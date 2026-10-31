@@ -1,0 +1,147 @@
+import SwiftUI
+
+struct IslandSettingsPane: View {
+    @ObservedObject var settings: IslandSettings
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                SettingsCard {
+                    VStack(spacing: 16) {
+                        IslandPreviewShape(bottomRadius: settings.bottomCornerRadius)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                }
+
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("外观")
+                            .font(.headline)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("下圆角")
+                                Spacer()
+                                Text("\(Int(settings.bottomCornerRadius.rounded())) pt")
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $settings.bottomCornerRadius, in: 0...36, step: 1)
+                        }
+                    }
+                }
+
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("行为")
+                            .font(.headline)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("展开动画速度")
+                                Spacer()
+                                Text(String(format: "%.1f×", settings.animationSpeed))
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $settings.animationSpeed, in: 0.5...2.0, step: 0.1)
+                        }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("震感强度")
+                                Spacer()
+                                Text(settings.hapticIntensity.title)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Picker("震感强度", selection: $settings.hapticIntensity) {
+                                ForEach(IslandHapticIntensity.allCases) { level in
+                                    Text(level.title).tag(level)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .labelsHidden()
+                        }
+
+                        Divider()
+
+                        Toggle("全屏时禁用灵动岛", isOn: $settings.hideInFullscreen)
+                    }
+                }
+            }
+            .padding(28)
+        }
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.35))
+        .background(Color.white)
+        .onChange(of: settings.animationSpeed) { _, value in
+            AppLog.info("Settings", "动画速度已更新", ["speed": value])
+        }
+        .onChange(of: settings.hideInFullscreen) { _, value in
+            AppLog.info("Settings", "全屏禁用岛", ["enabled": value])
+        }
+        .onChange(of: settings.hapticIntensity) { _, value in
+            AppLog.info("Settings", "震感强度", ["level": value.rawValue])
+        }
+        .onChange(of: settings.bottomCornerRadius) { _, value in
+            AppLog.info("Settings", "下圆角已更新", ["radius": value])
+        }
+    }
+}
+
+struct SettingsCard<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.white)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.black.opacity(0.06), lineWidth: 1)
+            )
+    }
+}
+
+private struct IslandPreviewShape: View {
+    let bottomRadius: Double
+
+    var body: some View {
+        let shape = UnevenRoundedRectangle(
+            topLeadingRadius: 0,
+            bottomLeadingRadius: bottomRadius,
+            bottomTrailingRadius: bottomRadius,
+            topTrailingRadius: 0,
+            style: .continuous
+        )
+        HStack(spacing: 10) {
+            Circle()
+                .fill(Color.white.opacity(0.2))
+                .frame(width: 22, height: 22)
+                .overlay(
+                    Image(systemName: "waveform")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                )
+            Capsule()
+                .fill(Color.white.opacity(0.18))
+                .frame(width: 54, height: 8)
+            Spacer(minLength: 0)
+            Capsule()
+                .fill(Color.white.opacity(0.18))
+                .frame(width: 36, height: 8)
+        }
+        .padding(.horizontal, 18)
+        .frame(height: 52)
+        .frame(maxWidth: 420)
+        .background(shape.fill(Color.black))
+        .clipShape(shape)
+        .frame(maxWidth: .infinity)
+    }
+}
