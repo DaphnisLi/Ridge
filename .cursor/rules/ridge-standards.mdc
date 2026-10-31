@@ -1,0 +1,32 @@
+---
+description: Ridge 项目总则 — 协作底线与规则索引（仓库内唯一规则目录）
+alwaysApply: true
+---
+
+# Ridge 项目总则
+
+**Ridge** 是独立仓库的 **macOS 灵动岛（Dynamic Island）** App。规则一律放在 **`.cursor/rules/`**（进 Git）。**禁止**写入 `~/.cursor/rules/` 或 Cursor Settings → User Rules 重复同内容。
+
+## 规则索引
+
+| 文件 | 功能 |
+|------|------|
+| `ridge-standards.mdc` | 本文件：总则与索引 |
+| `git-workflow.mdc` | 仅在你要求时 commit / 建 PR |
+| `debug-logging.mdc` | 关键路径打日志；修 bug 必看日志，没有则补 |
+| `agent-communication.mdc` | Agent 回复风格 |
+| `desktop-app.mdc` | 桌面端（Mac / 灵动岛边界） |
+| `dev-relaunch.mdc` | 改完后杀光旧进程，只开最新编译的一份 Ridge |
+
+## 协作底线
+
+- **最小改动**：只改与任务相关的代码
+- **复用优先**：已有组件 / 服务 / 工具先复用，再新写
+- **用户可见错误**：走统一错误展示；禁止把原始异常字符串直接上屏
+- **密钥**：不进仓库；本机密钥文件对话里标明未纳入即可，不要删
+
+## 与其它仓库的关系
+
+- 本仓库**不是** `daphnis-apps` 或 Focal 的子目录
+- 不要往 Focal / `daphnis-apps` 里塞 Ridge 代码；反之亦然
+- 可借鉴 Focal 约定（Git、日志、回复风格、改完即重启），但路径与发版命令以本仓库为准

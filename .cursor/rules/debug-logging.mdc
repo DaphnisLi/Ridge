@@ -1,0 +1,46 @@
+---
+description: 关键路径打日志；修 bug 必须先看日志，没有就补
+alwaysApply: true
+---
+
+# 关键路径日志
+
+完成**有实际代码变更**的任务后，除业务逻辑外，须在**关键路径**补充可排查日志。纯答疑、只读代码、无 diff 时不加。
+
+本仓库用 `AppLog`（tag 前缀），**禁止**裸 `print` / 无 tag 的散落日志。
+
+## 修 Bug（强制）
+
+排查 / 修复缺陷时：
+
+1. **先看日志**：用「控制台」或 Xcode 控制台，按模块 tag 过滤（如 `Island`、`Notch`、`Overlay`、`Media`、`Accessibility`）。结合复现时间线对照。
+2. **没有相关日志就先补**：在可疑入口、分支、失败路径加上带上下文的 `AppLog`，再复现、再根据新日志修。禁止只靠猜改完就收工。
+3. **修完后确认**：失败路径有 warn/error；成功路径有可辨认的 info/debug；重启 App 后能用日志验证修复（配合 `dev-relaunch`）。
+
+## 何时打
+
+| 场景 | 级别 | 示例 |
+|------|------|------|
+| 用户触发的写操作入口 | info | 展开/收起岛、改设置、授权 |
+| 外部 API 请求前/成功/失败 | info / warn / error | 含业务 code、关键 id，**不含** token / 密码 |
+| 本地持久化读/写/ miss | debug | 命中条数、会话 id 短前缀 |
+| 分支降级 / 权限失败 | debug 或 warn | 说明走了哪条路径、trusted 与否 |
+| 异步 fire-and-forget | debug | 标明「后台」避免误以为阻塞 |
+
+## 约定
+
+- 统一 `AppLog.debug/info/warn/error`；模块固定 tag
+- **不写**：完整 JWT、密码、用户隐私正文、通知全文
+- **可写**：会话 id 前缀、时长、业务 code、条数、权限状态、bundle 短名、岛展开状态
+
+```swift
+AppLog.info("Island", "展开灵动岛", ["reason": "media", "expanded": true])
+AppLog.warn("Island", "收起失败，已回退布局", ["display": displayID])
+```
+
+## 自检清单（Agent 收尾前）
+
+- [ ] 修 bug 时已查阅或补充相关日志，不是纯猜测
+- [ ] 本次新增/修改的入口、持久化、失败分支至少各 1 条日志
+- [ ] 失败路径有 warn/error，且带可定位上下文
+- [ ] 无敏感信息、无无意义逐行 debug 刷屏

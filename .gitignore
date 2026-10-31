@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+out/
+DerivedData/
+build/DerivedData/
+*.xcuserstate
+xcuserdata/
+*.app
+*.dmg
+*.pkg
+*.exe
+*.msi
+*.AppImage
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+credentials*.json
+secrets/
+!secrets/.gitkeep
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Rust / other
+target/

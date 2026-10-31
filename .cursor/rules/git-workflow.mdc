@@ -1,0 +1,48 @@
+---
+description: Git commit / PR 约定（仅用户明确要求时执行）
+alwaysApply: true
+---
+
+# Git 与 PR
+
+本仓库唯一 Git/PR 约定；不要再写进 `~/.cursor/rules/` 或 User Rules。
+
+## Commit
+
+- **仅在用户明确要求时**才 commit；未要求不要主动提交
+- 不改 git config；不用 `--no-verify` / force push（除非用户明确要求）
+- 不用 `-i` 交互 magit；commit 信息用 HEREDOC
+- **标题/正文中文**（conventional type 英文：`fix:` / `feat:` …），说清为什么
+- 不提交密钥、`.env`、credentials（本机密钥文件**不要删**，对话里标明未纳入即可）
+- **工作区一次收干净**：用户说提交时，把当时所有改动（modified + untracked）全部纳入本次 commit。禁止挑一部分提交、故意留下未提交文件。
+- 若认为某文件不该进仓库（草稿、无用产物、误生成）：**先删掉再 commit**，不要留在工作区当「先不提交」。已在 `.gitignore` 里的本来就不会出现在 status，不必管。
+
+### 执行步骤（用户明确要求 commit 时）
+
+1. 并行：`git status` · `git diff`（含 staged/unstaged）· `git log`（对齐近期文风）
+2. 起草 1–2 句说明「为什么」；密钥只排除、不删本机文件
+3. 无用文件先删 → `git add -A`（或等价地加齐 status 里全部路径）→ `git commit`（HEREDOC）→ `git status` 确认工作区干净
+4. hook 失败：修好后**新建** commit，不要 amend（除非满足下方 amend 条件）
+
+```bash
+git commit -m "$(cat <<'EOF'
+fix: 中文说明为什么。
+
+EOF
+)"
+```
+
+### Amend（极少用）
+
+仅当**同时**满足：用户明确要求 amend，或 hook 改了需纳入的文件；且 HEAD 是本对话刚提交的；且尚未 push。否则新建 commit。
+
+## Pull Request
+
+用户要求建 PR 时用 `gh`：
+
+1. 并行：`git status` · `git diff` · 跟踪/是否落后 remote · `git log` 与 `git diff [base]...HEAD`
+2. 需要时 `git push -u origin HEAD`
+3. `gh pr create`（正文 HEREDOC：Summary + Test plan）
+4. 返回 PR URL
+
+未要求不要 push。

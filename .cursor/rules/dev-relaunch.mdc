@@ -1,0 +1,40 @@
+---
+description: 改完代码后只保留一份最新 Ridge（安装到 /Applications 再启动）
+alwaysApply: true
+---
+
+# 改完即重启（只留最新一份）
+
+用户要的效果：**打开的 Ridge 必须是刚改完代码编出来的版本**，且状态栏 / 岛相关进程不重复。
+
+统一流程：编译 → **杀光所有旧 Ridge** → **ditto 原地覆盖** `/Applications/Ridge.app` → 只打开这一份。  
+固定路径；**禁止** `rm -rf` 后重建、禁止安装后再 `codesign --force`（会弄断辅助功能等 TCC 绑定）。
+
+## 何时做
+
+- 改了 `Ridge/**`、`project.yml`、会进包的资源 → 必须执行下方脚本（脚本落地后）
+- 纯文档 / 仅 `.cursor/rules` → 不必重启 App
+- 编译失败 → 修好或说明，不要打开旧包
+
+## 怎么做
+
+```bash
+cd /Users/daphnis/project/Ridge
+# 若改了 project.yml：先 xcodegen generate
+chmod +x scripts/relaunch-dev.sh
+./scripts/relaunch-dev.sh
+```
+
+脚手架阶段若尚无 `scripts/relaunch-dev.sh`：先补脚本再按上式执行；在此之前可用等价的 xcodebuild + killall + ditto + open。
+
+确认进程路径为 `/Applications/Ridge.app/...`，且只有一个。
+
+## 禁止
+
+- 不杀旧进程就再 `open` 一份
+- 同时开 Xcode Run 与脚本启动（会多开、权限错乱）
+- 权限失败时自动反复打开系统设置（应提示用户手动授权）
+
+## 回复
+
+说明：已编译并安装到 `/Applications/Ridge.app`；旧进程已结束；当前仅一份最新版。
