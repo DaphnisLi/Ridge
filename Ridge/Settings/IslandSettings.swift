@@ -35,6 +35,7 @@ final class IslandSettings: ObservableObject {
         static let bottomCornerRadius = 18.0
         /// 展开宽度（pt，逻辑像素）。
         static let expandedWidth: Double = 400
+        static let theme = IslandTheme.midnight
         static let displayStyle = IslandDisplayStyle.notch
         static let showInScreenRecordings = false
     }
@@ -54,6 +55,7 @@ final class IslandSettings: ObservableObject {
         static let showInScreenRecordings = "island.showInScreenRecordings"
         static let bottomCornerRadius = "island.bottomCornerRadius"
         static let expandedWidth = "island.expandedWidth"
+        static let theme = "island.theme"
         /// 旧版倍率 key，仅用于迁移。
         static let expandedWidthScaleLegacy = "island.expandedWidthScale"
         /// 一次性：全屏禁用改为默认关。
@@ -95,6 +97,11 @@ final class IslandSettings: ObservableObject {
         }
     }
 
+    /// 预设配色主题。
+    @Published var theme: IslandTheme {
+        didSet { UserDefaults.standard.set(theme.rawValue, forKey: Key.theme) }
+    }
+
     /// 展示形态：刘海 / 菜单栏下方胶囊。
     @Published var displayStyle: IslandDisplayStyle {
         didSet { UserDefaults.standard.set(displayStyle.rawValue, forKey: Key.displayStyle) }
@@ -117,6 +124,7 @@ final class IslandSettings: ObservableObject {
         hapticIntensity = Defaults.hapticIntensity
         bottomCornerRadius = Defaults.bottomCornerRadius
         expandedWidth = Defaults.expandedWidth
+        theme = Defaults.theme
         displayStyle = Defaults.displayStyle
         showInScreenRecordings = Defaults.showInScreenRecordings
         AppLog.info("Settings", "已恢复默认设置")
@@ -168,6 +176,9 @@ final class IslandSettings: ObservableObject {
                 defaults.set(Defaults.expandedWidth, forKey: Key.expandedWidth)
             }
         }
+        if defaults.object(forKey: Key.theme) == nil {
+            defaults.set(Defaults.theme.rawValue, forKey: Key.theme)
+        }
 
         animationSpeed = defaults.double(forKey: Key.animationSpeed)
         hideInFullscreen = defaults.bool(forKey: Key.hideInFullscreen)
@@ -179,6 +190,8 @@ final class IslandSettings: ObservableObject {
             max(loadedWidth, Self.expandedWidthRange.lowerBound),
             Self.expandedWidthRange.upperBound
         )
+        let themeRaw = defaults.string(forKey: Key.theme) ?? Defaults.theme.rawValue
+        theme = IslandTheme(rawValue: themeRaw) ?? Defaults.theme
         let styleRaw = defaults.string(forKey: Key.displayStyle) ?? Defaults.displayStyle.rawValue
         displayStyle = IslandDisplayStyle(rawValue: styleRaw) ?? Defaults.displayStyle
         showInScreenRecordings = defaults.bool(forKey: Key.showInScreenRecordings)
@@ -189,6 +202,7 @@ final class IslandSettings: ObservableObject {
             "haptic": hapticIntensity.rawValue,
             "bottomRadius": bottomCornerRadius,
             "expandedWidth": expandedWidth,
+            "theme": theme.rawValue,
             "heightScale": Self.fixedExpandedHeightScale,
             "style": displayStyle.rawValue
         ])

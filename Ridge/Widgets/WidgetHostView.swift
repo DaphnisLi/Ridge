@@ -4,6 +4,7 @@ import SwiftUI
 /// 左右切换由 `IslandHitTestView` 的 AppKit 拖拽 / 触控板横滑处理（SwiftUI DragGesture 在本 Panel 上无效）。
 struct WidgetHostView: View {
     @ObservedObject var runtime: WidgetRuntime
+    @Environment(\.islandPalette) private var palette
 
     var body: some View {
         VStack(spacing: 8) {
@@ -18,8 +19,8 @@ struct WidgetHostView: View {
                     ForEach(Array(runtime.pageIDs.indices), id: \.self) { index in
                         Circle()
                             .fill(index == runtime.pageIndex
-                                  ? Color.white.opacity(0.9)
-                                  : Color.white.opacity(0.22))
+                                  ? palette.pageDotActive
+                                  : palette.pageDotInactive)
                             .frame(width: 5, height: 5)
                     }
                 }

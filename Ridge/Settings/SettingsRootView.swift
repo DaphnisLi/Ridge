@@ -1,4 +1,13 @@
+import AppKit
 import SwiftUI
+
+/// 页面白底；分组卡片用与主题预设相同的浅灰底。
+enum SettingsChrome {
+    static let pageBackground = Color.white
+    /// 与 IslandThemeChip 未选中态一致。
+    static let cardBackground = Color.primary.opacity(0.04)
+    static let nsPageBackground = NSColor.white
+}
 
 enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
     case island
@@ -46,11 +55,11 @@ struct SettingsRootView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.white)
+            .background(SettingsChrome.pageBackground)
         }
         .navigationTitle(navigator.section.title)
         .preferredColorScheme(.light)
-        .background(Color.white)
+        .background(SettingsChrome.pageBackground)
         .frame(minWidth: 860, minHeight: 560)
     }
 }

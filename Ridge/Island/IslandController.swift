@@ -5,6 +5,9 @@ import SwiftUI
 /// 灵动岛窗口控制器：几何对齐、悬停展开、全屏隐藏、多屏降级。
 @MainActor
 final class IslandController: NSObject {
+    /// 设置页实时预览用；由 `start()` 挂上。
+    private(set) static weak var shared: IslandController?
+
     let viewModel = IslandViewModel()
     private let settings = IslandSettings.shared
     private let window = IslandWindow.make()
@@ -30,8 +33,13 @@ final class IslandController: NSObject {
     private var scrollGlobalMonitor: Any?
     private var scrollAccumX: CGFloat = 0
     private var lastPageSwipeAt: Date = .distantPast
+    /// 设置窗仍打开（不论是否在前台）。
+    private var isSettingsSessionActive = false
+    /// 设置窗在前台有焦点时钉住展开；失焦后关掉，岛恢复悬停正常逻辑。
+    private var isSettingsLivePreview = false
 
     func start() {
+        Self.shared = self
         WidgetRuntime.shared.start()
         installContent()
         applyScreenRecordingVisibility()
@@ -92,12 +100,111 @@ final class IslandController: NSObject {
         stopHoverPolling()
         stopScrollPagingMonitors()
         collapseWorkItem?.cancel()
+        isSettingsLivePreview = false
+        isSettingsSessionActive = false
         fullscreenMonitor.stop()
         displayMonitor.stop()
         appearanceObserver?.cancel()
         settingsObservers.removeAll()
         WidgetRuntime.shared.stop()
         window.orderOut(nil)
+        if Self.shared === self {
+            Self.shared = nil
+        }
+    }
+
+    /// 设置窗打开且在前台：钉住展开。
+    func beginSettingsSession() {
+        isSettingsSessionActive = true
+        setSettingsLivePreview(true)
+    }
+
+    /// 设置窗仍打开，但焦点离开（切到其它 App / 其它窗）：恢复岛的正常悬停逻辑。
+    /// 焦点回到设置窗：再次钉住展开。
+    func setSettingsWindowFocused(_ focused: Bool) {
+        guard isSettingsSessionActive else { return }
+        if focused {
+            AppLog.info("Island", "设置窗重新聚焦，钉住展开")
+            setSettingsLivePreview(true)
+        } else {
+            AppLog.info("Island", "设置窗失焦，岛恢复正常悬停")
+            // 关掉钉住，不强制收起：指针在岛上则保持，否则走正常收起。
+            setSettingsLivePreview(false, forceCollapseOnEnd: false)
+        }
+    }
+
+    /// 设置页打开某个小组件开关：展开岛 + 可选飞入动画 + 切到该页。
+    func presentWidgetEnabled(_ id: WidgetID, fromScreenRect: CGRect?) {
+        setSettingsLivePreview(true)
+        WidgetRuntime.shared.focusForSettings(id)
+        expand(reason: "widgetEnable")
+        applyWindowFrame(animated: true)
+        updateInteractiveFrame()
+
+        guard let fromScreenRect,
+              fromScreenRect.width > 8,
+              fromScreenRect.height > 8,
+              let geometry
+        else {
+            AppLog.info("Island", "开关开启：无飞入起点，直接展示", ["id": id])
+            return
+        }
+
+        let dest = geometry.expandedFrameOnScreen(width: CGFloat(settings.expandedWidth))
+        WidgetFlyAnimator.shared.play(widgetID: id, from: fromScreenRect, to: dest) {
+            AppLog.info("Island", "开关开启飞入完成", ["id": id])
+        }
+    }
+
+    /// 设置页拖拽排序落点后：展开岛并展示被拖动的小组件。
+    func presentWidgetReordered(_ id: WidgetID) {
+        // 拖拽结束后再动岛，避免和系统拖放会话抢主线程。
+        setSettingsLivePreview(true)
+        WidgetRuntime.shared.focusForSettings(id)
+        if !viewModel.isExpanded {
+            expand(reason: "widgetReorder")
+            applyWindowFrame(animated: true)
+            updateInteractiveFrame()
+        }
+        AppLog.info("Island", "排序后展示小组件", ["id": id])
+    }
+
+    /// 钉住 / 取消钉住展开。
+    /// - Parameter forceCollapseOnEnd: 关设置窗时传 `true`，强制收起。
+    func setSettingsLivePreview(_ enabled: Bool, forceCollapseOnEnd: Bool = false) {
+        if enabled {
+            isSettingsSessionActive = true
+            if isSettingsLivePreview {
+                if !viewModel.isExpanded {
+                    expand(reason: "settingsPreview")
+                }
+                return
+            }
+            isSettingsLivePreview = true
+            collapseWorkItem?.cancel()
+            collapseWorkItem = nil
+            AppLog.info("Island", "设置页实时预览：钉住展开", ["expanded": true])
+            expand(reason: "settingsPreview")
+            updateInteractiveFrame()
+            return
+        }
+
+        let wasPreview = isSettingsLivePreview
+        isSettingsLivePreview = false
+        if forceCollapseOnEnd {
+            isSettingsSessionActive = false
+        }
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        AppLog.info("Island", "设置页实时预览结束", [
+            "wasPreview": wasPreview,
+            "pointerOver": isPointerOverIsland,
+            "forceCollapse": forceCollapseOnEnd,
+            "sessionActive": isSettingsSessionActive
+        ])
+        if forceCollapseOnEnd || (!isPointerOverIsland && !isMouseDownInIsland) {
+            collapse(reason: "settingsPreviewEnd")
+        }
     }
 
     func expand(reason: String) {
@@ -111,6 +218,10 @@ final class IslandController: NSObject {
 
     func collapse(reason: String) {
         guard viewModel.isExpanded else { return }
+        if isSettingsLivePreview, reason != "settingsPreviewEnd" {
+            AppLog.debug("Island", "设置预览中，忽略收起", ["reason": reason])
+            return
+        }
         AppLog.info("Island", "收起灵动岛", ["reason": reason, "expanded": false])
         viewModel.collapse()
         stopScrollPagingMonitors()
@@ -160,6 +271,14 @@ final class IslandController: NSObject {
         // 拖拽翻页过程中不穿透，否则 mouseDragged / 横滑会被掐断。
         let shouldIgnore = !over && !isMouseDownInIsland
         setClickThrough(shouldIgnore, reason: over ? "pointerOver" : (isMouseDownInIsland ? "dragHold" : "pointerAway"))
+
+        if isSettingsLivePreview {
+            isPointerOverIsland = over
+            if !viewModel.isExpanded {
+                expand(reason: "settingsPreview")
+            }
+            return
+        }
 
         if over == isPointerOverIsland { return }
         isPointerOverIsland = over

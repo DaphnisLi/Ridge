@@ -142,7 +142,32 @@ final class WidgetRuntime: ObservableObject {
         }
     }
 
+    /// 设置页开关 / 拖拽后：确保争夺展示并强制切到该页（立即反映到岛上）。
+    func focusForSettings(_ id: WidgetID) {
+        guard registry.manifest(for: id)?.kind == .content else { return }
+        guard settings.isEnabled(id) else {
+            AppLog.debug("Widget", "设置聚焦跳过：未启用", ["id": id])
+            return
+        }
+        _ = ensureInstance(id)
+        if demandTimestamps[id] == nil {
+            demandTimestamps[id] = Date()
+            AppLog.info("Widget", "设置页申请展示", ["id": id])
+        }
+        browseOverrideID = id
+        recompute(reason: "settingsFocus")
+    }
+
     func recompute(reason: String) {
+        // 关掉的小组件立刻退出争夺，避免设置里关了岛上还挂着。
+        for id in Array(demandTimestamps.keys) where !settings.isEnabled(id) {
+            demandTimestamps.removeValue(forKey: id)
+            if browseOverrideID == id {
+                browseOverrideID = nil
+            }
+            AppLog.debug("Widget", "已禁用，撤出争夺", ["id": id, "reason": reason])
+        }
+
         // 已启用的内容型先建实例，便于占位/采样类在创建时声明 wantsDisplay。
         for id in settings.order where settings.isEnabled(id) {
             _ = ensureInstance(id)
@@ -231,10 +256,10 @@ final class WidgetRuntime: ObservableObject {
     }
 
     private func reapUnneeded(reason: String) {
-        var keep = Set(settings.pinnedIDs)
+        var keep = Set(settings.pinnedIDs.filter { settings.isEnabled($0) })
         if let activeID { keep.insert(activeID) }
         keep.insert(SystemWidgetID.empty)
-        keep.formUnion(demandTimestamps.keys)
+        keep.formUnion(demandTimestamps.keys.filter { settings.isEnabled($0) })
         for id in Array(instances.keys) where !keep.contains(id) {
             tearDown(id, reason: reason)
         }

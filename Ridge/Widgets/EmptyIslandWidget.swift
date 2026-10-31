@@ -43,27 +43,28 @@ final class EmptyIslandWidget: IslandWidget {
 
 private struct EmptyIslandView: View {
     let onAdd: () -> Void
+    @Environment(\.islandPalette) private var palette
 
     var body: some View {
         VStack(spacing: 10) {
             Text("尚未添加小组件")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(palette.title)
 
             Text("启用或添加后，内容会显示在这里")
                 .font(.system(size: 11))
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(palette.secondary)
                 .multilineTextAlignment(.center)
 
             Button(action: onAdd) {
                 Text("去添加小组件")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.black.opacity(0.85))
+                    .foregroundStyle(palette.accentForeground)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
                     .background(
                         Capsule(style: .continuous)
-                            .fill(Color.white.opacity(0.92))
+                            .fill(palette.accentFill)
                     )
             }
             .buttonStyle(.plain)

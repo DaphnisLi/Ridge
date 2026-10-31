@@ -78,6 +78,28 @@ final class WidgetSettings: ObservableObject {
         AppLog.info("Widget", "排序已更新", ["count": next.count])
     }
 
+    /// 拖到 `targetID` 上时与目标交换位置（不做中间项推移）。
+    /// - Returns: 是否真的改了顺序。
+    @discardableResult
+    func move(draggedID: WidgetID, onto targetID: WidgetID) -> Bool {
+        guard draggedID != targetID,
+              let from = order.firstIndex(of: draggedID),
+              let to = order.firstIndex(of: targetID),
+              from != to
+        else { return false }
+
+        var next = order
+        next.swapAt(from, to)
+        order = next
+        AppLog.debug("Widget", "拖拽交换", [
+            "from": draggedID,
+            "onto": targetID,
+            "fromIndex": from,
+            "toIndex": to
+        ])
+        return true
+    }
+
     func restoreDefaults() {
         order = Defaults.order
         disabledIDs = Set(Defaults.disabled)

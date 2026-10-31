@@ -115,21 +115,22 @@ private struct PlaceholderWidgetChrome: View {
     let symbol: String
     let title: String
     let subtitle: String
+    @Environment(\.islandPalette) private var palette
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(palette.icon)
                 .frame(width: 28, height: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(palette.title)
                 Text(subtitle)
                     .font(.system(size: 11))
-                    .foregroundStyle(.white.opacity(0.4))
+                    .foregroundStyle(palette.secondary)
             }
             Spacer(minLength: 0)
         }

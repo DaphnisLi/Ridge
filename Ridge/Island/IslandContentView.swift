@@ -37,6 +37,8 @@ struct IslandContentView: View {
         )
     }
 
+    private var palette: IslandPalette { settings.theme.palette }
+
     var body: some View {
         let shape = IslandPanelShape(bottomRadius: appliedBottomRadius)
         return ZStack(alignment: .top) {
@@ -45,15 +47,16 @@ struct IslandContentView: View {
                 runtime: runtime
             )
             .frame(width: bodySize.width, height: bodySize.height)
-            // 黑底就是形状本身，再 clip 内容；不要给矩形上色再靠 Shape 插值裁切。
-            .background(shape.fill(Color.black))
+            .background(shape.fill(palette.fill))
             .clipShape(shape)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .environment(\.islandPalette, palette)
         .animation(islandSpring, value: viewModel.appearance)
         .animation(islandSpring, value: runtime.contentEpoch)
         .animation(islandSpring, value: settings.bottomCornerRadius)
         .animation(islandSpring, value: settings.expandedWidth)
+        .animation(islandSpring, value: settings.theme)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
         .onChange(of: bodySize) { _, size in
@@ -61,7 +64,8 @@ struct IslandContentView: View {
                 "expanded": viewModel.isExpanded,
                 "w": size.width,
                 "h": size.height,
-                "radius": appliedBottomRadius
+                "radius": appliedBottomRadius,
+                "theme": settings.theme.rawValue
             ])
         }
     }
@@ -74,6 +78,7 @@ struct IslandContentView: View {
 private struct IslandBody: View {
     let isExpanded: Bool
     @ObservedObject var runtime: WidgetRuntime
+    @Environment(\.islandPalette) private var palette
 
     var body: some View {
         Group {
@@ -83,7 +88,7 @@ private struct IslandBody: View {
                         HStack {
                             Text(runtime.activeTitle.isEmpty ? "Ridge" : runtime.activeTitle)
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.9))
+                                .foregroundStyle(palette.title)
                                 .lineLimit(1)
                             Spacer(minLength: 0)
                         }

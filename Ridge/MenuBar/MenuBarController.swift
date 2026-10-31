@@ -7,6 +7,8 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     private weak var island: IslandController?
     private var settingsWindowController: NSWindowController?
     private var openSettingsObserver: NSObjectProtocol?
+    private var appActiveObserver: NSObjectProtocol?
+    private var appResignObserver: NSObjectProtocol?
 
     func start(island: IslandController) {
         self.island = island
@@ -31,6 +33,31 @@ final class MenuBarController: NSObject, NSWindowDelegate {
             }
         }
 
+        appResignObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard self?.settingsWindowController?.window?.isVisible == true else { return }
+                IslandController.shared?.setSettingsWindowFocused(false)
+            }
+        }
+
+        appActiveObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let window = self?.settingsWindowController?.window,
+                      window.isVisible,
+                      window.isKeyWindow
+                else { return }
+                IslandController.shared?.setSettingsWindowFocused(true)
+            }
+        }
+
         AppLog.info("Overlay", "菜单栏已就绪")
     }
 
@@ -38,6 +65,14 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         if let openSettingsObserver {
             NotificationCenter.default.removeObserver(openSettingsObserver)
             self.openSettingsObserver = nil
+        }
+        if let appResignObserver {
+            NotificationCenter.default.removeObserver(appResignObserver)
+            self.appResignObserver = nil
+        }
+        if let appActiveObserver {
+            NotificationCenter.default.removeObserver(appActiveObserver)
+            self.appActiveObserver = nil
         }
         if let statusItem {
             NSStatusBar.system.removeStatusItem(statusItem)
@@ -49,9 +84,9 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         let menu = NSMenu()
 
         let settings = NSMenuItem(
-            title: "设置…",
+            title: "设置",
             action: #selector(openSettings),
-            keyEquivalent: ","
+            keyEquivalent: ""
         )
         settings.target = self
         menu.addItem(settings)
@@ -61,7 +96,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         let quit = NSMenuItem(
             title: "退出 Ridge",
             action: #selector(quit),
-            keyEquivalent: "q"
+            keyEquivalent: ""
         )
         quit.target = self
         menu.addItem(quit)
@@ -78,11 +113,22 @@ final class MenuBarController: NSObject, NSWindowDelegate {
             center(existing, on: Self.activeScreen())
             existing.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
+            IslandController.shared?.beginSettingsSession()
             return
+        }
+
+        // 关窗后再开：销毁旧窗，避免残留白底/旧布局。
+        if let stale = settingsWindowController?.window {
+            stale.delegate = nil
+            stale.close()
+            settingsWindowController = nil
         }
 
         let root = SettingsRootView(settings: IslandSettings.shared)
         let hosting = NSHostingController(rootView: root)
+        hosting.view.wantsLayer = true
+        hosting.view.layer?.backgroundColor = SettingsChrome.nsPageBackground.cgColor
+
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 920, height: 620),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -91,7 +137,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         )
         window.title = "Ridge"
         window.titlebarAppearsTransparent = true
-        window.backgroundColor = .white
+        window.backgroundColor = SettingsChrome.nsPageBackground
         window.contentViewController = hosting
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 820, height: 520)
@@ -101,14 +147,36 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         settingsWindowController = NSWindowController(window: window)
-        AppLog.info("Settings", "设置窗已显示，已允许 ⌘Tab 切换")
+        IslandController.shared?.beginSettingsSession()
+        AppLog.info("Settings", "设置窗已显示", ["chrome": "whitePage-grayCards"])
     }
 
     func windowWillClose(_ notification: Notification) {
         guard let closing = notification.object as? NSWindow,
               closing === settingsWindowController?.window
         else { return }
+        // 关窗时 SwiftUI onDisappear 不一定触发；强制结束预览并收起岛。
+        WidgetFlyAnimator.shared.cancel()
+        IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
+        AppLog.info("Settings", "设置窗关闭，结束灵动岛实时预览")
         demoteAfterSettingsClosed()
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow,
+              window === settingsWindowController?.window
+        else { return }
+        // 失焦：岛恢复正常悬停，不再钉住。
+        IslandController.shared?.setSettingsWindowFocused(false)
+        AppLog.debug("Settings", "设置窗失焦，岛恢复正常")
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow,
+              window === settingsWindowController?.window
+        else { return }
+        IslandController.shared?.setSettingsWindowFocused(true)
+        AppLog.debug("Settings", "设置窗重新成为 key，钉住展开")
     }
 
     private func promoteForSettingsWindow() {
@@ -121,6 +189,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         // 下一轮 runloop 再降级，避免关窗动画期间抢焦点异常。
         DispatchQueue.main.async {
             guard self.settingsWindowController?.window?.isVisible != true else { return }
+            IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
             NSApp.setActivationPolicy(.accessory)
             AppLog.info("Settings", "设置窗已关，activationPolicy → accessory")
         }
