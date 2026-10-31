@@ -10,41 +10,61 @@
 		06D9881C8149C1F7395BAB29 /* IslandPanelShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */; };
 		3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7694C35719C53E4F238252E3 /* IslandSettings.swift */; };
 		4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */; };
+		62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
+		880D2C2BEA473BDDE8EE44FB /* PlaceholderWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C039DD65EADD0E2CC891E9D /* PlaceholderWidgets.swift */; };
 		90D890B66F172EDA7F680261 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */; };
 		9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A380AA9950E13AF158422F15 /* IslandState.swift */; };
 		9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1266F73AC4146FF0C01385 /* RidgeApp.swift */; };
+		9E9C3420E3E847D32E5733ED /* WidgetSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */; };
 		A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5894114050B192E21DBC168B /* IslandContentView.swift */; };
+		AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A050E8B86C4C1A0EECE7EDB /* EmptyIslandWidget.swift */; };
+		AB381B4B47D62E0AD24F5D92 /* WidgetHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */; };
+		AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BB2FAF48572CDD36E2974F /* IslandWidget.swift */; };
 		AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */; };
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
 		C81C8B553E9FB563CD83D571 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */; };
 		CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED55417055983E937B47576 /* DisplayMonitor.swift */; };
+		CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */; };
 		D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
 		E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073E52F82BA9EE649BA7890 /* IslandController.swift */; };
 		E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */; };
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
+		F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11948404DA855E5880642096 /* WidgetRuntime.swift */; };
+		F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 088CFC576E84896E553FC0DD /* WidgetRegistry.swift */; };
+		FBF5908F3A964F8598572BA1 /* WidgetsSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		07EC22739F9DB8CD07D03E0B /* Ridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		088CFC576E84896E553FC0DD /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
 		1073E52F82BA9EE649BA7890 /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
+		11948404DA855E5880642096 /* WidgetRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRuntime.swift; sourceTree = "<group>"; };
 		192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
 		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
 		482677D8E4898DBF37E8B22E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4C039DD65EADD0E2CC891E9D /* PlaceholderWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderWidgets.swift; sourceTree = "<group>"; };
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
+		5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetContextImpl.swift; sourceTree = "<group>"; };
 		57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5894114050B192E21DBC168B /* IslandContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandContentView.swift; sourceTree = "<group>"; };
 		7694C35719C53E4F238252E3 /* IslandSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettings.swift; sourceTree = "<group>"; };
+		77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNavigator.swift; sourceTree = "<group>"; };
 		7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
+		81BB2FAF48572CDD36E2974F /* IslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWidget.swift; sourceTree = "<group>"; };
+		8A050E8B86C4C1A0EECE7EDB /* EmptyIslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyIslandWidget.swift; sourceTree = "<group>"; };
 		8A1266F73AC4146FF0C01385 /* RidgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidgeApp.swift; sourceTree = "<group>"; };
 		8B7B868652010E80E7A1FACC /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
 		9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGeometry.swift; sourceTree = "<group>"; };
 		A380AA9950E13AF158422F15 /* IslandState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandState.swift; sourceTree = "<group>"; };
 		BED55417055983E937B47576 /* DisplayMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayMonitor.swift; sourceTree = "<group>"; };
+		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
+		D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHostView.swift; sourceTree = "<group>"; };
+		D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetsSettingsPane.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -77,6 +97,7 @@
 				61864BFFC78D89E10A875476 /* Logging */,
 				92B4A2ED5A5028E8FCA74BE2 /* MenuBar */,
 				D2C332D1C56253B5EAA5B089 /* Settings */,
+				E6385D7185B43005C4D82D75 /* Widgets */,
 			);
 			path = Ridge;
 			sourceTree = "<group>";
@@ -127,9 +148,26 @@
 			children = (
 				7694C35719C53E4F238252E3 /* IslandSettings.swift */,
 				54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */,
+				77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */,
 				8B7B868652010E80E7A1FACC /* SettingsRootView.swift */,
 			);
 			path = Settings;
+			sourceTree = "<group>";
+		};
+		E6385D7185B43005C4D82D75 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				8A050E8B86C4C1A0EECE7EDB /* EmptyIslandWidget.swift */,
+				81BB2FAF48572CDD36E2974F /* IslandWidget.swift */,
+				4C039DD65EADD0E2CC891E9D /* PlaceholderWidgets.swift */,
+				5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */,
+				D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */,
+				088CFC576E84896E553FC0DD /* WidgetRegistry.swift */,
+				11948404DA855E5880642096 /* WidgetRuntime.swift */,
+				CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */,
+				D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */,
+			);
+			path = Widgets;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -205,6 +243,7 @@
 				B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */,
 				90D890B66F172EDA7F680261 /* AppLog.swift in Sources */,
 				CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */,
+				AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */,
 				AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */,
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
@@ -213,11 +252,20 @@
 				3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */,
 				D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */,
 				9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */,
+				AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */,
 				DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */,
 				4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */,
 				C81C8B553E9FB563CD83D571 /* NotchGeometry.swift in Sources */,
+				880D2C2BEA473BDDE8EE44FB /* PlaceholderWidgets.swift in Sources */,
 				9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */,
+				CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */,
 				F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */,
+				62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */,
+				AB381B4B47D62E0AD24F5D92 /* WidgetHostView.swift in Sources */,
+				F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */,
+				F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */,
+				9E9C3420E3E847D32E5733ED /* WidgetSettings.swift in Sources */,
+				FBF5908F3A964F8598572BA1 /* WidgetsSettingsPane.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

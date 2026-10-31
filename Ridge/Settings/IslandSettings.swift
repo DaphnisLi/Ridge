@@ -33,12 +33,17 @@ final class IslandSettings: ObservableObject {
         static let hideInFullscreen = false
         static let hapticIntensity = IslandHapticIntensity.medium
         static let bottomCornerRadius = 18.0
-        /// 相对刘海尺寸的展开倍率。
-        static let expandedWidthScale = 2.0
-        static let expandedHeightScale = 3.0
+        /// 展开宽度（pt，逻辑像素）。
+        static let expandedWidth: Double = 400
         static let displayStyle = IslandDisplayStyle.notch
         static let showInScreenRecordings = false
     }
+
+    /// 设置滑块范围（pt）；运行时还会按屏幕再钳制。
+    static let expandedWidthRange: ClosedRange<Double> = 240...900
+
+    /// 展开高度 = 刘海高 × 此倍率；固定不可调。
+    static let fixedExpandedHeightScale: Double = 3.0
 
     private enum Key {
         static let animationSpeed = "island.animationSpeed"
@@ -48,8 +53,9 @@ final class IslandSettings: ObservableObject {
         static let displayStyle = "island.displayStyle"
         static let showInScreenRecordings = "island.showInScreenRecordings"
         static let bottomCornerRadius = "island.bottomCornerRadius"
-        static let expandedWidthScale = "island.expandedWidthScale"
-        static let expandedHeightScale = "island.expandedHeightScale"
+        static let expandedWidth = "island.expandedWidth"
+        /// 旧版倍率 key，仅用于迁移。
+        static let expandedWidthScaleLegacy = "island.expandedWidthScale"
         /// 一次性：全屏禁用改为默认关。
         static let hideFullscreenDefaultOff = "island.hideFullscreenDefaultOff.v1"
     }
@@ -74,14 +80,19 @@ final class IslandSettings: ObservableObject {
         didSet { UserDefaults.standard.set(bottomCornerRadius, forKey: Key.bottomCornerRadius) }
     }
 
-    /// 展开宽度 = 刘海宽 × 此倍率。
-    @Published var expandedWidthScale: Double {
-        didSet { UserDefaults.standard.set(expandedWidthScale, forKey: Key.expandedWidthScale) }
-    }
-
-    /// 展开高度 = 刘海高 × 此倍率。
-    @Published var expandedHeightScale: Double {
-        didSet { UserDefaults.standard.set(expandedHeightScale, forKey: Key.expandedHeightScale) }
+    /// 展开宽度（pt）。
+    @Published var expandedWidth: Double {
+        didSet {
+            let clamped = min(
+                max(expandedWidth, Self.expandedWidthRange.lowerBound),
+                Self.expandedWidthRange.upperBound
+            )
+            if clamped != expandedWidth {
+                expandedWidth = clamped
+                return
+            }
+            UserDefaults.standard.set(expandedWidth, forKey: Key.expandedWidth)
+        }
     }
 
     /// 展示形态：刘海 / 菜单栏下方胶囊。
@@ -105,8 +116,7 @@ final class IslandSettings: ObservableObject {
         hideInFullscreen = Defaults.hideInFullscreen
         hapticIntensity = Defaults.hapticIntensity
         bottomCornerRadius = Defaults.bottomCornerRadius
-        expandedWidthScale = Defaults.expandedWidthScale
-        expandedHeightScale = Defaults.expandedHeightScale
+        expandedWidth = Defaults.expandedWidth
         displayStyle = Defaults.displayStyle
         showInScreenRecordings = Defaults.showInScreenRecordings
         AppLog.info("Settings", "已恢复默认设置")
@@ -140,11 +150,23 @@ final class IslandSettings: ObservableObject {
         if defaults.object(forKey: Key.bottomCornerRadius) == nil {
             defaults.set(Defaults.bottomCornerRadius, forKey: Key.bottomCornerRadius)
         }
-        if defaults.object(forKey: Key.expandedWidthScale) == nil {
-            defaults.set(Defaults.expandedWidthScale, forKey: Key.expandedWidthScale)
-        }
-        if defaults.object(forKey: Key.expandedHeightScale) == nil {
-            defaults.set(Defaults.expandedHeightScale, forKey: Key.expandedHeightScale)
+        if defaults.object(forKey: Key.expandedWidth) == nil {
+            // 从旧倍率迁到绝对宽度：按约 200pt 刘海估算。
+            if defaults.object(forKey: Key.expandedWidthScaleLegacy) != nil {
+                let scale = defaults.double(forKey: Key.expandedWidthScaleLegacy)
+                let migrated = (scale * 200).rounded()
+                let clamped = min(
+                    max(migrated, Self.expandedWidthRange.lowerBound),
+                    Self.expandedWidthRange.upperBound
+                )
+                defaults.set(clamped, forKey: Key.expandedWidth)
+                AppLog.info("Settings", "展开宽度已从倍率迁移为 pt", [
+                    "scale": scale,
+                    "width": clamped
+                ])
+            } else {
+                defaults.set(Defaults.expandedWidth, forKey: Key.expandedWidth)
+            }
         }
 
         animationSpeed = defaults.double(forKey: Key.animationSpeed)
@@ -152,8 +174,11 @@ final class IslandSettings: ObservableObject {
         let hapticRaw = defaults.integer(forKey: Key.hapticIntensity)
         hapticIntensity = IslandHapticIntensity(rawValue: hapticRaw) ?? Defaults.hapticIntensity
         bottomCornerRadius = defaults.double(forKey: Key.bottomCornerRadius)
-        expandedWidthScale = defaults.double(forKey: Key.expandedWidthScale)
-        expandedHeightScale = defaults.double(forKey: Key.expandedHeightScale)
+        let loadedWidth = defaults.double(forKey: Key.expandedWidth)
+        expandedWidth = min(
+            max(loadedWidth, Self.expandedWidthRange.lowerBound),
+            Self.expandedWidthRange.upperBound
+        )
         let styleRaw = defaults.string(forKey: Key.displayStyle) ?? Defaults.displayStyle.rawValue
         displayStyle = IslandDisplayStyle(rawValue: styleRaw) ?? Defaults.displayStyle
         showInScreenRecordings = defaults.bool(forKey: Key.showInScreenRecordings)
@@ -163,8 +188,8 @@ final class IslandSettings: ObservableObject {
             "hideFullscreen": hideInFullscreen,
             "haptic": hapticIntensity.rawValue,
             "bottomRadius": bottomCornerRadius,
-            "widthScale": expandedWidthScale,
-            "heightScale": expandedHeightScale,
+            "expandedWidth": expandedWidth,
+            "heightScale": Self.fixedExpandedHeightScale,
             "style": displayStyle.rawValue
         ])
     }

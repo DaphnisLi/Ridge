@@ -8,7 +8,6 @@ struct IslandSettingsPane: View {
             VStack(alignment: .leading, spacing: 22) {
                 SettingsCard {
                     VStack(spacing: 14) {
-                        // 收起态固定贴合刘海，不随宽高倍率变化。
                         IslandCompactPreview()
                         Text("收起 · 贴合刘海")
                             .font(.caption)
@@ -16,10 +15,9 @@ struct IslandSettingsPane: View {
 
                         IslandExpandedPreview(
                             bottomRadius: settings.bottomCornerRadius,
-                            widthScale: settings.expandedWidthScale,
-                            heightScale: settings.expandedHeightScale
+                            width: settings.expandedWidth
                         )
-                        Text("展开后 · 随下方倍率变化")
+                        Text("展开后 · 随下方宽度变化")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -36,22 +34,15 @@ struct IslandSettingsPane: View {
                             HStack {
                                 Text("展开后宽度")
                                 Spacer()
-                                Text(String(format: "%.1f×", settings.expandedWidthScale))
+                                Text("\(Int(settings.expandedWidth.rounded())) pt")
                                     .foregroundStyle(.secondary)
                                     .monospacedDigit()
                             }
-                            Slider(value: $settings.expandedWidthScale, in: 1.2...4.0, step: 0.1)
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("展开后高度")
-                                Spacer()
-                                Text(String(format: "%.1f×", settings.expandedHeightScale))
-                                    .foregroundStyle(.secondary)
-                                    .monospacedDigit()
-                            }
-                            Slider(value: $settings.expandedHeightScale, in: 1.5...6.0, step: 0.1)
+                            Slider(
+                                value: $settings.expandedWidth,
+                                in: IslandSettings.expandedWidthRange,
+                                step: 10
+                            )
                         }
 
                         Divider()
@@ -132,11 +123,8 @@ struct IslandSettingsPane: View {
         .onChange(of: settings.bottomCornerRadius) { _, value in
             AppLog.info("Settings", "下圆角已更新", ["radius": value])
         }
-        .onChange(of: settings.expandedWidthScale) { _, value in
-            AppLog.info("Settings", "展开宽度倍率", ["scale": value])
-        }
-        .onChange(of: settings.expandedHeightScale) { _, value in
-            AppLog.info("Settings", "展开高度倍率", ["scale": value])
+        .onChange(of: settings.expandedWidth) { _, value in
+            AppLog.info("Settings", "展开宽度", ["width": value])
         }
     }
 }
@@ -159,7 +147,7 @@ struct SettingsCard<Content: View>: View {
     }
 }
 
-/// 收起态预览：固定尺寸，不受展开倍率影响。
+/// 收起态预览：固定尺寸，不受展开宽度影响。
 private struct IslandCompactPreview: View {
     var body: some View {
         let shape = IslandPanelShape(bottomRadius: 10)
@@ -171,16 +159,15 @@ private struct IslandCompactPreview: View {
     }
 }
 
-/// 展开态预览：随宽高倍率缩放。
+/// 展开态预览：随绝对宽度缩放；高度固定。
 private struct IslandExpandedPreview: View {
     let bottomRadius: Double
-    let widthScale: Double
-    let heightScale: Double
+    let width: Double
 
     var body: some View {
-        // 预览按倍率相对默认 2×/3× 缩放，上限避免撑破卡片。
-        let previewWidth = min(520, 180 * widthScale / 2.0)
-        let previewHeight = min(120, 52 * heightScale / 3.0)
+        // 预览按实际宽度相对默认 400pt 缩放，上限避免撑破卡片。
+        let previewWidth = min(520, 180 * width / IslandSettings.Defaults.expandedWidth)
+        let previewHeight: CGFloat = 52
         let radius = min(bottomRadius, previewHeight / 2, previewWidth / 2)
         let shape = IslandPanelShape(bottomRadius: radius)
 
@@ -206,8 +193,7 @@ private struct IslandExpandedPreview: View {
         .background(shape.fill(Color.black))
         .clipShape(shape)
         .frame(maxWidth: .infinity)
-        .animation(.easeInOut(duration: 0.15), value: widthScale)
-        .animation(.easeInOut(duration: 0.15), value: heightScale)
+        .animation(.easeInOut(duration: 0.15), value: width)
         .animation(.easeInOut(duration: 0.15), value: bottomRadius)
     }
 }

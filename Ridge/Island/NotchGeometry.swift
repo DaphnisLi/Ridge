@@ -16,9 +16,8 @@ struct NotchGeometry: Equatable {
 
     /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
     static let compactScale: CGFloat = 0.96
-    /// 展开倍率默认值（与 IslandSettings.Defaults 对齐）。
-    static let defaultExpandedWidthMultiplier: CGFloat = 2
-    static let defaultExpandedHeightMultiplier: CGFloat = 3
+    /// 展开高度固定为刘海高 × 此倍率（不可调）。
+    static let fixedExpandedHeightMultiplier: CGFloat = 3
 
     var compactSize: CGSize {
         CGSize(
@@ -27,22 +26,59 @@ struct NotchGeometry: Equatable {
         )
     }
 
-    func expandedSize(widthScale: CGFloat, heightScale: CGFloat) -> CGSize {
+    /// 展开宽度上限：不可超出屏幕，否则左右被裁切。
+    var maxExpandedWidth: CGFloat {
+        max(notchWidth, screenFrame.width - Self.expandedHorizontalInset * 2)
+    }
+
+    static let expandedHorizontalInset: CGFloat = 16
+
+    /// 可见岛面板尺寸（绝对宽度 pt，高度固定）。宽高对齐到 0.5pt。
+    func expandedSize(width: CGFloat) -> CGSize {
+        let clamped = min(max(width, notchWidth), maxExpandedWidth)
+        let height = notchHeight * Self.fixedExpandedHeightMultiplier
+        return CGSize(
+            width: Self.pixelAlign(clamped),
+            height: Self.pixelAlign(height)
+        )
+    }
+
+    /// 浮层窗口占位：始终用最大展开宽，避免调宽度时窗体与 SwiftUI 面板不同步裁掉圆角。
+    var windowSize: CGSize {
         CGSize(
-            width: notchWidth * widthScale,
-            height: notchHeight * heightScale
+            width: Self.pixelAlign(maxExpandedWidth),
+            height: Self.pixelAlign(notchHeight * Self.fixedExpandedHeightMultiplier)
         )
     }
 
     /// 展开态面板在屏幕坐标中的矩形（顶边对齐屏幕顶，水平以刘海居中）。
-    func expandedFrameOnScreen(widthScale: CGFloat, heightScale: CGFloat) -> CGRect {
-        let size = expandedSize(widthScale: widthScale, heightScale: heightScale)
-        return CGRect(
+    func expandedFrameOnScreen(width: CGFloat) -> CGRect {
+        centeredTopFrame(size: expandedSize(width: width))
+    }
+
+    /// 窗口在屏幕上的矩形（最大宽度占位）。
+    func windowFrameOnScreen() -> CGRect {
+        centeredTopFrame(size: windowSize)
+    }
+
+    private func centeredTopFrame(size: CGSize) -> CGRect {
+        var frame = CGRect(
             x: notchCenterX - size.width / 2,
             y: screenFrame.maxY - size.height,
             width: size.width,
             height: size.height
         )
+        if frame.minX < screenFrame.minX + Self.expandedHorizontalInset {
+            frame.origin.x = screenFrame.minX + Self.expandedHorizontalInset
+        }
+        if frame.maxX > screenFrame.maxX - Self.expandedHorizontalInset {
+            frame.origin.x = screenFrame.maxX - Self.expandedHorizontalInset - frame.width
+        }
+        return frame
+    }
+
+    static func pixelAlign(_ value: CGFloat) -> CGFloat {
+        (value * 2).rounded() / 2
     }
 }
 

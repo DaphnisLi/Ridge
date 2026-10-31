@@ -1,0 +1,90 @@
+---
+description: Ridge 小组件扩展契约 — 新 widget / AI 自定义必须按此开发与注册
+alwaysApply: true
+---
+
+# 小组件架构（扩展契约）
+
+Ridge 功能（媒体、会议、状态、用户/AI 自定义等）一律做成 **独立 widget**，走统一协议；**禁止**在 `IslandContentView` / `IslandController` 里塞业务 UI。
+
+代码根目录：`Ridge/Widgets/`。权威类型：`IslandWidget.swift`。
+
+## 分层（勿越层）
+
+| 层 | 职责 | 谁改 |
+|---|---|---|
+| `WidgetManifest` | id / 名称 / 版本 / `source` / `kind` | 每个 widget 声明 |
+| `IslandWidget` | UI + 生命周期 + refresh | 每个 widget 实现 |
+| `WidgetContext` | 申请展示、打开设置、隔离存储、日志 | **widget 唯一可依赖的运行时** |
+| `WidgetModule` / `TypedWidgetModule` | 打包注册 | 注册时用 |
+| `WidgetRegistry` | `register` / `unregister`（热加载同通道） | 启动或加载器 |
+| `WidgetRuntime` | 调度（优先级 + 时间戳）、pin 常驻、按需销毁 | **框架**；widget 禁止直连 |
+| `system.empty` | 无争夺时的空态岛 | 系统；不进设置排序 |
+
+`source`：`builtin` | `user` | `generated`（AI）。`kind`：`content`（进库、可调度）| `systemEmpty`（仅空态）。
+
+## 接入新小组件（清单）
+
+1. 新建 `Ridge/Widgets/<Name>Widget.swift`（或子目录），实现 `IslandWidget`。
+2. 填写 `static let manifest`：稳定反向域名 id（如 `builtin.media` / `user.…` / `generated.…`）。
+3. 有内容要上岛 → `context.requestDisplay()`；结束 → `context.withdrawDisplay()`。
+4. 在 `WidgetRegistry.registerBuiltins()`（内置）或加载器里：  
+   `registry.register(TypedWidgetModule<YourWidget>())`。
+5. 不要改岛窗口几何 / 悬停逻辑；不要 `WidgetRuntime.shared` 从 widget 内部调用。
+6. 改完按 `dev-relaunch` 重启验收。
+
+## 最小实现模板
+
+```swift
+@MainActor
+final class ExampleWidget: IslandWidget {
+    static let manifest = WidgetManifest(
+        id: "builtin.example",
+        displayName: "示例",
+        summary: "一句话说明",
+        source: .builtin,   // 用户包 .user；AI .generated
+        kind: .content
+    )
+
+    private let context: WidgetContext
+    var priority: Int = 0
+    private(set) var wantsDisplay = false
+    private(set) var requestedAt = Date.distantPast
+
+    init(context: WidgetContext) { self.context = context }
+
+    func makeView() -> AnyView { AnyView(Text(Self.manifest.displayName)) }
+
+    func onAppear() { context.log("appear") }
+    func onDisappear() { context.log("disappear") }
+    func refresh() { /* 拉数；勿阻塞主线程过久 */ }
+
+    func show() {
+        wantsDisplay = true
+        requestedAt = Date()
+        context.requestDisplay()
+    }
+
+    func hide() {
+        wantsDisplay = false
+        context.withdrawDisplay()
+    }
+}
+
+// 注册：WidgetRegistry.shared.register(TypedWidgetModule<ExampleWidget>())
+```
+
+## 调度与设置（开发时要知道）
+
+- 用户排序越靠前 → `priority` 越大；同级按 `requestDisplay` 时间先到先得。
+- 展开后左右滑动切换正在争夺的内容型 widget；底部分页点数量 = 可切换个数（空态无点）。
+- 设置「小组件」只列出 `showsInLibrary`，拖拽排序；空态 `system.empty` 永不进列表。
+- pin = 常驻内存（设置 UI 可隐藏，API 仍保留）；未 pin 离开展示后可销毁。
+- 持久化用 `context.storageKey("…")`，勿写全局裸 key。
+
+## 禁止
+
+- 在岛壳（`Island/*` 窗口/几何）里写具体业务面板
+- widget 内硬编码抢 priority
+- 把系统空态当成可开关的「业务 widget」
+- 为自定义/AI widget 另搞一套不兼容的注册 API（必须 `register` + `WidgetManifest`）

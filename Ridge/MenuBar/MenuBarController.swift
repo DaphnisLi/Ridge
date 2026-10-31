@@ -6,6 +6,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     private var statusItem: NSStatusItem?
     private weak var island: IslandController?
     private var settingsWindowController: NSWindowController?
+    private var openSettingsObserver: NSObjectProtocol?
 
     func start(island: IslandController) {
         self.island = island
@@ -19,7 +20,29 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         }
         item.menu = buildMenu()
         statusItem = item
+
+        openSettingsObserver = NotificationCenter.default.addObserver(
+            forName: .ridgeOpenSettings,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.openSettings()
+            }
+        }
+
         AppLog.info("Overlay", "菜单栏已就绪")
+    }
+
+    func stop() {
+        if let openSettingsObserver {
+            NotificationCenter.default.removeObserver(openSettingsObserver)
+            self.openSettingsObserver = nil
+        }
+        if let statusItem {
+            NSStatusBar.system.removeStatusItem(statusItem)
+            self.statusItem = nil
+        }
     }
 
     private func buildMenu() -> NSMenu {

@@ -9,7 +9,7 @@ final class IslandController: NSObject {
     private let settings = IslandSettings.shared
     private let window = IslandWindow.make()
     private let hitTestView = IslandHitTestView()
-    private var hostingView: NSHostingView<IslandContentView>?
+    private var hostingView: IslandHostingView<IslandContentView>?
     private var geometry: NotchGeometry?
     private var targetScreen: NSScreen?
 
@@ -22,8 +22,17 @@ final class IslandController: NSObject {
     private var hoverTimer: Timer?
     private var isPointerOverIsland = false
     private var collapseWorkItem: DispatchWorkItem?
+    /// 岛内按下拖拽中：保持接收事件，避免穿透把翻页掐断。
+    private var isMouseDownInIsland = false
+    private var pagePanRecognizer: NSPanGestureRecognizer?
+    /// 触控板横滑：nonactivating Panel 上的 scrollWheel 常被系统送给下层 App，用监视器兜底。
+    private var scrollLocalMonitor: Any?
+    private var scrollGlobalMonitor: Any?
+    private var scrollAccumX: CGFloat = 0
+    private var lastPageSwipeAt: Date = .distantPast
 
     func start() {
+        WidgetRuntime.shared.start()
         installContent()
         applyScreenRecordingVisibility()
 
@@ -60,20 +69,17 @@ final class IslandController: NSObject {
             }
             .store(in: &settingsObservers)
 
-        settings.$expandedWidthScale
-            .combineLatest(settings.$expandedHeightScale)
-            .removeDuplicates { $0.0 == $1.0 && $0.1 == $1.1 }
+        settings.$expandedWidth
+            .removeDuplicates()
             .dropFirst()
-            .sink { [weak self] width, height in
+            .sink { [weak self] width in
                 guard let self else { return }
-                // 收起时只静默改窗体占位，避免常驻黑条跟着动画抖动。
-                let animate = self.viewModel.isExpanded
-                AppLog.info("Settings", "展开尺寸倍率变更", [
+                // 窗体占位固定最大宽，这里主要刷新可点区与日志。
+                AppLog.info("Settings", "展开宽度变更", [
                     "width": width,
-                    "height": height,
-                    "animate": animate
+                    "expanded": self.viewModel.isExpanded
                 ])
-                self.applyWindowFrame(animated: animate)
+                self.applyWindowFrame(animated: false)
             }
             .store(in: &settingsObservers)
 
@@ -84,11 +90,13 @@ final class IslandController: NSObject {
 
     func stop() {
         stopHoverPolling()
+        stopScrollPagingMonitors()
         collapseWorkItem?.cancel()
         fullscreenMonitor.stop()
         displayMonitor.stop()
         appearanceObserver?.cancel()
         settingsObservers.removeAll()
+        WidgetRuntime.shared.stop()
         window.orderOut(nil)
     }
 
@@ -96,12 +104,20 @@ final class IslandController: NSObject {
         guard !viewModel.isExpanded else { return }
         AppLog.info("Island", "展开灵动岛", ["reason": reason, "expanded": true])
         viewModel.expand()
+        // 成为 key（不抢前台 App）后，触控板滚轮更容易落到本窗。
+        window.makeKey()
+        startScrollPagingMonitors()
     }
 
     func collapse(reason: String) {
         guard viewModel.isExpanded else { return }
         AppLog.info("Island", "收起灵动岛", ["reason": reason, "expanded": false])
         viewModel.collapse()
+        stopScrollPagingMonitors()
+        scrollAccumX = 0
+        if window.isKeyWindow {
+            window.resignKey()
+        }
     }
 
     // MARK: - Hover (screen-space)
@@ -141,8 +157,9 @@ final class IslandController: NSObject {
         )
 
         // 窗体始终按展开尺寸占位；收起时刘海以外必须穿透。
-        // AppKit 里 contentView.hitTest 返回 nil 不能可靠把点击交给下层，只能用 ignoresMouseEvents。
-        setClickThrough(!over, reason: over ? "pointerOver" : "pointerAway")
+        // 拖拽翻页过程中不穿透，否则 mouseDragged / 横滑会被掐断。
+        let shouldIgnore = !over && !isMouseDownInIsland
+        setClickThrough(shouldIgnore, reason: over ? "pointerOver" : (isMouseDownInIsland ? "dragHold" : "pointerAway"))
 
         if over == isPointerOverIsland { return }
         isPointerOverIsland = over
@@ -151,7 +168,7 @@ final class IslandController: NSObject {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             expand(reason: "hover")
-        } else {
+        } else if !isMouseDownInIsland {
             scheduleCollapse()
         }
     }
@@ -178,12 +195,9 @@ final class IslandController: NSObject {
             return true
         }
         if expanded {
-            let widthScale = CGFloat(IslandSettings.shared.expandedWidthScale)
-            let heightScale = CGFloat(IslandSettings.shared.expandedHeightScale)
-            let body = geometry.expandedFrameOnScreen(
-                widthScale: widthScale,
-                heightScale: heightScale
-            ).insetBy(dx: -2, dy: -2)
+            let width = CGFloat(IslandSettings.shared.expandedWidth)
+            let body = geometry.expandedFrameOnScreen(width: width)
+                .insetBy(dx: -2, dy: -2)
             if body.contains(mouse) {
                 return true
             }
@@ -218,16 +232,168 @@ final class IslandController: NSObject {
     // MARK: - Layout
 
     private func installContent() {
-        let root = IslandContentView(viewModel: viewModel, settings: settings)
-        let hosting = NSHostingView(rootView: root)
+        let root = IslandContentView(
+            viewModel: viewModel,
+            settings: settings,
+            runtime: WidgetRuntime.shared
+        )
+        let hosting = IslandHostingView(rootView: root)
         hosting.translatesAutoresizingMaskIntoConstraints = true
+        hosting.onHorizontalPageSwipe = { [weak self] offset in
+            self?.commitPageSwipe(offset: offset, source: "hostingScroll")
+        }
         hostingView = hosting
 
         hitTestView.wantsLayer = true
         hitTestView.layer?.backgroundColor = NSColor.clear.cgColor
         hitTestView.addSubview(hosting)
 
+        // SwiftUI DragGesture 在 nonactivating Panel 上不可靠；用 AppKit 平移识别拖拽翻页。
+        let pan = NSPanGestureRecognizer(target: self, action: #selector(handlePagePan(_:)))
+        hitTestView.addGestureRecognizer(pan)
+        pagePanRecognizer = pan
+
         window.contentView = hitTestView
+    }
+
+    // MARK: - 分页手势（触控板 / 拖拽）
+
+    private func startScrollPagingMonitors() {
+        stopScrollPagingMonitors()
+        scrollAccumX = 0
+
+        scrollLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            guard let self else { return event }
+            if self.handleScrollPaging(event) {
+                // 吃掉横滑，避免再派给下层或重复进 hosting。
+                return nil
+            }
+            return event
+        }
+
+        // 前台是别的 App 时，滚轮常不进本进程；全局监视仍能看到（无需改事件）。
+        scrollGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+            self?.handleScrollPaging(event)
+        }
+        AppLog.debug("Overlay", "已启动触控板横滑监视", ["expanded": true])
+    }
+
+    private func stopScrollPagingMonitors() {
+        if let scrollLocalMonitor {
+            NSEvent.removeMonitor(scrollLocalMonitor)
+            self.scrollLocalMonitor = nil
+        }
+        if let scrollGlobalMonitor {
+            NSEvent.removeMonitor(scrollGlobalMonitor)
+            self.scrollGlobalMonitor = nil
+        }
+    }
+
+    /// 处理触控板 / 鼠标滚轮横滑。返回 `true` 表示已作为翻页消费。
+    @discardableResult
+    private func handleScrollPaging(_ event: NSEvent) -> Bool {
+        guard viewModel.isExpanded else { return false }
+        guard let geometry else { return false }
+        guard Self.pointerIsOverIsland(
+            mouse: NSEvent.mouseLocation,
+            geometry: geometry,
+            expanded: true
+        ) else {
+            scrollAccumX = 0
+            return false
+        }
+
+        // 忽略惯性阶段，避免一次轻扫翻多页。
+        if event.momentumPhase != [] && event.momentumPhase != .began {
+            scrollAccumX = 0
+            return false
+        }
+
+        let dx: CGFloat
+        let dy: CGFloat
+        if event.hasPreciseScrollingDeltas {
+            dx = event.scrollingDeltaX
+            dy = event.scrollingDeltaY
+        } else {
+            dx = event.deltaX
+            dy = event.deltaY
+        }
+
+        guard abs(dx) > abs(dy), abs(dx) > 0.05 else {
+            if event.phase == .ended || event.phase == .cancelled {
+                scrollAccumX = 0
+            }
+            return false
+        }
+
+        scrollAccumX += dx
+        AppLog.debug("Overlay", "触控板横滑累加", [
+            "dx": dx,
+            "accum": scrollAccumX,
+            "phase": event.phase.rawValue
+        ])
+
+        if scrollAccumX <= -10 {
+            commitPageSwipe(offset: 1, source: "trackpad")
+            scrollAccumX = 0
+            return true
+        }
+        if scrollAccumX >= 10 {
+            commitPageSwipe(offset: -1, source: "trackpad")
+            scrollAccumX = 0
+            return true
+        }
+
+        if event.phase == .ended || event.phase == .cancelled {
+            scrollAccumX = 0
+        }
+        return true
+    }
+
+    private func commitPageSwipe(offset: Int, source: String) {
+        guard viewModel.isExpanded else { return }
+        // 防抖：local + hosting / global 可能短时间重复触发。
+        let now = Date()
+        guard now.timeIntervalSince(lastPageSwipeAt) > 0.28 else {
+            AppLog.debug("Overlay", "翻页防抖忽略", ["source": source, "offset": offset])
+            return
+        }
+        lastPageSwipeAt = now
+        let pages = WidgetRuntime.shared.pageIDs.count
+        AppLog.info("Overlay", "翻页手势", [
+            "source": source,
+            "offset": offset,
+            "pages": pages
+        ])
+        guard pages >= 2 else {
+            AppLog.warn("Overlay", "可切换页不足，无法翻页", ["pages": pages])
+            return
+        }
+        WidgetRuntime.shared.selectPage(offset: offset)
+    }
+
+    @objc private func handlePagePan(_ gr: NSPanGestureRecognizer) {
+        switch gr.state {
+        case .began:
+            isMouseDownInIsland = true
+            setClickThrough(false, reason: "panBegan")
+        case .ended, .cancelled, .failed:
+            defer {
+                isMouseDownInIsland = false
+                gr.setTranslation(.zero, in: hitTestView)
+            }
+            guard viewModel.isExpanded else { return }
+            let dx = gr.translation(in: hitTestView).x
+            if dx <= -28 {
+                AppLog.debug("Overlay", "鼠标拖拽翻页", ["offset": 1, "dx": dx])
+                commitPageSwipe(offset: 1, source: "pan")
+            } else if dx >= 28 {
+                AppLog.debug("Overlay", "鼠标拖拽翻页", ["offset": -1, "dx": dx])
+                commitPageSwipe(offset: -1, source: "pan")
+            }
+        default:
+            break
+        }
     }
 
     private func relayout(reason: String) {
@@ -245,18 +411,29 @@ final class IslandController: NSObject {
         viewModel.notchHeight = preferred.1.notchHeight
         viewModel.notchWidth = preferred.1.notchWidth
         viewModel.isVisibleOnDisplay = true
-        let widthScale = CGFloat(settings.expandedWidthScale)
-        let heightScale = CGFloat(settings.expandedHeightScale)
-        let expanded = preferred.1.expandedSize(widthScale: widthScale, heightScale: heightScale)
+        let requestedW = CGFloat(settings.expandedWidth)
+        let expanded = preferred.1.expandedSize(width: requestedW)
+        viewModel.maxExpandedWidth = preferred.1.maxExpandedWidth
         AppLog.info("Notch", "对齐刘海", [
             "reason": reason,
             "display": Int(preferred.1.screenID),
-            "width": preferred.1.notchWidth,
-            "height": preferred.1.notchHeight,
-            "expandedW": expanded.width,
-            "expandedH": expanded.height
+            "notchW": preferred.1.notchWidth,
+            "notchH": preferred.1.notchHeight,
+            "panelW": expanded.width,
+            "panelH": expanded.height,
+            "windowW": preferred.1.windowSize.width,
+            "requestedW": requestedW,
+            "clamped": abs(requestedW - expanded.width) > 0.5
         ])
-        // 窗口始终按展开尺寸占位，避免悬停时改窗体触发抖动。
+        if abs(requestedW - expanded.width) > 0.5 {
+            AppLog.warn("Island", "展开宽度已按屏幕/刘海钳制", [
+                "requested": requestedW,
+                "maxW": preferred.1.maxExpandedWidth,
+                "minW": preferred.1.notchWidth,
+                "usedW": expanded.width
+            ])
+        }
+        // 窗口固定最大宽占位；面板在窗内居中变宽，避免裁圆角。
         applyWindowFrame(animated: false)
         updateVisibility()
     }
@@ -272,28 +449,28 @@ final class IslandController: NSObject {
 
     private func applyWindowFrame(animated: Bool) {
         guard let geometry else { return }
-        let frame = geometry.expandedFrameOnScreen(
-            widthScale: CGFloat(settings.expandedWidthScale),
-            heightScale: CGFloat(settings.expandedHeightScale)
-        )
-
-        let apply = { [weak self] in
-            guard let self else { return }
-            self.window.setFrame(frame, display: true)
-            self.hostingView?.frame = self.hitTestView.bounds
-            self.updateInteractiveFrame()
+        _ = animated // 窗体尺寸不跟宽度做 AppKit 动画，避免与 SwiftUI 面板抢裁切。
+        viewModel.maxExpandedWidth = geometry.maxExpandedWidth
+        let requestedW = CGFloat(settings.expandedWidth)
+        let panel = geometry.expandedSize(width: requestedW)
+        if abs(requestedW - panel.width) > 0.5 {
+            AppLog.warn("Island", "展开宽度已按屏幕/刘海钳制", [
+                "requested": requestedW,
+                "usedW": panel.width
+            ])
         }
-
-        if animated {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = settings.springDuration
-                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                context.allowsImplicitAnimation = true
-                apply()
-            }
-        } else {
-            apply()
-        }
+        // 窗口始终 = 最大展开宽 × 固定高；只有面板随设置宽度变。
+        let frame = geometry.windowFrameOnScreen()
+        window.setFrame(frame, display: true)
+        hostingView?.frame = hitTestView.bounds
+        updateInteractiveFrame()
+        AppLog.debug("Island", "窗口占位已更新", [
+            "windowW": frame.width,
+            "windowH": frame.height,
+            "panelW": panel.width,
+            "panelH": panel.height,
+            "requestedW": requestedW
+        ])
 
         if viewModel.isVisibleOnDisplay && !viewModel.isHiddenForFullscreen {
             window.orderFrontRegardless()
@@ -303,18 +480,19 @@ final class IslandController: NSObject {
     private func updateInteractiveFrame() {
         guard let geometry else { return }
         let windowFrame = window.frame
-        let interactive: CGRect
+        let panel: CGSize
         if viewModel.isExpanded {
-            interactive = CGRect(origin: .zero, size: windowFrame.size)
+            panel = geometry.expandedSize(width: CGFloat(settings.expandedWidth))
         } else {
-            let compact = geometry.compactSize
-            interactive = CGRect(
-                x: (windowFrame.width - compact.width) / 2,
-                y: windowFrame.height - compact.height,
-                width: compact.width,
-                height: compact.height
-            )
+            panel = geometry.compactSize
         }
+        // 面板在窗内水平居中、贴顶（AppKit 原点左下）。
+        let interactive = CGRect(
+            x: (windowFrame.width - panel.width) / 2,
+            y: windowFrame.height - panel.height,
+            width: panel.width,
+            height: panel.height
+        )
         hitTestView.interactiveFrame = interactive
         window.interactiveFrameInWindow = interactive
         AppLog.debug("Overlay", "可点区域已更新", [
