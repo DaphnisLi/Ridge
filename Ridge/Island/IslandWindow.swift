@@ -1,6 +1,7 @@
 import AppKit
 
-/// 无边框浮层窗：不进 Dock / ⌘Tab（由 LSUIElement + accessory 保证），点击穿透由 contentView hitTest 控制。
+/// 无边框浮层窗：不进 Dock / ⌘Tab（由 LSUIElement + accessory 保证）。
+/// 窗体按展开尺寸占位；真正的点击穿透靠 `ignoresMouseEvents`（由控制器按指针位置切换）。
 final class IslandWindow: NSPanel {
     var interactiveFrameInWindow: CGRect = .zero
 
@@ -30,13 +31,14 @@ final class IslandWindow: NSPanel {
         window.isExcludedFromWindowsMenu = true
         window.animationBehavior = .none
         window.sharingType = .none
-        window.ignoresMouseEvents = false
+        // 默认穿透；指针进入刘海/展开面板后再关闭穿透，避免展开占位挡下方点击。
+        window.ignoresMouseEvents = true
         window.acceptsMouseMovedEvents = true
         return window
     }
 }
 
-/// 仅在 `interactiveFrame` 内命中；其余返回 nil，事件落到下方 App。
+/// 辅助限制：在未穿透时，仅 `interactiveFrame` 内命中（双保险）。
 /// 悬停展开不依赖 trackingArea（避免改尺寸时抖动）。
 final class IslandHitTestView: NSView {
     var interactiveFrame: CGRect = .zero

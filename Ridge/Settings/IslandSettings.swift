@@ -28,6 +28,18 @@ enum IslandDisplayStyle: String, CaseIterable, Identifiable {
 final class IslandSettings: ObservableObject {
     static let shared = IslandSettings()
 
+    enum Defaults {
+        static let animationSpeed = 1.0
+        static let hideInFullscreen = false
+        static let hapticIntensity = IslandHapticIntensity.medium
+        static let bottomCornerRadius = 18.0
+        /// 相对刘海尺寸的展开倍率。
+        static let expandedWidthScale = 2.0
+        static let expandedHeightScale = 3.0
+        static let displayStyle = IslandDisplayStyle.notch
+        static let showInScreenRecordings = false
+    }
+
     private enum Key {
         static let animationSpeed = "island.animationSpeed"
         static let hideInFullscreen = "island.hideInFullscreen"
@@ -36,6 +48,8 @@ final class IslandSettings: ObservableObject {
         static let displayStyle = "island.displayStyle"
         static let showInScreenRecordings = "island.showInScreenRecordings"
         static let bottomCornerRadius = "island.bottomCornerRadius"
+        static let expandedWidthScale = "island.expandedWidthScale"
+        static let expandedHeightScale = "island.expandedHeightScale"
         /// 一次性：全屏禁用改为默认关。
         static let hideFullscreenDefaultOff = "island.hideFullscreenDefaultOff.v1"
     }
@@ -60,6 +74,16 @@ final class IslandSettings: ObservableObject {
         didSet { UserDefaults.standard.set(bottomCornerRadius, forKey: Key.bottomCornerRadius) }
     }
 
+    /// 展开宽度 = 刘海宽 × 此倍率。
+    @Published var expandedWidthScale: Double {
+        didSet { UserDefaults.standard.set(expandedWidthScale, forKey: Key.expandedWidthScale) }
+    }
+
+    /// 展开高度 = 刘海高 × 此倍率。
+    @Published var expandedHeightScale: Double {
+        didSet { UserDefaults.standard.set(expandedHeightScale, forKey: Key.expandedHeightScale) }
+    }
+
     /// 展示形态：刘海 / 菜单栏下方胶囊。
     @Published var displayStyle: IslandDisplayStyle {
         didSet { UserDefaults.standard.set(displayStyle.rawValue, forKey: Key.displayStyle) }
@@ -76,43 +100,62 @@ final class IslandSettings: ObservableObject {
 
     var springDamping: Double { 0.8 }
 
+    func restoreDefaults() {
+        animationSpeed = Defaults.animationSpeed
+        hideInFullscreen = Defaults.hideInFullscreen
+        hapticIntensity = Defaults.hapticIntensity
+        bottomCornerRadius = Defaults.bottomCornerRadius
+        expandedWidthScale = Defaults.expandedWidthScale
+        expandedHeightScale = Defaults.expandedHeightScale
+        displayStyle = Defaults.displayStyle
+        showInScreenRecordings = Defaults.showInScreenRecordings
+        AppLog.info("Settings", "已恢复默认设置")
+    }
+
     private init() {
         let defaults = UserDefaults.standard
         if defaults.object(forKey: Key.animationSpeed) == nil {
-            defaults.set(1.0, forKey: Key.animationSpeed)
+            defaults.set(Defaults.animationSpeed, forKey: Key.animationSpeed)
         }
         if defaults.object(forKey: Key.hideFullscreenDefaultOff) == nil {
-            defaults.set(false, forKey: Key.hideInFullscreen)
+            defaults.set(Defaults.hideInFullscreen, forKey: Key.hideInFullscreen)
             defaults.set(true, forKey: Key.hideFullscreenDefaultOff)
         } else if defaults.object(forKey: Key.hideInFullscreen) == nil {
-            defaults.set(false, forKey: Key.hideInFullscreen)
+            defaults.set(Defaults.hideInFullscreen, forKey: Key.hideInFullscreen)
         }
         if defaults.object(forKey: Key.hapticIntensity) == nil {
-            // 迁移旧开关；默认「强」
             if defaults.object(forKey: Key.hapticFeedbackLegacy) != nil,
                defaults.bool(forKey: Key.hapticFeedbackLegacy) == false {
                 defaults.set(IslandHapticIntensity.off.rawValue, forKey: Key.hapticIntensity)
             } else {
-                defaults.set(IslandHapticIntensity.strong.rawValue, forKey: Key.hapticIntensity)
+                defaults.set(Defaults.hapticIntensity.rawValue, forKey: Key.hapticIntensity)
             }
         }
         if defaults.object(forKey: Key.displayStyle) == nil {
-            defaults.set(IslandDisplayStyle.notch.rawValue, forKey: Key.displayStyle)
+            defaults.set(Defaults.displayStyle.rawValue, forKey: Key.displayStyle)
         }
         if defaults.object(forKey: Key.showInScreenRecordings) == nil {
-            defaults.set(false, forKey: Key.showInScreenRecordings)
+            defaults.set(Defaults.showInScreenRecordings, forKey: Key.showInScreenRecordings)
         }
         if defaults.object(forKey: Key.bottomCornerRadius) == nil {
-            defaults.set(18.0, forKey: Key.bottomCornerRadius)
+            defaults.set(Defaults.bottomCornerRadius, forKey: Key.bottomCornerRadius)
+        }
+        if defaults.object(forKey: Key.expandedWidthScale) == nil {
+            defaults.set(Defaults.expandedWidthScale, forKey: Key.expandedWidthScale)
+        }
+        if defaults.object(forKey: Key.expandedHeightScale) == nil {
+            defaults.set(Defaults.expandedHeightScale, forKey: Key.expandedHeightScale)
         }
 
         animationSpeed = defaults.double(forKey: Key.animationSpeed)
         hideInFullscreen = defaults.bool(forKey: Key.hideInFullscreen)
         let hapticRaw = defaults.integer(forKey: Key.hapticIntensity)
-        hapticIntensity = IslandHapticIntensity(rawValue: hapticRaw) ?? .strong
+        hapticIntensity = IslandHapticIntensity(rawValue: hapticRaw) ?? Defaults.hapticIntensity
         bottomCornerRadius = defaults.double(forKey: Key.bottomCornerRadius)
-        let styleRaw = defaults.string(forKey: Key.displayStyle) ?? IslandDisplayStyle.notch.rawValue
-        displayStyle = IslandDisplayStyle(rawValue: styleRaw) ?? .notch
+        expandedWidthScale = defaults.double(forKey: Key.expandedWidthScale)
+        expandedHeightScale = defaults.double(forKey: Key.expandedHeightScale)
+        let styleRaw = defaults.string(forKey: Key.displayStyle) ?? Defaults.displayStyle.rawValue
+        displayStyle = IslandDisplayStyle(rawValue: styleRaw) ?? Defaults.displayStyle
         showInScreenRecordings = defaults.bool(forKey: Key.showInScreenRecordings)
 
         AppLog.debug("Settings", "已加载岛设置", [
@@ -120,6 +163,8 @@ final class IslandSettings: ObservableObject {
             "hideFullscreen": hideInFullscreen,
             "haptic": hapticIntensity.rawValue,
             "bottomRadius": bottomCornerRadius,
+            "widthScale": expandedWidthScale,
+            "heightScale": expandedHeightScale,
             "style": displayStyle.rawValue
         ])
     }

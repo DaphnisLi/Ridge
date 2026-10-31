@@ -16,9 +16,9 @@ struct NotchGeometry: Equatable {
 
     /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
     static let compactScale: CGFloat = 0.96
-    /// 展开：宽 = 刘海宽 × 2，高 = 刘海高 × 3。
-    static let expandedWidthMultiplier: CGFloat = 2
-    static let expandedHeightMultiplier: CGFloat = 3
+    /// 展开倍率默认值（与 IslandSettings.Defaults 对齐）。
+    static let defaultExpandedWidthMultiplier: CGFloat = 2
+    static let defaultExpandedHeightMultiplier: CGFloat = 3
 
     var compactSize: CGSize {
         CGSize(
@@ -27,24 +27,16 @@ struct NotchGeometry: Equatable {
         )
     }
 
-    var expandedSize: CGSize {
+    func expandedSize(widthScale: CGFloat, heightScale: CGFloat) -> CGSize {
         CGSize(
-            width: notchWidth * Self.expandedWidthMultiplier,
-            height: notchHeight * Self.expandedHeightMultiplier
+            width: notchWidth * widthScale,
+            height: notchHeight * heightScale
         )
     }
 
-    var expandedCornerRadius: CGFloat {
-        min(24, expandedSize.height * 0.22)
-    }
-
-    var compactCornerRadius: CGFloat {
-        compactSize.height * 0.45
-    }
-
     /// 展开态面板在屏幕坐标中的矩形（顶边对齐屏幕顶，水平以刘海居中）。
-    var expandedFrameOnScreen: CGRect {
-        let size = expandedSize
+    func expandedFrameOnScreen(widthScale: CGFloat, heightScale: CGFloat) -> CGRect {
+        let size = expandedSize(widthScale: widthScale, heightScale: heightScale)
         return CGRect(
             x: notchCenterX - size.width / 2,
             y: screenFrame.maxY - size.height,

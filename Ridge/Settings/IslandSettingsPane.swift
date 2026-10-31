@@ -7,17 +7,54 @@ struct IslandSettingsPane: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 SettingsCard {
-                    VStack(spacing: 16) {
-                        IslandPreviewShape(bottomRadius: settings.bottomCornerRadius)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
+                    VStack(spacing: 14) {
+                        // 收起态固定贴合刘海，不随宽高倍率变化。
+                        IslandCompactPreview()
+                        Text("收起 · 贴合刘海")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        IslandExpandedPreview(
+                            bottomRadius: settings.bottomCornerRadius,
+                            widthScale: settings.expandedWidthScale,
+                            heightScale: settings.expandedHeightScale
+                        )
+                        Text("展开后 · 随下方倍率变化")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
                 }
 
                 SettingsCard {
                     VStack(alignment: .leading, spacing: 16) {
                         Text("外观")
                             .font(.headline)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("展开后宽度")
+                                Spacer()
+                                Text(String(format: "%.1f×", settings.expandedWidthScale))
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $settings.expandedWidthScale, in: 1.2...4.0, step: 0.1)
+                        }
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("展开后高度")
+                                Spacer()
+                                Text(String(format: "%.1f×", settings.expandedHeightScale))
+                                    .foregroundStyle(.secondary)
+                                    .monospacedDigit()
+                            }
+                            Slider(value: $settings.expandedHeightScale, in: 1.5...6.0, step: 0.1)
+                        }
+
+                        Divider()
 
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -71,6 +108,13 @@ struct IslandSettingsPane: View {
                         Toggle("全屏时禁用灵动岛", isOn: $settings.hideInFullscreen)
                     }
                 }
+
+                SettingsCard {
+                    Button("恢复默认设置") {
+                        settings.restoreDefaults()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             .padding(28)
         }
@@ -87,6 +131,12 @@ struct IslandSettingsPane: View {
         }
         .onChange(of: settings.bottomCornerRadius) { _, value in
             AppLog.info("Settings", "下圆角已更新", ["radius": value])
+        }
+        .onChange(of: settings.expandedWidthScale) { _, value in
+            AppLog.info("Settings", "展开宽度倍率", ["scale": value])
+        }
+        .onChange(of: settings.expandedHeightScale) { _, value in
+            AppLog.info("Settings", "展开高度倍率", ["scale": value])
         }
     }
 }
@@ -109,17 +159,31 @@ struct SettingsCard<Content: View>: View {
     }
 }
 
-private struct IslandPreviewShape: View {
+/// 收起态预览：固定尺寸，不受展开倍率影响。
+private struct IslandCompactPreview: View {
+    var body: some View {
+        let shape = IslandPanelShape(bottomRadius: 10)
+        Color.clear
+            .frame(width: 168, height: 34)
+            .background(shape.fill(Color.black))
+            .clipShape(shape)
+            .frame(maxWidth: .infinity)
+    }
+}
+
+/// 展开态预览：随宽高倍率缩放。
+private struct IslandExpandedPreview: View {
     let bottomRadius: Double
+    let widthScale: Double
+    let heightScale: Double
 
     var body: some View {
-        let shape = UnevenRoundedRectangle(
-            topLeadingRadius: 0,
-            bottomLeadingRadius: bottomRadius,
-            bottomTrailingRadius: bottomRadius,
-            topTrailingRadius: 0,
-            style: .continuous
-        )
+        // 预览按倍率相对默认 2×/3× 缩放，上限避免撑破卡片。
+        let previewWidth = min(520, 180 * widthScale / 2.0)
+        let previewHeight = min(120, 52 * heightScale / 3.0)
+        let radius = min(bottomRadius, previewHeight / 2, previewWidth / 2)
+        let shape = IslandPanelShape(bottomRadius: radius)
+
         HStack(spacing: 10) {
             Circle()
                 .fill(Color.white.opacity(0.2))
@@ -138,10 +202,12 @@ private struct IslandPreviewShape: View {
                 .frame(width: 36, height: 8)
         }
         .padding(.horizontal, 18)
-        .frame(height: 52)
-        .frame(maxWidth: 420)
+        .frame(width: previewWidth, height: previewHeight)
         .background(shape.fill(Color.black))
         .clipShape(shape)
         .frame(maxWidth: .infinity)
+        .animation(.easeInOut(duration: 0.15), value: widthScale)
+        .animation(.easeInOut(duration: 0.15), value: heightScale)
+        .animation(.easeInOut(duration: 0.15), value: bottomRadius)
     }
 }

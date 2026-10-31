@@ -60,6 +60,23 @@ final class IslandController: NSObject {
             }
             .store(in: &settingsObservers)
 
+        settings.$expandedWidthScale
+            .combineLatest(settings.$expandedHeightScale)
+            .removeDuplicates { $0.0 == $1.0 && $0.1 == $1.1 }
+            .dropFirst()
+            .sink { [weak self] width, height in
+                guard let self else { return }
+                // 收起时只静默改窗体占位，避免常驻黑条跟着动画抖动。
+                let animate = self.viewModel.isExpanded
+                AppLog.info("Settings", "展开尺寸倍率变更", [
+                    "width": width,
+                    "height": height,
+                    "animate": animate
+                ])
+                self.applyWindowFrame(animated: animate)
+            }
+            .store(in: &settingsObservers)
+
         startHoverPolling()
         relayout(reason: "start")
         AppLog.info("Island", "控制器已启动")
@@ -106,8 +123,15 @@ final class IslandController: NSObject {
     }
 
     private func pollPointer() {
-        guard viewModel.isVisibleOnDisplay, !viewModel.isHiddenForFullscreen else { return }
-        guard let geometry else { return }
+        guard viewModel.isVisibleOnDisplay, !viewModel.isHiddenForFullscreen else {
+            // 隐藏时仍可能占着展开窗框，必须穿透，否则挡下方点击。
+            setClickThrough(true, reason: "hidden")
+            return
+        }
+        guard let geometry else {
+            setClickThrough(true, reason: "noGeometry")
+            return
+        }
 
         let mouse = NSEvent.mouseLocation
         let over = Self.pointerIsOverIsland(
@@ -115,6 +139,10 @@ final class IslandController: NSObject {
             geometry: geometry,
             expanded: viewModel.isExpanded
         )
+
+        // 窗体始终按展开尺寸占位；收起时刘海以外必须穿透。
+        // AppKit 里 contentView.hitTest 返回 nil 不能可靠把点击交给下层，只能用 ignoresMouseEvents。
+        setClickThrough(!over, reason: over ? "pointerOver" : "pointerAway")
 
         if over == isPointerOverIsland { return }
         isPointerOverIsland = over
@@ -126,6 +154,16 @@ final class IslandController: NSObject {
         } else {
             scheduleCollapse()
         }
+    }
+
+    /// `true` = 整窗点击穿透到下层 App；悬停进入可交互区后再关闭穿透。
+    private func setClickThrough(_ enabled: Bool, reason: String) {
+        guard window.ignoresMouseEvents != enabled else { return }
+        window.ignoresMouseEvents = enabled
+        AppLog.debug("Overlay", enabled ? "开启点击穿透" : "关闭点击穿透", [
+            "reason": reason,
+            "expanded": viewModel.isExpanded
+        ])
     }
 
     /// 刘海本体始终算「在岛上」；展开后展开面板区域也算。
@@ -140,7 +178,12 @@ final class IslandController: NSObject {
             return true
         }
         if expanded {
-            let body = geometry.expandedFrameOnScreen.insetBy(dx: -2, dy: -2)
+            let widthScale = CGFloat(IslandSettings.shared.expandedWidthScale)
+            let heightScale = CGFloat(IslandSettings.shared.expandedHeightScale)
+            let body = geometry.expandedFrameOnScreen(
+                widthScale: widthScale,
+                heightScale: heightScale
+            ).insetBy(dx: -2, dy: -2)
             if body.contains(mouse) {
                 return true
             }
@@ -202,13 +245,16 @@ final class IslandController: NSObject {
         viewModel.notchHeight = preferred.1.notchHeight
         viewModel.notchWidth = preferred.1.notchWidth
         viewModel.isVisibleOnDisplay = true
+        let widthScale = CGFloat(settings.expandedWidthScale)
+        let heightScale = CGFloat(settings.expandedHeightScale)
+        let expanded = preferred.1.expandedSize(widthScale: widthScale, heightScale: heightScale)
         AppLog.info("Notch", "对齐刘海", [
             "reason": reason,
             "display": Int(preferred.1.screenID),
             "width": preferred.1.notchWidth,
             "height": preferred.1.notchHeight,
-            "expandedW": preferred.1.expandedSize.width,
-            "expandedH": preferred.1.expandedSize.height
+            "expandedW": expanded.width,
+            "expandedH": expanded.height
         ])
         // 窗口始终按展开尺寸占位，避免悬停时改窗体触发抖动。
         applyWindowFrame(animated: false)
@@ -226,7 +272,10 @@ final class IslandController: NSObject {
 
     private func applyWindowFrame(animated: Bool) {
         guard let geometry else { return }
-        let frame = geometry.expandedFrameOnScreen
+        let frame = geometry.expandedFrameOnScreen(
+            widthScale: CGFloat(settings.expandedWidthScale),
+            heightScale: CGFloat(settings.expandedHeightScale)
+        )
 
         let apply = { [weak self] in
             guard let self else { return }
@@ -268,6 +317,14 @@ final class IslandController: NSObject {
         }
         hitTestView.interactiveFrame = interactive
         window.interactiveFrameInWindow = interactive
+        AppLog.debug("Overlay", "可点区域已更新", [
+            "expanded": viewModel.isExpanded,
+            "x": interactive.origin.x,
+            "y": interactive.origin.y,
+            "w": interactive.width,
+            "h": interactive.height,
+            "clickThrough": window.ignoresMouseEvents
+        ])
     }
 
     private func applyFullscreen(_ fullscreen: Bool) {
@@ -276,6 +333,7 @@ final class IslandController: NSObject {
         if shouldHide {
             collapseWorkItem?.cancel()
             isPointerOverIsland = false
+            setClickThrough(true, reason: "fullscreenHide")
             if viewModel.isExpanded {
                 viewModel.collapse()
             }
@@ -299,11 +357,17 @@ final class IslandController: NSObject {
         if show {
             window.alphaValue = 1
             window.orderFrontRegardless()
+            // 下一帧 poll 会按指针位置决定是否穿透；默认先穿透，避免启动即挡点击。
+            if !isPointerOverIsland {
+                setClickThrough(true, reason: "shownIdle")
+            }
         } else if viewModel.isVisibleOnDisplay, viewModel.isHiddenForFullscreen {
             // 真正移出屏幕层级，避免仍挡事件；常驻黑块本身也看不见，靠「悬停无法展开」验证。
+            setClickThrough(true, reason: "orderOutFullscreen")
             window.alphaValue = 0
             window.orderOut(nil)
         } else {
+            setClickThrough(true, reason: "orderOut")
             window.orderOut(nil)
         }
     }

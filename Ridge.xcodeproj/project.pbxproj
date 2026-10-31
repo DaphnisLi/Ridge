@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06D9881C8149C1F7395BAB29 /* IslandPanelShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */; };
 		3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7694C35719C53E4F238252E3 /* IslandSettings.swift */; };
 		4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
@@ -30,6 +31,7 @@
 		1073E52F82BA9EE649BA7890 /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
 		192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
+		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
 		482677D8E4898DBF37E8B22E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
@@ -56,6 +58,7 @@
 				5894114050B192E21DBC168B /* IslandContentView.swift */,
 				1073E52F82BA9EE649BA7890 /* IslandController.swift */,
 				41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */,
+				3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */,
 				A380AA9950E13AF158422F15 /* IslandState.swift */,
 				D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */,
 				9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */,
@@ -206,6 +209,7 @@
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
 				7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */,
+				06D9881C8149C1F7395BAB29 /* IslandPanelShape.swift in Sources */,
 				3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */,
 				D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */,
 				9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */,
