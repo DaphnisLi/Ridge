@@ -33,7 +33,7 @@ final class ControlDeckSettings: ObservableObject {
             .init(
                 id: "volume",
                 title: L10n.ControlDeck.moduleVolume,
-                summary: L10n.ControlDeck.moduleVolumeSummary,
+                summary: L10n.ControlDeck.moduleVolumeSummaryLive,
                 symbol: "speaker.wave.2.fill"
             ),
             .init(

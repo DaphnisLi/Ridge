@@ -15,11 +15,28 @@ struct IslandContentView: View {
 
     private var expandedSize: CGSize {
         let rawWidth = CGFloat(settings.expandedWidth)
-        // 与窗口几何同一钳制：不小于刘海、不超出屏宽。
-        // 普通页 = 刘海×3；组合页（多组件）= 两倍高。
-        let width = min(max(rawWidth, viewModel.notchWidth), viewModel.maxExpandedWidth)
+        let layout: NotchGeometry.ExpandedLayout = {
+            if runtime.isControlDeckPage { return .controlDeck }
+            if runtime.isComboPage { return .combo }
+            return .standard
+        }()
+        // 与 NotchGeometry.expandedSize 同一套规则（控制台会抬到约 660×300+）。
+        let preferred = runtime.isControlDeckPage
+            ? max(rawWidth, NotchGeometry.controlDeckPreferredWidth)
+            : rawWidth
+        let width = min(max(preferred, viewModel.notchWidth), viewModel.maxExpandedWidth)
         let baseH = viewModel.notchHeight * NotchGeometry.fixedExpandedHeightMultiplier
-        let height = runtime.isComboPage ? baseH * 2 : baseH
+        let height: CGFloat = {
+            switch layout {
+            case .standard: return baseH
+            case .combo: return baseH * 2
+            case .controlDeck:
+                return max(
+                    viewModel.notchHeight * NotchGeometry.controlDeckHeightMultiplier,
+                    NotchGeometry.controlDeckMinHeight
+                )
+            }
+        }()
         return CGSize(
             width: NotchGeometry.pixelAlign(width),
             height: NotchGeometry.pixelAlign(height)
@@ -31,8 +48,12 @@ struct IslandContentView: View {
     }
 
     private var appliedBottomRadius: CGFloat {
-        min(
-            CGFloat(settings.bottomCornerRadius),
+        // 控制台混音台稿面底部约 26pt 圆角。
+        let preferred = runtime.isControlDeckPage
+            ? max(CGFloat(settings.bottomCornerRadius), 26)
+            : CGFloat(settings.bottomCornerRadius)
+        return min(
+            preferred,
             bodySize.height / 2,
             bodySize.width / 2
         )
@@ -45,11 +66,14 @@ struct IslandContentView: View {
         return ZStack(alignment: .top) {
             IslandBody(
                 isExpanded: viewModel.isExpanded,
+                notchHeight: viewModel.notchHeight,
                 runtime: runtime
             )
             .frame(width: bodySize.width, height: bodySize.height)
             .background(shape.fill(palette.fill))
             .clipShape(shape)
+            // 整块面板都要可命中，避免透明子区把点击漏给下层页面。
+            .contentShape(shape)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.islandPalette, palette)
@@ -59,6 +83,7 @@ struct IslandContentView: View {
         .animation(islandSpring, value: settings.expandedWidth)
         .animation(islandSpring, value: settings.theme)
         .animation(islandSpring, value: runtime.isComboPage)
+        .animation(islandSpring, value: runtime.isControlDeckPage)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
         .onChange(of: bodySize) { _, size in
@@ -80,6 +105,7 @@ struct IslandContentView: View {
 
 private struct IslandBody: View {
     let isExpanded: Bool
+    let notchHeight: CGFloat
     @ObservedObject var runtime: WidgetRuntime
     @Environment(\.islandPalette) private var palette
 
@@ -87,23 +113,7 @@ private struct IslandBody: View {
         Group {
             if isExpanded {
                 VStack(spacing: 0) {
-                    if !runtime.isShowingEmpty {
-                        if !runtime.activeTitle.isEmpty {
-                            HStack {
-                                Text(runtime.activeTitle)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(palette.title)
-                                    .lineLimit(1)
-                                Spacer(minLength: 0)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
-                        } else {
-                            Color.clear.frame(height: 10)
-                        }
-                    } else {
-                        Color.clear.frame(height: 10)
-                    }
+                    topChrome
 
                     WidgetHostView(runtime: runtime)
                         .padding(.horizontal, 12)
@@ -112,6 +122,33 @@ private struct IslandBody: View {
             } else {
                 Color.clear
             }
+        }
+    }
+
+    @ViewBuilder
+    private var topChrome: some View {
+        if runtime.isControlDeckPage {
+            // 控制台不显示标题行；顶部留出刘海盲区，避免按钮落在摄像头缺口上点不到。
+            Color.clear
+                .frame(height: max(8, notchHeight - 6))
+                .accessibilityHidden(true)
+        } else if !runtime.isShowingEmpty, !runtime.activeTitle.isEmpty {
+            HStack {
+                Text(runtime.activeTitle)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(palette.title)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+        } else if !runtime.isShowingEmpty {
+            // 会议等自带标题的内容页：只留刘海安全距，不再叠一层顶栏。
+            Color.clear
+                .frame(height: max(8, notchHeight - 6))
+                .accessibilityHidden(true)
+        } else {
+            Color.clear.frame(height: 10)
         }
     }
 }

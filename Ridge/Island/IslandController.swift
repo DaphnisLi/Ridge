@@ -97,8 +97,23 @@ final class IslandController: NSObject {
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] combo in
-                AppLog.info("Island", "控制台高度切换", ["tall": combo])
+                AppLog.info("Island", "高页布局切换", ["tall": combo])
                 self?.updateInteractiveFrame()
+            }
+            .store(in: &settingsObservers)
+
+        WidgetRuntime.shared.$isControlDeckPage
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] deck in
+                AppLog.info("Island", "控制台混音台尺寸切换", [
+                    "controlDeck": deck,
+                    "preferredW": NotchGeometry.controlDeckPreferredWidth,
+                    "minH": NotchGeometry.controlDeckMinHeight
+                ])
+                // 控制台页禁用横向拖拽翻页手势，避免抢走按钮点击。
+                self?.pagePanRecognizer?.isEnabled = !deck
+                self?.applyWindowFrame(animated: false)
             }
             .store(in: &settingsObservers)
 
@@ -271,21 +286,9 @@ final class IslandController: NSObject {
             "prevKey": Self.describeKeyWindow()
         ])
         viewModel.expand()
-        // 设置会话中不抢 key：否则设置刚打开/钉住预览时会被岛抢走焦点，表现为「窗还在却失焦」。
-        // 非设置场景仍 makeKey，方便触控板滚轮落到本窗（nonactivatingPanel 不抢其它 App 前台）。
-        if isSettingsSessionActive {
-            AppLog.info("Island", "展开跳过 makeKey，避免抢走设置焦点", [
-                "reason": reason,
-                "key": Self.describeKeyWindow()
-            ])
-        } else {
-            window.makeKey()
-            AppLog.debug("Island", "展开后 makeKey", [
-                "reason": reason,
-                "islandKey": window.isKeyWindow,
-                "key": Self.describeKeyWindow()
-            ])
-        }
+        // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
+        updateInteractiveFrame(expanded: true)
+        ensureIslandInteractionReady(reason: "expand:\(reason)")
         startScrollPagingMonitors()
     }
 
@@ -302,12 +305,14 @@ final class IslandController: NSObject {
             "key": Self.describeKeyWindow()
         ])
         viewModel.collapse()
+        updateInteractiveFrame(expanded: false)
         stopScrollPagingMonitors()
         scrollAccumX = 0
         if window.isKeyWindow {
             window.resignKey()
             AppLog.debug("Island", "收起后 resignKey", ["key": Self.describeKeyWindow()])
         }
+        demoteIslandInteractionIfNeeded(reason: "collapse:\(reason)")
     }
 
     private static func describeKeyWindow() -> String {
@@ -394,9 +399,62 @@ final class IslandController: NSObject {
     private func setClickThrough(_ enabled: Bool, reason: String) {
         guard window.ignoresMouseEvents != enabled else { return }
         window.ignoresMouseEvents = enabled
-        AppLog.debug("Overlay", enabled ? "开启点击穿透" : "关闭点击穿透", [
+        if !enabled, viewModel.isExpanded {
+            ensureIslandInteractionReady(reason: "clickThroughOff:\(reason)")
+        }
+        let level: (String, [String: Any]) -> Void = { message, fields in
+            if WidgetRuntime.shared.isControlDeckPage {
+                AppLog.info("Overlay", message, fields)
+            } else {
+                AppLog.debug("Overlay", message, fields)
+            }
+        }
+        level(enabled ? "开启点击穿透" : "关闭点击穿透", [
             "reason": reason,
-            "expanded": viewModel.isExpanded
+            "expanded": viewModel.isExpanded,
+            "controlDeck": WidgetRuntime.shared.isControlDeckPage,
+            "islandKey": window.isKeyWindow,
+            "appActive": NSApp.isActive
+        ])
+    }
+
+    /// 对齐「开设置就能点」的条件：临时升到 regular + activate + makeKey。
+    /// 纯 accessory 下 `NSApp.activate` 常常不生效（日志里 activated=true 但 appActive 仍 false）。
+    private func ensureIslandInteractionReady(reason: String) {
+        if isSettingsSessionActive {
+            AppLog.debug("Overlay", "设置会话中跳过岛激活", [
+                "reason": reason,
+                "appActive": NSApp.isActive,
+                "key": Self.describeKeyWindow()
+            ])
+            return
+        }
+
+        var promoted = false
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+            promoted = true
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        AppLog.info("Overlay", "岛交互就绪", [
+            "reason": reason,
+            "promoted": promoted,
+            "appActive": NSApp.isActive,
+            "islandKey": window.isKeyWindow,
+            "policy": NSApp.activationPolicy() == .regular ? "regular" : "accessory"
+        ])
+    }
+
+    /// 收起后若设置窗未开，降回 accessory，避免常驻 Dock。
+    private func demoteIslandInteractionIfNeeded(reason: String) {
+        if isSettingsSessionActive { return }
+        if MenuBarController.shared?.settingsWindow != nil { return }
+        guard NSApp.activationPolicy() == .regular else { return }
+        NSApp.setActivationPolicy(.accessory)
+        AppLog.info("Overlay", "岛收起后降回 accessory", [
+            "reason": reason,
+            "appActive": NSApp.isActive
         ])
     }
 
@@ -412,8 +470,14 @@ final class IslandController: NSObject {
             return true
         }
         if expanded {
+            let runtime = WidgetRuntime.shared
+            let layout: NotchGeometry.ExpandedLayout = {
+                if runtime.isControlDeckPage { return .controlDeck }
+                if runtime.isComboPage { return .combo }
+                return .standard
+            }()
             let width = CGFloat(IslandSettings.shared.expandedWidth)
-            let body = geometry.expandedFrameOnScreen(width: width)
+            let body = geometry.expandedFrameOnScreen(width: width, layout: layout)
                 .insetBy(dx: -2, dy: -2)
             if body.contains(mouse) {
                 return true
@@ -446,6 +510,12 @@ final class IslandController: NSObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
 
+    private static func expandedLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
+        if runtime.isControlDeckPage { return .controlDeck }
+        if runtime.isComboPage { return .combo }
+        return .standard
+    }
+
     // MARK: - Layout
 
     private func installContent() {
@@ -466,7 +536,10 @@ final class IslandController: NSObject {
         hitTestView.addSubview(hosting)
 
         // SwiftUI DragGesture 在 nonactivating Panel 上不可靠；用 AppKit 平移识别拖拽翻页。
-        let pan = NSPanGestureRecognizer(target: self, action: #selector(handlePagePan(_:)))
+        // 不可 delaysPrimaryMouseButtonEvents：否则会吞掉混音台按钮的 mouseDown。
+        let pan = HorizontalPagePanRecognizer(target: self, action: #selector(handlePagePan(_:)))
+        pan.delaysPrimaryMouseButtonEvents = false
+        pan.isEnabled = !WidgetRuntime.shared.isControlDeckPage
         hitTestView.addGestureRecognizer(pan)
         pagePanRecognizer = pan
 
@@ -592,14 +665,16 @@ final class IslandController: NSObject {
     @objc private func handlePagePan(_ gr: NSPanGestureRecognizer) {
         switch gr.state {
         case .began:
+            // 仅在确认为横向拖拽后才钉住不穿透；纯点击不会进 began（见 HorizontalPagePanRecognizer）。
             isMouseDownInIsland = true
             setClickThrough(false, reason: "panBegan")
+            AppLog.debug("Overlay", "横向拖拽翻页开始")
         case .ended, .cancelled, .failed:
             defer {
                 isMouseDownInIsland = false
                 gr.setTranslation(.zero, in: hitTestView)
             }
-            guard viewModel.isExpanded else { return }
+            guard viewModel.isExpanded, gr.state == .ended else { return }
             let dx = gr.translation(in: hitTestView).x
             if dx <= -28 {
                 AppLog.debug("Overlay", "鼠标拖拽翻页", ["offset": 1, "dx": dx])
@@ -656,11 +731,11 @@ final class IslandController: NSObject {
     }
 
     private func handleAppearanceChange(_ appearance: IslandAppearance) {
-        AppLog.debug("Island", appearance == .expanded ? "切换到展开态" : "切换到常驻态", [
+        AppLog.info("Island", appearance == .expanded ? "切换到展开态" : "切换到常驻态", [
             "expanded": appearance == .expanded
         ])
-        // 只更新可点区域；窗体尺寸保持展开上限。
-        updateInteractiveFrame()
+        // 以 sink 收到的 appearance 为准，避免与 viewModel 时序错位时热区停在刘海尺寸。
+        updateInteractiveFrame(expanded: appearance == .expanded)
         IslandHaptics.play(settings.hapticIntensity)
     }
 
@@ -669,15 +744,15 @@ final class IslandController: NSObject {
         _ = animated // 窗体尺寸不跟宽度做 AppKit 动画，避免与 SwiftUI 面板抢裁切。
         viewModel.maxExpandedWidth = geometry.maxExpandedWidth
         let requestedW = CGFloat(settings.expandedWidth)
-        let combo = WidgetRuntime.shared.isComboPage
-        let panel = geometry.expandedSize(width: requestedW, combo: combo)
-        if abs(requestedW - panel.width) > 0.5 {
+        let layout = Self.expandedLayout(for: WidgetRuntime.shared)
+        let panel = geometry.expandedSize(width: requestedW, layout: layout)
+        if abs(requestedW - panel.width) > 0.5, layout != .controlDeck {
             AppLog.warn("Island", "展开宽度已按屏幕/刘海钳制", [
                 "requested": requestedW,
                 "usedW": panel.width
             ])
         }
-        // 窗口始终 = 最大展开宽 × 组合页高度；面板高度随是否组合页变化。
+        // 窗口始终按控制台最大占位；面板随当前页布局变化。
         let frame = geometry.windowFrameOnScreen()
         window.setFrame(frame, display: true)
         hostingView?.frame = hitTestView.bounds
@@ -687,7 +762,7 @@ final class IslandController: NSObject {
             "windowH": frame.height,
             "panelW": panel.width,
             "panelH": panel.height,
-            "combo": combo,
+            "layout": "\(layout)",
             "requestedW": requestedW
         ])
 
@@ -696,14 +771,15 @@ final class IslandController: NSObject {
         }
     }
 
-    private func updateInteractiveFrame() {
+    private func updateInteractiveFrame(expanded: Bool? = nil) {
         guard let geometry else { return }
         let windowFrame = window.frame
+        let isExpanded = expanded ?? viewModel.isExpanded
         let panel: CGSize
-        if viewModel.isExpanded {
+        if isExpanded {
             panel = geometry.expandedSize(
                 width: CGFloat(settings.expandedWidth),
-                combo: WidgetRuntime.shared.isComboPage
+                layout: Self.expandedLayout(for: WidgetRuntime.shared)
             )
         } else {
             panel = geometry.compactSize
@@ -717,14 +793,22 @@ final class IslandController: NSObject {
         )
         hitTestView.interactiveFrame = interactive
         window.interactiveFrameInWindow = interactive
-        AppLog.debug("Overlay", "可点区域已更新", [
-            "expanded": viewModel.isExpanded,
-            "x": interactive.origin.x,
-            "y": interactive.origin.y,
-            "w": interactive.width,
-            "h": interactive.height,
-            "clickThrough": window.ignoresMouseEvents
-        ])
+        let fields: [String: Any] = [
+            "expanded": isExpanded,
+            "vmExpanded": viewModel.isExpanded,
+            "x": Int(interactive.origin.x),
+            "y": Int(interactive.origin.y),
+            "w": Int(interactive.width),
+            "h": Int(interactive.height),
+            "clickThrough": window.ignoresMouseEvents,
+            "controlDeck": WidgetRuntime.shared.isControlDeckPage,
+            "layout": "\(Self.expandedLayout(for: WidgetRuntime.shared))"
+        ]
+        if WidgetRuntime.shared.isControlDeckPage || isExpanded {
+            AppLog.info("Overlay", "可点区域已更新", fields)
+        } else {
+            AppLog.debug("Overlay", "可点区域已更新", fields)
+        }
     }
 
     private func applyFullscreen(_ fullscreen: Bool) {

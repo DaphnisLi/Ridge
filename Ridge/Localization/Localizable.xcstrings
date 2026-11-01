@@ -139,7 +139,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已开启。展开岛后可左右滑动到控制台页（高度为普通页两倍）。"
+            "value": "已开启。展开岛后可左右滑动到混音台页（约 660×300，高于普通页）。"
           }
         }
       }
@@ -227,7 +227,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "音量与静音"
+            "value": "输出音量"
           }
         }
       }
@@ -238,7 +238,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "快速调节输出音量、一键静音麦克风"
+            "value": "快速调节系统与按 App 输出音量"
+          }
+        }
+      }
+    },
+    "control_deck.module.volume_summary_live": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制台混音台：主输出、设备切换、按 App 独立音量"
           }
         }
       }
@@ -316,17 +327,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "媒体控制即将接入"
-          }
-        }
-      }
-    },
-    "control_deck.tile.mute_mics": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "静音麦"
           }
         }
       }
@@ -1207,6 +1207,270 @@
           "stringUnit": {
             "state": "translated",
             "value": "深海潮汐"
+          }
+        }
+      }
+    },
+    "sound.app_idle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待机"
+          }
+        }
+      }
+    },
+    "sound.app_muted_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前静音"
+          }
+        }
+      }
+    },
+    "sound.app_playing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在播放"
+          }
+        }
+      }
+    },
+    "sound.grant_screen_capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权屏幕录制以启用按 App 音量"
+          }
+        }
+      }
+    },
+    "sound.mixer.active_output": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前输出"
+          }
+        }
+      }
+    },
+    "sound.mixer.active_sources_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个源激活"
+          }
+        }
+      }
+    },
+    "sound.mixer.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Studio Pro"
+          }
+        }
+      }
+    },
+    "sound.mixer.built_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内建"
+          }
+        }
+      }
+    },
+    "sound.mixer.current_output": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前输出设备"
+          }
+        }
+      }
+    },
+    "sound.mixer.footer_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动跟随发声源"
+          }
+        }
+      }
+    },
+    "sound.mixer.master_output": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主输出音量"
+          }
+        }
+      }
+    },
+    "sound.mixer.no_outputs": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未发现可用输出设备"
+          }
+        }
+      }
+    },
+    "sound.mixer.per_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发声应用独立混音"
+          }
+        }
+      }
+    },
+    "sound.mixer.prefs_intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "混音台在控制台页展示。按 App 音量需 macOS 14.2+ 与屏幕录制权限（不会录制画面）。"
+          }
+        }
+      }
+    },
+    "sound.mixer.prefs_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "混音台选项"
+          }
+        }
+      }
+    },
+    "sound.mixer.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专业双轨混音台"
+          }
+        }
+      }
+    },
+    "sound.module_live": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已启用"
+          }
+        }
+      }
+    },
+    "sound.mute_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "静音此 App"
+          }
+        }
+      }
+    },
+    "sound.needs_macos142_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按 App 独立音量需要 macOS 14.2 或更高版本。"
+          }
+        }
+      }
+    },
+    "sound.no_active_apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前没有正在播放的 App"
+          }
+        }
+      }
+    },
+    "sound.remember_volumes": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记住每 App 音量（重启后恢复）"
+          }
+        }
+      }
+    },
+    "sound.reset_app_volumes": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置 App 音量"
+          }
+        }
+      }
+    },
+    "sound.tap_unavailable_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按 App 音量暂不可用，请检查系统版本与屏幕录制权限"
+          }
+        }
+      }
+    },
+    "sound.unmute_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复声音"
           }
         }
       }

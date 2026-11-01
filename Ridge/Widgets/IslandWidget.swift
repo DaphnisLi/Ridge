@@ -98,6 +98,9 @@ protocol IslandWidget: AnyObject {
     var wantsDisplay: Bool { get }
     var requestedAt: Date { get }
 
+    /// 岛顶栏标题；空字符串则不显示顶栏文案（会议卡自身已带标题）。
+    var title: String { get }
+
     func makeView() -> AnyView
     func onAppear()
     func onDisappear()

@@ -313,7 +313,7 @@ private struct DiscreteSliderTickLabels: View {
 }
 
 /// 标签靠左 + 右侧开关（仿「用力点按和触感反馈」）。
-private struct SettingsSwitchRow: View {
+struct SettingsSwitchRow: View {
     let title: String
     var subtitle: String? = nil
     @Binding var isOn: Bool

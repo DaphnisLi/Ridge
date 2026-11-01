@@ -27,9 +27,15 @@
 
 新增内容型小组件步骤：实现 `IslandWidget` → `registry.register(TypedWidgetModule<YourWidget>())` → 在 `requestDisplay` 时争夺展示。
 
+## 3. 声音（控制台混音台组件）
+
+- [x] 输出设备列表 / 切换默认输出、系统主音量（过滤虚拟/聚合设备）
+- [x] 按 App 输出活跃列表与独立音量（macOS 14.2+ Process Tap；需屏幕录制；失败 fail-open）
+- [x] 控制台岛 UI：混音台（无独立设置页；选项挂在控制台设置）
+- [ ] 默认输出设备偏好记忆
+
 ## 后续（未开始）
 
 - 媒体 Now Playing widget
-- 日历 / 会议倒计时 widget
-- 系统状态 widget
+- 系统状态 widget（控制台读数）
 - AI / 用户自定义 widget 加载器

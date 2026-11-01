@@ -8,17 +8,25 @@
 
 /* Begin PBXBuildFile section */
 		06D9881C8149C1F7395BAB29 /* IslandPanelShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */; };
+		07C3537DC59E89A52F22B961 /* SoundProcessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */; };
 		0A5B9B60AA7D728483C7BB2E /* IslandTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85DB713B5E38759909A00339 /* IslandTheme.swift */; };
+		144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */; };
 		31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */; };
 		3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7694C35719C53E4F238252E3 /* IslandSettings.swift */; };
+		3AF7B245C9F5F0D0CA48BCE8 /* MeetingIslandCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C36C15A1A789E41F21DB58B /* MeetingIslandCardView.swift */; };
 		471A0815FAD97EDE07C14EF9 /* MeetingCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */; };
+		4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */; };
 		4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */; };
+		529931F2CDA102243049C1AA /* SoundAppVolumeRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */; };
 		5A5FAF628460840B773CAA96 /* ControlDeckSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1795489812D91800F557AA88 /* ControlDeckSettingsPane.swift */; };
+		5B179643451CD3B2B0612E4A /* SoundSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CAAD888892D784B7830797 /* SoundSettings.swift */; };
 		62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */; };
 		6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50603770034DE47EEF814877 /* L10n.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
+		85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFC96E41744375F5D6F2529 /* SoundSession.swift */; };
 		85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */; };
 		90D890B66F172EDA7F680261 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */; };
+		9198703E93AAFF286FC6A778 /* SoundModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */; };
 		9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A380AA9950E13AF158422F15 /* IslandState.swift */; };
 		94145ED790F224EC91A1E6BA /* MeetingCountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D669A16E4C8C5DB311E03507 /* MeetingCountdownWidget.swift */; };
 		94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */; };
@@ -38,6 +46,7 @@
 		CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED55417055983E937B47576 /* DisplayMonitor.swift */; };
 		CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */; };
 		D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */; };
+		D3131253CE98D17A73798553 /* SoundDeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BFECE714321CB884F2A555 /* SoundDeviceService.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
 		E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073E52F82BA9EE649BA7890 /* IslandController.swift */; };
 		E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */; };
@@ -58,10 +67,12 @@
 		192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
 		2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFlyAnimator.swift; sourceTree = "<group>"; };
+		30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDeckView.swift; sourceTree = "<group>"; };
 		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
 		3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettings.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
 		482677D8E4898DBF37E8B22E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4BFC96E41744375F5D6F2529 /* SoundSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSession.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
 		5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetContextImpl.swift; sourceTree = "<group>"; };
@@ -73,19 +84,26 @@
 		7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
 		805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettingsPane.swift; sourceTree = "<group>"; };
 		81BB2FAF48572CDD36E2974F /* IslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWidget.swift; sourceTree = "<group>"; };
+		81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAppVolumeRoute.swift; sourceTree = "<group>"; };
+		84CAAD888892D784B7830797 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
 		85DB713B5E38759909A00339 /* IslandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTheme.swift; sourceTree = "<group>"; };
 		8A050E8B86C4C1A0EECE7EDB /* EmptyIslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyIslandWidget.swift; sourceTree = "<group>"; };
 		8A1266F73AC4146FF0C01385 /* RidgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RidgeApp.swift; sourceTree = "<group>"; };
 		8B7B868652010E80E7A1FACC /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		95BFECE714321CB884F2A555 /* SoundDeviceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundDeviceService.swift; sourceTree = "<group>"; };
 		97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingCalendarService.swift; sourceTree = "<group>"; };
+		99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundProcessMonitor.swift; sourceTree = "<group>"; };
 		9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGeometry.swift; sourceTree = "<group>"; };
+		9C36C15A1A789E41F21DB58B /* MeetingIslandCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingIslandCardView.swift; sourceTree = "<group>"; };
 		A380AA9950E13AF158422F15 /* IslandState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandState.swift; sourceTree = "<group>"; };
+		BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAudioProperty.swift; sourceTree = "<group>"; };
 		BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLinkDetector.swift; sourceTree = "<group>"; };
 		BED55417055983E937B47576 /* DisplayMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayMonitor.swift; sourceTree = "<group>"; };
 		BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckIslandView.swift; sourceTree = "<group>"; };
 		C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
+		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
 		D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHostView.swift; sourceTree = "<group>"; };
 		D46C8B0291D49B709283472D /* WidgetGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGrid.swift; sourceTree = "<group>"; };
@@ -101,6 +119,7 @@
 			children = (
 				97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */,
 				D669A16E4C8C5DB311E03507 /* MeetingCountdownWidget.swift */,
+				9C36C15A1A789E41F21DB58B /* MeetingIslandCardView.swift */,
 				BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */,
 				6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */,
 				805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */,
@@ -139,6 +158,7 @@
 				0D3085EE34BCDA5A9630E266 /* Meeting */,
 				92B4A2ED5A5028E8FCA74BE2 /* MenuBar */,
 				D2C332D1C56253B5EAA5B089 /* Settings */,
+				6475114B0F370C8ABCCC842F /* Sound */,
 				E6385D7185B43005C4D82D75 /* Widgets */,
 			);
 			path = Ridge;
@@ -150,6 +170,21 @@
 				7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */,
 			);
 			path = Logging;
+			sourceTree = "<group>";
+		};
+		6475114B0F370C8ABCCC842F /* Sound */ = {
+			isa = PBXGroup;
+			children = (
+				BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */,
+				81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */,
+				95BFECE714321CB884F2A555 /* SoundDeviceService.swift */,
+				30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */,
+				CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */,
+				99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */,
+				4BFC96E41744375F5D6F2529 /* SoundSession.swift */,
+				84CAAD888892D784B7830797 /* SoundSettings.swift */,
+			);
+			path = Sound;
 			sourceTree = "<group>";
 		};
 		7AA9E0DE363D2BCF020D2CA7 /* Products */ = {
@@ -311,6 +346,7 @@
 				C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */,
 				94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */,
 				5A5FAF628460840B773CAA96 /* ControlDeckSettingsPane.swift in Sources */,
+				4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */,
 				CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */,
 				AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */,
 				AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */,
@@ -327,6 +363,7 @@
 				6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */,
 				471A0815FAD97EDE07C14EF9 /* MeetingCalendarService.swift in Sources */,
 				94145ED790F224EC91A1E6BA /* MeetingCountdownWidget.swift in Sources */,
+				3AF7B245C9F5F0D0CA48BCE8 /* MeetingIslandCardView.swift in Sources */,
 				E794CC28B7A3B53CB12FCC4F /* MeetingLinkDetector.swift in Sources */,
 				A889A198A328AD2670E8BA7D /* MeetingSettings.swift in Sources */,
 				B20B99352F2BB4E10A110518 /* MeetingSettingsPane.swift in Sources */,
@@ -335,6 +372,13 @@
 				9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */,
 				CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */,
 				F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */,
+				529931F2CDA102243049C1AA /* SoundAppVolumeRoute.swift in Sources */,
+				D3131253CE98D17A73798553 /* SoundDeviceService.swift in Sources */,
+				144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */,
+				9198703E93AAFF286FC6A778 /* SoundModels.swift in Sources */,
+				07C3537DC59E89A52F22B961 /* SoundProcessMonitor.swift in Sources */,
+				85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */,
+				5B179643451CD3B2B0612E4A /* SoundSettings.swift in Sources */,
 				62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */,
 				CC8899C4D4192755214DF267 /* WidgetFlyAnimator.swift in Sources */,
 				F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */,

@@ -18,6 +18,10 @@ struct NotchGeometry: Equatable {
     static let compactScale: CGFloat = 0.96
     /// 普通展开页高度 = 刘海高 × 此倍率；组合页为 2 倍。
     static let fixedExpandedHeightMultiplier: CGFloat = 3
+    /// 控制台混音台：稿面约 660×320，按刘海倍率抬高并设下限。
+    static let controlDeckPreferredWidth: CGFloat = 660
+    static let controlDeckHeightMultiplier: CGFloat = 8.5
+    static let controlDeckMinHeight: CGFloat = 300
 
     var compactSize: CGSize {
         CGSize(
@@ -43,25 +47,58 @@ struct NotchGeometry: Equatable {
         standardExpandedHeight * 2
     }
 
-    /// 可见岛面板尺寸。`combo` 为 true 时高度翻倍。
+    /// 控制台混音台高度。
+    var controlDeckExpandedHeight: CGFloat {
+        max(notchHeight * Self.controlDeckHeightMultiplier, Self.controlDeckMinHeight)
+    }
+
+    enum ExpandedLayout {
+        case standard
+        case combo
+        case controlDeck
+    }
+
+    /// 可见岛面板尺寸。
     func expandedSize(width: CGFloat, combo: Bool = false) -> CGSize {
-        let clamped = min(max(width, notchWidth), maxExpandedWidth)
-        let height = combo ? comboExpandedHeight : standardExpandedHeight
+        expandedSize(width: width, layout: combo ? .combo : .standard)
+    }
+
+    func expandedSize(width: CGFloat, layout: ExpandedLayout) -> CGSize {
+        let preferredWidth: CGFloat = {
+            switch layout {
+            case .controlDeck:
+                return max(width, Self.controlDeckPreferredWidth)
+            case .standard, .combo:
+                return width
+            }
+        }()
+        let clamped = min(max(preferredWidth, notchWidth), maxExpandedWidth)
+        let height: CGFloat = {
+            switch layout {
+            case .standard: return standardExpandedHeight
+            case .combo: return comboExpandedHeight
+            case .controlDeck: return controlDeckExpandedHeight
+            }
+        }()
         return CGSize(
             width: Self.pixelAlign(clamped),
             height: Self.pixelAlign(height)
         )
     }
 
-    /// 浮层窗口占位：始终按组合页最大高度，避免翻页时裁切。
+    /// 浮层窗口占位：按控制台最大高度，避免翻页裁切。
     var windowSize: CGSize {
-        let size = expandedSize(width: maxExpandedWidth, combo: true)
-        return CGSize(width: size.width, height: size.height)
+        let deck = expandedSize(width: maxExpandedWidth, layout: .controlDeck)
+        let combo = expandedSize(width: maxExpandedWidth, layout: .combo)
+        return CGSize(
+            width: max(deck.width, combo.width),
+            height: max(deck.height, combo.height)
+        )
     }
 
     /// 展开态面板在屏幕坐标中的矩形（顶边对齐屏幕顶，水平以刘海居中）。
-    func expandedFrameOnScreen(width: CGFloat) -> CGRect {
-        centeredTopFrame(size: expandedSize(width: width))
+    func expandedFrameOnScreen(width: CGFloat, layout: ExpandedLayout = .standard) -> CGRect {
+        centeredTopFrame(size: expandedSize(width: width, layout: layout))
     }
 
     /// 窗口在屏幕上的矩形（最大宽度占位）。

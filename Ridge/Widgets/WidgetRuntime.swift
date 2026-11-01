@@ -189,7 +189,8 @@ final class WidgetRuntime: ObservableObject {
         }
     }
 
-    /// 设置页开关 / 拖拽后：确保争夺展示并强制切到该页（立即反映到岛上）。
+    /// 设置页开关后：确保实例存活并 recompute。
+    /// 不强制 requestDisplay——内容型小组件由自身在「有内容」时申请；无内容不得占岛分页。
     func focusForSettings(_ id: WidgetID) {
         guard registry.manifest(for: id)?.kind == .content else { return }
         guard settings.isEnabled(id) else {
@@ -197,11 +198,13 @@ final class WidgetRuntime: ObservableObject {
             return
         }
         _ = ensureInstance(id)
-        if demandTimestamps[id] == nil {
-            demandTimestamps[id] = Date()
-            AppLog.info("Widget", "设置页申请展示", ["id": id])
+        if demandTimestamps[id] != nil {
+            browseOverrideID = id
+            AppLog.info("Widget", "设置聚焦：组件已有内容，切到该页", ["id": id])
+        } else {
+            browseOverrideID = nil
+            AppLog.info("Widget", "设置聚焦：已启用但暂无内容，不上岛", ["id": id])
         }
-        browseOverrideID = id
         recompute(reason: "settingsFocus")
     }
 

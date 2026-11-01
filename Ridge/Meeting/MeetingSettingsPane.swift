@@ -481,76 +481,27 @@ struct MeetingWidgetConfigSection: View {
     }
 }
 
-// MARK: - 岛胶囊预览（设计稿样张：有会议 + 入会）
+// MARK: - 岛胶囊预览（与岛上真机共用 MeetingIslandCardView）
 
 private struct MeetingIslandPreviewCapsule: View {
     /// 与「提前提醒」联动的样张倒计时。
     let leadMinutes: Int
 
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.10))
-                    .overlay(Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
-                Image(systemName: "video.fill")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.9))
-            }
-            .frame(width: 32, height: 32)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(L10n.Meeting.previewSampleTitle)
-                        .font(.system(size: 13.5, weight: .medium))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                    Text(L10n.Meeting.platformZoom)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.7))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                .fill(Color.white.opacity(0.10))
-                        )
-                }
-
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Color(red: 0.157, green: 0.784, blue: 0.251))
-                        .frame(width: 6, height: 6)
-                    Text(L10n.Meeting.previewMinutesAhead(max(leadMinutes, 1)))
-                        .font(.system(size: 11, weight: .medium).monospacedDigit())
-                        .foregroundStyle(Color(red: 0.20, green: 0.83, blue: 0.60))
-                    Text("· 14:00 - 15:30")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.white.opacity(0.4))
-                }
-            }
-
-            Spacer(minLength: 8)
-
-            Text(L10n.Meeting.joinMeeting)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(Capsule().fill(Color.white))
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .frame(maxWidth: 540)
-        .background(
-            MeetingIslandPreviewShape(bottomRadius: 26)
-                .fill(Color.black.opacity(0.92))
-                .overlay(
-                    MeetingIslandPreviewShape(bottomRadius: 26)
-                        .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
-        )
-        .clipShape(MeetingIslandPreviewShape(bottomRadius: 26))
+        MeetingIslandCardView.previewSample(leadMinutes: leadMinutes)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 14)
+            .frame(maxWidth: 540)
+            .background(
+                MeetingIslandPreviewShape(bottomRadius: 26)
+                    .fill(Color.black.opacity(0.92))
+                    .overlay(
+                        MeetingIslandPreviewShape(bottomRadius: 26)
+                            .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
+            )
+            .clipShape(MeetingIslandPreviewShape(bottomRadius: 26))
     }
 }
 

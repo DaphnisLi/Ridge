@@ -79,6 +79,54 @@ enum L10n {
         static var emptyAdd: String { tr("widgets.empty.add", "去添加小组件") }
     }
 
+    // MARK: - Sound（控制台混音台组件文案）
+
+    enum Sound {
+        static var mixerTitle: String { tr("sound.mixer.title", "专业双轨混音台") }
+        static var mixerBadge: String { tr("sound.mixer.badge", "Studio Pro") }
+        static var masterOutputVolume: String { tr("sound.mixer.master_output", "主输出音量") }
+        static var currentOutputDevice: String { tr("sound.mixer.current_output", "当前输出设备") }
+        static var activeOutput: String { tr("sound.mixer.active_output", "当前输出") }
+        static var builtInHint: String { tr("sound.mixer.built_in", "内建") }
+        static var noOutputDevices: String { tr("sound.mixer.no_outputs", "未发现可用输出设备") }
+        static var perAppMix: String { tr("sound.mixer.per_app", "发声应用独立混音") }
+        static func activeSources(_ count: Int) -> String {
+            String(format: tr("sound.mixer.active_sources_format", "%d 个源激活"), count)
+        }
+        static var mixerFooterHint: String {
+            tr("sound.mixer.footer_hint", "自动跟随发声源")
+        }
+        static var noActiveApps: String {
+            tr("sound.no_active_apps", "当前没有正在播放的 App")
+        }
+        static var appMutedNow: String { tr("sound.app_muted_now", "当前静音") }
+        static var appPlaying: String { tr("sound.app_playing", "正在播放") }
+        static var appIdle: String { tr("sound.app_idle", "待机") }
+        static var muteApp: String { tr("sound.mute_app", "静音此 App") }
+        static var unmuteApp: String { tr("sound.unmute_app", "恢复声音") }
+        static var rememberVolumes: String {
+            tr("sound.remember_volumes", "记住每 App 音量（重启后恢复）")
+        }
+        static var resetAppVolumes: String { tr("sound.reset_app_volumes", "重置 App 音量") }
+        static var grantScreenCapture: String {
+            tr("sound.grant_screen_capture", "授权屏幕录制以启用按 App 音量")
+        }
+        static var needsMacOS142Body: String {
+            tr("sound.needs_macos142_body", "按 App 独立音量需要 macOS 14.2 或更高版本。")
+        }
+        static var tapUnavailableHint: String {
+            tr("sound.tap_unavailable_hint", "按 App 音量暂不可用，请检查系统版本与屏幕录制权限")
+        }
+        static var mixerPrefsTitle: String { tr("sound.mixer.prefs_title", "混音台选项") }
+        static var mixerPrefsIntro: String {
+            tr(
+                "sound.mixer.prefs_intro",
+                "混音台在控制台页展示。按 App 音量需 macOS 14.2+ 与屏幕录制权限（不会录制画面）。"
+            )
+        }
+        static var moduleLive: String { tr("sound.module_live", "已启用") }
+    }
+
     // MARK: - Control deck
 
     enum ControlDeck {
@@ -91,7 +139,10 @@ enum L10n {
         }
         static var showOnIsland: String { tr("control_deck.show_on_island", "在灵动岛显示控制台") }
         static var enabledHint: String {
-            tr("control_deck.enabled_hint", "已开启。展开岛后可左右滑动到控制台页（高度为普通页两倍）。")
+            tr(
+                "control_deck.enabled_hint",
+                "已开启。展开岛后可左右滑动到混音台页（约 660×300，高于普通页）。"
+            )
         }
         static var disabledHint: String {
             tr("control_deck.disabled_hint", "最多一个控制台。开启后会出现在岛的分页中。")
@@ -106,9 +157,15 @@ enum L10n {
         static var moduleBatterySummary: String {
             tr("control_deck.module.battery_summary", "本机与键盘、鼠标等电量环形指示")
         }
-        static var moduleVolume: String { tr("control_deck.module.volume", "音量与静音") }
+        static var moduleVolume: String { tr("control_deck.module.volume", "输出音量") }
         static var moduleVolumeSummary: String {
-            tr("control_deck.module.volume_summary", "快速调节输出音量、一键静音麦克风")
+            tr("control_deck.module.volume_summary", "快速调节系统与按 App 输出音量")
+        }
+        static var moduleVolumeSummaryLive: String {
+            tr(
+                "control_deck.module.volume_summary_live",
+                "控制台混音台：主输出、设备切换、按 App 独立音量"
+            )
         }
         static var moduleFocus: String { tr("control_deck.module.focus", "专注与防休眠") }
         static var moduleFocusSummary: String {
@@ -125,7 +182,6 @@ enum L10n {
         static var weatherSoon: String { tr("control_deck.tile.weather_soon", "稍后接入") }
         static var keepAwake: String { tr("control_deck.tile.keep_awake", "防休眠") }
         static var focus: String { tr("control_deck.tile.focus", "专注") }
-        static var muteMics: String { tr("control_deck.tile.mute_mics", "静音麦") }
         static var system: String { tr("control_deck.tile.system", "系统") }
         static var systemMetersSoon: String {
             tr("control_deck.tile.system_meters_soon", "CPU / 内存读数即将接入")
@@ -248,6 +304,12 @@ enum L10n {
             tr(
                 "NSCalendarsFullAccessUsageDescription",
                 "Ridge 需要读取日历，以便在灵动岛显示即将开始的会议倒计时，并提供一键入会。日历数据仅在本机处理。"
+            )
+        }
+        static var screenCaptureUsage: String {
+            tr(
+                "NSScreenCaptureUsageDescription",
+                "Ridge 需要屏幕录制权限以通过系统音频接口调节其它 App 的音量；不会录制或保存屏幕画面。"
             )
         }
     }
