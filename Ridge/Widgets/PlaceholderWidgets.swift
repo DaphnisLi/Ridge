@@ -10,7 +10,8 @@ final class MediaPlaceholderWidget: IslandWidget {
         displayName: "正在播放",
         summary: "媒体占位，后续接 Now Playing",
         source: .builtin,
-        kind: .content
+        kind: .content,
+        defaultGridSize: .twoByOne
     )
 
     private let context: WidgetContext
@@ -46,7 +47,8 @@ final class MeetingPlaceholderWidget: IslandWidget {
         displayName: "下一场会议",
         summary: "日历占位，后续接日程倒计时",
         source: .builtin,
-        kind: .content
+        kind: .content,
+        defaultGridSize: .twoByOne
     )
 
     private let context: WidgetContext
@@ -82,7 +84,8 @@ final class StatusPlaceholderWidget: IslandWidget {
         displayName: "系统状态",
         summary: "状态占位，后续接电量 / 网络等",
         source: .builtin,
-        kind: .content
+        kind: .content,
+        defaultGridSize: .oneByOne
     )
 
     private let context: WidgetContext

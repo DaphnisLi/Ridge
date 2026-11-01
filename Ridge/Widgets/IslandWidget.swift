@@ -28,6 +28,8 @@ struct WidgetManifest: Identifiable, Hashable, Codable {
     let kind: WidgetKind
     /// 是否允许「常驻」pin。
     let supportsPinning: Bool
+    /// 默认占格；用户稍后可改尺寸，本阶段只用默认值。
+    let defaultGridSize: WidgetGridSize
 
     /// 出现在设置「显示优先级」列表中。
     var showsInLibrary: Bool { kind == .content }
@@ -39,7 +41,8 @@ struct WidgetManifest: Identifiable, Hashable, Codable {
         version: String = "1.0.0",
         source: WidgetSource = .builtin,
         kind: WidgetKind = .content,
-        supportsPinning: Bool = true
+        supportsPinning: Bool = true,
+        defaultGridSize: WidgetGridSize = .oneByOne
     ) {
         self.id = id
         self.displayName = displayName
@@ -48,6 +51,7 @@ struct WidgetManifest: Identifiable, Hashable, Codable {
         self.source = source
         self.kind = kind
         self.supportsPinning = supportsPinning
+        self.defaultGridSize = defaultGridSize
     }
 }
 

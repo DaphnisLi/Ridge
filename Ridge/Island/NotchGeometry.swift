@@ -16,7 +16,7 @@ struct NotchGeometry: Equatable {
 
     /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
     static let compactScale: CGFloat = 0.96
-    /// 展开高度固定为刘海高 × 此倍率（不可调）。
+    /// 普通展开页高度 = 刘海高 × 此倍率；组合页为 2 倍。
     static let fixedExpandedHeightMultiplier: CGFloat = 3
 
     var compactSize: CGSize {
@@ -33,22 +33,30 @@ struct NotchGeometry: Equatable {
 
     static let expandedHorizontalInset: CGFloat = 16
 
-    /// 可见岛面板尺寸（绝对宽度 pt，高度固定）。宽高对齐到 0.5pt。
-    func expandedSize(width: CGFloat) -> CGSize {
+    /// 普通页展开高度。
+    var standardExpandedHeight: CGFloat {
+        notchHeight * Self.fixedExpandedHeightMultiplier
+    }
+
+    /// 组合页展开高度（普通页的两倍）。
+    var comboExpandedHeight: CGFloat {
+        standardExpandedHeight * 2
+    }
+
+    /// 可见岛面板尺寸。`combo` 为 true 时高度翻倍。
+    func expandedSize(width: CGFloat, combo: Bool = false) -> CGSize {
         let clamped = min(max(width, notchWidth), maxExpandedWidth)
-        let height = notchHeight * Self.fixedExpandedHeightMultiplier
+        let height = combo ? comboExpandedHeight : standardExpandedHeight
         return CGSize(
             width: Self.pixelAlign(clamped),
             height: Self.pixelAlign(height)
         )
     }
 
-    /// 浮层窗口占位：始终用最大展开宽，避免调宽度时窗体与 SwiftUI 面板不同步裁掉圆角。
+    /// 浮层窗口占位：始终按组合页最大高度，避免翻页时裁切。
     var windowSize: CGSize {
-        CGSize(
-            width: Self.pixelAlign(maxExpandedWidth),
-            height: Self.pixelAlign(notchHeight * Self.fixedExpandedHeightMultiplier)
-        )
+        let size = expandedSize(width: maxExpandedWidth, combo: true)
+        return CGSize(width: size.width, height: size.height)
     }
 
     /// 展开态面板在屏幕坐标中的矩形（顶边对齐屏幕顶，水平以刘海居中）。

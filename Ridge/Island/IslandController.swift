@@ -91,6 +91,15 @@ final class IslandController: NSObject {
             }
             .store(in: &settingsObservers)
 
+        WidgetRuntime.shared.$isComboPage
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] combo in
+                AppLog.info("Island", "组合页高度切换", ["combo": combo])
+                self?.updateInteractiveFrame()
+            }
+            .store(in: &settingsObservers)
+
         startHoverPolling()
         relayout(reason: "start")
         AppLog.info("Island", "控制器已启动")
@@ -571,14 +580,15 @@ final class IslandController: NSObject {
         _ = animated // 窗体尺寸不跟宽度做 AppKit 动画，避免与 SwiftUI 面板抢裁切。
         viewModel.maxExpandedWidth = geometry.maxExpandedWidth
         let requestedW = CGFloat(settings.expandedWidth)
-        let panel = geometry.expandedSize(width: requestedW)
+        let combo = WidgetRuntime.shared.isComboPage
+        let panel = geometry.expandedSize(width: requestedW, combo: combo)
         if abs(requestedW - panel.width) > 0.5 {
             AppLog.warn("Island", "展开宽度已按屏幕/刘海钳制", [
                 "requested": requestedW,
                 "usedW": panel.width
             ])
         }
-        // 窗口始终 = 最大展开宽 × 固定高；只有面板随设置宽度变。
+        // 窗口始终 = 最大展开宽 × 组合页高度；面板高度随是否组合页变化。
         let frame = geometry.windowFrameOnScreen()
         window.setFrame(frame, display: true)
         hostingView?.frame = hitTestView.bounds
@@ -588,6 +598,7 @@ final class IslandController: NSObject {
             "windowH": frame.height,
             "panelW": panel.width,
             "panelH": panel.height,
+            "combo": combo,
             "requestedW": requestedW
         ])
 
@@ -601,7 +612,10 @@ final class IslandController: NSObject {
         let windowFrame = window.frame
         let panel: CGSize
         if viewModel.isExpanded {
-            panel = geometry.expandedSize(width: CGFloat(settings.expandedWidth))
+            panel = geometry.expandedSize(
+                width: CGFloat(settings.expandedWidth),
+                combo: WidgetRuntime.shared.isComboPage
+            )
         } else {
             panel = geometry.compactSize
         }

@@ -34,6 +34,7 @@
 		E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */; };
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
 		F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11948404DA855E5880642096 /* WidgetRuntime.swift */; };
+		F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C8B0291D49B709283472D /* WidgetGrid.swift */; };
 		F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 088CFC576E84896E553FC0DD /* WidgetRegistry.swift */; };
 		FBF5908F3A964F8598572BA1 /* WidgetsSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */; };
 /* End PBXBuildFile section */
@@ -68,6 +69,7 @@
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
 		D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHostView.swift; sourceTree = "<group>"; };
+		D46C8B0291D49B709283472D /* WidgetGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGrid.swift; sourceTree = "<group>"; };
 		D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetsSettingsPane.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
@@ -167,6 +169,7 @@
 				4C039DD65EADD0E2CC891E9D /* PlaceholderWidgets.swift */,
 				5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */,
 				2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */,
+				D46C8B0291D49B709283472D /* WidgetGrid.swift */,
 				D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */,
 				088CFC576E84896E553FC0DD /* WidgetRegistry.swift */,
 				11948404DA855E5880642096 /* WidgetRuntime.swift */,
@@ -269,6 +272,7 @@
 				F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */,
 				62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */,
 				CC8899C4D4192755214DF267 /* WidgetFlyAnimator.swift in Sources */,
+				F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */,
 				AB381B4B47D62E0AD24F5D92 /* WidgetHostView.swift in Sources */,
 				F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */,
 				F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */,

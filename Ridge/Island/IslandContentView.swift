@@ -16,12 +16,13 @@ struct IslandContentView: View {
     private var expandedSize: CGSize {
         let rawWidth = CGFloat(settings.expandedWidth)
         // 与窗口几何同一钳制：不小于刘海、不超出屏宽。
+        // 普通页 = 刘海×3；组合页（多组件）= 两倍高。
         let width = min(max(rawWidth, viewModel.notchWidth), viewModel.maxExpandedWidth)
+        let baseH = viewModel.notchHeight * NotchGeometry.fixedExpandedHeightMultiplier
+        let height = runtime.isComboPage ? baseH * 2 : baseH
         return CGSize(
             width: NotchGeometry.pixelAlign(width),
-            height: NotchGeometry.pixelAlign(
-                viewModel.notchHeight * NotchGeometry.fixedExpandedHeightMultiplier
-            )
+            height: NotchGeometry.pixelAlign(height)
         )
     }
 
@@ -57,11 +58,13 @@ struct IslandContentView: View {
         .animation(islandSpring, value: settings.bottomCornerRadius)
         .animation(islandSpring, value: settings.expandedWidth)
         .animation(islandSpring, value: settings.theme)
+        .animation(islandSpring, value: runtime.isComboPage)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
         .onChange(of: bodySize) { _, size in
             AppLog.debug("Island", "岛尺寸已更新", [
                 "expanded": viewModel.isExpanded,
+                "combo": runtime.isComboPage,
                 "w": size.width,
                 "h": size.height,
                 "radius": appliedBottomRadius,
@@ -85,15 +88,19 @@ private struct IslandBody: View {
             if isExpanded {
                 VStack(spacing: 0) {
                     if !runtime.isShowingEmpty {
-                        HStack {
-                            Text(runtime.activeTitle.isEmpty ? "Ridge" : runtime.activeTitle)
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(palette.title)
-                                .lineLimit(1)
-                            Spacer(minLength: 0)
+                        if !runtime.activeTitle.isEmpty {
+                            HStack {
+                                Text(runtime.activeTitle)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(palette.title)
+                                    .lineLimit(1)
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                        } else {
+                            Color.clear.frame(height: 10)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 14)
                     } else {
                         Color.clear.frame(height: 10)
                     }

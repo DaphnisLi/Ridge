@@ -12,7 +12,8 @@ final class EmptyIslandWidget: IslandWidget {
         version: "1.0.0",
         source: .builtin,
         kind: .systemEmpty,
-        supportsPinning: false
+        supportsPinning: false,
+        defaultGridSize: .twoByOne
     )
 
     private let context: WidgetContext

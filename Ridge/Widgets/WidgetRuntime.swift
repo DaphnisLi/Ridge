@@ -2,26 +2,36 @@ import Combine
 import Foundation
 import SwiftUI
 
-/// 调度 + 生命周期。内容型 widget 按优先级与时间戳竞争；无人争夺时落到系统空态。
+/// 调度 + 生命周期。内容型 widget 按优先级与时间戳竞争；同页可多组件网格共存。
 @MainActor
 final class WidgetRuntime: ObservableObject {
     static let shared = WidgetRuntime()
 
+    /// 当前页主 id（标题 / 兼容旧逻辑）；多组件页取组内优先级最高者。
     @Published private(set) var activeID: WidgetID?
     @Published private(set) var activeTitle: String = ""
     @Published private(set) var isShowingEmpty = true
     @Published private(set) var contentEpoch: Int = 0
-    /// 可左右滑动浏览的内容型 widget（已启用且正在争夺），顺序与设置优先级一致。
+    /// 每一页上的小组件 id 列表（仅含正在争夺的）。
+    @Published private(set) var pages: [[WidgetID]] = []
+    /// 兼容旧调用：每页的「代表」id（组内第一个）。
     @Published private(set) var pageIDs: [WidgetID] = []
     @Published private(set) var pageIndex: Int = 0
+    /// 当前页要渲染的 id。
+    @Published private(set) var visibleWidgetIDs: [WidgetID] = []
+    /// 当前页打包后的占位。
+    @Published private(set) var visiblePlacements: [WidgetGridPlacement] = []
+    /// 同页多个小组件：岛高为普通页的 2 倍。
+    @Published private(set) var isComboPage = false
 
     private let registry = WidgetRegistry.shared
     private let settings = WidgetSettings.shared
     private var instances: [WidgetID: any IslandWidget] = [:]
     private var demandTimestamps: [WidgetID: Date] = [:]
-    /// 用户滑动选中的页；仍在 pageIDs 内则优先于自动调度。
+    /// 用户滑动选中的页代表 id；仍在 pageIDs 内则优先于自动调度。
     private var browseOverrideID: WidgetID?
     private var settingsObservers: Set<AnyCancellable> = []
+    private var appearedIDs: Set<WidgetID> = []
     private var started = false
 
     private init() {}
@@ -34,8 +44,9 @@ final class WidgetRuntime: ObservableObject {
 
         settings.$order
             .combineLatest(settings.$disabledIDs, settings.$pinnedIDs)
+            .combineLatest(settings.$comboPages)
             .dropFirst()
-            .sink { [weak self] _, _, _ in
+            .sink { [weak self] _ in
                 self?.recompute(reason: "settings")
             }
             .store(in: &settingsObservers)
@@ -44,7 +55,8 @@ final class WidgetRuntime: ObservableObject {
         AppLog.info("Widget", "Runtime 已启动", [
             "registered": registry.manifests.count,
             "library": registry.libraryManifests.count,
-            "active": activeID ?? "nil"
+            "active": activeID ?? "nil",
+            "pages": pages.count
         ])
     }
 
@@ -53,6 +65,7 @@ final class WidgetRuntime: ObservableObject {
         for id in Array(instances.keys) {
             tearDown(id, reason: "stop")
         }
+        appearedIDs.removeAll()
         settingsObservers.removeAll()
         started = false
         AppLog.info("Widget", "Runtime 已停止")
@@ -97,23 +110,55 @@ final class WidgetRuntime: ObservableObject {
         let id = pageIDs[index]
         browseOverrideID = id
         pageIndex = index
-        AppLog.info("Widget", "滑动切换小组件", ["id": id, "index": index])
+        AppLog.info("Widget", "滑动切换小组件页", [
+            "id": id,
+            "index": index,
+            "widgets": pages[index].count
+        ])
         recompute(reason: "page")
     }
 
     // MARK: - Access
 
-    func activeView() -> AnyView {
-        guard let id = activeID, let widget = instances[id] else {
+    func view(for id: WidgetID) -> AnyView {
+        guard let widget = instances[id] else {
             return AnyView(Color.clear)
         }
         return widget.makeView()
     }
 
+    /// 兼容旧单组件宿主。
+    func activeView() -> AnyView {
+        guard let id = activeID else { return AnyView(Color.clear) }
+        return view(for: id)
+    }
+
     func refreshActive() {
-        guard let id = activeID, let widget = instances[id] else { return }
-        widget.refresh()
+        for id in visibleWidgetIDs {
+            instances[id]?.refresh()
+        }
         contentEpoch &+= 1
+    }
+
+    /// 设置里加入组合页后：确保展示并切到该组合页。
+    func focusComboPage(at comboIndex: Int) {
+        let pages = settings.normalizedComboPages()
+        guard pages.indices.contains(comboIndex) else { return }
+        let members = pages[comboIndex]
+        for id in members where settings.isEnabled(id) {
+            _ = ensureInstance(id)
+            if demandTimestamps[id] == nil {
+                demandTimestamps[id] = Date()
+            }
+        }
+        if let first = members.first(where: { settings.isEnabled($0) }) {
+            browseOverrideID = first
+        }
+        recompute(reason: "comboFocus")
+        AppLog.info("Widget", "聚焦组合页", [
+            "index": comboIndex,
+            "widgets": members.count
+        ])
     }
 
     // MARK: - Schedule
@@ -159,7 +204,6 @@ final class WidgetRuntime: ObservableObject {
     }
 
     func recompute(reason: String) {
-        // 关掉的小组件立刻退出争夺，避免设置里关了岛上还挂着。
         for id in Array(demandTimestamps.keys) where !settings.isEnabled(id) {
             demandTimestamps.removeValue(forKey: id)
             if browseOverrideID == id {
@@ -168,75 +212,166 @@ final class WidgetRuntime: ObservableObject {
             AppLog.debug("Widget", "已禁用，撤出争夺", ["id": id, "reason": reason])
         }
 
-        // 已启用的内容型先建实例，便于占位/采样类在创建时声明 wantsDisplay。
         for id in settings.order where settings.isEnabled(id) {
             _ = ensureInstance(id)
         }
 
-        // 分页列表：按用户优先级顺序，仅含正在争夺的内容型。
-        let pages = settings.order.filter {
-            settings.isEnabled($0)
-                && demandTimestamps[$0] != nil
-                && registry.manifest(for: $0)?.kind == .content
-        }
-        pageIDs = pages
+        let demanding = Set(
+            settings.order.filter {
+                settings.isEnabled($0)
+                    && demandTimestamps[$0] != nil
+                    && registry.manifest(for: $0)?.kind == .content
+            }
+        )
 
-        if let browse = browseOverrideID, !pages.contains(browse) {
-            browseOverrideID = nil
+        let built = buildVisiblePages(demanding: demanding)
+        pages = built.map(\.ids)
+        pageIDs = built.map { representative(of: $0.ids) }
+
+        if let browse = browseOverrideID, !pageIDs.contains(browse) {
+            if let idx = built.firstIndex(where: { $0.ids.contains(browse) }) {
+                browseOverrideID = pageIDs[idx]
+            } else {
+                browseOverrideID = nil
+            }
         }
 
-        let chosen: WidgetID
-        if let browse = browseOverrideID, pages.contains(browse) {
-            chosen = browse
-        } else if let top = scheduledCandidates().first {
-            chosen = top.id
+        let chosenPageIndex: Int
+        if let browse = browseOverrideID,
+           let idx = pageIDs.firstIndex(of: browse) {
+            chosenPageIndex = idx
+        } else if let top = scheduledCandidates().first,
+                  let idx = built.firstIndex(where: { $0.ids.contains(top.id) }) {
+            chosenPageIndex = idx
             browseOverrideID = nil
         } else {
-            chosen = SystemWidgetID.empty
-            browseOverrideID = nil
+            chosenPageIndex = 0
         }
 
-        if let idx = pages.firstIndex(of: chosen) {
-            pageIndex = idx
-        } else {
+        if built.isEmpty {
             pageIndex = 0
+            applyPage([], combo: false, reason: reason)
+        } else {
+            let index = min(max(chosenPageIndex, 0), built.count - 1)
+            pageIndex = index
+            applyPage(built[index].ids, combo: built[index].isCombo, reason: reason)
         }
 
-        applyActive(chosen, reason: reason)
         reapUnneeded(reason: reason)
     }
 
-    private func applyActive(_ newID: WidgetID, reason: String) {
-        let oldID = activeID
-        let showingEmpty = newID == SystemWidgetID.empty
+    private struct VisiblePage {
+        let ids: [WidgetID]
+        let isCombo: Bool
+    }
+
+    /// 组合页（按创建顺序）+ 未入组的争夺者各自独占普通页。
+    private func buildVisiblePages(demanding: Set<WidgetID>) -> [VisiblePage] {
+        var result: [VisiblePage] = []
+        var seated = Set<WidgetID>()
+
+        for group in settings.normalizedComboPages() {
+            let visible = group.filter { demanding.contains($0) }
+            guard !visible.isEmpty else { continue }
+            // 组合页内保持用户加入顺序（一行四格），不再按 priority 重排。
+            result.append(VisiblePage(ids: visible, isCombo: true))
+            seated.formUnion(visible)
+        }
+
+        for id in settings.order where demanding.contains(id) && !seated.contains(id) {
+            result.append(VisiblePage(ids: [id], isCombo: false))
+        }
+        return result
+    }
+
+    private func representative(of page: [WidgetID]) -> WidgetID {
+        page.max(by: { settings.priority(for: $0) < settings.priority(for: $1) }) ?? page[0]
+    }
+
+    private func applyPage(_ page: [WidgetID], combo: Bool, reason: String) {
+        let showingEmpty = page.isEmpty
         isShowingEmpty = showingEmpty
+        isComboPage = combo && !showingEmpty
 
-        guard oldID != newID else {
-            if let widget = instances[newID] {
-                widget.priority = settings.priority(for: newID)
+        let nextIDs = showingEmpty ? [SystemWidgetID.empty] : page
+        let items: [(id: WidgetID, size: WidgetGridSize)] = showingEmpty
+            ? []
+            : nextIDs.map { ($0, settings.gridSize(for: $0)) }
+
+        let placements: [WidgetGridPlacement]
+        if showingEmpty {
+            placements = []
+        } else if let packed = WidgetGridPacker.pack(items) {
+            placements = packed
+        } else {
+            // 异常超格：降级为仅显示代表，避免空白。
+            let primary = representative(of: page)
+            AppLog.warn("Widget", "当前页超格，降级单组件", [
+                "widgets": page.count,
+                "primary": primary,
+                "reason": reason
+            ])
+            placements = [
+                WidgetGridPlacement(
+                    id: primary,
+                    column: 0,
+                    row: 0,
+                    size: settings.gridSize(for: primary)
+                )
+            ]
+        }
+
+        let newAppeared: Set<WidgetID> = showingEmpty
+            ? [SystemWidgetID.empty]
+            : Set(placements.map(\.id))
+
+        let leaving = appearedIDs.subtracting(newAppeared)
+        for id in leaving {
+            instances[id]?.onDisappear()
+            AppLog.debug("Widget", "onDisappear", ["id": id, "reason": reason])
+        }
+
+        visibleWidgetIDs = placements.map(\.id)
+        visiblePlacements = placements
+
+        if showingEmpty {
+            _ = ensureInstance(SystemWidgetID.empty)
+            if !appearedIDs.contains(SystemWidgetID.empty) {
+                instances[SystemWidgetID.empty]?.onAppear()
+                instances[SystemWidgetID.empty]?.refresh()
             }
-            return
+            activeID = SystemWidgetID.empty
+            activeTitle = ""
+            appearedIDs = [SystemWidgetID.empty]
+        } else {
+            for id in visibleWidgetIDs {
+                let widget = ensureInstance(id)
+                widget?.priority = settings.priority(for: id)
+                if !appearedIDs.contains(id) {
+                    widget?.onAppear()
+                    widget?.refresh()
+                    AppLog.debug("Widget", "onAppear", ["id": id, "reason": reason])
+                }
+            }
+            let primary = representative(of: visibleWidgetIDs)
+            activeID = primary
+            activeTitle = combo
+                ? ""
+                : (instances[primary]?.title
+                    ?? registry.manifest(for: primary)?.displayName
+                    ?? primary)
+            appearedIDs = Set(visibleWidgetIDs)
         }
 
-        if let oldID, let old = instances[oldID] {
-            old.onDisappear()
-            AppLog.debug("Widget", "onDisappear", ["id": oldID, "reason": reason])
-        }
-
-        activeID = newID
-        let widget = ensureInstance(newID)
-        widget?.priority = settings.priority(for: newID)
-        widget?.onAppear()
-        widget?.refresh()
-        activeTitle = showingEmpty
-            ? ""
-            : (widget?.title ?? registry.manifest(for: newID)?.displayName ?? newID)
         contentEpoch &+= 1
-        AppLog.info("Widget", "切换当前小组件", [
-            "id": newID,
+        AppLog.info("Widget", "切换当前页", [
+            "primary": activeID ?? "nil",
             "reason": reason,
             "empty": showingEmpty,
-            "priority": settings.priority(for: newID)
+            "combo": combo,
+            "widgets": visibleWidgetIDs.count,
+            "pageIndex": pageIndex,
+            "pages": pages.count
         ])
     }
 
@@ -247,7 +382,6 @@ final class WidgetRuntime: ObservableObject {
         guard let widget = registry.make(id: id, context: context) else { return nil }
         widget.priority = settings.priority(for: id)
         instances[id] = widget
-        // 创建时已 wantsDisplay 的（如占位），同步进争夺表，无需再调 requestDisplay。
         if widget.wantsDisplay, demandTimestamps[id] == nil {
             demandTimestamps[id] = widget.requestedAt
             AppLog.debug("Widget", "创建时即争夺展示", ["id": id])
@@ -257,7 +391,7 @@ final class WidgetRuntime: ObservableObject {
 
     private func reapUnneeded(reason: String) {
         var keep = Set(settings.pinnedIDs.filter { settings.isEnabled($0) })
-        if let activeID { keep.insert(activeID) }
+        keep.formUnion(visibleWidgetIDs)
         keep.insert(SystemWidgetID.empty)
         keep.formUnion(demandTimestamps.keys.filter { settings.isEnabled($0) })
         for id in Array(instances.keys) where !keep.contains(id) {
@@ -268,8 +402,11 @@ final class WidgetRuntime: ObservableObject {
     private func tearDown(_ id: WidgetID, reason: String) {
         guard id != SystemWidgetID.empty || reason == "stop" else { return }
         guard let widget = instances.removeValue(forKey: id) else { return }
-        if activeID == id {
+        if appearedIDs.contains(id) {
             widget.onDisappear()
+            appearedIDs.remove(id)
+        }
+        if activeID == id {
             activeID = nil
             activeTitle = ""
             isShowingEmpty = true
