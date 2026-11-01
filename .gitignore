@@ -41,6 +41,11 @@ logs/
 *.log
 npm-debug.log*
 
+# Local project-release demo servers
+.ridge-demo-http.py
+.ridge-demo-server.py
+.ridge-demo-*.py
+
 # Test / coverage
 coverage/
 .nyc_output/

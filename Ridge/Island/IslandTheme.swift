@@ -24,7 +24,8 @@ enum IslandTheme: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .midnight:
             return IslandPalette(
-                fill: .black,
+                // SwiftUI 样张用纯黑；实岛底见 IslandTheme.nsFillColor（device RGB）。
+                fill: Color(.sRGB, red: 0, green: 0, blue: 0, opacity: 1),
                 title: .white.opacity(0.9),
                 secondary: .white.opacity(0.4),
                 icon: .white.opacity(0.85),

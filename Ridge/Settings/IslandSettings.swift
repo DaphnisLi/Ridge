@@ -37,7 +37,6 @@ final class IslandSettings: ObservableObject {
         static let expandedWidth: Double = 400
         static let theme = IslandTheme.midnight
         static let displayStyle = IslandDisplayStyle.notch
-        static let showInScreenRecordings = false
     }
 
     /// 设置滑块范围（pt）；运行时还会按屏幕再钳制。
@@ -52,7 +51,6 @@ final class IslandSettings: ObservableObject {
         static let hapticIntensity = "island.hapticIntensity"
         static let hapticFeedbackLegacy = "island.hapticFeedback"
         static let displayStyle = "island.displayStyle"
-        static let showInScreenRecordings = "island.showInScreenRecordings"
         static let bottomCornerRadius = "island.bottomCornerRadius"
         static let expandedWidth = "island.expandedWidth"
         static let theme = "island.theme"
@@ -107,11 +105,6 @@ final class IslandSettings: ObservableObject {
         didSet { UserDefaults.standard.set(displayStyle.rawValue, forKey: Key.displayStyle) }
     }
 
-    /// 是否出现在屏幕录制中。
-    @Published var showInScreenRecordings: Bool {
-        didSet { UserDefaults.standard.set(showInScreenRecordings, forKey: Key.showInScreenRecordings) }
-    }
-
     var springDuration: Double {
         0.35 / max(animationSpeed, 0.25)
     }
@@ -126,7 +119,6 @@ final class IslandSettings: ObservableObject {
         expandedWidth = Defaults.expandedWidth
         theme = Defaults.theme
         displayStyle = Defaults.displayStyle
-        showInScreenRecordings = Defaults.showInScreenRecordings
         AppLog.info("Settings", "已恢复默认设置")
     }
 
@@ -152,9 +144,8 @@ final class IslandSettings: ObservableObject {
         if defaults.object(forKey: Key.displayStyle) == nil {
             defaults.set(Defaults.displayStyle.rawValue, forKey: Key.displayStyle)
         }
-        if defaults.object(forKey: Key.showInScreenRecordings) == nil {
-            defaults.set(Defaults.showInScreenRecordings, forKey: Key.showInScreenRecordings)
-        }
+        // 旧版「截屏可见」开关已废弃：岛窗口固定可被截屏/录屏捕获。
+        defaults.removeObject(forKey: "island.showInScreenRecordings")
         if defaults.object(forKey: Key.bottomCornerRadius) == nil {
             defaults.set(Defaults.bottomCornerRadius, forKey: Key.bottomCornerRadius)
         }
@@ -194,7 +185,6 @@ final class IslandSettings: ObservableObject {
         theme = IslandTheme(rawValue: themeRaw) ?? Defaults.theme
         let styleRaw = defaults.string(forKey: Key.displayStyle) ?? Defaults.displayStyle.rawValue
         displayStyle = IslandDisplayStyle(rawValue: styleRaw) ?? Defaults.displayStyle
-        showInScreenRecordings = defaults.bool(forKey: Key.showInScreenRecordings)
 
         AppLog.debug("Settings", "已加载岛设置", [
             "speed": animationSpeed,

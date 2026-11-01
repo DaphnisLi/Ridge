@@ -72,7 +72,14 @@ enum L10n {
         static var notFound: String { tr("widgets.not_found", "找不到该小组件。") }
         static var cannotPreview: String { tr("widgets.cannot_preview", "无法预览") }
         static var pageDotsA11y: String { tr("widgets.page_dots_a11y", "小组件分页") }
+        static var pageDotsCornerValueFormat: String {
+            tr(
+                "widgets.page_dots_corner_value_format",
+                "左侧 %d 页，右侧 %d 页，当前第 %d / %d 页"
+            )
+        }
         static var meetingPreviewTitle: String { tr("widgets.meeting_preview_title", "下一场会议提醒设置") }
+        static var mediaPreviewTitle: String { tr("widgets.media_preview_title", "正在播放") }
         static var emptySummary: String { tr("widgets.empty.summary", "尚未添加小组件时的提示") }
         static var emptyTitle: String { tr("widgets.empty.title", "尚未添加小组件") }
         static var emptySubtitle: String { tr("widgets.empty.subtitle", "启用或添加后，内容会显示在这里") }
@@ -161,6 +168,14 @@ enum L10n {
             tr("control_deck.module.battery_summary", "本机与键盘、鼠标等电量环形指示")
         }
         static var moduleVolume: String { tr("control_deck.module.volume", "输出音量") }
+        static var moduleProjects: String { tr("control_deck.module.projects", "项目释放") }
+        static var moduleShelf: String { tr("control_deck.module.shelf", "货架与剪贴板") }
+        static var moduleShelfSummary: String {
+            tr(
+                "control_deck.module.shelf_summary",
+                "拖文件暂存到刘海，并找回复制过的文字、链接、颜色与截图"
+            )
+        }
         static var moduleVolumeSummary: String {
             tr("control_deck.module.volume_summary", "快速调节系统与按 App 输出音量")
         }
@@ -189,6 +204,305 @@ enum L10n {
         static var systemMetersSoon: String {
             tr("control_deck.tile.system_meters_soon", "CPU / 内存读数即将接入")
         }
+    }
+
+    // MARK: - Media（正在播放）
+
+    enum Media {
+        static var widgetName: String { tr("media.widget.name", "正在播放") }
+        static var widgetSummary: String {
+            tr("media.widget.summary", "显示封面与播放控制，播放时自动出现在灵动岛")
+        }
+        static var settingsIntro: String {
+            tr(
+                "media.settings.intro",
+                "系统正在播放音乐、播客或网页媒体时，灵动岛会显示封面、进度与控制按钮。支持拖动进度条跳转。"
+            )
+        }
+        static var playersTitle: String { tr("media.players.title", "支持的播放器") }
+        static var playersSubtitle: String {
+            tr(
+                "media.players.subtitle",
+                "读取系统 Now Playing；Apple Music、Spotify、播客与浏览器内网页播放均可。"
+            )
+        }
+        static var playersAllSupported: String {
+            tr("media.players.all_supported", "全部已支持")
+        }
+        static var playerAppleMusic: String { tr("media.player.apple_music", "Apple Music") }
+        static var playerSpotify: String { tr("media.player.spotify", "Spotify") }
+        static var playerBrowser: String { tr("media.player.browser", "浏览器 / YouTube") }
+        static var playerPodcasts: String { tr("media.player.podcasts", "播客") }
+
+        static var previewSampleTitle: String {
+            tr("media.preview.sample_title", "Midnight City")
+        }
+        static var previewSampleArtist: String {
+            tr("media.preview.sample_artist", "M83")
+        }
+        static var idleArtist: String { tr("media.idle_artist", "暂无正在播放的内容") }
+        static var unknownArtist: String { tr("media.unknown_artist", "未知艺术家") }
+
+        static var playA11y: String { tr("media.a11y.play", "播放") }
+        static var pauseA11y: String { tr("media.a11y.pause", "暂停") }
+        static var previousA11y: String { tr("media.a11y.previous", "上一曲") }
+        static var nextA11y: String { tr("media.a11y.next", "下一曲") }
+        static var shuffleA11y: String { tr("media.a11y.shuffle", "随机播放") }
+        static var repeatA11y: String { tr("media.a11y.repeat", "循环播放") }
+    }
+
+    // MARK: - Projects（控制台：端口 / 进程按项目释放）
+
+    enum Projects {
+        static var deckTitle: String { tr("projects.deck.title", "项目释放") }
+        static var emptyState: String {
+            tr("projects.deck.empty", "未发现占用中的项目进程。可在设置中添加项目根目录。")
+        }
+        static var runningTitle: String { tr("projects.deck.running", "运行中") }
+        static var watchingTitle: String { tr("projects.deck.watching", "监视中") }
+        static var containersTitle: String { tr("projects.deck.containers", "容器") }
+        static var watchingEmpty: String {
+            tr("projects.deck.watching_empty", "在左侧点「监视」，进程结束后会在刘海处提示。")
+        }
+        static var watchAction: String { tr("projects.deck.watch_action", "监视") }
+        static var watchingActionOn: String { tr("projects.deck.watching_action_on", "监视中") }
+        static var releaseHelp: String {
+            tr("projects.deck.release_help", "结束该项目下可释放的进程与容器")
+        }
+        static func releaseDone(_ project: String) -> String {
+            String(format: tr("projects.deck.release_done_format", "已释放 %@"), project)
+        }
+        static func releasePartial(_ project: String, _ alive: Int) -> String {
+            String(
+                format: tr("projects.deck.release_partial_format", "%@ 仍有 %d 个进程未结束"),
+                project,
+                alive
+            )
+        }
+        static var containersEmpty: String {
+            tr("projects.deck.containers_empty", "当前没有运行中的容器。")
+        }
+        static var watchingHint: String {
+            tr("projects.deck.watching_hint", "计时从进程启动算起；结束后会提示成功或失败")
+        }
+        static func watchingCommand(_ command: String, _ project: String) -> String {
+            String(
+                format: tr("projects.deck.watching_command_format", "%@ · %@"),
+                command,
+                project
+            )
+        }
+        static var openLog: String { tr("projects.deck.open_log", "日志") }
+        static var viewLog: String { tr("projects.deck.view_log", "查看日志") }
+        static var logNotFound: String {
+            tr("projects.deck.log_not_found", "未找到该进程的日志文件")
+        }
+        static var logOpenFailed: String {
+            tr("projects.deck.log_open_failed", "无法打开日志文件")
+        }
+        static var watchOutcomeSuccess: String {
+            tr("projects.deck.watch_outcome_success", "执行成功")
+        }
+        static func watchOutcomeFailed(_ code: Int32) -> String {
+            String(format: tr("projects.deck.watch_outcome_failed_format", "执行失败（退出码 %d）"), code)
+        }
+        static func watchOutcomeSignaled(_ signal: Int32) -> String {
+            String(format: tr("projects.deck.watch_outcome_signaled_format", "被信号终止（%@）"), signalName(signal))
+        }
+        static var watchOutcomeUnknown: String {
+            tr("projects.deck.watch_outcome_unknown", "已结束")
+        }
+        private static func signalName(_ signal: Int32) -> String {
+            switch signal {
+            case 2: return "SIGINT"
+            case 9: return "SIGKILL"
+            case 15: return "SIGTERM"
+            default: return "\(signal)"
+            }
+        }
+        static func resourceMemCPU(_ mem: String, _ cpu: String) -> String {
+            String(format: tr("projects.deck.resource_mem_cpu_format", "%@ · %@"), mem, cpu)
+        }
+        static func resourceMemCPUPorts(_ mem: String, _ cpu: String, _ ports: String) -> String {
+            String(
+                format: tr("projects.deck.resource_mem_cpu_ports_format", "%@ · %@ · %@"),
+                mem,
+                cpu,
+                ports
+            )
+        }
+        static func containersSummary(_ count: Int, _ mem: String) -> String {
+            String(
+                format: tr("projects.deck.containers_summary_format", "%d 个运行中 · 占用 %@"),
+                count,
+                mem
+            )
+        }
+        static func containersCountOnly(_ count: Int) -> String {
+            String(format: tr("projects.deck.containers_count_format", "%d 个运行中"), count)
+        }
+        static func groupCount(_ count: Int) -> String {
+            String(format: tr("projects.deck.group_count_format", "%d 组"), count)
+        }
+        static var refresh: String { tr("projects.deck.refresh", "刷新") }
+        static var release: String { tr("projects.deck.release", "释放") }
+        static var pause: String { tr("projects.deck.pause", "暂停") }
+        static var stop: String { tr("projects.deck.stop", "停止") }
+        static var show: String { tr("projects.deck.show", "查看") }
+        static var hide: String { tr("projects.deck.hide", "收起") }
+        static var releasing: String { tr("projects.deck.releasing", "释放中") }
+        static var unattributed: String { tr("projects.deck.unattributed", "未归属") }
+        static var viewOnly: String { tr("projects.deck.view_only", "仅查看") }
+        static var watchHelp: String { tr("projects.deck.watch_help", "结束后在灵动岛提示") }
+        static var watchNotificationTitle: String {
+            tr("projects.watch.notification_title", "开发进程已结束")
+        }
+        static var watchEndedTitle: String { tr("projects.deck.watch_ended_title", "已结束") }
+        static var watchEndedHeadline: String {
+            tr("projects.deck.watch_ended_headline", "进程已结束")
+        }
+        static var watchEndedDismiss: String { tr("projects.deck.watch_ended_dismiss", "知道了") }
+        static func watchEnded(_ project: String, _ label: String) -> String {
+            String(
+                format: tr("projects.watch.ended_format", "%@ · %@ 已结束"),
+                project,
+                label
+            )
+        }
+        static func watchEndedMessage(
+            _ project: String,
+            _ label: String,
+            _ outcome: ProjectWatchOutcome,
+            peakMemoryBytes: UInt64 = 0,
+            durationSeconds: TimeInterval = 0
+        ) -> String {
+            let parts = [
+                "\(project) / \(label)",
+                outcomeText(outcome),
+                durationSeconds > 0 ? durationText(durationSeconds) : nil,
+                peakMemoryBytes > 0 ? memoryPeak(peakMemoryBytes) : nil
+            ].compactMap { $0 }
+            return parts.joined(separator: " · ")
+        }
+        static func outcomeText(_ outcome: ProjectWatchOutcome) -> String {
+            switch outcome {
+            case .succeeded: return watchOutcomeSuccess
+            case .failed(let code): return watchOutcomeFailed(code)
+            case .signaled(let signal): return watchOutcomeSignaled(signal)
+            case .unknown: return watchOutcomeUnknown
+            }
+        }
+        static func memoryPeak(_ bytes: UInt64) -> String {
+            let text = ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+            return String(format: tr("projects.deck.memory_peak_format", "峰值 %@"), text)
+        }
+        static func memoryUsed(_ bytes: UInt64) -> String {
+            let text = ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+            return String(format: tr("projects.deck.memory_used_format", "内存 %@"), text)
+        }
+        static func durationText(_ seconds: TimeInterval) -> String {
+            let text: String
+            if seconds >= 60 {
+                let m = Int(seconds) / 60
+                let s = seconds.truncatingRemainder(dividingBy: 60)
+                text = String(format: "%d:%05.2f", m, s)
+            } else {
+                text = String(format: "%.2fs", seconds)
+            }
+            return String(format: tr("projects.deck.duration_format", "耗时 %@"), text)
+        }
+        static func exitTag(_ outcome: ProjectWatchOutcome) -> String {
+            switch outcome {
+            case .succeeded:
+                return tr("projects.deck.exit_tag_ok", "exit 0")
+            case .failed(let code):
+                return String(format: tr("projects.deck.exit_tag_code_format", "exit %d"), code)
+            case .signaled(let signal):
+                return watchOutcomeSignaled(signal)
+            case .unknown:
+                return tr("projects.deck.exit_tag_ended", "ended")
+            }
+        }
+        static func statusBadge(_ outcome: ProjectWatchOutcome) -> String {
+            switch outcome {
+            case .succeeded:
+                return tr("projects.deck.status_badge_success", "成功")
+            case .failed, .signaled:
+                return tr("projects.deck.status_badge_failed", "失败")
+            case .unknown:
+                return tr("projects.deck.status_badge_ended", "已结束")
+            }
+        }
+        static func endedTitleCommand(_ label: String) -> String {
+            // 岛上标题只展示命令本身，不再追加「进程已结束」。
+            label
+        }
+        static func moreItems(_ count: Int) -> String {
+            String(format: tr("projects.deck.more_items_format", "另有 %d 项"), count)
+        }
+        static func processCount(_ count: Int) -> String {
+            String(format: tr("projects.deck.process_count_format", "%d 个进程"), count)
+        }
+        static func ports(_ ports: [Int]) -> String {
+            let text = ports.prefix(5).map(String.init).joined(separator: "、")
+            return String(format: tr("projects.deck.ports_format", "端口 %@"), text)
+        }
+        static var unknownProcess: String { tr("projects.deck.unknown_process", "未知进程") }
+        static var unknownContainer: String { tr("projects.deck.unknown_container", "未命名容器") }
+        static var imageLabel: String { tr("projects.deck.image_label", "镜像") }
+        static var rootsTitle: String { tr("projects.settings.roots_title", "项目扫描目录") }
+        static var rootsIntro: String {
+            tr(
+                "projects.settings.roots_intro",
+                "填写代码所在的父文件夹，例如 ~/project。Ridge 会识别其中的项目，并汇总相关进程与容器。"
+            )
+        }
+        static var rootsEmpty: String {
+            tr("projects.settings.roots_empty", "尚未添加目录。添加后才会扫描其中的项目。")
+        }
+        static var addRoot: String { tr("projects.settings.add_root", "添加目录") }
+    }
+
+    // MARK: - Shelf + Clipboard（控制台）
+
+    enum Shelf {
+        static var deckTitle: String { tr("shelf.deck.title", "货架与剪贴板") }
+        static var shelfTitle: String { tr("shelf.title", "货架") }
+        static var clipboardTitle: String { tr("shelf.clipboard.title", "剪贴板历史") }
+        static var dropHint: String { tr("shelf.drop_hint", "拖到此处暂存") }
+        static var dropHintDetail: String {
+            tr("shelf.drop_hint_detail", "文件、图片或文件夹路径仅存于内存")
+        }
+        static var dropMore: String { tr("shelf.drop_more", "继续拖入可追加") }
+        static var kindFile: String { tr("shelf.kind.file", "文件") }
+        static var kindFolder: String { tr("shelf.kind.folder", "文件夹") }
+        static var showInFinder: String { tr("shelf.show_in_finder", "在 Finder 中显示") }
+        static var clearShelf: String { tr("shelf.clear", "清空货架") }
+        static var clearClipboard: String { tr("shelf.clipboard.clear", "清空历史") }
+        static var clipboardEmpty: String {
+            tr("shelf.clipboard.empty", "复制文字、链接、颜色或截图后会出现在这里")
+        }
+        static var clipboardSearchPlaceholder: String {
+            tr("shelf.clipboard.search_placeholder", "搜索")
+        }
+        static var clipboardSearchClear: String {
+            tr("shelf.clipboard.search_clear", "清除搜索")
+        }
+        static var clipboardSearchEmpty: String {
+            tr("shelf.clipboard.search_empty", "无匹配内容")
+        }
+        static var clipboardImagePreview: String { tr("shelf.clipboard.image_preview", "图片") }
+        static var copied: String { tr("shelf.copied", "已复制") }
+        static var copyAgain: String { tr("shelf.copy_again", "再次复制") }
+        static var pin: String { tr("shelf.pin", "置顶") }
+        static var unpin: String { tr("shelf.unpin", "取消置顶") }
+
+        static var tabAll: String { tr("shelf.tab.all", "全部") }
+        static var tabText: String { tr("shelf.tab.text", "文本") }
+        static var tabLink: String { tr("shelf.tab.link", "链接") }
+        static var tabColor: String { tr("shelf.tab.color", "颜色") }
+        static var tabImage: String { tr("shelf.tab.image", "图片") }
+        static var tabScreenshot: String { tr("shelf.tab.screenshot", "截图") }
     }
 
     // MARK: - Meeting
@@ -320,6 +634,32 @@ enum L10n {
                 "NSBluetoothAlwaysUsageDescription",
                 "Ridge 需要蓝牙权限以读取已连接耳机等设备的电量，并在控制台混音台中显示。"
             )
+        }
+    }
+
+    // MARK: - Island notice（隐性瞬时通知，不进库）
+
+    enum IslandNotice {
+        static var widgetName: String { tr("island_notice.widget.name", "岛内通知") }
+        static var widgetSummary: String {
+            tr("island_notice.widget.summary", "通用瞬时通知（如监视结束），约三秒后收起")
+        }
+        static var endedHeadline: String { tr("island_notice.ended.headline", "进程已结束") }
+        static var endedSuccessHeadline: String {
+            tr("island_notice.ended.success_headline", "执行成功")
+        }
+        static var endedFailedHeadline: String {
+            tr("island_notice.ended.failed_headline", "执行失败")
+        }
+        static func headline(for outcome: ProjectWatchOutcome) -> String {
+            switch outcome {
+            case .succeeded: return endedSuccessHeadline
+            case .failed, .signaled: return endedFailedHeadline
+            case .unknown: return endedHeadline
+            }
+        }
+        static func accessibilityLabel(_ notice: ProjectWatchEndedNotice) -> String {
+            notice.message
         }
     }
 

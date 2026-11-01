@@ -34,8 +34,30 @@
 - [x] 控制台岛 UI：混音台（无独立设置页；选项挂在控制台设置）
 - [ ] 默认输出设备偏好记忆
 
+## 4. 项目释放（控制台模块）
+
+- [x] 用户指定根目录扫描 package.json / Cargo.toml / go.mod 等
+- [x] 进程 / 端口（lsof）/ Docker 按项目聚合，展示 CPU·内存
+- [x] 一键释放：SIGINT → 2s → SIGKILL；未归属端口只读
+- [x] Watch 进程结束：展开岛 + 系统通知
+- [ ] 电量 / Energy Impact 精确读数（当前以 CPU·内存代替）
+
+## 5. 货架 + 剪贴板历史（控制台模块）
+
+- [x] Shelf：拖文件 / 图片 / 文件夹到岛暂存（路径存内存）；点按 Finder 显示；可拖出
+- [x] 剪贴板历史：轮询 NSPasteboard；Tab 分文本 / 链接 / 颜色 / 图片 / 截图
+- [x] 点历史条目写回系统剪贴板
+- [x] 私密过滤：前台为 1Password 等密码管理器时不记录
+- [x] 控制台模块开关；与混音台 / 项目释放同页分段切换
+
+## 6. 媒体 Now Playing（内容型小组件）
+
+- [x] `builtin.media`：封面 / 标题 / 艺术家 / 进度条 / 上一曲·播放暂停·下一曲·随机·循环；进度拖拽 seek
+- [x] 有 Now Playing 会话时上岛（播放或暂停），清空后撤回；与会议组件同为「有内容才显示」
+- [x] `MediaRemoteAdapter`（perl 桥）读取 macOS 15.4+ / 27 Now Playing；Apple Music、Spotify、播客、浏览器网页媒体
+- [ ] 浏览器扩展增强（非系统 Now Playing 场景）
+
 ## 后续（未开始）
 
-- 媒体 Now Playing widget
 - 系统状态 widget（控制台读数）
 - AI / 用户自定义 widget 加载器

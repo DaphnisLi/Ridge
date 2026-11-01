@@ -24,6 +24,7 @@ struct IslandSettingsPane: View {
             .padding(.vertical, 28)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .scrollIndicators(.hidden)
         .contentMargins(.horizontal, 0, for: .scrollContent)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(SettingsChrome.pageBackground)

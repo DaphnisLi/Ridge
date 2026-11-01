@@ -13,6 +13,11 @@ settings:
     # 个人 Team：稳定签名后日历 / 辅助功能等 TCC 才不会每次重装都丢。
     DEVELOPMENT_TEAM: 444ULG6V8C
     ENABLE_HARDENED_RUNTIME: true
+# macOS 15.4+ MediaRemote 仅对 Apple 签名进程应答；经 perl 桥读取 Now Playing。
+packages:
+  MediaRemoteAdapter:
+    url: https://github.com/ejbills/mediaremote-adapter
+    revision: 5b6afde3f501a3da567e23bf7f23d562938a1809
 targets:
   Ridge:
     type: application
@@ -38,6 +43,10 @@ targets:
         CODE_SIGN_STYLE: Automatic
     dependencies:
       - sdk: IOBluetooth.framework
+      - package: MediaRemoteAdapter
+        product: MediaRemoteAdapter
+        embed: true
+        link: true
     entitlements:
       path: Ridge/Ridge.entitlements
       properties:

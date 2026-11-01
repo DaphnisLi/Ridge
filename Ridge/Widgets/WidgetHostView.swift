@@ -1,46 +1,29 @@
 import SwiftUI
 
-/// 岛展开区宿主：当前页内容 + 底部分页点。
-/// 左右切换由 `IslandHitTestView` 的 AppKit 拖拽 / 触控板横滑处理。
+/// 岛展开区宿主：当前页内容。
+/// 分页点改到岛左上 / 右上角（见 `IslandPageCornerDots`）；左右切换仍由 AppKit 拖拽 / 触控板横滑处理。
 struct WidgetHostView: View {
     @ObservedObject var runtime: WidgetRuntime
-    @Environment(\.islandPalette) private var palette
 
     var body: some View {
-        VStack(spacing: 8) {
-            Group {
-                if runtime.isControlDeckPage {
-                    ControlDeckIslandView()
-                        .id(runtime.contentEpoch)
-                } else if runtime.isShowingEmpty || !runtime.isComboPage {
-                    // 空态 / 普通单组件页：铺满。
-                    runtime.activeView()
-                        .id(runtime.contentEpoch)
-                } else {
-                    WidgetPageGridView(
-                        placements: runtime.visiblePlacements,
-                        runtime: runtime
-                    )
+        Group {
+            if runtime.isControlDeckPage {
+                ControlDeckIslandView()
                     .id(runtime.contentEpoch)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .animation(.easeInOut(duration: 0.18), value: runtime.pageIndex)
-
-            if !runtime.isShowingEmpty, runtime.pageIDs.count > 1 {
-                HStack(spacing: 5) {
-                    ForEach(Array(runtime.pageIDs.indices), id: \.self) { index in
-                        Circle()
-                            .fill(index == runtime.pageIndex
-                                  ? palette.pageDotActive
-                                  : palette.pageDotInactive)
-                            .frame(width: 5, height: 5)
-                    }
-                }
-                .padding(.bottom, 2)
-                .accessibilityLabel(L10n.Widgets.pageDotsA11y)
+            } else if runtime.isShowingEmpty || !runtime.isComboPage {
+                // 空态 / 普通单组件页：铺满。
+                runtime.activeView()
+                    .id(runtime.contentEpoch)
+            } else {
+                WidgetPageGridView(
+                    placements: runtime.visiblePlacements,
+                    runtime: runtime
+                )
+                .id(runtime.contentEpoch)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(.easeInOut(duration: 0.18), value: runtime.pageIndex)
         .contentShape(Rectangle())
     }
 }
@@ -49,7 +32,6 @@ struct WidgetHostView: View {
 private struct WidgetPageGridView: View {
     let placements: [WidgetGridPlacement]
     @ObservedObject var runtime: WidgetRuntime
-    @Environment(\.islandPalette) private var palette
 
     var body: some View {
         GeometryReader { geo in
@@ -106,5 +88,55 @@ private struct WidgetPageGridView: View {
         let h = CGFloat(placement.size.rows) * cellH
             + CGFloat(placement.size.rows - 1) * WidgetGridBoard.spacing
         return CGRect(x: x, y: y, width: w, height: h)
+    }
+}
+
+/// 岛左上 / 右上角分页点：左边 = 当前页之前的页数，右边 = 之后的页数。
+struct IslandPageCornerDots: View {
+    @ObservedObject var runtime: WidgetRuntime
+    @Environment(\.islandPalette) private var palette
+
+    private var leadingCount: Int {
+        max(0, runtime.pageIndex)
+    }
+
+    private var trailingCount: Int {
+        max(0, runtime.pageIDs.count - runtime.pageIndex - 1)
+    }
+
+    var body: some View {
+        let total = runtime.pageIDs.count
+        // 瞬时通知不是正规分页，不显示角点。
+        if !runtime.isShowingEmpty, !runtime.isTransientNoticePage, total > 1 {
+            HStack(spacing: 0) {
+                dots(count: leadingCount, side: "leading")
+                Spacer(minLength: 0)
+                dots(count: trailingCount, side: "trailing")
+            }
+            .padding(.horizontal, 14)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(L10n.Widgets.pageDotsA11y)
+            .accessibilityValue(
+                String(
+                    format: L10n.Widgets.pageDotsCornerValueFormat,
+                    leadingCount,
+                    trailingCount,
+                    runtime.pageIndex + 1,
+                    total
+                )
+            )
+        }
+    }
+
+    private func dots(count: Int, side: String) -> some View {
+        HStack(spacing: 4) {
+            ForEach(0..<count, id: \.self) { index in
+                Circle()
+                    .fill(palette.pageDotInactive)
+                    .frame(width: 5, height: 5)
+                    .accessibilityHidden(true)
+                    .id("\(side)-\(index)")
+            }
+        }
     }
 }

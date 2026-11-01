@@ -59,7 +59,9 @@ final class WidgetRegistry {
         guard factories[SystemWidgetID.empty] == nil else { return }
 
         register(TypedWidgetModule<EmptyIslandWidget>())
+        register(TypedWidgetModule<IslandNoticeWidget>())
         register(TypedWidgetModule<MeetingCountdownWidget>())
+        register(TypedWidgetModule<MediaNowPlayingWidget>())
 
         // 用户 / AI 包：校验 manifest 后 register(manifest:factory:)，无需改 Runtime。
     }

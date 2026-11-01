@@ -20,8 +20,11 @@ Ridge 功能（媒体、会议、状态、用户/AI 自定义等）一律做成 
 | `WidgetRegistry` | `register` / `unregister`（热加载同通道） | 启动或加载器 |
 | `WidgetRuntime` | 调度（优先级 + 时间戳）、pin 常驻、按需销毁 | **框架**；widget 禁止直连 |
 | `system.empty` | 无争夺时的空态岛 | 系统；不进设置排序 |
+| `system.islandNotice` | **通用**瞬时通知 | 系统；不进库；`IslandNoticeCenter` 投递；约 3s 撤回（悬停不收）；**禁止左右滑** |
 
-`source`：`builtin` | `user` | `generated`（AI）。`kind`：`content`（进库、可调度）| `systemEmpty`（仅空态）。
+`source`：`builtin` | `user` | `generated`（AI）。`kind`：`content`（进库、可调度）| `systemEmpty`（仅空态）| `systemTransient`（隐性瞬时通知，可调度、不进库）。
+
+瞬时通知细节见 `island-notice.mdc`：新提示加 `IslandNoticePayload` case，勿新建第二个 transient widget。
 
 ## 接入新小组件（清单）
 
@@ -83,6 +86,7 @@ final class ExampleWidget: IslandWidget {
 - pin = 常驻内存（设置 UI 可隐藏，API 仍保留）；未 pin 离开展示后可销毁。
 - 持久化用 `context.storageKey("…")`，勿写全局裸 key。
 - `builtin.meeting`：EventKit 读系统日历会议 + 会前倒计时；从事件链接一键入会。预览页可配提前分钟与授权；始终单独成页，不进控制台。
+- `builtin.media`：系统 Now Playing（MediaRemoteAdapter）封面与播放控制；有会话时上岛，结束后撤回；始终单独成页，不进控制台。
 
 ## 禁止
 

@@ -19,6 +19,8 @@ final class IslandWindow: NSPanel {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
+        // 固定深色外观，避免系统浅色模式把岛底抬成深灰。
+        window.appearance = NSAppearance(named: .darkAqua)
         window.isFloatingPanel = true
         window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.statusWindow)) + 2)
         window.collectionBehavior = [
@@ -32,7 +34,8 @@ final class IslandWindow: NSPanel {
         window.hidesOnDeactivate = false
         window.isExcludedFromWindowsMenu = true
         window.animationBehavior = .none
-        window.sharingType = .none
+        // 允许系统截屏 / 录屏拍到灵动岛。
+        window.sharingType = .readOnly
         // 默认穿透；指针进入刘海/展开面板后再关闭穿透，避免展开占位挡下方点击。
         window.ignoresMouseEvents = true
         window.acceptsMouseMovedEvents = true

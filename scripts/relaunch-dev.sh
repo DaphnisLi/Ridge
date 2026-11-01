@@ -46,6 +46,40 @@ if [[ ! -f "${ENTITLEMENTS}" ]]; then
   exit 1
 fi
 
+# SPM 动态库会写入 DerivedData/PackageFrameworks 绝对 rpath，且排在
+# @executable_path/../Frameworks 之前；运行时 perl 桥会去加载构建目录。
+# 安装前剥掉绝对 PackageFrameworks rpath，强制走 App 内嵌 Frameworks。
+strip_packageframeworks_rpaths() {
+  local bin="$1"
+  [[ -f "${bin}" ]] || return 0
+  local rpaths
+  rpaths="$(otool -l "${bin}" 2>/dev/null | awk '
+    /cmd LC_RPATH/ { want=1; next }
+    want && /path / {
+      path=$2
+      if (path ~ /PackageFrameworks/ && path ~ /^\//) print path
+      want=0
+    }
+  ')"
+  [[ -n "${rpaths}" ]] || return 0
+  while IFS= read -r rp; do
+    [[ -n "${rp}" ]] || continue
+    echo "    strip rpath: ${rp}  ←  $(basename "${bin}")"
+    install_name_tool -delete_rpath "${rp}" "${bin}" 2>/dev/null || true
+  done <<< "${rpaths}"
+}
+
+echo "==> Fixing SPM absolute PackageFrameworks rpaths"
+while IFS= read -r -d '' macho; do
+  strip_packageframeworks_rpaths "${macho}"
+done < <(find "${BUILT_APP}/Contents" \( -type f -perm +111 -o -name "*.dylib" \) -print0 2>/dev/null)
+# 框架主二进制偶发无 +x，再显式扫一遍 Frameworks。
+if [[ -d "${BUILT_APP}/Contents/Frameworks" ]]; then
+  while IFS= read -r -d '' fwbin; do
+    strip_packageframeworks_rpaths "${fwbin}"
+  done < <(find "${BUILT_APP}/Contents/Frameworks" -type f -print0 2>/dev/null)
+fi
+
 # Automatic 签名会把 calendars 等 entitlement 剥掉，导致授权弹窗无反应；构建后用完整 entitlements 再签一次。
 echo "==> Re-signing with full entitlements"
 if ! grep -q 'personal-information.calendars' "${ENTITLEMENTS}"; then
@@ -58,7 +92,17 @@ if [[ -z "${CODESIGN_ID}" ]]; then
   echo "error: no Apple Development identity found" >&2
   exit 1
 fi
-# 先签主可执行文件，再签 bundle（避免空 entitlements 被嵌进 Mach-O）。
+
+# 嵌套 Framework 先签（改过 rpath 后签名已失效），再签主二进制与 bundle。
+if [[ -d "${BUILT_APP}/Contents/Frameworks" ]]; then
+  while IFS= read -r -d '' fw; do
+    echo "    codesign framework: $(basename "${fw}")"
+    codesign --force --options runtime --timestamp=none --generate-entitlement-der \
+      --sign "${CODESIGN_ID}" \
+      "${fw}"
+  done < <(find "${BUILT_APP}/Contents/Frameworks" -name "*.framework" -maxdepth 1 -print0 2>/dev/null)
+fi
+
 MAIN_BIN="${BUILT_APP}/Contents/MacOS/${APP_NAME}"
 codesign --force --options runtime --timestamp=none --generate-entitlement-der \
   --sign "${CODESIGN_ID}" \
@@ -85,6 +129,8 @@ echo "==> Entitlements OK (calendars present)"
 
 echo "==> Quitting existing ${APP_NAME}"
 pkill -x "${APP_NAME}" 2>/dev/null || true
+# MediaRemote perl 桥可能在主进程退出后残留，且仍握着旧 DerivedData 路径。
+pkill -f "MediaRemoteAdapter_MediaRemoteAdapter.bundle/.*/run.pl" 2>/dev/null || true
 # 等进程退出
 for _ in $(seq 1 20); do
   if ! pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
@@ -96,6 +142,7 @@ if pgrep -x "${APP_NAME}" >/dev/null 2>&1; then
   pkill -9 -x "${APP_NAME}" 2>/dev/null || true
   sleep 0.2
 fi
+pkill -9 -f "MediaRemoteAdapter_MediaRemoteAdapter.bundle/.*/run.pl" 2>/dev/null || true
 
 echo "==> Installing to ${INSTALL_APP}"
 mkdir -p "$(dirname "${INSTALL_APP}")"
@@ -113,3 +160,10 @@ if [[ "${COUNT}" != "1" ]]; then
   echo "warn: expected exactly one ${APP_NAME} process" >&2
 fi
 echo "Done. Installed at ${INSTALL_APP}"
+
+# 可选：拉起项目释放验收用的演示进程（Ridge/Focal/daphnis-apps :8871-8873）
+if [[ "${RIDGE_START_DEMOS:-}" == "1" ]]; then
+  echo "==> Starting project-release demos"
+  chmod +x "${ROOT}/scripts/start-project-demos.sh"
+  "${ROOT}/scripts/start-project-demos.sh" || true
+fi

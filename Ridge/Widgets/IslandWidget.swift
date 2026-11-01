@@ -12,10 +12,12 @@ enum WidgetSource: String, Codable, Hashable {
     case generated
 }
 
-/// 内容型参与调度；系统空态不进用户库、不参与排序。
+/// 内容型参与调度；系统空态不进库；瞬时通知隐性上岛、不进库。
 enum WidgetKind: String, Codable, Hashable {
     case content
     case systemEmpty
+    /// 与业务事件绑定的瞬时通知（如监视进程结束），不进设置库，可 `requestDisplay`。
+    case systemTransient
 }
 
 /// 可序列化元数据：内置、用户包、AI 生成包均以此描述，便于目录与校验。
@@ -33,6 +35,11 @@ struct WidgetManifest: Identifiable, Hashable, Codable {
 
     /// 出现在设置「显示优先级」列表中。
     var showsInLibrary: Bool { kind == .content }
+
+    /// 可参与岛上分页争夺（内容型 + 瞬时系统通知）。
+    var participatesInScheduling: Bool {
+        kind == .content || kind == .systemTransient
+    }
 
     init(
         id: WidgetID,
@@ -134,4 +141,6 @@ typealias WidgetFactory = @MainActor (WidgetContext) -> any IslandWidget
 enum SystemWidgetID {
     /// 系统空态岛：无用户小组件争夺时展示，不进设置排序列表。
     static let empty = "system.empty"
+    /// 瞬时通知（监视结束等）：隐性小组件，不进库。
+    static let islandNotice = "system.islandNotice"
 }

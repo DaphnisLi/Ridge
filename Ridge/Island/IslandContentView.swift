@@ -1,10 +1,17 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct IslandContentView: View {
     @ObservedObject var viewModel: IslandViewModel
     @ObservedObject var settings: IslandSettings
     @ObservedObject var runtime: WidgetRuntime
+    @ObservedObject private var controlDeck = ControlDeckSettings.shared
+    @State private var shelfDropTargeted = false
+
+    private var shelfDropEnabled: Bool {
+        controlDeck.isModuleEnabled("shelf")
+    }
 
     private var compactSize: CGSize {
         CGSize(
@@ -17,6 +24,7 @@ struct IslandContentView: View {
         let rawWidth = CGFloat(settings.expandedWidth)
         let layout: NotchGeometry.ExpandedLayout = {
             if runtime.isControlDeckPage { return .controlDeck }
+            if runtime.isTransientNoticePage { return .notice }
             if runtime.isComboPage { return .combo }
             return .standard
         }()
@@ -34,6 +42,11 @@ struct IslandContentView: View {
                 return max(
                     viewModel.notchHeight * NotchGeometry.controlDeckHeightMultiplier,
                     NotchGeometry.controlDeckMinHeight
+                )
+            case .notice:
+                return max(
+                    viewModel.notchHeight * NotchGeometry.noticeHeightMultiplier,
+                    viewModel.notchHeight + 34
                 )
             }
         }()
@@ -64,16 +77,39 @@ struct IslandContentView: View {
     var body: some View {
         let shape = IslandPanelShape(bottomRadius: appliedBottomRadius)
         return ZStack(alignment: .top) {
-            IslandBody(
-                isExpanded: viewModel.isExpanded,
-                notchHeight: viewModel.notchHeight,
-                runtime: runtime
-            )
+            ZStack(alignment: .top) {
+                // AppKit device 色不透明层：比 SwiftUI Color 经透明窗合成更接近刘海漆黑。
+                IslandOpaqueFillView(
+                    bottomRadius: appliedBottomRadius,
+                    fill: settings.theme.nsFillColor
+                )
+                IslandBody(
+                    isExpanded: viewModel.isExpanded,
+                    notchHeight: viewModel.notchHeight,
+                    runtime: runtime
+                )
+            }
             .frame(width: bodySize.width, height: bodySize.height)
-            .background(shape.fill(palette.fill))
+            .overlay {
+                if shelfDropEnabled, viewModel.isExpanded, shelfDropTargeted {
+                    shape
+                        .fill(Color(red: 0.678, green: 0.776, blue: 1.0).opacity(0.12))
+                        .allowsHitTesting(false)
+                }
+            }
             .clipShape(shape)
             // 整块面板都要可命中，避免透明子区把点击漏给下层页面。
             .contentShape(shape)
+            // 货架开启时：整岛接收文件拖入（不限货架小栏）。
+            .onDrop(of: [.fileURL], isTargeted: $shelfDropTargeted) { providers in
+                guard shelfDropEnabled else { return false }
+                AppLog.info("Shelf", "整岛接收拖入", [
+                    "providers": providers.count,
+                    "expanded": viewModel.isExpanded,
+                    "page": runtime.activeID ?? "nil"
+                ])
+                return ShelfClipboardDeckView.ingestDrop(providers: providers, into: ShelfStore.shared)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.islandPalette, palette)
@@ -84,8 +120,22 @@ struct IslandContentView: View {
         .animation(islandSpring, value: settings.theme)
         .animation(islandSpring, value: runtime.isComboPage)
         .animation(islandSpring, value: runtime.isControlDeckPage)
+        .animation(islandSpring, value: runtime.isTransientNoticePage)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
+        .onChange(of: shelfDropTargeted) { _, targeted in
+            let active = targeted && shelfDropEnabled
+            IslandController.shared?.setShelfDropTargeted(active)
+            if active {
+                ControlDeckSettings.shared.focusShelfForDrop()
+            }
+        }
+        .onChange(of: shelfDropEnabled) { _, enabled in
+            if !enabled, shelfDropTargeted {
+                shelfDropTargeted = false
+                IslandController.shared?.setShelfDropTargeted(false)
+            }
+        }
         .onChange(of: bodySize) { _, size in
             AppLog.debug("Island", "岛尺寸已更新", [
                 "expanded": viewModel.isExpanded,
@@ -112,12 +162,33 @@ private struct IslandBody: View {
     var body: some View {
         Group {
             if isExpanded {
-                VStack(spacing: 0) {
-                    topChrome
+                ZStack(alignment: .top) {
+                    VStack(spacing: 0) {
+                        // 瞬时通知：不再单独垫 topChrome，整块内容由下方统一 padding.top 下推。
+                        if !runtime.isTransientNoticePage {
+                            topChrome
+                        }
 
-                    WidgetHostView(runtime: runtime)
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, runtime.isShowingEmpty ? 16 : 10)
+                        WidgetHostView(runtime: runtime)
+                            .padding(.horizontal, 12)
+                            .padding(
+                                .top,
+                                runtime.isTransientNoticePage
+                                    ? max(32, (notchHeight * 0.5 + 4) * 2)
+                                    : 0
+                            )
+                            .padding(
+                                .bottom,
+                                runtime.isTransientNoticePage
+                                    ? 12
+                                    : (runtime.isShowingEmpty ? 16 : 8)
+                            )
+                    }
+
+                    // 左上 / 右上：前面几页 / 后面几页。
+                    IslandPageCornerDots(runtime: runtime)
+                        .padding(.top, max(6, notchHeight * 0.22))
+                        .allowsHitTesting(false)
                 }
             } else {
                 Color.clear
@@ -141,11 +212,11 @@ private struct IslandBody: View {
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 16)
-            .padding(.top, 12)
+            .padding(.top, max(12, notchHeight + 2))
         } else if !runtime.isShowingEmpty {
-            // 会议等自带标题的内容页：只留刘海安全距，不再叠一层顶栏。
+            // 会议 / 媒体等自带标题的内容页：留足刘海盲区，避免曲名顶进摄像头缺口。
             Color.clear
-                .frame(height: max(8, notchHeight - 6))
+                .frame(height: max(12, notchHeight + 2))
                 .accessibilityHidden(true)
         } else {
             Color.clear.frame(height: 10)

@@ -16,8 +16,11 @@ struct NotchGeometry: Equatable {
 
     /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
     static let compactScale: CGFloat = 0.96
-    /// 普通展开页高度 = 刘海高 × 此倍率；组合页为 2 倍。
-    static let fixedExpandedHeightMultiplier: CGFloat = 3
+    /// 普通展开页高度 = 刘海高 × 此倍率；组合页再 ×2。
+    /// 媒体卡（封面 + 律动条 + 进度 + 控制 + 分页点）纵向更高；5× 会裁切经典展开布局。
+    static let fixedExpandedHeightMultiplier: CGFloat = 6
+    /// 瞬时通知（进程结束）：矮胶囊（日志按钮与名称同行）。
+    static let noticeHeightMultiplier: CGFloat = 2.65
     /// 控制台混音台：稿面约 660×320，按刘海倍率抬高并设下限。
     static let controlDeckPreferredWidth: CGFloat = 660
     static let controlDeckHeightMultiplier: CGFloat = 8.5
@@ -52,10 +55,16 @@ struct NotchGeometry: Equatable {
         max(notchHeight * Self.controlDeckHeightMultiplier, Self.controlDeckMinHeight)
     }
 
+    /// 进程结束等瞬时通知高度（贴刘海）。
+    var noticeExpandedHeight: CGFloat {
+        max(notchHeight * Self.noticeHeightMultiplier, notchHeight + 34)
+    }
+
     enum ExpandedLayout {
         case standard
         case combo
         case controlDeck
+        case notice
     }
 
     /// 可见岛面板尺寸。
@@ -68,7 +77,7 @@ struct NotchGeometry: Equatable {
             switch layout {
             case .controlDeck:
                 return max(width, Self.controlDeckPreferredWidth)
-            case .standard, .combo:
+            case .standard, .combo, .notice:
                 return width
             }
         }()
@@ -78,6 +87,7 @@ struct NotchGeometry: Equatable {
             case .standard: return standardExpandedHeight
             case .combo: return comboExpandedHeight
             case .controlDeck: return controlDeckExpandedHeight
+            case .notice: return noticeExpandedHeight
             }
         }()
         return CGSize(

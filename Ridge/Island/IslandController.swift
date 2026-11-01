@@ -23,16 +23,29 @@ final class IslandController: NSObject {
 
     /// 用屏幕坐标轮询指针，避免 trackingArea 随窗口变形导致抖动。
     private var hoverTimer: Timer?
-    private var isPointerOverIsland = false
+    /// 指针是否在岛热区内（瞬时通知据此暂停 2s 自动收起）。
+    private(set) var isPointerOverIsland = false
+    /// 对外别名，供 `IslandNoticeWidget` 等读取悬停态。
+    var isHoveringIsland: Bool { isPointerOverIsland }
     private var collapseWorkItem: DispatchWorkItem?
     /// 岛内按下拖拽中：保持接收事件，避免穿透把翻页掐断。
     private var isMouseDownInIsland = false
+    /// 系统拖文件进入岛 / 悬停在货架投放区：钉住展开，避免展开收起来回闪。
+    private var isShelfFileDragPinned = false
+    /// SwiftUI 货架 `.onDrop(isTargeted:)` 命中中。
+    private var isShelfDropTargeted = false
+    /// 拖文件接近货架时临时抬高层级，便于抢到投放命中。
+    private var isShelfDragElevated = false
+    private lazy var islandRestingLevel = window.level
     private var pagePanRecognizer: NSPanGestureRecognizer?
     /// 触控板横滑：nonactivating Panel 上的 scrollWheel 常被系统送给下层 App，用监视器兜底。
     private var scrollLocalMonitor: Any?
     private var scrollGlobalMonitor: Any?
     private var scrollAccumX: CGFloat = 0
     private var lastPageSwipeAt: Date = .distantPast
+    /// 从控制台翻到矮页后，短暂沿用控制台热区，避免指针还在原下半截被当成离开。
+    private var hoverLayoutBoostUntil: Date = .distantPast
+    private var hoverLayoutBoost: NotchGeometry.ExpandedLayout?
     /// 设置窗仍打开（不论是否在前台）。
     private var isSettingsSessionActive = false
     /// 设置窗在前台有焦点时钉住展开；失焦后关掉，岛恢复悬停正常逻辑。
@@ -44,7 +57,6 @@ final class IslandController: NSObject {
         Self.shared = self
         WidgetRuntime.shared.start()
         installContent()
-        applyScreenRecordingVisibility()
 
         displayMonitor.onScreensChanged = { [weak self] in
             self?.relayout(reason: "screenParams")
@@ -61,13 +73,6 @@ final class IslandController: NSObject {
             .sink { [weak self] appearance in
                 self?.handleAppearanceChange(appearance)
             }
-
-        settings.$showInScreenRecordings
-            .removeDuplicates()
-            .sink { [weak self] _ in
-                self?.applyScreenRecordingVisibility()
-            }
-            .store(in: &settingsObservers)
 
         settings.$hideInFullscreen
             .removeDuplicates()
@@ -106,14 +111,33 @@ final class IslandController: NSObject {
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] deck in
-                AppLog.info("Island", "控制台混音台尺寸切换", [
+                AppLog.info("Island", "控制台页尺寸切换", [
                     "controlDeck": deck,
                     "preferredW": NotchGeometry.controlDeckPreferredWidth,
                     "minH": NotchGeometry.controlDeckMinHeight
                 ])
-                // 控制台页禁用横向拖拽翻页手势，避免抢走按钮点击。
-                self?.pagePanRecognizer?.isEnabled = !deck
+                self?.updatePagePanEnabled()
                 self?.applyWindowFrame(animated: false)
+            }
+            .store(in: &settingsObservers)
+
+        WidgetRuntime.shared.$isTransientNoticePage
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] notice in
+                AppLog.info("Island", "瞬时通知页尺寸切换", ["notice": notice])
+                self?.updatePagePanEnabled()
+                self?.updateInteractiveFrame()
+                self?.applyWindowFrame(animated: false)
+            }
+            .store(in: &settingsObservers)
+
+        WidgetRuntime.shared.$pageIDs
+            .map(\.count)
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.updatePagePanEnabled()
             }
             .store(in: &settingsObservers)
 
@@ -298,6 +322,11 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "设置预览中，忽略收起", ["reason": reason])
             return
         }
+        // 仅投放区仍命中时挡收起；指针已离开则允许 hoverEnd 收起。
+        if isShelfDropTargeted, reason == "hoverEnd" {
+            AppLog.debug("Island", "货架投放区命中中，忽略收起", ["targeted": true])
+            return
+        }
         AppLog.info("Island", "收起灵动岛", [
             "reason": reason,
             "expanded": false,
@@ -374,22 +403,67 @@ final class IslandController: NSObject {
             return
         }
 
-        let over = Self.pointerIsOverIsland(
+        let over = pointerIsOverIsland(
             mouse: mouse,
             geometry: geometry,
             expanded: viewModel.isExpanded
         )
+        let fileDrag = Self.isFileDragInProgress()
+        let shelfEnabled = ControlDeckSettings.shared.isModuleEnabled("shelf")
+        // 用「控制台展开框」作磁吸区：拖文件靠近时提前展开，不必顶到屏幕最上沿
+        // （顶边会触发系统调度中心 / 空间切换，优先级高于第三方窗）。
+        let approach = shelfEnabled && fileDrag
+            && pointerIsInShelfDropApproachZone(mouse: mouse, geometry: geometry)
+
+        // 仅在「接近 / 在岛上 / 投放区命中」且拖文件进行中时钉住；驶出即解除。
+        let wantShelfHold = shelfEnabled
+            && (over || isShelfDropTargeted || approach)
+            && (fileDrag || isShelfDropTargeted)
+        if isShelfFileDragPinned != wantShelfHold {
+            isShelfFileDragPinned = wantShelfHold
+            if wantShelfHold {
+                ControlDeckSettings.shared.focusShelfForDrop()
+                AppLog.info("Island", "货架拖入：钉住展开", [
+                    "over": over,
+                    "targeted": isShelfDropTargeted,
+                    "approach": approach
+                ])
+            } else {
+                AppLog.info("Island", "货架拖入：解除钉住", [
+                    "over": over,
+                    "targeted": isShelfDropTargeted,
+                    "fileDrag": fileDrag,
+                    "approach": approach
+                ])
+            }
+        }
+        setShelfDragWindowElevation(wantShelfHold)
 
         // 窗体始终按展开尺寸占位；收起时刘海以外必须穿透。
-        // 拖拽翻页过程中不穿透，否则 mouseDragged / 横滑会被掐断。
-        let shouldIgnore = !over && !isMouseDownInIsland
-        setClickThrough(shouldIgnore, reason: over ? "pointerOver" : (isMouseDownInIsland ? "dragHold" : "pointerAway"))
+        // 货架接近 / 投放命中时不穿透，否则收不到 onDrop。
+        let shelfHold = isShelfFileDragPinned || isShelfDropTargeted
+        let shouldIgnore = !over && !isMouseDownInIsland && !shelfHold
+        setClickThrough(
+            shouldIgnore,
+            reason: shelfHold ? "shelfDropHold" : (over ? "pointerOver" : (isMouseDownInIsland ? "dragHold" : "pointerAway"))
+        )
 
         if isSettingsLivePreview {
             isPointerOverIsland = over
             if !viewModel.isExpanded {
                 expand(reason: "settingsPreview")
             }
+            return
+        }
+
+        // 拖文件进入磁吸区 / 投放区：提前展开，松手点落在面板中部，躲开顶边调度中心。
+        if shelfHold {
+            collapseWorkItem?.cancel()
+            collapseWorkItem = nil
+            if !viewModel.isExpanded {
+                expand(reason: approach && !over ? "shelfDropApproach" : "shelfDrop")
+            }
+            isPointerOverIsland = over || isShelfDropTargeted || approach
             return
         }
 
@@ -402,6 +476,58 @@ final class IslandController: NSObject {
             expand(reason: "hover")
         } else if !isMouseDownInIsland {
             scheduleCollapse()
+        }
+    }
+
+    /// 货架 SwiftUI drop 命中变化：命中期间同样钉住展开。
+    func setShelfDropTargeted(_ targeted: Bool) {
+        guard isShelfDropTargeted != targeted else { return }
+        isShelfDropTargeted = targeted
+        AppLog.info("Island", "货架投放区命中", ["targeted": targeted])
+        if targeted {
+            isShelfFileDragPinned = true
+            collapseWorkItem?.cancel()
+            collapseWorkItem = nil
+            ControlDeckSettings.shared.focusShelfForDrop()
+            if !viewModel.isExpanded {
+                expand(reason: "shelfDropTargeted")
+            }
+            setClickThrough(false, reason: "shelfDropTargeted")
+        }
+    }
+
+    /// 正在拖文件：须同时满足左键按下 + 拖放剪贴板带 fileURL。
+    /// 仅查 pasteboard 不够——松手后类型常残留，会把货架钉住展开卡死。
+    private static func isFileDragInProgress() -> Bool {
+        guard NSEvent.pressedMouseButtons & (1 << 0) != 0 else { return false }
+        let drag = NSPasteboard(name: .drag)
+        guard let types = drag.types, !types.isEmpty else { return false }
+        return types.contains(.fileURL) || types.contains(NSPasteboard.PasteboardType("public.file-url"))
+    }
+
+    /// 拖文件磁吸区：控制台展开框再向下 / 左右扩一圈。
+    /// 指针进入此区即展开货架，避免为命中刘海而顶到屏幕最上沿触发调度中心。
+    private func pointerIsInShelfDropApproachZone(mouse: NSPoint, geometry: NotchGeometry) -> Bool {
+        let width = CGFloat(IslandSettings.shared.expandedWidth)
+        var zone = geometry.expandedFrameOnScreen(width: width, layout: .controlDeck)
+        // 下扩：从面板下方就能吸住；左右略扩方便斜着拖入。
+        zone = zone.insetBy(dx: -36, dy: 0)
+        zone.origin.y -= 72
+        zone.size.height += 72
+        return zone.contains(mouse)
+    }
+
+    private func setShelfDragWindowElevation(_ elevated: Bool) {
+        guard isShelfDragElevated != elevated else { return }
+        isShelfDragElevated = elevated
+        if elevated {
+            // 抬到弹出菜单级，仍低于系统拖影；提高相对其它浮层的投放命中机会。
+            window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.popUpMenuWindow)) + 1)
+            window.orderFrontRegardless()
+            AppLog.debug("Island", "货架拖入：抬高窗口层级")
+        } else {
+            window.level = islandRestingLevel
+            AppLog.debug("Island", "货架拖入：恢复窗口层级")
         }
     }
 
@@ -468,8 +594,8 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 刘海本体始终算「在岛上」；展开后展开面板区域也算。
-    private static func pointerIsOverIsland(
+    /// 刘海本体始终算「在岛上」；展开后按「当前页实际面积」判断（见 `hoverRetentionLayout`）。
+    private func pointerIsOverIsland(
         mouse: NSPoint,
         geometry: NotchGeometry,
         expanded: Bool
@@ -480,12 +606,7 @@ final class IslandController: NSObject {
             return true
         }
         if expanded {
-            let runtime = WidgetRuntime.shared
-            let layout: NotchGeometry.ExpandedLayout = {
-                if runtime.isControlDeckPage { return .controlDeck }
-                if runtime.isComboPage { return .combo }
-                return .standard
-            }()
+            let layout = hoverRetentionLayout(for: WidgetRuntime.shared)
             let width = CGFloat(IslandSettings.shared.expandedWidth)
             let body = geometry.expandedFrameOnScreen(width: width, layout: layout)
                 .insetBy(dx: -2, dy: -2)
@@ -496,8 +617,25 @@ final class IslandController: NSObject {
         return false
     }
 
+    /// 悬停保留区跟当前页走：小组件用矮区，控制台用高区。
+    /// 仅在刚从控制台翻走的短窗口内临时抬到控制台高度，避免翻页误收。
+    private func hoverRetentionLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
+        if let boost = hoverLayoutBoost, Date() < hoverLayoutBoostUntil {
+            return boost
+        }
+        if hoverLayoutBoost != nil {
+            hoverLayoutBoost = nil
+        }
+        if runtime.isControlDeckPage { return .controlDeck }
+        if runtime.isTransientNoticePage { return .notice }
+        if runtime.isComboPage { return .combo }
+        return .standard
+    }
+
     private func scheduleCollapse() {
         collapseWorkItem?.cancel()
+        // 刚翻页时高度会变，给指针一点时间落在新面板上，避免误收。
+        let delay: TimeInterval = Date().timeIntervalSince(lastPageSwipeAt) < 0.45 ? 0.36 : 0.12
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             // 收起前再确认一次，避免边缘抖动。
@@ -512,7 +650,7 @@ final class IslandController: NSObject {
                 self.collapse(reason: "hoverEnd")
                 return
             }
-            let stillOver = Self.pointerIsOverIsland(
+            let stillOver = self.pointerIsOverIsland(
                 mouse: mouse,
                 geometry: geometry,
                 expanded: true
@@ -524,7 +662,7 @@ final class IslandController: NSObject {
             self.collapse(reason: "hoverEnd")
         }
         collapseWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
     private func isPointerOverSettingsWindow(_ mouse: NSPoint) -> Bool {
@@ -536,6 +674,7 @@ final class IslandController: NSObject {
 
     private static func expandedLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
         if runtime.isControlDeckPage { return .controlDeck }
+        if runtime.isTransientNoticePage { return .notice }
         if runtime.isComboPage { return .combo }
         return .standard
     }
@@ -550,6 +689,9 @@ final class IslandController: NSObject {
         )
         let hosting = IslandHostingView(rootView: root)
         hosting.translatesAutoresizingMaskIntoConstraints = true
+        hosting.appearance = NSAppearance(named: .darkAqua)
+        hosting.wantsLayer = true
+        hosting.layer?.backgroundColor = NSColor.clear.cgColor
         hosting.onHorizontalPageSwipe = { [weak self] offset in
             self?.commitPageSwipe(offset: offset, source: "hostingScroll")
         }
@@ -563,11 +705,31 @@ final class IslandController: NSObject {
         // 不可 delaysPrimaryMouseButtonEvents：否则会吞掉混音台按钮的 mouseDown。
         let pan = HorizontalPagePanRecognizer(target: self, action: #selector(handlePagePan(_:)))
         pan.delaysPrimaryMouseButtonEvents = false
-        pan.isEnabled = !WidgetRuntime.shared.isControlDeckPage
         hitTestView.addGestureRecognizer(pan)
         pagePanRecognizer = pan
+        updatePagePanEnabled()
 
         window.contentView = hitTestView
+        // 主题框层偶发带灰底，清掉后纯黑 fill 才贴得上刘海。
+        if let frameView = hitTestView.superview {
+            frameView.wantsLayer = true
+            frameView.layer?.backgroundColor = NSColor.clear.cgColor
+        }
+        AppLog.info("Island", "已安装岛内容与 device 纯黑底", [
+            "theme": settings.theme.rawValue,
+            "appearance": "darkAqua",
+            "fill": "deviceRGB"
+        ])
+    }
+
+    /// 多页时可横滑翻页（含多个控制台模块页）；单页 / 瞬时通知页关掉，避免抢按钮或滑走提示。
+    private func updatePagePanEnabled() {
+        let runtime = WidgetRuntime.shared
+        let multi = runtime.pageIDs.count > 1 && !runtime.isTransientNoticePage
+        pagePanRecognizer?.isEnabled = multi
+        if runtime.isTransientNoticePage {
+            AppLog.debug("Overlay", "瞬时通知页已禁用翻页手势")
+        }
     }
 
     // MARK: - 分页手势（触控板 / 拖拽）
@@ -607,8 +769,17 @@ final class IslandController: NSObject {
     @discardableResult
     private func handleScrollPaging(_ event: NSEvent) -> Bool {
         guard viewModel.isExpanded else { return false }
+        // 瞬时通知不是正规分页内容，禁止横滑切走。
+        if WidgetRuntime.shared.isTransientNoticePage {
+            scrollAccumX = 0
+            return false
+        }
+        // 控制台页（货架 / 混音台）需要纵向滚动，不拦截任何滚轮。
+        if WidgetRuntime.shared.isControlDeckPage {
+            return false
+        }
         guard let geometry else { return false }
-        guard Self.pointerIsOverIsland(
+        guard pointerIsOverIsland(
             mouse: NSEvent.mouseLocation,
             geometry: geometry,
             expanded: true
@@ -666,6 +837,10 @@ final class IslandController: NSObject {
 
     private func commitPageSwipe(offset: Int, source: String) {
         guard viewModel.isExpanded else { return }
+        if WidgetRuntime.shared.isTransientNoticePage {
+            AppLog.debug("Overlay", "瞬时通知页禁止翻页", ["source": source])
+            return
+        }
         // 防抖：local + hosting / global 可能短时间重复触发。
         let now = Date()
         guard now.timeIntervalSince(lastPageSwipeAt) > 0.28 else {
@@ -683,7 +858,26 @@ final class IslandController: NSObject {
             AppLog.warn("Overlay", "可切换页不足，无法翻页", ["pages": pages])
             return
         }
+        let wasControlDeck = WidgetRuntime.shared.isControlDeckPage
+        // 翻页瞬间高度会变，先取消待收起，避免「还在下半截」被当成离开。
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        isPointerOverIsland = true
         WidgetRuntime.shared.selectPage(offset: offset)
+        let nowControlDeck = WidgetRuntime.shared.isControlDeckPage
+        if wasControlDeck, !nowControlDeck {
+            hoverLayoutBoost = .controlDeck
+            hoverLayoutBoostUntil = Date().addingTimeInterval(0.55)
+            AppLog.debug("Island", "翻离控制台，短暂保留大热区", ["seconds": 0.55])
+        } else {
+            hoverLayoutBoost = nil
+        }
+        updateInteractiveFrame(expanded: true)
+        AppLog.debug("Island", "翻页后悬停热区", [
+            "hoverLayout": "\(hoverRetentionLayout(for: WidgetRuntime.shared))",
+            "page": WidgetRuntime.shared.activeID ?? "nil",
+            "boost": hoverLayoutBoost != nil
+        ])
     }
 
     @objc private func handlePagePan(_ gr: NSPanGestureRecognizer) {
@@ -851,13 +1045,6 @@ final class IslandController: NSObject {
             "setting": settings.hideInFullscreen
         ])
         updateVisibility()
-    }
-
-    private func applyScreenRecordingVisibility() {
-        window.sharingType = settings.showInScreenRecordings ? .readOnly : .none
-        AppLog.debug("Overlay", "屏幕录制可见性已应用", [
-            "visible": settings.showInScreenRecordings
-        ])
     }
 
     private func updateVisibility() {

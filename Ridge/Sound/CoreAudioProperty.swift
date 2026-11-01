@@ -99,10 +99,11 @@ enum CoreAudioProperty {
         object: AudioObjectID,
         _ selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+        element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
         queue: DispatchQueue = .main,
         block: @escaping () -> Void
     ) -> AudioObjectPropertyListenerBlock? {
-        var address = Self.address(selector, scope: scope)
+        var address = Self.address(selector, scope: scope, element: element)
         let listener: AudioObjectPropertyListenerBlock = { _, _ in
             queue.async { block() }
         }
@@ -115,10 +116,11 @@ enum CoreAudioProperty {
         object: AudioObjectID,
         _ selector: AudioObjectPropertySelector,
         scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal,
+        element: AudioObjectPropertyElement = kAudioObjectPropertyElementMain,
         queue: DispatchQueue = .main,
         block: @escaping AudioObjectPropertyListenerBlock
     ) {
-        var address = Self.address(selector, scope: scope)
+        var address = Self.address(selector, scope: scope, element: element)
         AudioObjectRemovePropertyListenerBlock(object, &address, queue, block)
     }
 }

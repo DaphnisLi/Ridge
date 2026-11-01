@@ -1,54 +1,126 @@
 import Combine
 import Foundation
 
-/// 控制台：最多一个，与小组件库分离；放功能性磁贴（电量、音量等），不承载会议等内容型页。
+/// 控制台：最多一个，与小组件库分离；放功能性磁贴（音量、货架、项目释放等），不承载会议等内容型页。
 @MainActor
 final class ControlDeckSettings: ObservableObject {
     static let shared = ControlDeckSettings()
 
-    /// 分页 / 宿主用的稳定 id（不进小组件库）。
-    static let pageID: WidgetID = "system.controlDeck"
+    /// 控制台页 id 前缀；每个已开启模块各占一页：`system.controlDeck.volume` 等。
+    static let pageIDPrefix: WidgetID = "system.controlDeck"
+    /// 兼容旧单一页 id。
+    static let pageID: WidgetID = pageIDPrefix
+
+    /// 已落地、可上岛的模块 id。
+    static let liveModuleIDs: Set<String> = ["shelf", "volume", "projects"]
+
+    enum Pane: String, CaseIterable, Identifiable {
+        case shelf
+        case volume
+        case projects
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .shelf: return L10n.ControlDeck.moduleShelf
+            case .volume: return L10n.ControlDeck.moduleVolume
+            case .projects: return L10n.ControlDeck.moduleProjects
+            }
+        }
+
+        var pageID: WidgetID { "\(ControlDeckSettings.pageIDPrefix).\(rawValue)" }
+
+        static func from(pageID: WidgetID) -> Pane? {
+            guard pageID.hasPrefix(ControlDeckSettings.pageIDPrefix + ".") else {
+                if pageID == ControlDeckSettings.pageIDPrefix { return nil }
+                return nil
+            }
+            let suffix = String(pageID.dropFirst(ControlDeckSettings.pageIDPrefix.count + 1))
+            return Pane(rawValue: suffix)
+        }
+    }
+
+    static func isControlDeckPageID(_ id: WidgetID) -> Bool {
+        id == pageIDPrefix || id.hasPrefix(pageIDPrefix + ".")
+    }
+
+    static func pageID(for pane: Pane) -> WidgetID { pane.pageID }
 
     private enum Key {
         static let enabled = "controlDeck.enabled.v1"
+        static let modules = "controlDeck.modules.v1"
         static let migratedFromCombo = "controlDeck.migratedFromCombo.v1"
+        static let activePane = "controlDeck.activePane.v1"
     }
 
-    @Published var isEnabled: Bool {
+    /// 岛上是否展示控制台页（任一已落地模块开启即显示）。
+    @Published private(set) var isEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isEnabled, forKey: Key.enabled)
             AppLog.info("ControlDeck", "控制台开关变更", ["enabled": isEnabled])
         }
     }
 
-    /// 设置页展示的规划中功能模块（只读说明，尚未逐项开关）。
+    /// 各规划模块开关。
+    @Published private var moduleEnabled: [String: Bool] {
+        didSet {
+            UserDefaults.standard.set(moduleEnabled, forKey: Key.modules)
+        }
+    }
+
+    /// 控制台内当前面板；多模块同时开启时用分段切换。
+    @Published var activePane: Pane {
+        didSet {
+            UserDefaults.standard.set(activePane.rawValue, forKey: Key.activePane)
+        }
+    }
+
+    /// 设置页展示的功能模块。
     var plannedModules: [ControlDeckPlannedModule] {
         [
             .init(
-                id: "battery",
-                title: L10n.ControlDeck.moduleBattery,
-                summary: L10n.ControlDeck.moduleBatterySummary,
-                symbol: "battery.100.bolt"
+                id: "shelf",
+                title: L10n.ControlDeck.moduleShelf,
+                symbol: "tray.full.fill",
+                isLive: true
             ),
             .init(
                 id: "volume",
                 title: L10n.ControlDeck.moduleVolume,
-                summary: L10n.ControlDeck.moduleVolumeSummaryLive,
-                symbol: "speaker.wave.2.fill"
+                symbol: "speaker.wave.2.fill",
+                isLive: true
+            ),
+            .init(
+                id: "projects",
+                title: L10n.ControlDeck.moduleProjects,
+                symbol: "hammer.fill",
+                isLive: true
+            ),
+            .init(
+                id: "battery",
+                title: L10n.ControlDeck.moduleBattery,
+                symbol: "battery.100.bolt",
+                isLive: false
             ),
             .init(
                 id: "focus",
                 title: L10n.ControlDeck.moduleFocus,
-                summary: L10n.ControlDeck.moduleFocusSummary,
-                symbol: "cup.and.saucer.fill"
+                symbol: "cup.and.saucer.fill",
+                isLive: false
             ),
             .init(
                 id: "system",
                 title: L10n.ControlDeck.moduleSystem,
-                summary: L10n.ControlDeck.moduleSystemSummary,
-                symbol: "cpu"
+                symbol: "cpu",
+                isLive: false
             )
         ]
+    }
+
+    /// 当前已开启的已落地面板（有序）。
+    var enabledPanes: [Pane] {
+        Pane.allCases.filter { isModuleEnabled($0.rawValue) }
     }
 
     private init() {
@@ -73,23 +145,119 @@ final class ControlDeckSettings: ObservableObject {
             }
             defaults.set(true, forKey: Key.migratedFromCombo)
             defaults.set(enabled, forKey: Key.enabled)
-            // 清掉旧组合成员，避免残留调度。
             defaults.removeObject(forKey: "widget.comboPages.v1")
         }
 
-        isEnabled = enabled
-        AppLog.debug("ControlDeck", "已加载控制台设置", ["enabled": isEnabled])
+        var modules = defaults.dictionary(forKey: Key.modules) as? [String: Bool] ?? [:]
+        // 与旧总开关对齐：曾开启控制台 → 默认打开音量模块。
+        if modules["volume"] == nil {
+            modules["volume"] = enabled
+        }
+        moduleEnabled = modules
+
+        if let raw = defaults.string(forKey: Key.activePane), let pane = Pane(rawValue: raw) {
+            activePane = pane
+        } else if modules["shelf"] == true {
+            activePane = .shelf
+        } else if modules["projects"] == true {
+            activePane = .projects
+        } else {
+            activePane = .volume
+        }
+
+        isEnabled = Self.anyLiveModuleEnabled(modules)
+        if isEnabled != enabled {
+            defaults.set(isEnabled, forKey: Key.enabled)
+        }
+        if modules["shelf"] == true {
+            ClipboardHistoryStore.shared.start()
+        }
+        if modules["projects"] == true {
+            ProjectReleaseSession.shared.start()
+        }
+        AppLog.debug("ControlDeck", "已加载控制台设置", [
+            "enabled": isEnabled,
+            "modules": modules.filter(\.value).map(\.key).sorted().joined(separator: ","),
+            "pane": activePane.rawValue
+        ])
+    }
+
+    func isModuleEnabled(_ id: String) -> Bool {
+        moduleEnabled[id] ?? false
+    }
+
+    func setModuleEnabled(_ id: String, _ enabled: Bool) {
+        guard isModuleEnabled(id) != enabled else { return }
+        moduleEnabled[id] = enabled
+        AppLog.info("ControlDeck", "模块开关变更", ["id": id, "enabled": enabled])
+
+        if id == "shelf" {
+            if enabled {
+                ClipboardHistoryStore.shared.start()
+            } else {
+                ClipboardHistoryStore.shared.stop()
+            }
+        }
+        if id == "projects" {
+            if enabled {
+                ProjectReleaseSession.shared.start()
+            } else {
+                ProjectReleaseSession.shared.stop()
+            }
+        }
+
+        guard Self.liveModuleIDs.contains(id) else { return }
+
+        let anyOn = Self.anyLiveModuleEnabled(moduleEnabled)
+        setEnabled(anyOn)
+
+        if enabled, let pane = Pane(rawValue: id) {
+            activePane = pane
+            WidgetRuntime.shared.focusControlDeck(pane: pane)
+        } else if !anyOn {
+            WidgetRuntime.shared.recompute(reason: "controlDeckOff")
+        } else {
+            if activePane.rawValue == id, let fallback = enabledPanes.first {
+                activePane = fallback
+            }
+            // 模块增减会改变页数，必须重算分页。
+            WidgetRuntime.shared.recompute(reason: "controlDeckModules")
+        }
+    }
+
+    /// 拖文件靠近刘海时切到货架面板。
+    func focusShelfForDrop() {
+        guard isModuleEnabled("shelf") else { return }
+        if activePane != .shelf {
+            activePane = .shelf
+            AppLog.info("ControlDeck", "拖入文件，切到货架面板")
+        }
+        if !isEnabled {
+            setEnabled(true)
+        }
+        WidgetRuntime.shared.focusControlDeck(pane: .shelf)
+    }
+
+    /// 岛滑动到某控制台页时回写当前面板。
+    func syncActivePane(fromPageID pageID: WidgetID) {
+        guard let pane = Pane.from(pageID: pageID), activePane != pane else { return }
+        activePane = pane
+        AppLog.debug("ControlDeck", "滑动同步控制台面板", ["pane": pane.rawValue])
     }
 
     func setEnabled(_ enabled: Bool) {
         guard isEnabled != enabled else { return }
         isEnabled = enabled
     }
+
+    private static func anyLiveModuleEnabled(_ modules: [String: Bool]) -> Bool {
+        liveModuleIDs.contains { modules[$0] == true }
+    }
 }
 
 struct ControlDeckPlannedModule: Identifiable, Hashable {
     let id: String
     let title: String
-    let summary: String
     let symbol: String
+    let isLive: Bool
 }

@@ -1,3 +1,4 @@
+import AudioToolbox
 import CoreAudio
 import Foundation
 
@@ -148,6 +149,14 @@ enum SoundDeviceService {
 
     static func masterOutputVolume() -> Double {
         guard let id = defaultOutputDeviceID() else { return 0 }
+        // 键盘音量键通常改 VirtualMainVolume，优先读它。
+        if let virtual: Float32 = CoreAudioProperty.get(
+            object: id,
+            kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+            scope: kAudioObjectPropertyScopeOutput
+        ) {
+            return Double(virtual)
+        }
         if let scalar: Float32 = CoreAudioProperty.get(
             object: id,
             kAudioDevicePropertyVolumeScalar,
@@ -176,12 +185,19 @@ enum SoundDeviceService {
     static func setMasterOutputVolume(_ value: Double) -> Bool {
         guard let id = defaultOutputDeviceID() else { return false }
         let scalar = Float32(min(1, max(0, value)))
+        // 与键盘路径一致：优先写 VirtualMainVolume，再回退通道 VolumeScalar。
         var ok = CoreAudioProperty.set(
+            object: id,
+            kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+            scope: kAudioObjectPropertyScopeOutput,
+            value: scalar
+        )
+        ok = CoreAudioProperty.set(
             object: id,
             kAudioDevicePropertyVolumeScalar,
             scope: kAudioObjectPropertyScopeOutput,
             value: scalar
-        )
+        ) || ok
         ok = CoreAudioProperty.set(
             object: id,
             kAudioDevicePropertyVolumeScalar,

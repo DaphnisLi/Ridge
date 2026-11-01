@@ -25,6 +25,8 @@ final class WidgetRuntime: ObservableObject {
     @Published private(set) var isComboPage = false
     /// 当前页是否为控制台（与小组件网格互斥）。
     @Published private(set) var isControlDeckPage = false
+    /// 当前页是否为瞬时通知（进程结束等），用贴刘海的矮展开高度。
+    @Published private(set) var isTransientNoticePage = false
 
     private let registry = WidgetRegistry.shared
     private let settings = WidgetSettings.shared
@@ -86,10 +88,16 @@ final class WidgetRuntime: ObservableObject {
     // MARK: - Demand（供 Context 调用）
 
     func requestDisplay(_ id: WidgetID) {
-        guard registry.manifest(for: id)?.kind == .content else { return }
+        guard let kind = registry.manifest(for: id)?.kind,
+              kind == .content || kind == .systemTransient
+        else { return }
         if demandTimestamps[id] == nil {
             demandTimestamps[id] = Date()
-            AppLog.info("Widget", "申请展示", ["id": id])
+            AppLog.info("Widget", "申请展示", ["id": id, "kind": kind.rawValue])
+        }
+        // 瞬时通知抢到当前页，避免被控制台/其它内容页挡住。
+        if kind == .systemTransient {
+            browseOverrideID = id
         }
         recompute(reason: "request")
     }
@@ -109,8 +117,12 @@ final class WidgetRuntime: ObservableObject {
 
     // MARK: - 左右滑动分页
 
-    /// `offset`：+1 下一页（向左滑），-1 上一页（向右滑）。
+    /// `offset`：+1 下一页（向左滑），-1 上一页（向右滑）。瞬时通知页禁止切换。
     func selectPage(offset: Int) {
+        guard !isTransientNoticePage else {
+            AppLog.debug("Widget", "瞬时通知页禁止左右滑动")
+            return
+        }
         guard pageIDs.count >= 2 else { return }
         let count = pageIDs.count
         let next = ((pageIndex + offset) % count + count) % count
@@ -118,6 +130,10 @@ final class WidgetRuntime: ObservableObject {
     }
 
     func selectPage(at index: Int) {
+        guard !isTransientNoticePage else {
+            AppLog.debug("Widget", "瞬时通知页禁止左右滑动", ["index": index])
+            return
+        }
         guard pageIDs.indices.contains(index) else { return }
         let id = pageIDs[index]
         browseOverrideID = id
@@ -152,15 +168,23 @@ final class WidgetRuntime: ObservableObject {
         contentEpoch &+= 1
     }
 
-    /// 设置里打开 / 预览控制台：切到控制台高页。
-    func focusControlDeck() {
+    /// 设置里打开 / 预览控制台：切到指定（或当前）控制台模块高页。
+    func focusControlDeck(pane: ControlDeckSettings.Pane? = nil) {
         guard controlDeck.isEnabled else {
             AppLog.debug("Widget", "聚焦控制台跳过：未开启")
             return
         }
-        browseOverrideID = ControlDeckSettings.pageID
+        let target = pane ?? controlDeck.activePane
+        let pageID = ControlDeckSettings.pageID(for: target)
+        if controlDeck.enabledPanes.contains(target) {
+            browseOverrideID = pageID
+        } else if let first = controlDeck.enabledPanes.first {
+            browseOverrideID = first.pageID
+        } else {
+            browseOverrideID = nil
+        }
         recompute(reason: "controlDeckFocus")
-        AppLog.info("Widget", "聚焦控制台")
+        AppLog.info("Widget", "聚焦控制台", ["pane": target.rawValue, "page": browseOverrideID ?? "nil"])
     }
 
     // MARK: - Schedule
@@ -171,7 +195,7 @@ final class WidgetRuntime: ObservableObject {
         let requestedAt: Date
     }
 
-    /// 已启用且正在争夺（requestDisplay）的内容型 widget。
+    /// 已启用且正在争夺的内容型 + 瞬时系统通知。
     private func scheduledCandidates() -> [Candidate] {
         var result: [Candidate] = []
         for id in settings.order where settings.isEnabled(id) {
@@ -183,9 +207,35 @@ final class WidgetRuntime: ObservableObject {
                 requestedAt: stamp
             ))
         }
+        for (id, stamp) in demandTimestamps {
+            guard registry.manifest(for: id)?.kind == .systemTransient else { continue }
+            result.append(Candidate(
+                id: id,
+                priority: Int.max,
+                requestedAt: stamp
+            ))
+        }
         return result.sorted {
             if $0.priority != $1.priority { return $0.priority > $1.priority }
             return $0.requestedAt < $1.requestedAt
+        }
+    }
+
+    /// 后台服务发现内容变化时唤醒小组件：有内容则确保实例并 `refresh`（由其自行 requestDisplay）；
+    /// 无内容仅在实例仍存活时 refresh（以便 withdraw），避免空闲时反复创建再被 reap。
+    func nudgeContentWidget(_ id: WidgetID, hasContent: Bool) {
+        guard registry.manifest(for: id)?.kind == .content else { return }
+        guard settings.isEnabled(id) else {
+            if demandTimestamps[id] != nil {
+                withdrawDisplay(id)
+            }
+            return
+        }
+        if hasContent {
+            let widget = ensureInstance(id)
+            widget?.refresh()
+        } else if let widget = instances[id] {
+            widget.refresh()
         }
     }
 
@@ -209,25 +259,35 @@ final class WidgetRuntime: ObservableObject {
     }
 
     func recompute(reason: String) {
-        for id in Array(demandTimestamps.keys) where !settings.isEnabled(id) {
-            demandTimestamps.removeValue(forKey: id)
-            if browseOverrideID == id {
-                browseOverrideID = nil
+        for id in Array(demandTimestamps.keys) {
+            let kind = registry.manifest(for: id)?.kind
+            if kind == .systemTransient { continue }
+            guard settings.isEnabled(id) else {
+                demandTimestamps.removeValue(forKey: id)
+                if browseOverrideID == id {
+                    browseOverrideID = nil
+                }
+                AppLog.debug("Widget", "已禁用，撤出争夺", ["id": id, "reason": reason])
+                continue
             }
-            AppLog.debug("Widget", "已禁用，撤出争夺", ["id": id, "reason": reason])
         }
 
         for id in settings.order where settings.isEnabled(id) {
             _ = ensureInstance(id)
         }
+        // 瞬时通知常驻实例，以便订阅业务事件。
+        _ = ensureInstance(SystemWidgetID.islandNotice)
 
-        let demanding = Set(
+        var demanding = Set(
             settings.order.filter {
                 settings.isEnabled($0)
                     && demandTimestamps[$0] != nil
                     && registry.manifest(for: $0)?.kind == .content
             }
         )
+        for id in demandTimestamps.keys where registry.manifest(for: id)?.kind == .systemTransient {
+            demanding.insert(id)
+        }
 
         let built = buildVisiblePages(demanding: demanding)
         pages = built.map(\.ids)
@@ -270,11 +330,17 @@ final class WidgetRuntime: ObservableObject {
         let isTall: Bool
     }
 
-    /// 控制台（最多一页，高页）+ 争夺中的内容型小组件各自独占普通页。
+    /// 瞬时通知页优先；随后每个控制台模块一高页；争夺中的内容型各占一页。
     private func buildVisiblePages(demanding: Set<WidgetID>) -> [VisiblePage] {
         var result: [VisiblePage] = []
-        if controlDeck.isEnabled {
-            result.append(VisiblePage(ids: [ControlDeckSettings.pageID], isTall: true))
+        let transientIDs = demanding
+            .filter { registry.manifest(for: $0)?.kind == .systemTransient }
+            .sorted { (demandTimestamps[$0] ?? .distantPast) < (demandTimestamps[$1] ?? .distantPast) }
+        for id in transientIDs {
+            result.append(VisiblePage(ids: [id], isTall: false))
+        }
+        for pane in controlDeck.enabledPanes {
+            result.append(VisiblePage(ids: [pane.pageID], isTall: true))
         }
         for id in settings.order where demanding.contains(id) {
             result.append(VisiblePage(ids: [id], isTall: false))
@@ -289,9 +355,15 @@ final class WidgetRuntime: ObservableObject {
 
     private func applyPage(_ page: [WidgetID], tall: Bool, reason: String) {
         let showingEmpty = page.isEmpty
-        let controlDeckPage = !showingEmpty && page == [ControlDeckSettings.pageID]
+        let deckPageID = page.count == 1 ? page[0] : nil
+        let controlDeckPage = !showingEmpty
+            && deckPageID.map { ControlDeckSettings.isControlDeckPageID($0) } == true
+        let transientNoticePage = !showingEmpty
+            && page.count == 1
+            && page.first.map { registry.manifest(for: $0)?.kind == .systemTransient } == true
         isShowingEmpty = showingEmpty
         isControlDeckPage = controlDeckPage
+        isTransientNoticePage = transientNoticePage
         isComboPage = tall && !showingEmpty
 
         let leaving: Set<WidgetID>
@@ -318,11 +390,16 @@ final class WidgetRuntime: ObservableObject {
             activeID = SystemWidgetID.empty
             activeTitle = ""
             appearedIDs = [SystemWidgetID.empty]
-        } else if controlDeckPage {
+        } else if controlDeckPage, let deckPageID {
             visibleWidgetIDs = []
             visiblePlacements = []
-            activeID = ControlDeckSettings.pageID
-            activeTitle = L10n.ControlDeck.title
+            activeID = deckPageID
+            if let pane = ControlDeckSettings.Pane.from(pageID: deckPageID) {
+                activeTitle = pane.title
+                controlDeck.syncActivePane(fromPageID: deckPageID)
+            } else {
+                activeTitle = L10n.ControlDeck.title
+            }
             appearedIDs = []
         } else {
             let items = page.map { ($0, settings.gridSize(for: $0)) }
@@ -347,21 +424,23 @@ final class WidgetRuntime: ObservableObject {
             }
             visibleWidgetIDs = placements.map(\.id)
             visiblePlacements = placements
+            // 先登记 appeared，再 onAppear/refresh，避免 refresh→requestDisplay→recompute 再次走进本分支。
+            let newlyAppeared = visibleWidgetIDs.filter { !appearedIDs.contains($0) }
+            appearedIDs = Set(visibleWidgetIDs)
             for id in visibleWidgetIDs {
                 let widget = ensureInstance(id)
                 widget?.priority = settings.priority(for: id)
-                if !appearedIDs.contains(id) {
-                    widget?.onAppear()
-                    widget?.refresh()
-                    AppLog.debug("Widget", "onAppear", ["id": id, "reason": reason])
-                }
+            }
+            for id in newlyAppeared {
+                instances[id]?.onAppear()
+                instances[id]?.refresh()
+                AppLog.debug("Widget", "onAppear", ["id": id, "reason": reason])
             }
             let primary = representative(of: visibleWidgetIDs)
             activeID = primary
             activeTitle = instances[primary]?.title
                 ?? registry.manifest(for: primary)?.displayName
                 ?? primary
-            appearedIDs = Set(visibleWidgetIDs)
         }
 
         contentEpoch &+= 1
@@ -370,6 +449,7 @@ final class WidgetRuntime: ObservableObject {
             "reason": reason,
             "empty": showingEmpty,
             "controlDeck": controlDeckPage,
+            "notice": transientNoticePage,
             "tall": tall,
             "widgets": visibleWidgetIDs.count,
             "pageIndex": pageIndex,
@@ -402,7 +482,10 @@ final class WidgetRuntime: ObservableObject {
         var keep = Set(settings.pinnedIDs.filter { settings.isEnabled($0) })
         keep.formUnion(visibleWidgetIDs)
         keep.insert(SystemWidgetID.empty)
-        keep.formUnion(demandTimestamps.keys.filter { settings.isEnabled($0) })
+        keep.insert(SystemWidgetID.islandNotice)
+        keep.formUnion(demandTimestamps.keys.filter {
+            registry.manifest(for: $0)?.kind == .systemTransient || settings.isEnabled($0)
+        })
         for id in Array(instances.keys) where !keep.contains(id) {
             tearDown(id, reason: reason)
         }

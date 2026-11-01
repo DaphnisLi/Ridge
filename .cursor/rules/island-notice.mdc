@@ -1,0 +1,40 @@
+---
+description: 岛内瞬时通知（system.islandNotice）通用接入契约
+alwaysApply: true
+---
+
+# 岛内瞬时通知
+
+`system.islandNotice` 是**通用瞬时通知**通道，不只服务进程监视。新提示一律走此通道，禁止再造一套「临时上岛」widget。
+
+## 契约
+
+| 项 | 约定 |
+|---|---|
+| 注册 id | `system.islandNotice`（`kind: .systemTransient`） |
+| 投递 | `IslandNoticeCenter.shared.present(.…)` |
+| 撤回 | `IslandNoticeCenter.shared.dismiss(id:)` |
+| 载荷 | `IslandNoticePayload` 枚举；新场景加 case + 卡片渲染 |
+| 库 / 设置 | 不进小组件库、不可 pin、不进排序 |
+| 分页 | **禁止**左右滑动；展示期间不参与翻页点 |
+| 停留 | 默认约 **3s** 自动收起；指针在岛上时不自动收；离开后再收 |
+| 收岛 | 通知撤回时若指针不在岛上，**一并 collapse**，禁止留下展开空态/其它页闪一下 |
+
+## 接入步骤
+
+1. 在 `IslandNoticePayload` 增加 case（带稳定 `id`）。
+2. 在 `IslandNoticeWidget` / 卡片 View 按 case 渲染（文案走 `L10n`）。
+3. 业务侧事件发生时 `present`；结束或用户关掉时 `dismiss`。
+4. 不要在 `IslandContentView` / `IslandController` 里写业务通知 UI。
+
+## 进程监视（首个接入方）
+
+- 控制台同时只监视一个进程；点第二个会替换第一个。
+- **仅对当前监视进程**发结束通知；已被替换的监视取消等待，**不**上岛提示。
+- 控制台 Watch 区展示谁，岛上结束提示就对应谁。
+
+## 禁止
+
+- sticky / 假数据预览常驻上岛（验收完即删）
+- 通知页当普通内容页左右滑切换
+- 为「再来一种提示」新建第二个 `systemTransient` widget

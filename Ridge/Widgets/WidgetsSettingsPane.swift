@@ -29,6 +29,7 @@ struct WidgetsSettingsPane: View {
                 .padding(.vertical, 28)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .scrollIndicators(.hidden)
             .contentMargins(.horizontal, 0, for: .scrollContent)
             .background(SettingsChrome.pageBackground)
             .navigationDestination(for: WidgetID.self) { id in
@@ -340,6 +341,8 @@ private struct WidgetPreviewPane: View {
                     if widgetID == "builtin.meeting" {
                         // 会议页自带岛预览与配置，不再套通用灰底预览。
                         MeetingWidgetConfigSection()
+                    } else if widgetID == "builtin.media" {
+                        MediaWidgetConfigSection()
                     } else {
                         ZStack {
                             LinearGradient(
@@ -380,11 +383,14 @@ private struct WidgetPreviewPane: View {
             .padding(28)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .scrollIndicators(.hidden)
         .background(SettingsChrome.pageBackground)
         .navigationTitle(
             widgetID == "builtin.meeting"
                 ? L10n.Widgets.meetingPreviewTitle
-                : (manifest?.displayName ?? L10n.Common.preview)
+                : widgetID == "builtin.media"
+                    ? L10n.Widgets.mediaPreviewTitle
+                    : (manifest?.displayName ?? L10n.Common.preview)
         )
         .onAppear {
             AppLog.info("Settings", "打开小组件预览", ["id": widgetID])
@@ -465,6 +471,7 @@ private enum WidgetLibraryStyle {
     static func symbol(for id: WidgetID) -> String {
         switch id {
         case "builtin.meeting": return "calendar"
+        case "builtin.media": return "music.note.list"
         default: return "rectangle.3.group"
         }
     }

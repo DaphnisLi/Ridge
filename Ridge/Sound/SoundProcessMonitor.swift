@@ -52,16 +52,13 @@ enum SoundProcessMonitor {
         )] = [:]
 
         for process in raw {
-            let key = process.bundleID ?? "pid:\(process.pid)"
-            let app = NSRunningApplication(processIdentifier: process.pid)
-            let name = app?.localizedName
-                ?? process.bundleID
-                ?? "PID \(process.pid)"
-            let icon = app?.icon
+            let identity = SoundHostAppResolver.resolve(pid: process.pid, processBundleID: process.bundleID)
+            // 按宿主聚合：同一 App 的 Helper / GPU / Renderer 合成一行。
+            let key = identity.bundleID ?? process.bundleID ?? "pid:\(process.pid)"
             var bucket = buckets[key] ?? (
-                bundleID: process.bundleID,
-                name: name,
-                icon: icon,
+                bundleID: identity.bundleID ?? process.bundleID,
+                name: identity.name,
+                icon: identity.icon,
                 objects: [],
                 pids: [],
                 playing: false
@@ -71,8 +68,13 @@ enum SoundProcessMonitor {
                 bucket.pids.append(process.pid)
             }
             bucket.playing = bucket.playing || process.isRunningOutput
-            if bucket.icon == nil { bucket.icon = icon }
-            if bucket.name.isEmpty { bucket.name = name }
+            if bucket.icon == nil { bucket.icon = identity.icon }
+            if bucket.name.isEmpty || bucket.name.hasPrefix("PID ") || isLikelyHelperName(bucket.name) {
+                bucket.name = identity.name
+            }
+            if bucket.bundleID == nil {
+                bucket.bundleID = identity.bundleID ?? process.bundleID
+            }
             buckets[key] = bucket
         }
 
@@ -99,4 +101,15 @@ enum SoundProcessMonitor {
             return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         }
     }
+
+    private static func isLikelyHelperName(_ name: String) -> Bool {
+        let lower = name.lowercased()
+        return lower.contains("helper")
+            || lower.contains("(gpu)")
+            || lower.contains("(renderer)")
+            || lower.contains("(plugin)")
+    }
 }
+
+
+

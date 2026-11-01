@@ -1,4 +1,5 @@
 import AppKit
+import AudioToolbox
 import Combine
 import CoreAudio
 import CoreGraphics
@@ -21,11 +22,21 @@ final class SoundSession: ObservableObject {
     private var pollTimer: Timer?
     private var hardwareListeners: [AudioObjectPropertyListenerBlock] = []
     private var hardwareRefreshWorkItem: DispatchWorkItem?
+    private var volumeListenerTokens: [VolumeListenerToken] = []
+    private var volumeListenDeviceID: AudioObjectID = .unknown
     private var started = false
 
     private let lingerSeconds: TimeInterval = 5
     /// HAL 插拔蓝牙时会连发 Devices 变更，中间态常缺设备；合并后再读。
     private let hardwareDebounceSeconds: TimeInterval = 0.25
+
+    private struct VolumeListenerToken {
+        let object: AudioObjectID
+        let selector: AudioObjectPropertySelector
+        let scope: AudioObjectPropertyScope
+        let element: AudioObjectPropertyElement
+        let block: AudioObjectPropertyListenerBlock
+    }
 
     private init() {}
 
@@ -38,6 +49,7 @@ final class SoundSession: ObservableObject {
         refreshTapAvailability()
         refreshAll(reason: "start")
         installHardwareListeners()
+        installVolumeListeners(reason: "start")
         startPolling()
         AppLog.info("Sound", "声音会话已启动", [
             "tap": "\(tapAvailability)",
@@ -49,6 +61,7 @@ final class SoundSession: ObservableObject {
         pollTimer?.invalidate()
         pollTimer = nil
         removeHardwareListeners()
+        removeVolumeListeners()
         stopAllRoutes()
         started = false
         AppLog.info("Sound", "声音会话已停止")
@@ -136,6 +149,7 @@ final class SoundSession: ObservableObject {
         let previousBatteries = outputDevices.map(\.batteryPercent)
         outputDevices = next
         masterVolume = SoundDeviceService.masterOutputVolume()
+        reinstallVolumeListenersIfNeeded(reason: reason)
         let names = outputDevices.map(\.name).joined(separator: " | ")
         let batteries = outputDevices.compactMap(\.batteryPercent)
         let uidChanged = previous != outputDevices.map(\.uid)
@@ -151,6 +165,18 @@ final class SoundSession: ObservableObject {
                 "changed": changed
             ])
         }
+    }
+
+    private func refreshMasterVolume(reason: String) {
+        let next = SoundDeviceService.masterOutputVolume()
+        guard abs(next - masterVolume) > 0.0005 else { return }
+        let previous = masterVolume
+        masterVolume = next
+        AppLog.debug("Sound", "主音量已同步", [
+            "reason": reason,
+            "from": String(format: "%.3f", previous),
+            "to": String(format: "%.3f", next)
+        ])
     }
 
     /// 连接 AirPods 等时 HAL 会短暂少报设备；避免 UI 闪回「只有电脑」。
@@ -333,7 +359,7 @@ final class SoundSession: ObservableObject {
 
     private func startPolling() {
         pollTimer?.invalidate()
-        // HAL 对 IsRunningOutput 监听不可靠，1s 轮询兜底。
+        // HAL 对 IsRunningOutput 监听不可靠，1s 轮询兜底（主音量另有属性监听，不必靠这里跟进）。
         pollTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 // 插拔耳机常只改 DataSource，不一定触发 Devices 监听；轮询刷新输出列表。
@@ -364,5 +390,76 @@ final class SoundSession: ObservableObject {
     private func removeHardwareListeners() {
         // AudioObjectRemovePropertyListenerBlock 需要原 block；简化：进程退出时 HAL 会清。
         hardwareListeners.removeAll()
+    }
+
+    /// 键盘 / 菜单栏改系统音量时即时刷新 UI，避免等 1s 轮询。
+    private func reinstallVolumeListenersIfNeeded(reason: String) {
+        let nextID = SoundDeviceService.defaultOutputDeviceID() ?? .unknown
+        guard nextID != volumeListenDeviceID else { return }
+        installVolumeListeners(reason: reason)
+    }
+
+    private func installVolumeListeners(reason: String) {
+        removeVolumeListeners()
+        guard let deviceID = SoundDeviceService.defaultOutputDeviceID(), deviceID.isValid else {
+            AppLog.debug("Sound", "跳过主音量监听：无默认输出", ["reason": reason])
+            return
+        }
+        volumeListenDeviceID = deviceID
+
+        let onChange: () -> Void = { [weak self] in
+            Task { @MainActor in
+                self?.refreshMasterVolume(reason: "hardwareVolume")
+            }
+        }
+
+        // 键盘音量键优先走 VirtualMainVolume；部分设备只暴露通道 VolumeScalar。
+        let targets: [(AudioObjectPropertySelector, AudioObjectPropertyElement)] = [
+            (kAudioHardwareServiceDeviceProperty_VirtualMainVolume, kAudioObjectPropertyElementMain),
+            (kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyElementMain),
+            (kAudioDevicePropertyVolumeScalar, 1),
+            (kAudioDevicePropertyVolumeScalar, 2)
+        ]
+
+        var attached = 0
+        for (selector, element) in targets {
+            guard let block = CoreAudioProperty.addListener(
+                object: deviceID,
+                selector,
+                scope: kAudioObjectPropertyScopeOutput,
+                element: element,
+                block: onChange
+            ) else { continue }
+            volumeListenerTokens.append(
+                VolumeListenerToken(
+                    object: deviceID,
+                    selector: selector,
+                    scope: kAudioObjectPropertyScopeOutput,
+                    element: element,
+                    block: block
+                )
+            )
+            attached += 1
+        }
+
+        AppLog.debug("Sound", "已安装主音量监听", [
+            "reason": reason,
+            "device": deviceID,
+            "listeners": attached
+        ])
+    }
+
+    private func removeVolumeListeners() {
+        for token in volumeListenerTokens {
+            CoreAudioProperty.removeListener(
+                object: token.object,
+                token.selector,
+                scope: token.scope,
+                element: token.element,
+                block: token.block
+            )
+        }
+        volumeListenerTokens.removeAll()
+        volumeListenDeviceID = .unknown
     }
 }

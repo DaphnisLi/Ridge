@@ -13,6 +13,7 @@ alwaysApply: true
 |------|------|
 | `ridge-standards.mdc` | 本文件：总则与索引 |
 | `widget-architecture.mdc` | 小组件扩展契约：如何实现 / 注册新 widget（含 AI 自定义） |
+| `island-notice.mdc` | 岛内通用瞬时通知：`IslandNoticeCenter` / 悬停保活 / 禁滑 |
 | `git-workflow.mdc` | 仅在你要求时 commit / 建 PR |
 | `debug-logging.mdc` | 关键路径打日志；修 bug 必看日志，没有则补 |
 | `agent-communication.mdc` | Agent 回复风格 |
