@@ -319,7 +319,7 @@ final class WidgetRuntime: ObservableObject {
             visibleWidgetIDs = []
             visiblePlacements = []
             activeID = ControlDeckSettings.pageID
-            activeTitle = "控制台"
+            activeTitle = L10n.ControlDeck.title
             appearedIDs = []
         } else {
             let items = page.map { ($0, settings.gridSize(for: $0)) }

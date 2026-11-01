@@ -114,12 +114,12 @@ final class MeetingCalendarService: ObservableObject {
                 beginObserving()
                 refreshUpcoming(reason: "authorized")
             } else if authStatus == .denied || authStatus == .restricted {
-                lastErrorMessage = "未授予日历权限"
+                lastErrorMessage = L10n.Meeting.calendarDeniedShort
                 openSystemPrivacySettings()
             }
             return granted
         } catch {
-            lastErrorMessage = "无法请求日历权限"
+            lastErrorMessage = L10n.Meeting.calendarRequestFailed
             AppLog.error("Meeting", "日历授权失败", ["error": error.localizedDescription])
             refreshAuthStatus()
             return false
@@ -195,7 +195,7 @@ final class MeetingCalendarService: ObservableObject {
 
         let mapped = MeetingEvent(
             id: ek.eventIdentifier ?? "\(ek.startDate.timeIntervalSince1970)-\(ek.title ?? "")",
-            title: (ek.title?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? "未命名会议",
+            title: (ek.title?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? L10n.Meeting.untitled,
             startDate: ek.startDate,
             endDate: ek.endDate,
             calendarIdentifier: ek.calendar.calendarIdentifier,

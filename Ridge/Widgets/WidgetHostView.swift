@@ -38,7 +38,7 @@ struct WidgetHostView: View {
                     }
                 }
                 .padding(.bottom, 2)
-                .accessibilityLabel("小组件分页")
+                .accessibilityLabel(L10n.Widgets.pageDotsA11y)
             }
         }
         .contentShape(Rectangle())

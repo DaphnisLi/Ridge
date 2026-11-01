@@ -8,8 +8,8 @@ import SwiftUI
 final class MeetingCountdownWidget: IslandWidget {
     static let manifest = WidgetManifest(
         id: "builtin.meeting",
-        displayName: "下一场会议",
-        summary: "下一场会议倒计时，到点一键入会",
+        displayName: L10n.Meeting.widgetName,
+        summary: L10n.Meeting.widgetSummary,
         source: .builtin,
         kind: .content,
         defaultGridSize: .twoByOne
@@ -120,9 +120,9 @@ final class MeetingCountdownWidget: IslandWidget {
         if secondsToStart > 0 {
             countdownText = Self.formatCountdown(secondsToStart)
         } else if secondsToEnd > 0 {
-            countdownText = "进行中"
+            countdownText = L10n.Meeting.inProgress
         } else {
-            countdownText = "已结束"
+            countdownText = L10n.Meeting.ended
         }
 
         model.apply(
@@ -209,8 +209,8 @@ final class MeetingCountdownWidget: IslandWidget {
 
 @MainActor
 final class MeetingCountdownModel: ObservableObject {
-    @Published var title: String = "下一场会议"
-    @Published var subtitle: String = "暂无即将开始的日程"
+    @Published var title: String = L10n.Meeting.widgetName
+    @Published var subtitle: String = L10n.Meeting.noUpcoming
     @Published var platformName: String?
     @Published var showJoin = false
     @Published var needsAuth = false
@@ -221,16 +221,16 @@ final class MeetingCountdownModel: ObservableObject {
         switch auth {
         case .authorized:
             needsAuth = false
-            title = "下一场会议"
-            subtitle = "暂无即将开始的日程"
+            title = L10n.Meeting.widgetName
+            subtitle = L10n.Meeting.noUpcoming
         case .notDetermined:
             needsAuth = true
-            title = "会议倒计时"
-            subtitle = "需要日历权限"
+            title = L10n.Meeting.countdownTitle
+            subtitle = L10n.Meeting.calendarNeedAuth
         case .denied, .restricted:
             needsAuth = true
-            title = "会议倒计时"
-            subtitle = "未授予日历权限"
+            title = L10n.Meeting.countdownTitle
+            subtitle = L10n.Meeting.calendarDeniedShort
         }
     }
 
@@ -280,7 +280,7 @@ private struct MeetingCountdownView: View {
 
             if model.needsAuth {
                 Button(action: onRequestAuth) {
-                    Text("授权")
+                    Text(L10n.Common.authorize)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(palette.accentForeground)
                         .padding(.horizontal, 10)
@@ -290,7 +290,7 @@ private struct MeetingCountdownView: View {
                 .buttonStyle(.plain)
             } else if model.showJoin {
                 Button(action: onJoin) {
-                    Text("Join")
+                    Text(L10n.Meeting.joinShort)
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(palette.accentForeground)
                         .padding(.horizontal, 12)
@@ -298,7 +298,7 @@ private struct MeetingCountdownView: View {
                         .background(Capsule().fill(palette.accentFill))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("加入会议")
+                .accessibilityLabel(L10n.Meeting.joinA11y)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

@@ -4,7 +4,7 @@ options:
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
-  developmentLanguage: en
+  developmentLanguage: zh-Hans
 settings:
   base:
     SWIFT_VERSION: "5.9"
@@ -33,6 +33,7 @@ targets:
         COMBINE_HIDPI_IMAGES: true
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_EMIT_LOC_STRINGS: YES
+        LOCALIZATION_PREFERS_STRING_CATALOGS: YES
         DEVELOPMENT_TEAM: 444ULG6V8C
         CODE_SIGN_STYLE: Automatic
     entitlements:

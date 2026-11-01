@@ -31,7 +31,7 @@ struct MeetingWidgetConfigSection: View {
 
             HStack {
                 Spacer(minLength: 0)
-                Button("恢复默认设置") {
+                Button(L10n.Common.restoreDefaults) {
                     resignFields()
                     settings.restoreDefaults()
                     leadText = "\(settings.leadMinutes)"
@@ -105,7 +105,7 @@ struct MeetingWidgetConfigSection: View {
                 .frame(width: 32, height: 32)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("系统日历访问权限")
+                    Text(L10n.Meeting.calendarAccess)
                         .font(.system(size: 13.5, weight: .semibold))
                         .foregroundStyle(SettingsChrome.onSurface)
                     Text(authDescription)
@@ -130,7 +130,7 @@ struct MeetingWidgetConfigSection: View {
             HStack(spacing: 6) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(SettingsChrome.secondary)
-                Text("已授权")
+                Text(L10n.Meeting.calendarAuthorized)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(SettingsChrome.secondary)
             }
@@ -152,10 +152,10 @@ struct MeetingWidgetConfigSection: View {
                 }
             } label: {
                 if isRequestingAuth {
-                    Text("请求中…")
+                    Text(L10n.Common.requesting)
                         .font(.system(size: 12, weight: .medium))
                 } else {
-                    Label("允许访问系统日历", systemImage: "key.fill")
+                    Label(L10n.Meeting.calendarAllow, systemImage: "key.fill")
                         .font(.system(size: 12, weight: .medium))
                 }
             }
@@ -164,7 +164,7 @@ struct MeetingWidgetConfigSection: View {
             .tint(SettingsChrome.primary)
             .disabled(isRequestingAuth)
         case .denied, .restricted:
-            Button("打开系统设置") {
+            Button(L10n.Common.openSystemSettings) {
                 resignFields()
                 calendar.openSystemPrivacySettings()
                 AppLog.info("Meeting", "设置页打开系统日历隐私")
@@ -176,12 +176,10 @@ struct MeetingWidgetConfigSection: View {
 
     private var authDescription: String {
         switch calendar.authStatus {
-        case .authorized:
-            return "用于读取本地日历、iCloud、Exchange 与同步会议日程"
-        case .notDetermined:
-            return "用于读取本地日历、iCloud、Exchange 与同步会议日程"
+        case .authorized, .notDetermined:
+            return L10n.Meeting.calendarDesc
         case .denied, .restricted:
-            return "日历权限未开启，请在系统设置中允许 Ridge 访问"
+            return L10n.Meeting.calendarDeniedDesc
         }
     }
 
@@ -192,15 +190,15 @@ struct MeetingWidgetConfigSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("提前提醒时间")
+                        Text(L10n.Meeting.leadTitle)
                             .font(.system(size: 13.5, weight: .semibold))
                             .foregroundStyle(SettingsChrome.onSurface)
-                        Text("会议开始前在灵动岛显示入会按钮")
+                        Text(L10n.Meeting.leadSubtitle)
                             .font(.system(size: 12))
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     }
                     Spacer(minLength: 8)
-                    Text("提前 \(settings.leadMinutes) 分钟")
+                    Text(L10n.Meeting.leadBadge(settings.leadMinutes))
                         .font(.system(size: 11, weight: .medium).monospacedDigit())
                         .foregroundStyle(SettingsChrome.primary)
                         .padding(.horizontal, 8)
@@ -218,7 +216,7 @@ struct MeetingWidgetConfigSection: View {
                             resignFields()
                             applyLeadMinutes(minutes)
                         } label: {
-                            Text(minutes == 10 ? "\(minutes) 分钟 (推荐)" : "\(minutes) 分钟")
+                            Text(minutes == 10 ? L10n.Meeting.minutesRecommended(minutes) : L10n.Meeting.minutes(minutes))
                                 .font(.system(size: 12, weight: selected ? .semibold : .medium))
                                 .foregroundStyle(selected ? SettingsChrome.onSurface : SettingsChrome.onSurfaceVariant)
                                 .frame(maxWidth: .infinity)
@@ -253,7 +251,7 @@ struct MeetingWidgetConfigSection: View {
                                 let filtered = newValue.filter(\.isNumber)
                                 if filtered != newValue { leadText = filtered }
                             }
-                        Text("分")
+                        Text(L10n.Common.minuteUnit)
                             .font(.system(size: 11))
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     }
@@ -298,16 +296,16 @@ struct MeetingWidgetConfigSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("支持的会议平台")
+                        Text(L10n.Meeting.platformsTitle)
                             .font(.system(size: 13.5, weight: .semibold))
                             .foregroundStyle(SettingsChrome.onSurface)
-                        Text("自动从日程详情中识别入会链接，轻点即可调起客户端")
+                        Text(L10n.Meeting.platformsSubtitle)
                             .font(.system(size: 12))
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer(minLength: 8)
-                    Text("全部已支持")
+                    Text(L10n.Meeting.platformsAllSupported)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(SettingsChrome.secondary)
                 }
@@ -366,10 +364,10 @@ struct MeetingWidgetConfigSection: View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("自定义会议应用与链接")
+                    Text(L10n.Meeting.customTitle)
                         .font(.system(size: 13.5, weight: .semibold))
                         .foregroundStyle(SettingsChrome.onSurface)
-                    Text("添加会议名称与完整会议链接；将按域名识别后续日程，加入时打开日历中的链接。")
+                    Text(L10n.Meeting.customSubtitle)
                         .font(.system(size: 12))
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                         .fixedSize(horizontal: false, vertical: true)
@@ -380,7 +378,7 @@ struct MeetingWidgetConfigSection: View {
                     TextField(
                         "",
                         text: $customName,
-                        prompt: Text("会议名称（例如：Jitsi Meet）")
+                        prompt: Text(L10n.Meeting.customNamePlaceholder)
                             .foregroundStyle(SettingsChrome.placeholder)
                     )
                         .textFieldStyle(.roundedBorder)
@@ -392,7 +390,7 @@ struct MeetingWidgetConfigSection: View {
                     TextField(
                         "",
                         text: $customLink,
-                        prompt: Text("完整会议链接（例如：meet.jit.si/…）")
+                        prompt: Text(L10n.Meeting.customLinkPlaceholder)
                             .foregroundStyle(SettingsChrome.placeholder)
                     )
                         .textFieldStyle(.roundedBorder)
@@ -407,7 +405,7 @@ struct MeetingWidgetConfigSection: View {
                         resignFields()
                         commitCustomApp()
                     } label: {
-                        Label("添加", systemImage: "plus")
+                        Label(L10n.Common.add, systemImage: "plus")
                             .font(.system(size: 12, weight: .medium))
                     }
                     .buttonStyle(.borderedProminent)
@@ -451,7 +449,7 @@ struct MeetingWidgetConfigSection: View {
                                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                                 }
                                 .buttonStyle(.plain)
-                                .help("删除")
+                                .help(L10n.Common.delete)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
@@ -503,11 +501,11 @@ private struct MeetingIslandPreviewCapsule: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text("周度产研协同同步会")
+                    Text(L10n.Meeting.previewSampleTitle)
                         .font(.system(size: 13.5, weight: .medium))
                         .foregroundStyle(.white)
                         .lineLimit(1)
-                    Text("Zoom")
+                    Text(L10n.Meeting.platformZoom)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(Color.white.opacity(0.7))
                         .padding(.horizontal, 6)
@@ -522,7 +520,7 @@ private struct MeetingIslandPreviewCapsule: View {
                     Circle()
                         .fill(Color(red: 0.157, green: 0.784, blue: 0.251))
                         .frame(width: 6, height: 6)
-                    Text("\(max(leadMinutes, 1)) 分钟后开始")
+                    Text(L10n.Meeting.previewMinutesAhead(max(leadMinutes, 1)))
                         .font(.system(size: 11, weight: .medium).monospacedDigit())
                         .foregroundStyle(Color(red: 0.20, green: 0.83, blue: 0.60))
                     Text("· 14:00 - 15:30")
@@ -533,7 +531,7 @@ private struct MeetingIslandPreviewCapsule: View {
 
             Spacer(minLength: 8)
 
-            Text("进入会议")
+            Text(L10n.Meeting.joinMeeting)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.black)
                 .padding(.horizontal, 12)
@@ -599,11 +597,11 @@ private struct MeetingIslandPreviewShape: Shape, InsettableShape {
 private extension MeetingPlatform {
     var shortDisplayName: String {
         switch self {
-        case .teams: return "MS Teams"
-        case .googleMeet: return "Google Meet"
-        case .tencentMeeting: return "腾讯会议"
-        case .lark: return "飞书会议"
-        case .dingTalk: return "钉钉会议"
+        case .teams: return L10n.Meeting.platformTeamsShort
+        case .googleMeet: return L10n.Meeting.platformGoogleMeet
+        case .tencentMeeting: return L10n.Meeting.platformTencent
+        case .lark: return L10n.Meeting.platformLark
+        case .dingTalk: return L10n.Meeting.platformDingTalk
         default: return displayName
         }
     }

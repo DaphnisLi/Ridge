@@ -18,6 +18,7 @@ alwaysApply: true
 | `agent-communication.mdc` | Agent 回复风格 |
 | `desktop-app.mdc` | 桌面端（Mac / 灵动岛边界） |
 | `dev-relaunch.mdc` | 改完后杀光旧进程，只开最新编译的一份 Ridge |
+| `i18n.mdc` | 用户可见文案：`L10n` + String Catalog；AppLog 不进 i18n |
 
 ## 协作底线
 

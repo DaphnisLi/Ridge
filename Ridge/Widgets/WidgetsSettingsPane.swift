@@ -18,7 +18,7 @@ struct WidgetsSettingsPane: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("打开开关后可在灵动岛各自成页展示。拖到另一张卡片可交换库顺序。电量、音量等功能磁贴请到「控制台」。")
+                    Text(L10n.Widgets.libraryIntro)
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -58,11 +58,11 @@ struct WidgetsSettingsPane: View {
 
     private var librarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("小组件库")
+            Text(L10n.Widgets.libraryTitle)
                 .font(.system(size: 15, weight: .semibold))
 
             if libraryOrder.isEmpty {
-                Text("暂无可用小组件。")
+                Text(L10n.Widgets.libraryEmpty)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -372,7 +372,7 @@ private struct WidgetPreviewPane: View {
                         }
                     }
                 } else {
-                    Text("找不到该小组件。")
+                    Text(L10n.Widgets.notFound)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -382,8 +382,8 @@ private struct WidgetPreviewPane: View {
         .background(SettingsChrome.pageBackground)
         .navigationTitle(
             widgetID == "builtin.meeting"
-                ? "下一场会议提醒设置"
-                : (manifest?.displayName ?? "预览")
+                ? L10n.Widgets.meetingPreviewTitle
+                : (manifest?.displayName ?? L10n.Common.preview)
         )
         .onAppear {
             AppLog.info("Settings", "打开小组件预览", ["id": widgetID])
@@ -445,7 +445,7 @@ private struct LiveWidgetIslandPreview: View {
                 view
                     .padding(.horizontal, 12)
             } else {
-                Text("无法预览")
+                Text(L10n.Widgets.cannotPreview)
                     .font(.system(size: 12))
                     .foregroundStyle(palette.secondary)
             }

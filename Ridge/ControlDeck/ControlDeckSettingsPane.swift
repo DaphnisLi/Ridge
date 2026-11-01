@@ -25,9 +25,9 @@ struct ControlDeckSettingsPane: View {
 
     private var introCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("控制台")
+            Text(L10n.ControlDeck.title)
                 .font(.system(size: 22, weight: .semibold))
-            Text("类似手机控制中心：集中放电量、音量、防休眠等功能性磁贴。会议倒计时等内容型信息仍在「小组件」里各自成页，不会塞进控制台。")
+            Text(L10n.ControlDeck.intro)
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -39,11 +39,11 @@ struct ControlDeckSettingsPane: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("在灵动岛显示控制台")
+                    Text(L10n.ControlDeck.showOnIsland)
                         .font(.system(size: 14, weight: .semibold))
                     Text(settings.isEnabled
-                         ? "已开启。展开岛后可左右滑动到控制台页（高度为普通页两倍）。"
-                         : "最多一个控制台。开启后会出现在岛的分页中。")
+                         ? L10n.ControlDeck.enabledHint
+                         : L10n.ControlDeck.disabledHint)
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -74,7 +74,7 @@ struct ControlDeckSettingsPane: View {
                     IslandController.shared?.beginSettingsSession()
                     AppLog.info("ControlDeck", "设置页预览控制台")
                 } label: {
-                    Label("在岛上预览控制台", systemImage: "rectangle.portrait.on.rectangle.portrait")
+                    Label(L10n.ControlDeck.previewOnIsland, systemImage: "rectangle.portrait.on.rectangle.portrait")
                         .font(.system(size: 12, weight: .medium))
                 }
                 .buttonStyle(.bordered)
@@ -95,9 +95,9 @@ struct ControlDeckSettingsPane: View {
 
     private var modulesCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("规划中的功能模块")
+            Text(L10n.ControlDeck.plannedModules)
                 .font(.system(size: 15, weight: .semibold))
-            Text("以下能力将逐步接入控制台；与「小组件」库相互独立，无需拖拽放入。")
+            Text(L10n.ControlDeck.plannedIntro)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -123,7 +123,7 @@ struct ControlDeckSettingsPane: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 0)
-                        Text("即将推出")
+                        Text(L10n.Common.comingSoon)
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(.tertiary)
                     }

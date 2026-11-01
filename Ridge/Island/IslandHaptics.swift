@@ -12,10 +12,10 @@ enum IslandHapticIntensity: Int, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .off: return "关"
-        case .light: return "轻"
-        case .medium: return "中"
-        case .strong: return "强"
+        case .off: return L10n.Settings.hapticOff
+        case .light: return L10n.Settings.hapticLight
+        case .medium: return L10n.Settings.hapticMedium
+        case .strong: return L10n.Settings.hapticStrong
         }
     }
 }

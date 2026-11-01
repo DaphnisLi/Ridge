@@ -28,7 +28,7 @@ struct ControlDeckIslandView: View {
         }
         .padding(.horizontal, 4)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("控制台")
+        .accessibilityLabel(L10n.ControlDeck.title)
     }
 
     private var mediaPlaceholder: some View {
@@ -42,10 +42,10 @@ struct ControlDeckIslandView: View {
                             .foregroundStyle(.white.opacity(0.9))
                     )
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("正在播放")
+                    Text(L10n.ControlDeck.nowPlaying)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.primary)
-                    Text("媒体控制即将接入")
+                    Text(L10n.ControlDeck.mediaSoon)
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -62,12 +62,12 @@ struct ControlDeckIslandView: View {
     private var weatherPlaceholder: some View {
         deckCard {
             VStack(alignment: .leading, spacing: 4) {
-                Label("天气", systemImage: "cloud.sun.fill")
+                Label(L10n.ControlDeck.weather, systemImage: "cloud.sun.fill")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(Color.skyBlue)
                 Text("--°")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
-                Text("稍后接入")
+                Text(L10n.ControlDeck.weatherSoon)
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
@@ -89,9 +89,9 @@ struct ControlDeckIslandView: View {
     private var togglesPlaceholder: some View {
         deckCard {
             VStack(spacing: 6) {
-                toggleRow(symbol: "cup.and.saucer.fill", title: "防休眠", tint: .yellow)
-                toggleRow(symbol: "timer", title: "专注", tint: .red)
-                toggleRow(symbol: "mic.slash.fill", title: "静音麦", tint: .secondary)
+                toggleRow(symbol: "cup.and.saucer.fill", title: L10n.ControlDeck.keepAwake, tint: .yellow)
+                toggleRow(symbol: "timer", title: L10n.ControlDeck.focus, tint: .red)
+                toggleRow(symbol: "mic.slash.fill", title: L10n.ControlDeck.muteMics, tint: .secondary)
             }
         }
     }
@@ -102,7 +102,7 @@ struct ControlDeckIslandView: View {
                 HStack {
                     Image(systemName: "cpu")
                         .foregroundStyle(Color.skyBlue)
-                    Text("系统")
+                    Text(L10n.ControlDeck.system)
                         .font(.system(size: 11, weight: .semibold))
                     Spacer(minLength: 0)
                     Text("--%")
@@ -117,7 +117,7 @@ struct ControlDeckIslandView: View {
                             .fill(Color.skyBlue)
                             .frame(width: 36, height: 4)
                     }
-                Text("CPU / 内存读数即将接入")
+                Text(L10n.ControlDeck.systemMetersSoon)
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)

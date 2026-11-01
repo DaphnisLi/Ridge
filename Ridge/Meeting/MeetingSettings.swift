@@ -86,12 +86,12 @@ final class MeetingSettings: ObservableObject {
     @discardableResult
     func addCustomApp(name: String, sampleLink: String) -> String? {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return "请填写会议名称" }
+        guard !trimmedName.isEmpty else { return L10n.Meeting.customNameRequired }
         guard let domain = MeetingLinkDetector.normalizedHost(from: sampleLink) else {
-            return "无法从链接解析域名，请检查格式"
+            return L10n.Meeting.customBadLink
         }
         if let existing = customApps.first(where: { $0.domain == domain }) {
-            return "域名 \(domain) 已用于「\(existing.name)」"
+            return L10n.Meeting.customDomainInUse(domain: domain, name: existing.name)
         }
         let app = CustomMeetingApp(name: trimmedName, domain: domain)
         customApps.append(app)

@@ -22,12 +22,34 @@ final class ControlDeckSettings: ObservableObject {
     }
 
     /// 设置页展示的规划中功能模块（只读说明，尚未逐项开关）。
-    let plannedModules: [ControlDeckPlannedModule] = [
-        .init(id: "battery", title: "电量与外设", summary: "本机与键盘、鼠标等电量环形指示", symbol: "battery.100.bolt"),
-        .init(id: "volume", title: "音量与静音", summary: "快速调节输出音量、一键静音麦克风", symbol: "speaker.wave.2.fill"),
-        .init(id: "focus", title: "专注与防休眠", summary: "保持唤醒、计时专注等快捷操作", symbol: "cup.and.saucer.fill"),
-        .init(id: "system", title: "系统状态", summary: "CPU、内存等瞬时读数", symbol: "cpu")
-    ]
+    var plannedModules: [ControlDeckPlannedModule] {
+        [
+            .init(
+                id: "battery",
+                title: L10n.ControlDeck.moduleBattery,
+                summary: L10n.ControlDeck.moduleBatterySummary,
+                symbol: "battery.100.bolt"
+            ),
+            .init(
+                id: "volume",
+                title: L10n.ControlDeck.moduleVolume,
+                summary: L10n.ControlDeck.moduleVolumeSummary,
+                symbol: "speaker.wave.2.fill"
+            ),
+            .init(
+                id: "focus",
+                title: L10n.ControlDeck.moduleFocus,
+                summary: L10n.ControlDeck.moduleFocusSummary,
+                symbol: "cup.and.saucer.fill"
+            ),
+            .init(
+                id: "system",
+                title: L10n.ControlDeck.moduleSystem,
+                summary: L10n.ControlDeck.moduleSystemSummary,
+                symbol: "cpu"
+            )
+        ]
+    }
 
     private init() {
         let defaults = UserDefaults.standard

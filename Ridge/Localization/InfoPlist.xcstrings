@@ -1,0 +1,28 @@
+{
+  "sourceLanguage": "zh-Hans",
+  "strings": {
+    "NSCalendarsUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridge 需要读取日历，以便在灵动岛显示即将开始的会议倒计时，并提供一键入会。"
+          }
+        }
+      }
+    },
+    "NSCalendarsFullAccessUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridge 需要读取日历，以便在灵动岛显示即将开始的会议倒计时，并提供一键入会。日历数据仅在本机处理。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

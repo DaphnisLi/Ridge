@@ -12,21 +12,11 @@ enum IslandTheme: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .midnight: return "Midnight"
-        case .afterglow: return "Afterglow"
-        case .lumenPark: return "Lumen Park"
-        case .graphite: return "Graphite"
-        case .tide: return "Tide"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .midnight: return "经典黑"
-        case .afterglow: return "暖暮余晖"
-        case .lumenPark: return "林荫微光"
-        case .graphite: return "中性灰"
-        case .tide: return "深海潮汐"
+        case .midnight: return L10n.Settings.themeMidnight
+        case .afterglow: return L10n.Settings.themeAfterglow
+        case .lumenPark: return L10n.Settings.themeLumenPark
+        case .graphite: return L10n.Settings.themeGraphite
+        case .tide: return L10n.Settings.themeTide
         }
     }
 

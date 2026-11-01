@@ -11,7 +11,7 @@ struct IslandSettingsPane: View {
 
                 HStack {
                     Spacer(minLength: 0)
-                    Button("恢复默认设置") {
+                    Button(L10n.Common.restoreDefaults) {
                         settings.restoreDefaults()
                         AppLog.info("Settings", "已恢复默认设置")
                     }
@@ -59,7 +59,7 @@ struct IslandSettingsPane: View {
     private var appearanceRows: some View {
         // 预设主题单独成块，不用外层灰框（芯片自身已有灰底）。
         VStack(alignment: .leading, spacing: 10) {
-            Text("预设主题")
+            Text(L10n.Settings.presetTheme)
                 .font(.system(size: 13))
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -85,12 +85,12 @@ struct IslandSettingsPane: View {
         SettingsCard {
             SettingsFormRows {
                 SettingsLabeledSliderRow(
-                    title: "展开后宽度",
+                    title: L10n.Settings.expandedWidth,
                     value: $settings.expandedWidth,
                     range: IslandSettings.expandedWidthRange,
                     step: 10,
-                    leadingHint: "窄",
-                    trailingHint: "宽",
+                    leadingHint: L10n.Settings.widthNarrow,
+                    trailingHint: L10n.Settings.widthWide,
                     valueText: "\(Int(settings.expandedWidth.rounded())) pt"
                 )
 
@@ -98,12 +98,12 @@ struct IslandSettingsPane: View {
                     .padding(.leading, 16)
 
                 SettingsLabeledSliderRow(
-                    title: "下圆角",
+                    title: L10n.Settings.bottomCorner,
                     value: $settings.bottomCornerRadius,
                     range: 0...36,
                     step: 1,
-                    leadingHint: "直角",
-                    trailingHint: "圆润",
+                    leadingHint: L10n.Settings.cornerSquare,
+                    trailingHint: L10n.Settings.cornerRound,
                     valueText: "\(Int(settings.bottomCornerRadius.rounded())) pt"
                 )
             }
@@ -116,12 +116,12 @@ struct IslandSettingsPane: View {
     private var interactionRows: some View {
         SettingsFormRows {
             SettingsLabeledSliderRow(
-                title: "展开动画速度",
+                title: L10n.Settings.animationSpeed,
                 value: $settings.animationSpeed,
                 range: 0.5...2.0,
                 step: 0.1,
-                leadingHint: "慢",
-                trailingHint: "快",
+                leadingHint: L10n.Settings.speedSlow,
+                trailingHint: L10n.Settings.speedFast,
                 valueText: String(format: "%.1f×", settings.animationSpeed)
             )
 
@@ -129,7 +129,7 @@ struct IslandSettingsPane: View {
                 .padding(.leading, 16)
 
             SettingsDiscreteSliderRow(
-                title: "震感强度",
+                title: L10n.Settings.hapticIntensity,
                 selection: hapticIntensityBinding,
                 labels: IslandHapticIntensity.allCases.map(\.title)
             )
@@ -138,7 +138,7 @@ struct IslandSettingsPane: View {
                 .padding(.leading, 16)
 
             SettingsSwitchRow(
-                title: "全屏时禁用灵动岛",
+                title: L10n.Settings.hideInFullscreen,
                 isOn: $settings.hideInFullscreen
             )
         }
@@ -354,14 +354,9 @@ private struct IslandThemeChip: View {
             VStack(alignment: .leading, spacing: 8) {
                 IslandThemeSwatch(palette: palette)
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(theme.title)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.primary)
-                    Text(theme.subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
+                Text(theme.title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)

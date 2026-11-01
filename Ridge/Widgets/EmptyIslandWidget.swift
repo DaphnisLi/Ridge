@@ -8,7 +8,7 @@ final class EmptyIslandWidget: IslandWidget {
     static let manifest = WidgetManifest(
         id: SystemWidgetID.empty,
         displayName: "Ridge",
-        summary: "尚未添加小组件时的提示",
+        summary: L10n.Widgets.emptySummary,
         version: "1.0.0",
         source: .builtin,
         kind: .systemEmpty,
@@ -48,17 +48,17 @@ private struct EmptyIslandView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Text("尚未添加小组件")
+            Text(L10n.Widgets.emptyTitle)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(palette.title)
 
-            Text("启用或添加后，内容会显示在这里")
+            Text(L10n.Widgets.emptySubtitle)
                 .font(.system(size: 11))
                 .foregroundStyle(palette.secondary)
                 .multilineTextAlignment(.center)
 
             Button(action: onAdd) {
-                Text("去添加小组件")
+                Text(L10n.Widgets.emptyAdd)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(palette.accentForeground)
                     .padding(.horizontal, 12)

@@ -106,7 +106,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         let menu = NSMenu()
 
         let settings = NSMenuItem(
-            title: "设置",
+            title: L10n.Common.settings,
             action: #selector(openSettings),
             keyEquivalent: ""
         )
@@ -116,7 +116,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         menu.addItem(.separator())
 
         let quit = NSMenuItem(
-            title: "退出 Ridge",
+            title: L10n.Common.quitApp,
             action: #selector(quit),
             keyEquivalent: ""
         )

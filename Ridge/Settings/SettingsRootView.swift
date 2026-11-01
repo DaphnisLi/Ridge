@@ -45,9 +45,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .island: return "灵动岛"
-        case .controlDeck: return "控制台"
-        case .widgets: return "小组件"
+        case .island: return L10n.Settings.island
+        case .controlDeck: return L10n.Settings.controlDeck
+        case .widgets: return L10n.Settings.widgets
         }
     }
 

@@ -1,0 +1,1337 @@
+{
+  "sourceLanguage": "zh-Hans",
+  "strings": {
+    "common.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加"
+          }
+        }
+      }
+    },
+    "common.authorize": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权"
+          }
+        }
+      }
+    },
+    "common.coming_soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即将推出"
+          }
+        }
+      }
+    },
+    "common.delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除"
+          }
+        }
+      }
+    },
+    "common.minute_unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分"
+          }
+        }
+      }
+    },
+    "common.open_system_settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开系统设置"
+          }
+        }
+      }
+    },
+    "common.preview": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览"
+          }
+        }
+      }
+    },
+    "common.quit_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出 Ridge"
+          }
+        }
+      }
+    },
+    "common.requesting": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请求中…"
+          }
+        }
+      }
+    },
+    "common.restore_defaults": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复默认设置"
+          }
+        }
+      }
+    },
+    "common.settings": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
+          }
+        }
+      }
+    },
+    "control_deck.disabled_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最多一个控制台。开启后会出现在岛的分页中。"
+          }
+        }
+      }
+    },
+    "control_deck.enabled_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已开启。展开岛后可左右滑动到控制台页（高度为普通页两倍）。"
+          }
+        }
+      }
+    },
+    "control_deck.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "类似手机控制中心：集中放电量、音量、防休眠等功能性磁贴。会议倒计时等内容型信息仍在「小组件」里各自成页，不会塞进控制台。"
+          }
+        }
+      }
+    },
+    "control_deck.module.battery": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量与外设"
+          }
+        }
+      }
+    },
+    "control_deck.module.battery_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本机与键盘、鼠标等电量环形指示"
+          }
+        }
+      }
+    },
+    "control_deck.module.focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注与防休眠"
+          }
+        }
+      }
+    },
+    "control_deck.module.focus_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保持唤醒、计时专注等快捷操作"
+          }
+        }
+      }
+    },
+    "control_deck.module.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统状态"
+          }
+        }
+      }
+    },
+    "control_deck.module.system_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU、内存等瞬时读数"
+          }
+        }
+      }
+    },
+    "control_deck.module.volume": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音量与静音"
+          }
+        }
+      }
+    },
+    "control_deck.module.volume_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速调节输出音量、一键静音麦克风"
+          }
+        }
+      }
+    },
+    "control_deck.planned_intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以下能力将逐步接入控制台；与「小组件」库相互独立，无需拖拽放入。"
+          }
+        }
+      }
+    },
+    "control_deck.planned_modules": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "规划中的功能模块"
+          }
+        }
+      }
+    },
+    "control_deck.preview_on_island": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在岛上预览控制台"
+          }
+        }
+      }
+    },
+    "control_deck.show_on_island": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在灵动岛显示控制台"
+          }
+        }
+      }
+    },
+    "control_deck.tile.focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注"
+          }
+        }
+      }
+    },
+    "control_deck.tile.keep_awake": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "防休眠"
+          }
+        }
+      }
+    },
+    "control_deck.tile.media_soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "媒体控制即将接入"
+          }
+        }
+      }
+    },
+    "control_deck.tile.mute_mics": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "静音麦"
+          }
+        }
+      }
+    },
+    "control_deck.tile.now_playing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在播放"
+          }
+        }
+      }
+    },
+    "control_deck.tile.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统"
+          }
+        }
+      }
+    },
+    "control_deck.tile.system_meters_soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU / 内存读数即将接入"
+          }
+        }
+      }
+    },
+    "control_deck.tile.weather": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "天气"
+          }
+        }
+      }
+    },
+    "control_deck.tile.weather_soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍后接入"
+          }
+        }
+      }
+    },
+    "control_deck.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制台"
+          }
+        }
+      }
+    },
+    "meeting.calendar.access": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统日历访问权限"
+          }
+        }
+      }
+    },
+    "meeting.calendar.allow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许访问系统日历"
+          }
+        }
+      }
+    },
+    "meeting.calendar.authorized": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已授权"
+          }
+        }
+      }
+    },
+    "meeting.calendar.denied_desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日历权限未开启，请在系统设置中允许 Ridge 访问"
+          }
+        }
+      }
+    },
+    "meeting.calendar.denied_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未授予日历权限"
+          }
+        }
+      }
+    },
+    "meeting.calendar.desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于读取本地日历、iCloud、Exchange 与同步会议日程"
+          }
+        }
+      }
+    },
+    "meeting.calendar.need_auth": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要日历权限"
+          }
+        }
+      }
+    },
+    "meeting.calendar.request_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法请求日历权限"
+          }
+        }
+      }
+    },
+    "meeting.countdown_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议倒计时"
+          }
+        }
+      }
+    },
+    "meeting.custom.error_bad_link": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法从链接解析域名，请检查格式"
+          }
+        }
+      }
+    },
+    "meeting.custom.error_domain_in_use_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "域名 %@ 已用于「%@」"
+          }
+        }
+      }
+    },
+    "meeting.custom.error_name_required": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请填写会议名称"
+          }
+        }
+      }
+    },
+    "meeting.custom.link_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整会议链接（例如：meet.jit.si/…）"
+          }
+        }
+      }
+    },
+    "meeting.custom.name_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议名称（例如：Jitsi Meet）"
+          }
+        }
+      }
+    },
+    "meeting.custom.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加会议名称与完整会议链接；将按域名识别后续日程，加入时打开日历中的链接。"
+          }
+        }
+      }
+    },
+    "meeting.custom.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义会议应用与链接"
+          }
+        }
+      }
+    },
+    "meeting.ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已结束"
+          }
+        }
+      }
+    },
+    "meeting.in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进行中"
+          }
+        }
+      }
+    },
+    "meeting.join": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进入会议"
+          }
+        }
+      }
+    },
+    "meeting.join_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加入会议"
+          }
+        }
+      }
+    },
+    "meeting.join_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join"
+          }
+        }
+      }
+    },
+    "meeting.lead.badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提前 %d 分钟"
+          }
+        }
+      }
+    },
+    "meeting.lead.minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 分钟"
+          }
+        }
+      }
+    },
+    "meeting.lead.minutes_recommended_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 分钟 (推荐)"
+          }
+        }
+      }
+    },
+    "meeting.lead.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议开始前在灵动岛显示入会按钮"
+          }
+        }
+      }
+    },
+    "meeting.lead.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提前提醒时间"
+          }
+        }
+      }
+    },
+    "meeting.no_upcoming": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无即将开始的日程"
+          }
+        }
+      }
+    },
+    "meeting.platform.custom": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义"
+          }
+        }
+      }
+    },
+    "meeting.platform.dingtalk": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "钉钉会议"
+          }
+        }
+      }
+    },
+    "meeting.platform.facetime": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FaceTime"
+          }
+        }
+      }
+    },
+    "meeting.platform.generic": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览器"
+          }
+        }
+      }
+    },
+    "meeting.platform.google_meet": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Meet"
+          }
+        }
+      }
+    },
+    "meeting.platform.lark": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "飞书会议"
+          }
+        }
+      }
+    },
+    "meeting.platform.teams": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microsoft Teams"
+          }
+        }
+      }
+    },
+    "meeting.platform.teams_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MS Teams"
+          }
+        }
+      }
+    },
+    "meeting.platform.tencent": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "腾讯会议"
+          }
+        }
+      }
+    },
+    "meeting.platform.webex": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webex"
+          }
+        }
+      }
+    },
+    "meeting.platform.zoom": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom"
+          }
+        }
+      }
+    },
+    "meeting.platforms.all_supported": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部已支持"
+          }
+        }
+      }
+    },
+    "meeting.platforms.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动从日程详情中识别入会链接，轻点即可调起客户端"
+          }
+        }
+      }
+    },
+    "meeting.platforms.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持的会议平台"
+          }
+        }
+      }
+    },
+    "meeting.preview.minutes_ahead_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 分钟后开始"
+          }
+        }
+      }
+    },
+    "meeting.preview.sample_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周度产研协同同步会"
+          }
+        }
+      }
+    },
+    "meeting.untitled": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名会议"
+          }
+        }
+      }
+    },
+    "meeting.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一场会议"
+          }
+        }
+      }
+    },
+    "meeting.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一场会议倒计时，到点一键入会"
+          }
+        }
+      }
+    },
+    "settings.haptic.light": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻"
+          }
+        }
+      }
+    },
+    "settings.haptic.medium": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中"
+          }
+        }
+      }
+    },
+    "settings.haptic.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关"
+          }
+        }
+      }
+    },
+    "settings.haptic.strong": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强"
+          }
+        }
+      }
+    },
+    "settings.island.animation_speed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开动画速度"
+          }
+        }
+      }
+    },
+    "settings.island.bottom_corner": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下圆角"
+          }
+        }
+      }
+    },
+    "settings.island.corner_round": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圆润"
+          }
+        }
+      }
+    },
+    "settings.island.corner_square": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直角"
+          }
+        }
+      }
+    },
+    "settings.island.expanded_width": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开后宽度"
+          }
+        }
+      }
+    },
+    "settings.island.haptic_intensity": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "震感强度"
+          }
+        }
+      }
+    },
+    "settings.island.hide_in_fullscreen": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全屏时禁用灵动岛"
+          }
+        }
+      }
+    },
+    "settings.island.preset_theme": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预设主题"
+          }
+        }
+      }
+    },
+    "settings.island.speed_fast": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快"
+          }
+        }
+      }
+    },
+    "settings.island.speed_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "慢"
+          }
+        }
+      }
+    },
+    "settings.island.width_narrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "窄"
+          }
+        }
+      }
+    },
+    "settings.island.width_wide": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宽"
+          }
+        }
+      }
+    },
+    "settings.section.control_deck": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制台"
+          }
+        }
+      }
+    },
+    "settings.section.island": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "灵动岛"
+          }
+        }
+      }
+    },
+    "settings.section.widgets": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小组件"
+          }
+        }
+      }
+    },
+    "settings.style.notch": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刘海"
+          }
+        }
+      }
+    },
+    "settings.style.notch_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "贴合刘海，悬停展开"
+          }
+        }
+      }
+    },
+    "settings.style.pill": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "菜单栏下方胶囊"
+          }
+        }
+      }
+    },
+    "settings.style.pill_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浮在菜单栏下方（即将支持）"
+          }
+        }
+      }
+    },
+    "settings.theme.afterglow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暖暮余晖"
+          }
+        }
+      }
+    },
+    "settings.theme.graphite": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中性灰"
+          }
+        }
+      }
+    },
+    "settings.theme.lumen_park": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "林荫微光"
+          }
+        }
+      }
+    },
+    "settings.theme.midnight": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经典黑"
+          }
+        }
+      }
+    },
+    "settings.theme.tide": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深海潮汐"
+          }
+        }
+      }
+    },
+    "widgets.cannot_preview": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法预览"
+          }
+        }
+      }
+    },
+    "widgets.empty.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去添加小组件"
+          }
+        }
+      }
+    },
+    "widgets.empty.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用或添加后，内容会显示在这里"
+          }
+        }
+      }
+    },
+    "widgets.empty.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未添加小组件时的提示"
+          }
+        }
+      }
+    },
+    "widgets.empty.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未添加小组件"
+          }
+        }
+      }
+    },
+    "widgets.library.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无可用小组件。"
+          }
+        }
+      }
+    },
+    "widgets.library.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开开关后可在灵动岛各自成页展示。拖到另一张卡片可交换库顺序。电量、音量等功能磁贴请到「控制台」。"
+          }
+        }
+      }
+    },
+    "widgets.library.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小组件库"
+          }
+        }
+      }
+    },
+    "widgets.meeting_preview_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一场会议提醒设置"
+          }
+        }
+      }
+    },
+    "widgets.not_found": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "找不到该小组件。"
+          }
+        }
+      }
+    },
+    "widgets.page_dots_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小组件分页"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

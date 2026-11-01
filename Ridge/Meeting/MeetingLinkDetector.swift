@@ -18,16 +18,16 @@ enum MeetingPlatform: String, CaseIterable, Identifiable, Hashable {
 
     var displayName: String {
         switch self {
-        case .zoom: return "Zoom"
-        case .googleMeet: return "Google Meet"
-        case .teams: return "Microsoft Teams"
-        case .webex: return "Webex"
-        case .faceTime: return "FaceTime"
-        case .tencentMeeting: return "腾讯会议"
-        case .lark: return "飞书会议"
-        case .dingTalk: return "钉钉会议"
-        case .custom: return "自定义"
-        case .generic: return "浏览器"
+        case .zoom: return L10n.Meeting.platformZoom
+        case .googleMeet: return L10n.Meeting.platformGoogleMeet
+        case .teams: return L10n.Meeting.platformTeams
+        case .webex: return L10n.Meeting.platformWebex
+        case .faceTime: return L10n.Meeting.platformFaceTime
+        case .tencentMeeting: return L10n.Meeting.platformTencent
+        case .lark: return L10n.Meeting.platformLark
+        case .dingTalk: return L10n.Meeting.platformDingTalk
+        case .custom: return L10n.Meeting.platformCustom
+        case .generic: return L10n.Meeting.platformGeneric
         }
     }
 

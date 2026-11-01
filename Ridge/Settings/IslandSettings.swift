@@ -10,15 +10,15 @@ enum IslandDisplayStyle: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .notch: return "刘海"
-        case .pillBelowMenuBar: return "菜单栏下方胶囊"
+        case .notch: return L10n.Settings.styleNotch
+        case .pillBelowMenuBar: return L10n.Settings.stylePill
         }
     }
 
     var subtitle: String {
         switch self {
-        case .notch: return "贴合刘海，悬停展开"
-        case .pillBelowMenuBar: return "浮在菜单栏下方（即将支持）"
+        case .notch: return L10n.Settings.styleNotchSubtitle
+        case .pillBelowMenuBar: return L10n.Settings.stylePillSubtitle
         }
     }
 }
