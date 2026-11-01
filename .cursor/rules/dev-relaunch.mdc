@@ -8,7 +8,9 @@ alwaysApply: true
 用户要的效果：**打开的 Ridge 必须是刚改完代码编出来的版本**，且状态栏 / 岛相关进程不重复。
 
 统一流程：编译 → **杀光所有旧 Ridge** → **ditto 原地覆盖** `/Applications/Ridge.app` → 只打开这一份。  
-固定路径；**禁止** `rm -rf` 后重建、禁止安装后再 `codesign --force`（会弄断辅助功能等 TCC 绑定）。
+固定路径；**禁止** `rm -rf` 后重建、禁止安装后再 `codesign --force`（会弄断辅助功能等 TCC 绑定）。  
+**禁止** ad-hoc 签名（`CODE_SIGN_IDENTITY=-`）：每次 CDHash 变化会导致日历等权限当新 App，要重新授权。用 `Apple Development` + 固定 `DEVELOPMENT_TEAM`。  
+日历等 Hardened Runtime entitlement 须留在 `Ridge/Ridge.entitlements`；`relaunch-dev.sh` 会在 xcodebuild 后重签，防止 Automatic 签名把 entitlement 剥掉（否则授权按钮无弹窗）。
 
 ## 何时做
 

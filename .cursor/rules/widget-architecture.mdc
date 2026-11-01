@@ -77,11 +77,12 @@ final class ExampleWidget: IslandWidget {
 ## 调度与设置（开发时要知道）
 
 - 用户排序越靠前 → `priority` 越大；同级按 `requestDisplay` 时间先到先得。
-- **分页**：左右滑动切换页；默认每组件独占一页。设置里可「新建组合页」，点卡片加号放入（每页最多 8 格）。
-- **网格**：组合页固定 4×2 = 8 格；`WidgetManifest.defaultGridSize`（1×1 / 2×1 / 1×2 / 2×2）决定占格。按加入顺序一行四格首适打包，未放满也照排；不可自由拖格。组合页高度为普通页两倍。
+- **分页**：左右滑动切换页；默认每内容型组件独占一页。
+- **控制台**（`ControlDeck`）：独立于小组件库；设置侧栏单独一页；最多开启一个；岛上为双倍高度功能磁贴页（电量、音量等），不承载会议等内容型 widget。开关在 `ControlDeckSettings`；勿再做「拖小组件进组合页」。
 - 设置「小组件」只列出 `showsInLibrary`；库内拖放交换顺序；空态 `system.empty` 永不进列表。
 - pin = 常驻内存（设置 UI 可隐藏，API 仍保留）；未 pin 离开展示后可销毁。
-- 持久化用 `context.storageKey("…")`，勿写全局裸 key；组合页在 `WidgetSettings.comboPages`。
+- 持久化用 `context.storageKey("…")`，勿写全局裸 key。
+- `builtin.meeting`：EventKit 读系统日历会议 + 会前倒计时；从事件链接一键入会。预览页可配提前分钟与授权；始终单独成页，不进控制台。
 
 ## 禁止
 

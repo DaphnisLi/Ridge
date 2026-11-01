@@ -9,7 +9,10 @@ struct WidgetHostView: View {
     var body: some View {
         VStack(spacing: 8) {
             Group {
-                if runtime.isShowingEmpty || !runtime.isComboPage {
+                if runtime.isControlDeckPage {
+                    ControlDeckIslandView()
+                        .id(runtime.contentEpoch)
+                } else if runtime.isShowingEmpty || !runtime.isComboPage {
                     // 空态 / 普通单组件页：铺满。
                     runtime.activeView()
                         .id(runtime.contentEpoch)

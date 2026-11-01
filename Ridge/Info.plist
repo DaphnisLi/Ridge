@@ -28,5 +28,9 @@
 	<string>Copyright © Daphnis</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Ridge 需要读取日历，以便在灵动岛显示即将开始的会议倒计时，并提供一键入会。</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Ridge 需要读取日历，以便在灵动岛显示即将开始的会议倒计时，并提供一键入会。日历数据仅在本机处理。</string>
 </dict>
 </plist>

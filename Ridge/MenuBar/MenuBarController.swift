@@ -3,6 +3,9 @@ import SwiftUI
 
 @MainActor
 final class MenuBarController: NSObject, NSWindowDelegate {
+    /// 供岛在指针落在设置窗上时强制点击穿透，避免挡住设置内按钮。
+    private(set) static weak var shared: MenuBarController?
+
     private var statusItem: NSStatusItem?
     private weak var island: IslandController?
     private var settingsWindowController: NSWindowController?
@@ -10,7 +13,15 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     private var appActiveObserver: NSObjectProtocol?
     private var appResignObserver: NSObjectProtocol?
 
+    /// 当前设置窗（可见时）。
+    var settingsWindow: NSWindow? {
+        let window = settingsWindowController?.window
+        guard let window, window.isVisible else { return nil }
+        return window
+    }
+
     func start(island: IslandController) {
+        Self.shared = self
         self.island = island
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
@@ -39,7 +50,14 @@ final class MenuBarController: NSObject, NSWindowDelegate {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                guard self?.settingsWindowController?.window?.isVisible == true else { return }
+                guard let self,
+                      let window = self.settingsWindowController?.window,
+                      window.isVisible
+                else { return }
+                AppLog.info("Settings", "App 失去前台（设置仍打开）", [
+                    "settingsKey": window.isKeyWindow,
+                    "key": Self.describeKeyWindow()
+                ])
                 IslandController.shared?.setSettingsWindowFocused(false)
             }
         }
@@ -51,9 +69,13 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         ) { [weak self] _ in
             Task { @MainActor in
                 guard let window = self?.settingsWindowController?.window,
-                      window.isVisible,
-                      window.isKeyWindow
+                      window.isVisible
                 else { return }
+                AppLog.info("Settings", "App 回到前台（设置仍打开）", [
+                    "settingsKey": window.isKeyWindow,
+                    "key": Self.describeKeyWindow()
+                ])
+                guard window.isKeyWindow else { return }
                 IslandController.shared?.setSettingsWindowFocused(true)
             }
         }
@@ -167,16 +189,29 @@ final class MenuBarController: NSObject, NSWindowDelegate {
               window === settingsWindowController?.window
         else { return }
         // 失焦：岛恢复正常悬停，不再钉住。
+        AppLog.info("Settings", "设置窗 resignKey", [
+            "appActive": NSApp.isActive,
+            "visible": window.isVisible,
+            "key": Self.describeKeyWindow()
+        ])
         IslandController.shared?.setSettingsWindowFocused(false)
-        AppLog.debug("Settings", "设置窗失焦，岛恢复正常")
     }
 
     func windowDidBecomeKey(_ notification: Notification) {
         guard let window = notification.object as? NSWindow,
               window === settingsWindowController?.window
         else { return }
+        AppLog.info("Settings", "设置窗 becomeKey", [
+            "appActive": NSApp.isActive,
+            "key": Self.describeKeyWindow()
+        ])
         IslandController.shared?.setSettingsWindowFocused(true)
-        AppLog.debug("Settings", "设置窗重新成为 key，钉住展开")
+    }
+
+    private static func describeKeyWindow() -> String {
+        guard let key = NSApp.keyWindow else { return "nil" }
+        let title = key.title.isEmpty ? String(describing: type(of: key)) : key.title
+        return "\(title)#\(ObjectIdentifier(key))"
     }
 
     private func promoteForSettingsWindow() {

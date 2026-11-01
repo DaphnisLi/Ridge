@@ -12,9 +12,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ])
         island.start()
         menuBar.start(island: island)
+        // 日历服务随会议小组件启动；此处再兜底一次，便于已授权时尽早拉数。
+        MeetingCalendarService.shared.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        MeetingCalendarService.shared.stop()
         island.stop()
         AppLog.info("Overlay", "Ridge 即将退出")
     }

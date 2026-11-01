@@ -21,11 +21,14 @@ final class WidgetRuntime: ObservableObject {
     @Published private(set) var visibleWidgetIDs: [WidgetID] = []
     /// 当前页打包后的占位。
     @Published private(set) var visiblePlacements: [WidgetGridPlacement] = []
-    /// 同页多个小组件：岛高为普通页的 2 倍。
+    /// 高页（控制台）：岛高为普通页的 2 倍。
     @Published private(set) var isComboPage = false
+    /// 当前页是否为控制台（与小组件网格互斥）。
+    @Published private(set) var isControlDeckPage = false
 
     private let registry = WidgetRegistry.shared
     private let settings = WidgetSettings.shared
+    private let controlDeck = ControlDeckSettings.shared
     private var instances: [WidgetID: any IslandWidget] = [:]
     private var demandTimestamps: [WidgetID: Date] = [:]
     /// 用户滑动选中的页代表 id；仍在 pageIDs 内则优先于自动调度。
@@ -33,6 +36,8 @@ final class WidgetRuntime: ObservableObject {
     private var settingsObservers: Set<AnyCancellable> = []
     private var appearedIDs: Set<WidgetID> = []
     private var started = false
+    /// 防止 `make` → `requestDisplay` → `recompute` → `ensureInstance` 在写入 `instances` 前重入创建。
+    private var creatingIDs: Set<WidgetID> = []
 
     private init() {}
 
@@ -44,10 +49,16 @@ final class WidgetRuntime: ObservableObject {
 
         settings.$order
             .combineLatest(settings.$disabledIDs, settings.$pinnedIDs)
-            .combineLatest(settings.$comboPages)
             .dropFirst()
             .sink { [weak self] _ in
                 self?.recompute(reason: "settings")
+            }
+            .store(in: &settingsObservers)
+
+        controlDeck.$isEnabled
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.recompute(reason: "controlDeck")
             }
             .store(in: &settingsObservers)
 
@@ -56,7 +67,8 @@ final class WidgetRuntime: ObservableObject {
             "registered": registry.manifests.count,
             "library": registry.libraryManifests.count,
             "active": activeID ?? "nil",
-            "pages": pages.count
+            "pages": pages.count,
+            "controlDeck": controlDeck.isEnabled
         ])
     }
 
@@ -140,25 +152,15 @@ final class WidgetRuntime: ObservableObject {
         contentEpoch &+= 1
     }
 
-    /// 设置里加入组合页后：确保展示并切到该组合页。
-    func focusComboPage(at comboIndex: Int) {
-        let pages = settings.normalizedComboPages()
-        guard pages.indices.contains(comboIndex) else { return }
-        let members = pages[comboIndex]
-        for id in members where settings.isEnabled(id) {
-            _ = ensureInstance(id)
-            if demandTimestamps[id] == nil {
-                demandTimestamps[id] = Date()
-            }
+    /// 设置里打开 / 预览控制台：切到控制台高页。
+    func focusControlDeck() {
+        guard controlDeck.isEnabled else {
+            AppLog.debug("Widget", "聚焦控制台跳过：未开启")
+            return
         }
-        if let first = members.first(where: { settings.isEnabled($0) }) {
-            browseOverrideID = first
-        }
-        recompute(reason: "comboFocus")
-        AppLog.info("Widget", "聚焦组合页", [
-            "index": comboIndex,
-            "widgets": members.count
-        ])
+        browseOverrideID = ControlDeckSettings.pageID
+        recompute(reason: "controlDeckFocus")
+        AppLog.info("Widget", "聚焦控制台")
     }
 
     // MARK: - Schedule
@@ -250,11 +252,11 @@ final class WidgetRuntime: ObservableObject {
 
         if built.isEmpty {
             pageIndex = 0
-            applyPage([], combo: false, reason: reason)
+            applyPage([], tall: false, reason: reason)
         } else {
             let index = min(max(chosenPageIndex, 0), built.count - 1)
             pageIndex = index
-            applyPage(built[index].ids, combo: built[index].isCombo, reason: reason)
+            applyPage(built[index].ids, tall: built[index].isTall, reason: reason)
         }
 
         reapUnneeded(reason: reason)
@@ -262,79 +264,49 @@ final class WidgetRuntime: ObservableObject {
 
     private struct VisiblePage {
         let ids: [WidgetID]
-        let isCombo: Bool
+        let isTall: Bool
     }
 
-    /// 组合页（按创建顺序）+ 未入组的争夺者各自独占普通页。
+    /// 控制台（最多一页，高页）+ 争夺中的内容型小组件各自独占普通页。
     private func buildVisiblePages(demanding: Set<WidgetID>) -> [VisiblePage] {
         var result: [VisiblePage] = []
-        var seated = Set<WidgetID>()
-
-        for group in settings.normalizedComboPages() {
-            let visible = group.filter { demanding.contains($0) }
-            guard !visible.isEmpty else { continue }
-            // 组合页内保持用户加入顺序（一行四格），不再按 priority 重排。
-            result.append(VisiblePage(ids: visible, isCombo: true))
-            seated.formUnion(visible)
+        if controlDeck.isEnabled {
+            result.append(VisiblePage(ids: [ControlDeckSettings.pageID], isTall: true))
         }
-
-        for id in settings.order where demanding.contains(id) && !seated.contains(id) {
-            result.append(VisiblePage(ids: [id], isCombo: false))
+        for id in settings.order where demanding.contains(id) {
+            result.append(VisiblePage(ids: [id], isTall: false))
         }
         return result
     }
 
     private func representative(of page: [WidgetID]) -> WidgetID {
-        page.max(by: { settings.priority(for: $0) < settings.priority(for: $1) }) ?? page[0]
+        if page.count == 1 { return page[0] }
+        return page.max(by: { settings.priority(for: $0) < settings.priority(for: $1) }) ?? page[0]
     }
 
-    private func applyPage(_ page: [WidgetID], combo: Bool, reason: String) {
+    private func applyPage(_ page: [WidgetID], tall: Bool, reason: String) {
         let showingEmpty = page.isEmpty
+        let controlDeckPage = !showingEmpty && page == [ControlDeckSettings.pageID]
         isShowingEmpty = showingEmpty
-        isComboPage = combo && !showingEmpty
+        isControlDeckPage = controlDeckPage
+        isComboPage = tall && !showingEmpty
 
-        let nextIDs = showingEmpty ? [SystemWidgetID.empty] : page
-        let items: [(id: WidgetID, size: WidgetGridSize)] = showingEmpty
-            ? []
-            : nextIDs.map { ($0, settings.gridSize(for: $0)) }
-
-        let placements: [WidgetGridPlacement]
+        let leaving: Set<WidgetID>
         if showingEmpty {
-            placements = []
-        } else if let packed = WidgetGridPacker.pack(items) {
-            placements = packed
+            leaving = appearedIDs.subtracting([SystemWidgetID.empty])
+        } else if controlDeckPage {
+            leaving = appearedIDs
         } else {
-            // 异常超格：降级为仅显示代表，避免空白。
-            let primary = representative(of: page)
-            AppLog.warn("Widget", "当前页超格，降级单组件", [
-                "widgets": page.count,
-                "primary": primary,
-                "reason": reason
-            ])
-            placements = [
-                WidgetGridPlacement(
-                    id: primary,
-                    column: 0,
-                    row: 0,
-                    size: settings.gridSize(for: primary)
-                )
-            ]
+            leaving = appearedIDs.subtracting(Set(page))
         }
-
-        let newAppeared: Set<WidgetID> = showingEmpty
-            ? [SystemWidgetID.empty]
-            : Set(placements.map(\.id))
-
-        let leaving = appearedIDs.subtracting(newAppeared)
         for id in leaving {
             instances[id]?.onDisappear()
             AppLog.debug("Widget", "onDisappear", ["id": id, "reason": reason])
         }
 
-        visibleWidgetIDs = placements.map(\.id)
-        visiblePlacements = placements
-
         if showingEmpty {
+            visibleWidgetIDs = []
+            visiblePlacements = []
             _ = ensureInstance(SystemWidgetID.empty)
             if !appearedIDs.contains(SystemWidgetID.empty) {
                 instances[SystemWidgetID.empty]?.onAppear()
@@ -343,7 +315,35 @@ final class WidgetRuntime: ObservableObject {
             activeID = SystemWidgetID.empty
             activeTitle = ""
             appearedIDs = [SystemWidgetID.empty]
+        } else if controlDeckPage {
+            visibleWidgetIDs = []
+            visiblePlacements = []
+            activeID = ControlDeckSettings.pageID
+            activeTitle = "控制台"
+            appearedIDs = []
         } else {
+            let items = page.map { ($0, settings.gridSize(for: $0)) }
+            let placements: [WidgetGridPlacement]
+            if let packed = WidgetGridPacker.pack(items) {
+                placements = packed
+            } else {
+                let primary = representative(of: page)
+                AppLog.warn("Widget", "当前页超格，降级单组件", [
+                    "widgets": page.count,
+                    "primary": primary,
+                    "reason": reason
+                ])
+                placements = [
+                    WidgetGridPlacement(
+                        id: primary,
+                        column: 0,
+                        row: 0,
+                        size: settings.gridSize(for: primary)
+                    )
+                ]
+            }
+            visibleWidgetIDs = placements.map(\.id)
+            visiblePlacements = placements
             for id in visibleWidgetIDs {
                 let widget = ensureInstance(id)
                 widget?.priority = settings.priority(for: id)
@@ -355,11 +355,9 @@ final class WidgetRuntime: ObservableObject {
             }
             let primary = representative(of: visibleWidgetIDs)
             activeID = primary
-            activeTitle = combo
-                ? ""
-                : (instances[primary]?.title
-                    ?? registry.manifest(for: primary)?.displayName
-                    ?? primary)
+            activeTitle = instances[primary]?.title
+                ?? registry.manifest(for: primary)?.displayName
+                ?? primary
             appearedIDs = Set(visibleWidgetIDs)
         }
 
@@ -368,7 +366,8 @@ final class WidgetRuntime: ObservableObject {
             "primary": activeID ?? "nil",
             "reason": reason,
             "empty": showingEmpty,
-            "combo": combo,
+            "controlDeck": controlDeckPage,
+            "tall": tall,
             "widgets": visibleWidgetIDs.count,
             "pageIndex": pageIndex,
             "pages": pages.count
@@ -378,6 +377,13 @@ final class WidgetRuntime: ObservableObject {
     @discardableResult
     private func ensureInstance(_ id: WidgetID) -> (any IslandWidget)? {
         if let existing = instances[id] { return existing }
+        if creatingIDs.contains(id) {
+            AppLog.warn("Widget", "创建重入，跳过重复实例", ["id": id])
+            return nil
+        }
+        creatingIDs.insert(id)
+        defer { creatingIDs.remove(id) }
+
         let context = WidgetContextImpl(widgetID: id, runtime: self)
         guard let widget = registry.make(id: id, context: context) else { return nil }
         widget.priority = settings.priority(for: id)

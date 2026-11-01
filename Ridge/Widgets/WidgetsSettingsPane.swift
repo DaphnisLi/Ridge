@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct WidgetsSettingsPane: View {
     @ObservedObject var settings: WidgetSettings
+    @ObservedObject private var navigator = SettingsNavigator.shared
     private let registry = WidgetRegistry.shared
 
     @State private var path = NavigationPath()
@@ -13,20 +14,14 @@ struct WidgetsSettingsPane: View {
         settings.order.filter { registry.manifest(for: $0)?.showsInLibrary == true }
     }
 
-    private var hasActiveComboPage: Bool {
-        settings.comboPages.indices.contains(settings.activeComboPageIndex)
-    }
-
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("打开开关后可在灵动岛展示。先新建组合页，再点卡片上的加号放入（每页最多 8 格，未满也按一行四格排布）。拖到另一张卡片可交换库顺序。")
+                    Text("打开开关后可在灵动岛各自成页展示。拖到另一张卡片可交换库顺序。电量、音量等功能磁贴请到「控制台」。")
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    comboPagesSection
 
                     librarySection
                 }
@@ -42,117 +37,21 @@ struct WidgetsSettingsPane: View {
         }
         .onAppear {
             settings.reconcile(with: registry)
-            IslandController.shared?.beginSettingsSession()
+            // 小组件设计页用页内预览，真岛保持收起。
+            IslandController.shared?.beginSettingsSessionCollapsed()
+            consumePendingPreviewIfNeeded()
             AppLog.debug("Settings", "小组件库页已显示", ["count": libraryOrder.count])
         }
+        .onChange(of: navigator.openToken) { _, _ in
+            consumePendingPreviewIfNeeded()
+        }
     }
 
-    // MARK: - 组合页
-
-    private var comboPagesSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("组合页")
-                    .font(.system(size: 15, weight: .semibold))
-                Spacer(minLength: 0)
-                Button {
-                    _ = settings.createComboPage()
-                    AppLog.info("Settings", "用户新建组合页", [
-                        "index": settings.activeComboPageIndex
-                    ])
-                } label: {
-                    Label("新建组合页", systemImage: "plus.rectangle.on.rectangle")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-            }
-
-            if settings.comboPages.isEmpty {
-                Text("还没有组合页。新建后，点小组件卡片左下角加号即可放入。")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                ForEach(Array(settings.comboPages.indices), id: \.self) { index in
-                    comboPageRow(index: index)
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(SettingsChrome.cardBackground)
-        )
-    }
-
-    @ViewBuilder
-    private func comboPageRow(index: Int) -> some View {
-        let members = settings.comboPages[index]
-        let selected = settings.activeComboPageIndex == index
-        let cellUsed = members.reduce(0) { $0 + settings.gridSize(for: $1).cellCount }
-
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Button {
-                    settings.activeComboPageIndex = index
-                    WidgetRuntime.shared.focusComboPage(at: index)
-                    AppLog.debug("Settings", "选中组合页", ["index": index])
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(selected ? Color.accentColor : .secondary)
-                        Text("组合页 \(index + 1)")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.primary)
-                        Text("\(members.count) 个 · \(cellUsed)/8 格")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .buttonStyle(.plain)
-
-                Spacer(minLength: 0)
-
-                Button(role: .destructive) {
-                    settings.deleteComboPage(at: index)
-                    WidgetRuntime.shared.recompute(reason: "comboDelete")
-                    AppLog.info("Settings", "删除组合页", ["index": index])
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 12))
-                }
-                .buttonStyle(.borderless)
-                .help("删除组合页")
-            }
-
-            if members.isEmpty {
-                Text("空页 · 点下方卡片加号加入")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.tertiary)
-            } else {
-                FlowMemberChips(
-                    ids: members,
-                    name: { registry.manifest(for: $0)?.displayName ?? $0 },
-                    onRemove: { id in
-                        _ = settings.removeWidgetFromComboPage(id)
-                        WidgetRuntime.shared.recompute(reason: "comboRemove")
-                        IslandController.shared?.beginSettingsSession()
-                        AppLog.info("Settings", "移出组合页", ["id": id, "page": index])
-                    }
-                )
-            }
-        }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(selected ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.03))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(selected ? Color.accentColor.opacity(0.35) : Color.clear, lineWidth: 1)
-        )
+    private func consumePendingPreviewIfNeeded() {
+        guard let id = navigator.consumePendingWidgetPreview() else { return }
+        path = NavigationPath()
+        path.append(id)
+        AppLog.info("Settings", "已跳转小组件预览", ["id": id])
     }
 
     // MARK: - 库
@@ -193,9 +92,6 @@ struct WidgetsSettingsPane: View {
 
     @ViewBuilder
     private func widgetCardCell(id: WidgetID, manifest: WidgetManifest) -> some View {
-        let inCombo = settings.comboPageIndex(containing: id)
-        let canAdd = hasActiveComboPage && inCombo != settings.activeComboPageIndex
-
         ZStack(alignment: .topTrailing) {
             NavigationLink(value: id) {
                 WidgetLibraryCard(
@@ -219,16 +115,6 @@ struct WidgetsSettingsPane: View {
             .toggleStyle(.switch)
             .controlSize(.small)
             .padding(10)
-
-            // 左下角：加入 / 移出当前组合页
-            VStack {
-                Spacer(minLength: 0)
-                HStack {
-                    comboActionButton(id: id, inCombo: inCombo, canAdd: canAdd)
-                    Spacer(minLength: 0)
-                }
-                .padding(10)
-            }
         }
         .background(
             WidgetCardScreenFrameReader(widgetID: id)
@@ -256,116 +142,17 @@ struct WidgetsSettingsPane: View {
         )
     }
 
-    @ViewBuilder
-    private func comboActionButton(id: WidgetID, inCombo: Int?, canAdd: Bool) -> some View {
-        if let inCombo, inCombo == settings.activeComboPageIndex {
-            Button {
-                _ = settings.removeWidgetFromComboPage(id)
-                WidgetRuntime.shared.recompute(reason: "comboRemove")
-                IslandController.shared?.beginSettingsSession()
-                AppLog.info("Settings", "从当前组合页移除", ["id": id])
-            } label: {
-                Image(systemName: "minus.circle.fill")
-                    .font(.system(size: 22))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-            .help("从当前组合页移除")
-        } else if canAdd {
-            Button {
-                addToActiveCombo(id)
-            } label: {
-                Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 22))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(Color.accentColor)
-            }
-            .buttonStyle(.plain)
-            .help("加入当前组合页")
-            .disabled(!settings.isEnabled(id))
-            .opacity(settings.isEnabled(id) ? 1 : 0.35)
-        } else if !hasActiveComboPage {
-            EmptyView()
-        } else if let inCombo {
-            Text("组合页 \(inCombo + 1)")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Capsule().fill(Color.primary.opacity(0.06)))
-        }
-    }
-
-    private func addToActiveCombo(_ id: WidgetID) {
-        guard settings.isEnabled(id) else {
-            AppLog.warn("Settings", "未启用，无法加入组合页", ["id": id])
-            return
-        }
-        let page = settings.activeComboPageIndex
-        guard settings.addWidgetToComboPage(id, pageIndex: page) else { return }
-        WidgetRuntime.shared.focusComboPage(at: page)
-        IslandController.shared?.beginSettingsSession()
-        AppLog.info("Settings", "加号加入组合页", ["id": id, "page": page])
-    }
-
     private func handleEnableChange(id: WidgetID, enabled: Bool) {
         settings.setEnabled(id, enabled: enabled)
         if enabled {
             let source = WidgetCardFrameCache.shared.frame(for: id)
             IslandController.shared?.presentWidgetEnabled(id, fromScreenRect: source)
+            AppLog.info("Settings", "打开小组件，同步上岛", ["id": id])
         } else {
+            WidgetRuntime.shared.withdrawDisplay(id)
             IslandController.shared?.beginSettingsSession()
             WidgetRuntime.shared.recompute(reason: "settingsDisable")
-            AppLog.info("Settings", "关闭小组件展示", ["id": id])
-        }
-    }
-}
-
-/// 组合页成员小标签。
-private struct FlowMemberChips: View {
-    let ids: [WidgetID]
-    let name: (WidgetID) -> String
-    let onRemove: (WidgetID) -> Void
-
-    var body: some View {
-        FlexibleChipWrap(ids: ids, name: name, onRemove: onRemove)
-    }
-}
-
-private struct FlexibleChipWrap: View {
-    let ids: [WidgetID]
-    let name: (WidgetID) -> String
-    let onRemove: (WidgetID) -> Void
-
-    var body: some View {
-        // 简单横排换行：用 LazyVGrid 自适应小芯片。
-        LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: 72), spacing: 6)],
-            alignment: .leading,
-            spacing: 6
-        ) {
-            ForEach(ids, id: \.self) { id in
-                HStack(spacing: 4) {
-                    Text(name(id))
-                        .font(.system(size: 11, weight: .medium))
-                        .lineLimit(1)
-                    Button {
-                        onRemove(id)
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(Color.primary.opacity(0.06))
-                )
-            }
+            AppLog.info("Settings", "关闭小组件，同步下岛", ["id": id])
         }
     }
 }
@@ -511,14 +298,6 @@ private struct WidgetLibraryCard: View {
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                Label(
-                    WidgetLibraryStyle.category(for: manifest.source),
-                    systemImage: WidgetLibraryStyle.symbol(for: manifest.id)
-                )
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.orange.opacity(0.9))
-                .lineLimit(1)
-
                 Text(manifest.summary)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -527,9 +306,13 @@ private struct WidgetLibraryCard: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
-            .background(SettingsChrome.cardBackground)
+            .background(SettingsChrome.surfaceContainerLow.opacity(0.55))
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
+        )
         .opacity(isEnabled ? 1 : 0.72)
     }
 }
@@ -553,41 +336,40 @@ private struct WidgetPreviewPane: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 if let manifest {
-                    ZStack {
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.78, green: 0.84, blue: 0.90),
-                                Color(red: 0.92, green: 0.94, blue: 0.96)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 240)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    if widgetID == "builtin.meeting" {
+                        // 会议页自带岛预览与配置，不再套通用灰底预览。
+                        MeetingWidgetConfigSection()
+                    } else {
+                        ZStack {
+                            LinearGradient(
+                                colors: [
+                                    Color(red: 0.78, green: 0.84, blue: 0.90),
+                                    Color(red: 0.92, green: 0.94, blue: 0.96)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 240)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
-                        LiveWidgetIslandPreview(
-                            widgetID: widgetID,
-                            palette: islandSettings.theme.palette,
-                            width: previewWidth,
-                            height: 96,
-                            bottomRadius: CGFloat(islandSettings.bottomCornerRadius)
-                        )
-                        .padding(.horizontal, 28)
-                    }
+                            LiveWidgetIslandPreview(
+                                widgetID: widgetID,
+                                palette: islandSettings.theme.palette,
+                                width: previewWidth,
+                                height: 96,
+                                bottomRadius: CGFloat(islandSettings.bottomCornerRadius)
+                            )
+                            .padding(.horizontal, 28)
+                        }
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(manifest.displayName)
-                            .font(.system(size: 22, weight: .semibold))
-                        Label(
-                            WidgetLibraryStyle.category(for: manifest.source),
-                            systemImage: WidgetLibraryStyle.symbol(for: manifest.id)
-                        )
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Color.orange.opacity(0.9))
-                        Text(manifest.summary)
-                            .font(.system(size: 13))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(manifest.displayName)
+                                .font(.system(size: 22, weight: .semibold))
+                            Text(manifest.summary)
+                                .font(.system(size: 13))
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 } else {
                     Text("找不到该小组件。")
@@ -598,7 +380,11 @@ private struct WidgetPreviewPane: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(SettingsChrome.pageBackground)
-        .navigationTitle(manifest?.displayName ?? "预览")
+        .navigationTitle(
+            widgetID == "builtin.meeting"
+                ? "下一场会议提醒设置"
+                : (manifest?.displayName ?? "预览")
+        )
         .onAppear {
             AppLog.info("Settings", "打开小组件预览", ["id": widgetID])
         }
@@ -677,18 +463,8 @@ private struct LiveWidgetIslandPreview: View {
 private enum WidgetLibraryStyle {
     static func symbol(for id: WidgetID) -> String {
         switch id {
-        case "builtin.media": return "music.note"
         case "builtin.meeting": return "calendar"
-        case "builtin.status": return "battery.100"
         default: return "rectangle.3.group"
-        }
-    }
-
-    static func category(for source: WidgetSource) -> String {
-        switch source {
-        case .builtin: return "内置"
-        case .user: return "自定义"
-        case .generated: return "AI"
         }
     }
 }

@@ -10,6 +10,8 @@ settings:
     SWIFT_VERSION: "5.9"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     CODE_SIGN_STYLE: Automatic
+    # 个人 Team：稳定签名后日历 / 辅助功能等 TCC 才不会每次重装都丢。
+    DEVELOPMENT_TEAM: 444ULG6V8C
     ENABLE_HARDENED_RUNTIME: true
 targets:
   Ridge:
@@ -31,5 +33,10 @@ targets:
         COMBINE_HIDPI_IMAGES: true
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_EMIT_LOC_STRINGS: YES
+        DEVELOPMENT_TEAM: 444ULG6V8C
+        CODE_SIGN_STYLE: Automatic
     entitlements:
       path: Ridge/Ridge.entitlements
+      properties:
+        com.apple.security.get-task-allow: true
+        com.apple.security.personal-information.calendars: true

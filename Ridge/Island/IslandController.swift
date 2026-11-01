@@ -37,6 +37,8 @@ final class IslandController: NSObject {
     private var isSettingsSessionActive = false
     /// 设置窗在前台有焦点时钉住展开；失焦后关掉，岛恢复悬停正常逻辑。
     private var isSettingsLivePreview = false
+    /// 灵动岛设置页要实时预览；小组件 / 控制台设计页保持收起。
+    private var settingsPreferLivePreview = true
 
     func start() {
         Self.shared = self
@@ -95,7 +97,7 @@ final class IslandController: NSObject {
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] combo in
-                AppLog.info("Island", "组合页高度切换", ["combo": combo])
+                AppLog.info("Island", "控制台高度切换", ["tall": combo])
                 self?.updateInteractiveFrame()
             }
             .store(in: &settingsObservers)
@@ -111,6 +113,7 @@ final class IslandController: NSObject {
         collapseWorkItem?.cancel()
         isSettingsLivePreview = false
         isSettingsSessionActive = false
+        settingsPreferLivePreview = true
         fullscreenMonitor.stop()
         displayMonitor.stop()
         appearanceObserver?.cancel()
@@ -122,30 +125,69 @@ final class IslandController: NSObject {
         }
     }
 
-    /// 设置窗打开且在前台：钉住展开。
+    /// 设置窗打开且在前台：钉住展开（灵动岛设置页用）。
     func beginSettingsSession() {
         isSettingsSessionActive = true
+        settingsPreferLivePreview = true
         setSettingsLivePreview(true)
+        AppLog.info("Island", "设置会话：钉住展开预览")
+    }
+
+    /// 设置窗打开但保持收起（小组件 / 控制台设计页：页内自有预览，不再展开真岛）。
+    func beginSettingsSessionCollapsed() {
+        isSettingsSessionActive = true
+        settingsPreferLivePreview = false
+        isSettingsLivePreview = false
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        if viewModel.isExpanded {
+            viewModel.collapse()
+            applyWindowFrame(animated: true)
+            updateInteractiveFrame()
+        }
+        AppLog.info("Island", "设置会话：保持收起", ["expanded": false])
     }
 
     /// 设置窗仍打开，但焦点离开（切到其它 App / 其它窗）：恢复岛的正常悬停逻辑。
-    /// 焦点回到设置窗：再次钉住展开。
+    /// 焦点回到设置窗：若当前页需要预览则再次钉住展开。
     func setSettingsWindowFocused(_ focused: Bool) {
-        guard isSettingsSessionActive else { return }
+        guard isSettingsSessionActive else {
+            AppLog.debug("Island", "忽略设置焦点变更（无会话）", [
+                "focused": focused,
+                "key": Self.describeKeyWindow()
+            ])
+            return
+        }
         if focused {
-            AppLog.info("Island", "设置窗重新聚焦，钉住展开")
-            setSettingsLivePreview(true)
+            AppLog.info("Island", "设置窗重新聚焦", [
+                "appActive": NSApp.isActive,
+                "key": Self.describeKeyWindow(),
+                "preferPreview": settingsPreferLivePreview,
+                "preview": isSettingsLivePreview
+            ])
+            if settingsPreferLivePreview {
+                setSettingsLivePreview(true)
+            }
         } else {
-            AppLog.info("Island", "设置窗失焦，岛恢复正常悬停")
+            AppLog.info("Island", "设置窗失焦，岛恢复正常悬停", [
+                "appActive": NSApp.isActive,
+                "key": Self.describeKeyWindow(),
+                "pointerOver": isPointerOverIsland,
+                "preview": isSettingsLivePreview
+            ])
             // 关掉钉住，不强制收起：指针在岛上则保持，否则走正常收起。
             setSettingsLivePreview(false, forceCollapseOnEnd: false)
         }
     }
 
-    /// 设置页打开某个小组件开关：展开岛 + 可选飞入动画 + 切到该页。
+    /// 设置页打开某个小组件开关：切到该页；仅在「灵动岛」设置预览模式下展开真岛。
     func presentWidgetEnabled(_ id: WidgetID, fromScreenRect: CGRect?) {
-        setSettingsLivePreview(true)
         WidgetRuntime.shared.focusForSettings(id)
+        guard settingsPreferLivePreview else {
+            AppLog.info("Island", "开关开启：设计页保持收起", ["id": id])
+            return
+        }
+        setSettingsLivePreview(true)
         expand(reason: "widgetEnable")
         applyWindowFrame(animated: true)
         updateInteractiveFrame()
@@ -165,11 +207,14 @@ final class IslandController: NSObject {
         }
     }
 
-    /// 设置页拖拽排序落点后：展开岛并展示被拖动的小组件。
+    /// 设置页拖拽排序落点后：切到该页；设计页不展开真岛。
     func presentWidgetReordered(_ id: WidgetID) {
-        // 拖拽结束后再动岛，避免和系统拖放会话抢主线程。
-        setSettingsLivePreview(true)
         WidgetRuntime.shared.focusForSettings(id)
+        guard settingsPreferLivePreview else {
+            AppLog.info("Island", "排序后：设计页保持收起", ["id": id])
+            return
+        }
+        setSettingsLivePreview(true)
         if !viewModel.isExpanded {
             expand(reason: "widgetReorder")
             applyWindowFrame(animated: true)
@@ -218,10 +263,29 @@ final class IslandController: NSObject {
 
     func expand(reason: String) {
         guard !viewModel.isExpanded else { return }
-        AppLog.info("Island", "展开灵动岛", ["reason": reason, "expanded": true])
+        AppLog.info("Island", "展开灵动岛", [
+            "reason": reason,
+            "expanded": true,
+            "settingsSession": isSettingsSessionActive,
+            "settingsPreview": isSettingsLivePreview,
+            "prevKey": Self.describeKeyWindow()
+        ])
         viewModel.expand()
-        // 成为 key（不抢前台 App）后，触控板滚轮更容易落到本窗。
-        window.makeKey()
+        // 设置会话中不抢 key：否则设置刚打开/钉住预览时会被岛抢走焦点，表现为「窗还在却失焦」。
+        // 非设置场景仍 makeKey，方便触控板滚轮落到本窗（nonactivatingPanel 不抢其它 App 前台）。
+        if isSettingsSessionActive {
+            AppLog.info("Island", "展开跳过 makeKey，避免抢走设置焦点", [
+                "reason": reason,
+                "key": Self.describeKeyWindow()
+            ])
+        } else {
+            window.makeKey()
+            AppLog.debug("Island", "展开后 makeKey", [
+                "reason": reason,
+                "islandKey": window.isKeyWindow,
+                "key": Self.describeKeyWindow()
+            ])
+        }
         startScrollPagingMonitors()
     }
 
@@ -231,13 +295,25 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "设置预览中，忽略收起", ["reason": reason])
             return
         }
-        AppLog.info("Island", "收起灵动岛", ["reason": reason, "expanded": false])
+        AppLog.info("Island", "收起灵动岛", [
+            "reason": reason,
+            "expanded": false,
+            "wasKey": window.isKeyWindow,
+            "key": Self.describeKeyWindow()
+        ])
         viewModel.collapse()
         stopScrollPagingMonitors()
         scrollAccumX = 0
         if window.isKeyWindow {
             window.resignKey()
+            AppLog.debug("Island", "收起后 resignKey", ["key": Self.describeKeyWindow()])
         }
+    }
+
+    private static func describeKeyWindow() -> String {
+        guard let key = NSApp.keyWindow else { return "nil" }
+        let title = key.title.isEmpty ? String(describing: type(of: key)) : key.title
+        return "\(title)#\(ObjectIdentifier(key))"
     }
 
     // MARK: - Hover (screen-space)
@@ -270,6 +346,19 @@ final class IslandController: NSObject {
         }
 
         let mouse = NSEvent.mouseLocation
+
+        // 设置窗与展开岛常在屏幕上方重叠；命中设置窗时必须穿透，否则输入框失焦后点击会被岛吞掉。
+        if isSettingsSessionActive,
+           let settingsWindow = MenuBarController.shared?.settingsWindow,
+           settingsWindow.frame.contains(mouse) {
+            setClickThrough(true, reason: "pointerOverSettings")
+            isPointerOverIsland = false
+            if isSettingsLivePreview, !viewModel.isExpanded {
+                expand(reason: "settingsPreview")
+            }
+            return
+        }
+
         let over = Self.pointerIsOverIsland(
             mouse: mouse,
             geometry: geometry,

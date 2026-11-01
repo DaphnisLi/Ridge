@@ -179,6 +179,10 @@ struct SettingsCard<Content: View>: View {
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(SettingsChrome.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
+                    )
             )
     }
 }
