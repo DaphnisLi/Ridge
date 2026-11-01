@@ -1299,6 +1299,17 @@
         }
       }
     },
+    "sound.mixer.battery_percent_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量 %d%%"
+          }
+        }
+      }
+    },
     "sound.mixer.current_output": {
       "extractionState": "manual",
       "localizations": {

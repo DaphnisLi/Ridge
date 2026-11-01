@@ -20,9 +20,12 @@ final class SoundSession: ObservableObject {
     private var lingerUntil: [String: Date] = [:]
     private var pollTimer: Timer?
     private var hardwareListeners: [AudioObjectPropertyListenerBlock] = []
+    private var hardwareRefreshWorkItem: DispatchWorkItem?
     private var started = false
 
     private let lingerSeconds: TimeInterval = 5
+    /// HAL 插拔蓝牙时会连发 Devices 变更，中间态常缺设备；合并后再读。
+    private let hardwareDebounceSeconds: TimeInterval = 0.25
 
     private init() {}
 
@@ -118,14 +121,65 @@ final class SoundSession: ObservableObject {
     }
 
     private func refreshDevices(reason: String) {
-        outputDevices = SoundDeviceService.outputDevices()
+        let previous = outputDevices.map(\.uid)
+        let next = SoundDeviceService.outputDevices()
+        // 硬件抖动时偶发读到空/残缺列表：若默认设备仍在且结果明显变少，保留上一帧。
+        if shouldKeepPreviousOutputs(previous: outputDevices, next: next, reason: reason) {
+            AppLog.debug("Sound", "忽略残缺设备枚举", [
+                "reason": reason,
+                "previous": previous.count,
+                "next": next.count
+            ])
+            masterVolume = SoundDeviceService.masterOutputVolume()
+            return
+        }
+        let previousBatteries = outputDevices.map(\.batteryPercent)
+        outputDevices = next
         masterVolume = SoundDeviceService.masterOutputVolume()
-        AppLog.info("Sound", "刷新设备完成", [
-            "reason": reason,
-            "outputs": outputDevices.count,
-            "outputNames": outputDevices.map(\.name).joined(separator: " | "),
-            "master": String(format: "%.2f", masterVolume)
-        ])
+        let names = outputDevices.map(\.name).joined(separator: " | ")
+        let batteries = outputDevices.compactMap(\.batteryPercent)
+        let uidChanged = previous != outputDevices.map(\.uid)
+        let batteryChanged = previousBatteries != outputDevices.map(\.batteryPercent)
+        let changed = uidChanged || batteryChanged
+        if changed || reason == "start" || reason == "selectOutput" {
+            AppLog.info("Sound", "刷新设备完成", [
+                "reason": reason,
+                "outputs": outputDevices.count,
+                "outputNames": names,
+                "batteries": batteries.map(String.init).joined(separator: ","),
+                "master": String(format: "%.2f", masterVolume),
+                "changed": changed
+            ])
+        }
+    }
+
+    /// 连接 AirPods 等时 HAL 会短暂少报设备；避免 UI 闪回「只有电脑」。
+    private func shouldKeepPreviousOutputs(
+        previous: [SoundOutputDevice],
+        next: [SoundOutputDevice],
+        reason: String
+    ) -> Bool {
+        guard reason == "hardware" || reason == "poll" || reason == "hardwareDebounced" else {
+            return false
+        }
+        guard !previous.isEmpty, next.count < previous.count else { return false }
+        // 若上一帧的默认设备仍是系统默认，但本帧列表里找不到它 → 残缺读取。
+        guard let previousDefault = previous.first(where: \.isDefault) else { return false }
+        let systemDefault = SoundDeviceService.defaultOutputDeviceID()
+        let systemStillPrevious = systemDefault.map { $0 == previousDefault.objectID } ?? false
+        let nextHasPreviousDefault = next.contains(where: { $0.uid == previousDefault.uid })
+        return systemStillPrevious && !nextHasPreviousDefault
+    }
+
+    private func scheduleHardwareRefresh() {
+        hardwareRefreshWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            Task { @MainActor in
+                self?.refreshAll(reason: "hardwareDebounced")
+            }
+        }
+        hardwareRefreshWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + hardwareDebounceSeconds, execute: item)
     }
 
     private func refreshApps(reason: String) {
@@ -282,7 +336,8 @@ final class SoundSession: ObservableObject {
         // HAL 对 IsRunningOutput 监听不可靠，1s 轮询兜底。
         pollTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.masterVolume = SoundDeviceService.masterOutputVolume()
+                // 插拔耳机常只改 DataSource，不一定触发 Devices 监听；轮询刷新输出列表。
+                self?.refreshDevices(reason: "poll")
                 self?.refreshApps(reason: "poll")
             }
         }
@@ -297,7 +352,9 @@ final class SoundSession: ObservableObject {
         ]
         for selector in selectors {
             if let block = CoreAudioProperty.addListener(object: .system, selector, block: { [weak self] in
-                self?.refreshAll(reason: "hardware")
+                Task { @MainActor in
+                    self?.scheduleHardwareRefresh()
+                }
             }) {
                 hardwareListeners.append(block)
             }

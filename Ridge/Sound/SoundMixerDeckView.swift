@@ -1,3 +1,4 @@
+import CoreAudio
 import SwiftUI
 
 /// 控制台声音组件：主输出 + 设备切换 + 按 App 混音。
@@ -96,7 +97,7 @@ struct SoundMixerDeckView: View {
 
                 ForEach(others) { device in
                     HStack(spacing: 8) {
-                        Image(systemName: deviceSymbol(for: device.name))
+                        Image(systemName: deviceSymbol(for: device))
                             .font(.system(size: 13))
                             .foregroundStyle(.white.opacity(0.55))
                             .frame(width: 16)
@@ -105,6 +106,13 @@ struct SoundMixerDeckView: View {
                             .foregroundStyle(.white.opacity(0.70))
                             .lineLimit(1)
                         Spacer(minLength: 0)
+                        if let battery = device.batteryPercent {
+                            batteryBadge(percent: battery, emphasized: false)
+                        } else if device.transport == kAudioDeviceTransportTypeBuiltIn {
+                            Text(L10n.Sound.builtInHint)
+                                .font(.system(size: 10).monospaced())
+                                .foregroundStyle(.white.opacity(0.40))
+                        }
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
@@ -135,7 +143,7 @@ struct SoundMixerDeckView: View {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .strokeBorder(accentGreen.opacity(0.25), lineWidth: 1)
                     )
-                Image(systemName: deviceSymbol(for: device.name))
+                Image(systemName: deviceSymbol(for: device))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(accentGreen)
             }
@@ -154,9 +162,14 @@ struct SoundMixerDeckView: View {
 
             Spacer(minLength: 0)
 
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 14))
-                .foregroundStyle(accentGreen)
+            HStack(spacing: 6) {
+                if let battery = device.batteryPercent {
+                    batteryBadge(percent: battery, emphasized: true)
+                }
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(accentGreen)
+            }
         }
         .padding(8)
         .background(
@@ -167,6 +180,27 @@ struct SoundMixerDeckView: View {
                         .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
                 )
         )
+    }
+
+    private func batteryBadge(percent: Int, emphasized: Bool) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: batterySymbol(percent))
+                .font(.system(size: emphasized ? 13 : 12))
+            Text("\(percent)%")
+                .font(.system(size: 10, weight: .medium).monospacedDigit())
+        }
+        .foregroundStyle(emphasized ? accentGreen : Color.white.opacity(0.55))
+        .accessibilityLabel(L10n.Sound.batteryPercent(percent))
+    }
+
+    private func batterySymbol(_ percent: Int) -> String {
+        switch percent {
+        case 0..<15: return "battery.0percent"
+        case 15..<35: return "battery.25percent"
+        case 35..<60: return "battery.50percent"
+        case 60..<85: return "battery.75percent"
+        default: return "battery.100percent"
+        }
     }
 
     // MARK: - Right: apps
@@ -353,15 +387,35 @@ struct SoundMixerDeckView: View {
         Int((value * 100).rounded())
     }
 
-    private func deviceSymbol(for name: String) -> String {
-        let lower = name.lowercased()
-        if lower.contains("airpods") || lower.contains("headphone") || lower.contains("耳机") {
+    private func deviceSymbol(for device: SoundOutputDevice) -> String {
+        switch device.transport {
+        case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE:
             return "headphones"
-        }
-        if lower.contains("display") || lower.contains("hdmi") || lower.contains("外接") {
+        case kAudioDeviceTransportTypeBuiltIn:
+            let lower = device.name.lowercased()
+            if lower.contains("headphone") || lower.contains("耳机") {
+                return "headphones"
+            }
+            return "laptopcomputer"
+        case kAudioDeviceTransportTypeHDMI, kAudioDeviceTransportTypeDisplayPort,
+             kAudioDeviceTransportTypeAirPlay:
             return "hifispeaker.fill"
+        case kAudioDeviceTransportTypeUSB, kAudioDeviceTransportTypeThunderbolt:
+            let lower = device.name.lowercased()
+            if lower.contains("headphone") || lower.contains("airpods") || lower.contains("耳机") {
+                return "headphones"
+            }
+            return "hifispeaker.fill"
+        default:
+            let lower = device.name.lowercased()
+            if lower.contains("airpods") || lower.contains("headphone") || lower.contains("耳机") {
+                return "headphones"
+            }
+            if lower.contains("display") || lower.contains("hdmi") || lower.contains("外接") {
+                return "hifispeaker.fill"
+            }
+            return "laptopcomputer"
         }
-        return "laptopcomputer"
     }
 }
 

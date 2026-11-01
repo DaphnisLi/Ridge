@@ -88,6 +88,9 @@ enum L10n {
         static var currentOutputDevice: String { tr("sound.mixer.current_output", "当前输出设备") }
         static var activeOutput: String { tr("sound.mixer.active_output", "当前输出") }
         static var builtInHint: String { tr("sound.mixer.built_in", "内建") }
+        static func batteryPercent(_ value: Int) -> String {
+            String(format: tr("sound.mixer.battery_percent_format", "电量 %d%%"), value)
+        }
         static var noOutputDevices: String { tr("sound.mixer.no_outputs", "未发现可用输出设备") }
         static var perAppMix: String { tr("sound.mixer.per_app", "发声应用独立混音") }
         static func activeSources(_ count: Int) -> String {
@@ -310,6 +313,12 @@ enum L10n {
             tr(
                 "NSScreenCaptureUsageDescription",
                 "Ridge 需要屏幕录制权限以通过系统音频接口调节其它 App 的音量；不会录制或保存屏幕画面。"
+            )
+        }
+        static var bluetoothAlwaysUsage: String {
+            tr(
+                "NSBluetoothAlwaysUsageDescription",
+                "Ridge 需要蓝牙权限以读取已连接耳机等设备的电量，并在控制台混音台中显示。"
             )
         }
     }

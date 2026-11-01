@@ -2,8 +2,11 @@ import CoreAudio
 import Foundation
 
 /// 输出设备枚举与系统主输出音量。
+/// 内建声卡的「扬声器 / 耳机」是同一 Device 的不同 DataSource，会展开成多条可选输出。
 enum SoundDeviceService {
-    /// 用户可选的输出设备：排除虚拟设备、隐藏设备、Ridge 私有聚合等。
+    private static let dataSourceUIDMarker = "#ds:"
+
+    /// 用户可选的输出：排除虚拟设备、隐藏设备、Ridge 私有聚合等。
     static func outputDevices() -> [SoundOutputDevice] {
         let defaultID = defaultOutputDeviceID()
         let raw = deviceIDs()
@@ -16,13 +19,12 @@ enum SoundDeviceService {
             let transport = transportType(id)
             guard hasOutput(id) else { continue }
 
-            let isDefault = (defaultID.map { $0 == id } ?? false)
-            // 系统当前默认输出必须保留，否则列表空/无默认，按钮切换与 App 路由都会坏。
-            if let reason = rejectOutputReason(id: id, uid: uid, transport: transport), !isDefault {
+            let isDefaultDevice = (defaultID.map { $0 == id } ?? false)
+            if let reason = rejectOutputReason(id: id, uid: uid, transport: transport), !isDefaultDevice {
                 dropped.append((name, uid, reason))
                 continue
             }
-            if isDefault, let reason = rejectOutputReason(id: id, uid: uid, transport: transport) {
+            if isDefaultDevice, let reason = rejectOutputReason(id: id, uid: uid, transport: transport) {
                 AppLog.warn("Sound", "默认输出本应过滤，仍强制保留", [
                     "name": name,
                     "uid": uid,
@@ -30,24 +32,56 @@ enum SoundDeviceService {
                 ])
             }
 
-            kept.append(
-                SoundOutputDevice(id: id, uid: uid, name: name, isDefault: isDefault)
-            )
+            let sources = outputDataSources(id)
+            let currentSource = currentOutputDataSource(id)
+
+            if !sources.isEmpty {
+                // 内建声卡常见：扬声器 + 耳机 两条 DataSource；蓝牙等也可能有多路。
+                for source in sources {
+                    let sourceName = dataSourceName(device: id, sourceID: source) ?? name
+                    let endpointUID = sources.count == 1
+                        ? uid
+                        : "\(uid)\(dataSourceUIDMarker)\(source)"
+                    let isDefault = isDefaultDevice && (currentSource == nil || currentSource == source)
+                    kept.append(
+                        SoundOutputDevice(
+                            objectID: id,
+                            uid: endpointUID,
+                            name: sourceName,
+                            transport: transport,
+                            batteryPercent: batteryPercent(uid: uid, transport: transport),
+                            isDefault: isDefault
+                        )
+                    )
+                }
+            } else {
+                kept.append(
+                    SoundOutputDevice(
+                        objectID: id,
+                        uid: uid,
+                        name: name,
+                        transport: transport,
+                        batteryPercent: batteryPercent(uid: uid, transport: transport),
+                        isDefault: isDefaultDevice
+                    )
+                )
+            }
         }
 
         kept.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-        AppLog.info("Sound", "输出设备枚举", [
+        AppLog.debug("Sound", "输出设备枚举", [
             "raw": raw.count,
             "kept": kept.count,
-            "default": kept.first(where: \.isDefault)?.name ?? "none"
+            "default": kept.first(where: \.isDefault)?.name ?? "none",
+            "names": kept.map(\.name).joined(separator: " | ")
         ])
         for device in kept {
             AppLog.debug("Sound", "保留输出设备", [
                 "name": device.name,
                 "uid": device.uid,
                 "default": device.isDefault,
-                "transport": transportLabel(transportType(device.id))
+                "transport": transportLabel(transportType(device.objectID))
             ])
         }
         for item in dropped {
@@ -65,15 +99,50 @@ enum SoundDeviceService {
     }
 
     static func setDefaultOutput(uid: String) -> Bool {
+        let deviceUID: String
+        let sourceID: UInt32?
+        if let range = uid.range(of: dataSourceUIDMarker) {
+            deviceUID = String(uid[..<range.lowerBound])
+            sourceID = UInt32(uid[range.upperBound...])
+        } else {
+            deviceUID = uid
+            sourceID = nil
+        }
+
         guard let id = deviceIDs().first(where: {
-            CoreAudioProperty.getCFString(object: $0, kAudioDevicePropertyDeviceUID) == uid
-        }) else { return false }
-        let ok = CoreAudioProperty.set(
+            CoreAudioProperty.getCFString(object: $0, kAudioDevicePropertyDeviceUID) == deviceUID
+        }) else {
+            AppLog.warn("Sound", "切换输出失败：找不到设备", ["uid": uid])
+            return false
+        }
+
+        let setDevice = CoreAudioProperty.set(
             object: .system,
             kAudioHardwarePropertyDefaultOutputDevice,
             value: id
         )
-        AppLog.info("Sound", "切换默认输出", ["uid": uid, "ok": ok])
+        var setSource = true
+        if let sourceID {
+            setSource = CoreAudioProperty.set(
+                object: id,
+                kAudioDevicePropertyDataSource,
+                scope: kAudioObjectPropertyScopeOutput,
+                value: sourceID
+            )
+            if !setSource {
+                AppLog.warn("Sound", "切换数据源失败", [
+                    "uid": deviceUID,
+                    "source": sourceID
+                ])
+            }
+        }
+        let ok = setDevice && setSource
+        AppLog.info("Sound", "切换默认输出", [
+            "uid": uid,
+            "deviceOK": setDevice,
+            "sourceOK": setSource,
+            "ok": ok
+        ])
         return ok
     }
 
@@ -142,8 +211,10 @@ enum SoundDeviceService {
         if uid.lowercased().contains("soundrouter") { return "thirdPartyAggregate" }
         // 虚拟声卡（Zoom / Teams / BlackHole 等）不进列表。
         if transport == kAudioDeviceTransportTypeVirtual { return "virtual" }
-        // 不能作为系统默认输出的设备（含多数私有聚合）。
-        if !canBeDefaultOutput(id) { return "cannotBeDefault" }
+        // 仅对聚合设备看 canBeDefault，避免误杀蓝牙耳机等实体设备。
+        if transport == kAudioDeviceTransportTypeAggregate, !canBeDefaultOutput(id) {
+            return "cannotBeDefault"
+        }
         return nil
     }
 
@@ -162,12 +233,26 @@ enum SoundDeviceService {
         ) {
             return flag != 0
         }
-        // 读失败时保守保留，避免误杀内置扬声器。
         return true
     }
 
     private static func transportType(_ id: AudioObjectID) -> UInt32 {
         CoreAudioProperty.get(object: id, kAudioDevicePropertyTransportType) ?? 0
+    }
+
+    private static func batteryPercent(uid: String, transport: UInt32) -> Int? {
+        guard transport == kAudioDeviceTransportTypeBluetooth
+            || transport == kAudioDeviceTransportTypeBluetoothLE
+        else {
+            return nil
+        }
+        // 多数据源 UID 带 `#ds:`，电量仍按设备本体地址查。
+        let deviceUID = uid.components(separatedBy: dataSourceUIDMarker).first ?? uid
+        let percent = SoundBluetoothBattery.percent(forAudioDeviceUID: deviceUID)
+        if let percent {
+            AppLog.debug("Sound", "蓝牙电量", ["uid": deviceUID, "percent": percent])
+        }
+        return percent
     }
 
     private static func transportLabel(_ type: UInt32) -> String {
@@ -178,8 +263,8 @@ enum SoundDeviceService {
         case kAudioDeviceTransportTypePCI: return "pci"
         case kAudioDeviceTransportTypeUSB: return "usb"
         case kAudioDeviceTransportTypeFireWire: return "firewire"
-        case kAudioDeviceTransportTypeBluetooth: return "bluetooth"
-        case kAudioDeviceTransportTypeBluetoothLE: return "bluetoothLE"
+        case kAudioDeviceTransportTypeBluetooth: return "bluetooth" // 'blue'
+        case kAudioDeviceTransportTypeBluetoothLE: return "bluetoothLE" // 'blea'
         case kAudioDeviceTransportTypeHDMI: return "hdmi"
         case kAudioDeviceTransportTypeDisplayPort: return "displayPort"
         case kAudioDeviceTransportTypeAirPlay: return "airPlay"
@@ -189,6 +274,47 @@ enum SoundDeviceService {
         }
     }
 
+    // MARK: - Data sources（扬声器 / 耳机）
+
+    private static func outputDataSources(_ id: AudioObjectID) -> [UInt32] {
+        CoreAudioProperty.getArray(
+            object: id,
+            kAudioDevicePropertyDataSources,
+            scope: kAudioObjectPropertyScopeOutput
+        )
+    }
+
+    private static func currentOutputDataSource(_ id: AudioObjectID) -> UInt32? {
+        CoreAudioProperty.get(
+            object: id,
+            kAudioDevicePropertyDataSource,
+            scope: kAudioObjectPropertyScopeOutput
+        )
+    }
+
+    private static func dataSourceName(device: AudioObjectID, sourceID: UInt32) -> String? {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyDataSourceNameForIDCFString,
+            mScope: kAudioObjectPropertyScopeOutput,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var source = sourceID
+        var dataSize = UInt32(MemoryLayout<CFString?>.size)
+        var value: CFString?
+        let status = withUnsafeMutablePointer(to: &value) { ptr in
+            AudioObjectGetPropertyData(
+                device,
+                &address,
+                UInt32(MemoryLayout<UInt32>.size),
+                &source,
+                &dataSize,
+                ptr
+            )
+        }
+        guard status == noErr, let value else { return nil }
+        return value as String
+    }
+
     // MARK: - Private
 
     private static func deviceIDs() -> [AudioObjectID] {
@@ -196,11 +322,39 @@ enum SoundDeviceService {
     }
 
     private static func hasOutput(_ id: AudioObjectID) -> Bool {
+        if channelCount(id, scope: kAudioObjectPropertyScopeOutput) > 0 {
+            return true
+        }
         let streams: [AudioObjectID] = CoreAudioProperty.getArray(
             object: id,
             kAudioDevicePropertyStreams,
             scope: kAudioObjectPropertyScopeOutput
         )
         return streams.count > 0
+    }
+
+    /// 用 StreamConfiguration 数声道，比单纯数 stream 对象更稳（部分蓝牙耳机适用）。
+    private static func channelCount(_ id: AudioObjectID, scope: AudioObjectPropertyScope) -> Int {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyStreamConfiguration,
+            mScope: scope,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var dataSize: UInt32 = 0
+        guard AudioObjectGetPropertyDataSize(id, &address, 0, nil, &dataSize) == noErr, dataSize > 0 else {
+            return 0
+        }
+        let raw = UnsafeMutableRawPointer.allocate(byteCount: Int(dataSize), alignment: MemoryLayout<AudioBufferList>.alignment)
+        defer { raw.deallocate() }
+        guard AudioObjectGetPropertyData(id, &address, 0, nil, &dataSize, raw) == noErr else {
+            return 0
+        }
+        let list = raw.assumingMemoryBound(to: AudioBufferList.self)
+        let buffers = UnsafeMutableAudioBufferListPointer(list)
+        var total = 0
+        for buffer in buffers {
+            total += Int(buffer.mNumberChannels)
+        }
+        return total
     }
 }

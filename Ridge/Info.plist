@@ -34,5 +34,7 @@
 	<string>Ridge 需要读取日历，以便在灵动岛显示即将开始的会议倒计时，并提供一键入会。日历数据仅在本机处理。</string>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>Ridge 需要屏幕录制权限以通过系统音频接口调节其它 App 的音量；不会录制或保存屏幕画面。</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Ridge 需要蓝牙权限以读取已连接耳机等设备的电量，并在控制台混音台中显示。</string>
 </dict>
 </plist>

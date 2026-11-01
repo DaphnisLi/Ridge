@@ -150,7 +150,8 @@ struct WidgetsSettingsPane: View {
             AppLog.info("Settings", "打开小组件，同步上岛", ["id": id])
         } else {
             WidgetRuntime.shared.withdrawDisplay(id)
-            IslandController.shared?.beginSettingsSession()
+            // 仍在小组件设计页，保持「不钉住预览」，避免关掉开关后岛被钉死不收。
+            IslandController.shared?.beginSettingsSessionCollapsed()
             WidgetRuntime.shared.recompute(reason: "settingsDisable")
             AppLog.info("Settings", "关闭小组件，同步下岛", ["id": id])
         }

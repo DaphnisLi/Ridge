@@ -3,10 +3,21 @@ import CoreAudio
 import Foundation
 
 struct SoundOutputDevice: Identifiable, Hashable {
-    let id: AudioObjectID
+    /// 稳定键：设备 UID，多数据源时带 `#ds:<code>` 后缀。
+    var id: String { uid }
+    let objectID: AudioObjectID
     let uid: String
     let name: String
+    /// CoreAudio transport fourCC，用于图标与诊断。
+    let transport: UInt32
+    /// 蓝牙设备电量 0…100；非蓝牙或未知为 nil。
+    var batteryPercent: Int?
     var isDefault: Bool
+
+    var isBluetooth: Bool {
+        transport == kAudioDeviceTransportTypeBluetooth
+            || transport == kAudioDeviceTransportTypeBluetoothLE
+    }
 }
 
 struct SoundAppRow: Identifiable, Hashable {

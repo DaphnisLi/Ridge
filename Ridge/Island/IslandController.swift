@@ -357,9 +357,19 @@ final class IslandController: NSObject {
            let settingsWindow = MenuBarController.shared?.settingsWindow,
            settingsWindow.frame.contains(mouse) {
             setClickThrough(true, reason: "pointerOverSettings")
+            let leftIsland = isPointerOverIsland || viewModel.isExpanded
             isPointerOverIsland = false
-            if isSettingsLivePreview, !viewModel.isExpanded {
-                expand(reason: "settingsPreview")
+            if isSettingsLivePreview {
+                // 灵动岛设置页：钉住展开，指针回设置窗也不收。
+                if !viewModel.isExpanded {
+                    expand(reason: "settingsPreview")
+                }
+            } else if leftIsland, !isMouseDownInIsland {
+                // 控制台 / 小组件设计页：设置窗与展开岛几何重叠，
+                // 延迟收起的 stillOver 复查会误判「还在岛上」→ 必须立刻收起。
+                collapseWorkItem?.cancel()
+                collapseWorkItem = nil
+                collapse(reason: "pointerOverSettings")
             }
             return
         }
@@ -495,8 +505,15 @@ final class IslandController: NSObject {
                 self.collapse(reason: "hoverEnd")
                 return
             }
+            let mouse = NSEvent.mouseLocation
+            // 设置窗盖住岛展开区时，不算「还在岛上」（否则设计页永远收不起来）。
+            if self.isPointerOverSettingsWindow(mouse), !self.isSettingsLivePreview {
+                self.isPointerOverIsland = false
+                self.collapse(reason: "hoverEnd")
+                return
+            }
             let stillOver = Self.pointerIsOverIsland(
-                mouse: NSEvent.mouseLocation,
+                mouse: mouse,
                 geometry: geometry,
                 expanded: true
             )
@@ -508,6 +525,13 @@ final class IslandController: NSObject {
         }
         collapseWorkItem = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
+    }
+
+    private func isPointerOverSettingsWindow(_ mouse: NSPoint) -> Bool {
+        guard isSettingsSessionActive,
+              let settingsWindow = MenuBarController.shared?.settingsWindow
+        else { return false }
+        return settingsWindow.frame.contains(mouse)
     }
 
     private static func expandedLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
