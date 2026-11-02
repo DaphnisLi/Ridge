@@ -66,6 +66,7 @@ struct ShelfItem: Identifiable, Hashable {
     let url: URL
     let name: String
     let isDirectory: Bool
+    let byteCount: UInt64?
 
     init(url: URL) {
         self.id = UUID()
@@ -74,6 +75,13 @@ struct ShelfItem: Identifiable, Hashable {
         var isDir: ObjCBool = false
         FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
         self.isDirectory = isDir.boolValue
+        if let values = try? url.resourceValues(forKeys: [.fileSizeKey]),
+           let size = values.fileSize,
+           size >= 0 {
+            self.byteCount = UInt64(size)
+        } else {
+            self.byteCount = nil
+        }
     }
 
     var icon: NSImage {
@@ -87,6 +95,74 @@ struct ShelfItem: Identifiable, Hashable {
         }
         if let type = UTType(filenameExtension: url.pathExtension) { return type }
         return .data
+    }
+
+    /// 扩展名徽章（如 PDF / PNG）；文件夹显示 DIR。
+    var badgeLabel: String {
+        if isDirectory { return "DIR" }
+        let ext = url.pathExtension.uppercased()
+        if ext.isEmpty { return "FILE" }
+        return String(ext.prefix(4))
+    }
+
+    var subtitle: String {
+        if isDirectory {
+            return L10n.Shelf.kindFolder
+        }
+        var parts: [String] = []
+        if let byteCount {
+            parts.append(Self.formattedBytes(byteCount))
+        }
+        let kind = Self.kindLabel(for: contentType, extension: url.pathExtension)
+        if !kind.isEmpty {
+            parts.append(kind)
+        }
+        if parts.isEmpty {
+            return L10n.Shelf.kindFile
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    private static func formattedBytes(_ bytes: UInt64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useKB, .useMB, .useGB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: Int64(bytes))
+    }
+
+    private static func kindLabel(for type: UTType, extension ext: String) -> String {
+        if type.conforms(to: .pdf) { return L10n.Shelf.kindDocument }
+        if type.conforms(to: .image) { return L10n.Shelf.kindImage }
+        if type.conforms(to: .movie) || type.conforms(to: .audiovisualContent) {
+            return L10n.Shelf.kindVideo
+        }
+        if type.conforms(to: .audio) { return L10n.Shelf.kindAudio }
+        let lowerExt = ext.lowercased()
+        if ["swift", "ts", "tsx", "js", "jsx", "py", "go", "rs", "c", "cpp", "h", "m", "mm"].contains(lowerExt) {
+            return L10n.Shelf.kindSource
+        }
+        if type.conforms(to: .archive) || ["zip", "rar", "7z", "tar", "gz"].contains(lowerExt) {
+            return L10n.Shelf.kindArchive
+        }
+        if lowerExt == "svg" {
+            return L10n.Shelf.kindVector
+        }
+        return L10n.Shelf.kindFile
+    }
+
+    /// 徽章配色键，由 View 层映射成 Color。
+    var badgeStyleKey: String {
+        if isDirectory { return "dir" }
+        let key = url.pathExtension.lowercased()
+        switch key {
+        case "pdf": return "pdf"
+        case "png", "jpg", "jpeg", "gif", "webp", "heic": return "image"
+        case "svg": return "svg"
+        case "zip", "rar", "7z", "tar", "gz": return "archive"
+        case "mp4", "mov", "m4v", "mkv": return "video"
+        case "ts", "tsx", "js", "jsx", "swift", "py", "go", "rs": return "code"
+        default: return "file"
+        }
     }
 
     /// 拖出时用原路径；suggestedName 不要带后缀（系统会按 UTI 再补一次，否则变成 `.jpg.jpg`）。

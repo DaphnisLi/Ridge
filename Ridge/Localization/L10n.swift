@@ -258,9 +258,9 @@ enum L10n {
         static var emptyState: String {
             tr("projects.deck.empty", "未发现占用中的项目进程。可在设置中添加项目根目录。")
         }
-        static var runningTitle: String { tr("projects.deck.running", "运行中") }
-        static var watchingTitle: String { tr("projects.deck.watching", "监视中") }
-        static var containersTitle: String { tr("projects.deck.containers", "容器") }
+        static var runningTitle: String { tr("projects.deck.running", "运行中进程") }
+        static var watchingTitle: String { tr("projects.deck.watching", "监视中进程") }
+        static var containersTitle: String { tr("projects.deck.containers", "容器 Docker") }
         static var watchingEmpty: String {
             tr("projects.deck.watching_empty", "在左侧点「监视」，进程结束后会在刘海处提示。")
         }
@@ -268,6 +268,76 @@ enum L10n {
         static var watchingActionOn: String { tr("projects.deck.watching_action_on", "监视中") }
         static var releaseHelp: String {
             tr("projects.deck.release_help", "结束该项目下可释放的进程与容器")
+        }
+        static var releaseItemHelp: String {
+            tr("projects.deck.release_item_help", "结束该命令进程")
+        }
+        static var cancelWatch: String { tr("projects.deck.cancel_watch", "取消监视") }
+        static var expandDetails: String { tr("projects.deck.expand_details", "展开更多") }
+        static var treeStreamLabel: String { tr("projects.deck.tree_stream", "TREE STREAM") }
+        static var watchingActiveLabel: String { tr("projects.deck.watching_active_label", "ACTIVE") }
+        static var durationLabel: String { tr("projects.deck.duration_label", "持续时长") }
+        static var cpuUsageLabel: String { tr("projects.deck.cpu_usage", "CPU 占用") }
+        static var memoryUsageLabel: String { tr("projects.deck.memory_usage", "物理内存") }
+        static var cpuLimitSuffix: String { tr("projects.deck.cpu_limit_suffix", "/ 限额 100%") }
+        static var autoNotifyOn: String {
+            tr("projects.deck.auto_notify_on", "异常自动通知已开启")
+        }
+        static func runningStats(_ projects: Int, _ processes: Int) -> String {
+            String(
+                format: tr("projects.deck.running_stats_format", "%d 工程 · %d 进程"),
+                projects,
+                processes
+            )
+        }
+        static func watchingActiveCount(_ count: Int) -> String {
+            String(format: tr("projects.deck.watching_active_count_format", "%d 活跃"), count)
+        }
+        static func commandCount(_ count: Int) -> String {
+            String(format: tr("projects.deck.command_count_format", "%d 命令"), count)
+        }
+        static func projectCPU(_ percent: Double) -> String {
+            String(format: tr("projects.deck.project_cpu_format", "∑ CPU %.1f%%"), percent)
+        }
+        static func processMeta(_ pid: Int32, _ cpu: Double, _ mem: String) -> String {
+            String(
+                format: tr("projects.deck.process_meta_format", "PID %d · CPU %.1f%% · %@"),
+                pid,
+                cpu,
+                mem
+            )
+        }
+        static func memoryPeakInline(_ text: String) -> String {
+            String(format: tr("projects.deck.memory_peak_inline_format", "(峰值 %@)"), text)
+        }
+        static func containersRunningBadge(_ count: Int) -> String {
+            String(format: tr("projects.deck.containers_running_badge_format", "%d 运行中"), count)
+        }
+        static var containerRestart: String { tr("projects.deck.container_restart", "重启") }
+        static var containerStop: String { tr("projects.deck.container_stop", "停止") }
+        static var containerRestarting: String {
+            tr("projects.deck.container_restarting", "正在重启容器…")
+        }
+        static func containerRestartDone(_ name: String) -> String {
+            String(format: tr("projects.deck.container_restart_done_format", "已重启 %@"), name)
+        }
+        static func containerRestartFailed(_ name: String) -> String {
+            String(format: tr("projects.deck.container_restart_failed_format", "重启 %@ 失败"), name)
+        }
+        static func containerPortBadge(_ ports: [Int]) -> String {
+            guard let first = ports.first else { return "" }
+            if ports.count == 1 {
+                return String(format: tr("projects.deck.container_port_badge_format", "%d"), first)
+            }
+            let text = ports.prefix(2).map(String.init).joined(separator: "/")
+            return text
+        }
+        static func containerResourceLine(_ cpu: Double, _ mem: String) -> String {
+            String(
+                format: tr("projects.deck.container_resource_format", "%.1f%% · %@"),
+                cpu,
+                mem
+            )
         }
         static func releaseDone(_ project: String) -> String {
             String(format: tr("projects.deck.release_done_format", "已释放 %@"), project)
@@ -467,23 +537,42 @@ enum L10n {
 
     enum Shelf {
         static var deckTitle: String { tr("shelf.deck.title", "货架与剪贴板") }
-        static var shelfTitle: String { tr("shelf.title", "货架") }
+        static var shelfTitle: String { tr("shelf.title", "瞬时货架") }
         static var clipboardTitle: String { tr("shelf.clipboard.title", "剪贴板历史") }
-        static var dropHint: String { tr("shelf.drop_hint", "拖到此处暂存") }
+        static var dropHint: String {
+            tr("shelf.drop_hint", "拖至此处暂存")
+        }
         static var dropHintDetail: String {
-            tr("shelf.drop_hint_detail", "文件、图片或文件夹路径仅存于内存")
+            tr("shelf.drop_hint_detail", "任意文件均可暂存 · 悬停即存")
+        }
+        static var dropRamBadge: String {
+            tr("shelf.drop_ram_badge", "RAM 内存驻留 · 零磁盘磨损")
+        }
+        static var dropActiveHint: String {
+            tr("shelf.drop_active_hint", "释放即可暂存入舱")
+        }
+        static var dropActiveDetail: String {
+            tr("shelf.drop_active_detail", "已识别拖拽对象 · 准备自动就绪")
         }
         static var dropMore: String { tr("shelf.drop_more", "继续拖入可追加") }
         static var kindFile: String { tr("shelf.kind.file", "文件") }
         static var kindFolder: String { tr("shelf.kind.folder", "文件夹") }
+        static var kindDocument: String { tr("shelf.kind.document", "文档") }
+        static var kindImage: String { tr("shelf.kind.image", "图片") }
+        static var kindVideo: String { tr("shelf.kind.video", "视频") }
+        static var kindAudio: String { tr("shelf.kind.audio", "音频") }
+        static var kindSource: String { tr("shelf.kind.source", "源码") }
+        static var kindArchive: String { tr("shelf.kind.archive", "压缩归档") }
+        static var kindVector: String { tr("shelf.kind.vector", "矢量素材") }
         static var showInFinder: String { tr("shelf.show_in_finder", "在 Finder 中显示") }
         static var clearShelf: String { tr("shelf.clear", "清空货架") }
         static var clearClipboard: String { tr("shelf.clipboard.clear", "清空历史") }
+        static var removeItem: String { tr("shelf.remove_item", "移出货架") }
         static var clipboardEmpty: String {
             tr("shelf.clipboard.empty", "复制文字、链接、颜色或截图后会出现在这里")
         }
         static var clipboardSearchPlaceholder: String {
-            tr("shelf.clipboard.search_placeholder", "搜索")
+            tr("shelf.clipboard.search_placeholder", "搜索剪贴板记录…")
         }
         static var clipboardSearchClear: String {
             tr("shelf.clipboard.search_clear", "清除搜索")
@@ -493,6 +582,8 @@ enum L10n {
         }
         static var clipboardImagePreview: String { tr("shelf.clipboard.image_preview", "图片") }
         static var copied: String { tr("shelf.copied", "已复制") }
+        static var justCopied: String { tr("shelf.just_copied", "● 刚刚复制") }
+        static var pasteDirect: String { tr("shelf.paste_direct", "直贴") }
         static var copyAgain: String { tr("shelf.copy_again", "再次复制") }
         static var pin: String { tr("shelf.pin", "置顶") }
         static var unpin: String { tr("shelf.unpin", "取消置顶") }

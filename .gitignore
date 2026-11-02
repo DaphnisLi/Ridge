@@ -42,6 +42,7 @@ logs/
 npm-debug.log*
 
 # Local project-release demo servers
+.ridge-demo/
 .ridge-demo-http.py
 .ridge-demo-server.py
 .ridge-demo-*.py

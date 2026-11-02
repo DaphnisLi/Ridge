@@ -1195,7 +1195,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "运行中"
+            "value": "运行中进程"
           }
         }
       }
@@ -1206,7 +1206,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "监视中"
+            "value": "监视中进程"
           }
         }
       }
@@ -1217,7 +1217,271 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "容器"
+            "value": "容器 Docker"
+          }
+        }
+      }
+    },
+    "projects.deck.release_item_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束该命令进程"
+          }
+        }
+      }
+    },
+    "projects.deck.cancel_watch": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消监视"
+          }
+        }
+      }
+    },
+    "projects.deck.expand_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开更多"
+          }
+        }
+      }
+    },
+    "projects.deck.tree_stream": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TREE STREAM"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_active_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACTIVE"
+          }
+        }
+      }
+    },
+    "projects.deck.duration_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "持续时长"
+          }
+        }
+      }
+    },
+    "projects.deck.cpu_usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU 占用"
+          }
+        }
+      }
+    },
+    "projects.deck.memory_usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "物理内存"
+          }
+        }
+      }
+    },
+    "projects.deck.cpu_limit_suffix": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ 限额 100%"
+          }
+        }
+      }
+    },
+    "projects.deck.auto_notify_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "异常自动通知已开启"
+          }
+        }
+      }
+    },
+    "projects.deck.running_stats_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 工程 · %d 进程"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_active_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 活跃"
+          }
+        }
+      }
+    },
+    "projects.deck.command_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 命令"
+          }
+        }
+      }
+    },
+    "projects.deck.project_cpu_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "∑ CPU %.1f%%"
+          }
+        }
+      }
+    },
+    "projects.deck.process_meta_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PID %d · CPU %.1f%% · %@"
+          }
+        }
+      }
+    },
+    "projects.deck.memory_peak_inline_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(峰值 %@)"
+          }
+        }
+      }
+    },
+    "projects.deck.containers_running_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 运行中"
+          }
+        }
+      }
+    },
+    "projects.deck.container_restart": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重启"
+          }
+        }
+      }
+    },
+    "projects.deck.container_stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止"
+          }
+        }
+      }
+    },
+    "projects.deck.container_restarting": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在重启容器…"
+          }
+        }
+      }
+    },
+    "projects.deck.container_restart_done_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已重启 %@"
+          }
+        }
+      }
+    },
+    "projects.deck.container_restart_failed_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重启 %@ 失败"
+          }
+        }
+      }
+    },
+    "projects.deck.container_port_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d"
+          }
+        }
+      }
+    },
+    "projects.deck.container_resource_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f%% · %@"
           }
         }
       }
@@ -2350,7 +2614,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "货架"
+            "value": "瞬时货架"
           }
         }
       }
@@ -2372,7 +2636,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "拖到此处暂存"
+            "value": "拖至此处暂存"
           }
         }
       }
@@ -2383,7 +2647,40 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "文件、图片或文件夹路径仅存于内存"
+            "value": "任意文件均可暂存 · 悬停即存"
+          }
+        }
+      }
+    },
+    "shelf.drop_ram_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM 内存驻留 · 零磁盘磨损"
+          }
+        }
+      }
+    },
+    "shelf.drop_active_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "释放即可暂存入舱"
+          }
+        }
+      }
+    },
+    "shelf.drop_active_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已识别拖拽对象 · 准备自动就绪"
           }
         }
       }
@@ -2460,7 +2757,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索"
+            "value": "搜索剪贴板记录…"
           }
         }
       }
@@ -2549,6 +2846,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消置顶"
+          }
+        }
+      }
+    },
+    "shelf.kind.document": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文档"
+          }
+        }
+      }
+    },
+    "shelf.kind.image": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片"
+          }
+        }
+      }
+    },
+    "shelf.kind.video": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频"
+          }
+        }
+      }
+    },
+    "shelf.kind.audio": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频"
+          }
+        }
+      }
+    },
+    "shelf.kind.source": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源码"
+          }
+        }
+      }
+    },
+    "shelf.kind.archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩归档"
+          }
+        }
+      }
+    },
+    "shelf.kind.vector": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矢量素材"
+          }
+        }
+      }
+    },
+    "shelf.remove_item": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移出货架"
+          }
+        }
+      }
+    },
+    "shelf.just_copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "● 刚刚复制"
+          }
+        }
+      }
+    },
+    "shelf.paste_direct": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直贴"
           }
         }
       }

@@ -36,6 +36,10 @@ final class IslandController: NSObject {
     private var isShelfDropTargeted = false
     /// 拖文件接近货架时临时抬高层级，便于抢到投放命中。
     private var isShelfDragElevated = false
+    /// 整岛暂存拖入会话是否仍有效（接近区或投放命中）。
+    var isShelfDragSessionActive: Bool {
+        isShelfFileDragPinned || isShelfDropTargeted
+    }
     private lazy var islandRestingLevel = window.level
     private var pagePanRecognizer: NSPanGestureRecognizer?
     /// 触控板横滑：nonactivating Panel 上的 scrollWheel 常被系统送给下层 App，用监视器兜底。
@@ -437,6 +441,13 @@ final class IslandController: NSObject {
                 ])
             }
         }
+        // 接近 / 命中岛时整岛切到暂存区；离开拖拽后恢复原页。
+        ShelfDropSession.shared.setActive(
+            wantShelfHold,
+            reason: wantShelfHold
+                ? (isShelfDropTargeted ? "dropTargeted" : (approach ? "approach" : "over"))
+                : "dragEnded"
+        )
         setShelfDragWindowElevation(wantShelfHold)
 
         // 窗体始终按展开尺寸占位；收起时刘海以外必须穿透。
@@ -489,10 +500,13 @@ final class IslandController: NSObject {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             ControlDeckSettings.shared.focusShelfForDrop()
+            ShelfDropSession.shared.setActive(true, reason: "dropTargeted")
             if !viewModel.isExpanded {
                 expand(reason: "shelfDropTargeted")
             }
             setClickThrough(false, reason: "shelfDropTargeted")
+        } else if !isShelfFileDragPinned {
+            ShelfDropSession.shared.setActive(false, reason: "dropUntargeted")
         }
     }
 

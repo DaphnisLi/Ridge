@@ -7,6 +7,7 @@ struct IslandContentView: View {
     @ObservedObject var settings: IslandSettings
     @ObservedObject var runtime: WidgetRuntime
     @ObservedObject private var controlDeck = ControlDeckSettings.shared
+    @ObservedObject private var shelfDropSession = ShelfDropSession.shared
     @State private var shelfDropTargeted = false
 
     private var shelfDropEnabled: Bool {
@@ -83,20 +84,23 @@ struct IslandContentView: View {
                     bottomRadius: appliedBottomRadius,
                     fill: settings.theme.nsFillColor
                 )
-                IslandBody(
-                    isExpanded: viewModel.isExpanded,
-                    notchHeight: viewModel.notchHeight,
-                    runtime: runtime
-                )
-            }
-            .frame(width: bodySize.width, height: bodySize.height)
-            .overlay {
-                if shelfDropEnabled, viewModel.isExpanded, shelfDropTargeted {
-                    shape
-                        .fill(Color(red: 0.678, green: 0.776, blue: 1.0).opacity(0.12))
-                        .allowsHitTesting(false)
+                if shelfDropEnabled, viewModel.isExpanded, shelfDropSession.isActive {
+                    // 拖入中：整岛切成暂存区 UI，松手 / 离开后恢复。
+                    ShelfDropStagingView(highlighted: true, fillsIsland: true)
+                        .padding(.horizontal, 16)
+                        .padding(.top, max(28, viewModel.notchHeight + 4))
+                        .padding(.bottom, 16)
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                } else {
+                    IslandBody(
+                        isExpanded: viewModel.isExpanded,
+                        notchHeight: viewModel.notchHeight,
+                        runtime: runtime
+                    )
                 }
             }
+            .frame(width: bodySize.width, height: bodySize.height)
+            .animation(.easeOut(duration: 0.18), value: shelfDropSession.isActive)
             .clipShape(shape)
             // 整块面板都要可命中，避免透明子区把点击漏给下层页面。
             .contentShape(shape)
@@ -128,12 +132,19 @@ struct IslandContentView: View {
             IslandController.shared?.setShelfDropTargeted(active)
             if active {
                 ControlDeckSettings.shared.focusShelfForDrop()
+                ShelfDropSession.shared.setActive(true, reason: "dropTargeted")
+            } else if !active {
+                // 离开投放区：若控制器侧也未钉住拖入，则退出暂存态。
+                if IslandController.shared?.isShelfDragSessionActive != true {
+                    ShelfDropSession.shared.setActive(false, reason: "dropUntargeted")
+                }
             }
         }
         .onChange(of: shelfDropEnabled) { _, enabled in
             if !enabled, shelfDropTargeted {
                 shelfDropTargeted = false
                 IslandController.shared?.setShelfDropTargeted(false)
+                ShelfDropSession.shared.setActive(false, reason: "shelfDisabled")
             }
         }
         .onChange(of: bodySize) { _, size in

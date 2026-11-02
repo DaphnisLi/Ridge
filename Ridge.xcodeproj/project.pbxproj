@@ -57,6 +57,7 @@
 		B20B99352F2BB4E10A110518 /* MeetingSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */; };
 		B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */; };
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
+		B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */; };
 		BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; };
 		C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */; };
 		C81C8B553E9FB563CD83D571 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */; };
@@ -70,6 +71,7 @@
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
 		E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073E52F82BA9EE649BA7890 /* IslandController.swift */; };
 		E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */; };
+		E6FB571B18D96B08343DFEF2 /* ShelfDropStagingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */; };
 		E794CC28B7A3B53CB12FCC4F /* MeetingLinkDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */; };
 		E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888652166B6E000A14995BED /* IslandNoticeCenter.swift */; };
 		E86CFE0FA7133009ACF2445E /* IslandOpaqueFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */; };
@@ -113,6 +115,7 @@
 		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
 		3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettings.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
+		4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropStagingView.swift; sourceTree = "<group>"; };
 		440C96AEB669FCE08EA4DC22 /* ProjectSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSettings.swift; sourceTree = "<group>"; };
 		482677D8E4898DBF37E8B22E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4BFC96E41744375F5D6F2529 /* SoundSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSession.swift; sourceTree = "<group>"; };
@@ -169,6 +172,7 @@
 		D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetsSettingsPane.swift; sourceTree = "<group>"; };
 		D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandOpaqueFillView.swift; sourceTree = "<group>"; };
 		E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRuntimeSampler.swift; sourceTree = "<group>"; };
+		E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropSession.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -317,6 +321,8 @@
 				D79667A99D118163528FB369 /* AlwaysVisibleScrollView.swift */,
 				9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */,
 				B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */,
+				E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */,
+				4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */,
 				D5E852DDC5B27D351C9951BB /* ShelfStore.swift */,
 			);
 			path = Shelf;
@@ -522,6 +528,8 @@
 				CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */,
 				F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */,
 				1A5DDC7CD5AFE9DFE1664F76 /* ShelfClipboardDeckView.swift in Sources */,
+				B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */,
+				E6FB571B18D96B08343DFEF2 /* ShelfDropStagingView.swift in Sources */,
 				E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */,
 				529931F2CDA102243049C1AA /* SoundAppVolumeRoute.swift in Sources */,
 				1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */,

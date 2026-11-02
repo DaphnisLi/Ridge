@@ -160,6 +160,31 @@ final class ProjectReleaseSession: ObservableObject {
         }
     }
 
+    /// 释放组内单条进程 / 容器；仍走整组释放路径，仅缩小 kill 范围。
+    func release(item: ProjectRuntimeItem, in group: ProjectRuntimeGroup) {
+        guard item.canRelease else {
+            AppLog.warn("Projects", "单条释放跳过：不可释放", [
+                "group": group.id,
+                "item": item.title
+            ])
+            return
+        }
+        AppLog.info("Projects", "单条释放", [
+            "group": group.id,
+            "item": item.title,
+            "pid": item.pid.map(String.init) ?? "",
+            "container": item.containerID ?? ""
+        ])
+        let single = ProjectRuntimeGroup(
+            id: group.id,
+            project: group.project,
+            items: [item],
+            totalCPU: item.cpuPercent,
+            totalMemory: item.memoryBytes
+        )
+        release(group: single)
+    }
+
     func release(group: ProjectRuntimeGroup) {
         guard group.canRelease else {
             AppLog.warn("Projects", "释放跳过：不可释放", ["group": group.id])
@@ -184,6 +209,9 @@ final class ProjectReleaseSession: ObservableObject {
         lastActionBanner = L10n.Projects.releasing
 
         Task.detached(priority: .userInitiated) {
+            // 先卸演示 LaunchAgent（KeepAlive），再发信号；否则杀完会被立刻拉起，看起来像「释放无效」。
+            Self.bootoutDemoAgents(for: killable)
+
             for pid in pids {
                 let term = Self.signalPID(pid, sig: SIGTERM)
                 AppLog.info("Projects", "已发 SIGTERM", [
@@ -192,9 +220,6 @@ final class ProjectReleaseSession: ObservableObject {
                     "errno": term.errno
                 ])
             }
-
-            // 演示 LaunchAgent：直接 bootout，避免只杀进程看起来「没效果」。
-            Self.bootoutDemoAgentIfNeeded(projectName: projectName)
 
             if FileManager.default.isExecutableFile(atPath: docker) {
                 for id in containers {
@@ -318,36 +343,108 @@ final class ProjectReleaseSession: ObservableObject {
         return (ok, first)
     }
 
-    nonisolated private static func bootoutDemoAgentIfNeeded(projectName: String) {
-        let map = [
-            "Ridge": "app.daphnis.ridge.demo.ridge",
-            "Focal": "app.daphnis.ridge.demo.focal",
-            "daphnis-apps": "app.daphnis.ridge.demo.daphnis-apps"
-        ]
-        guard let label = map[projectName] else { return }
+    /// 演示进程由 `app.daphnis.ridge.demo.<tag>` LaunchAgent 托管；按条目标题解析 tag 后 bootout。
+    nonisolated private static func bootoutDemoAgents(for items: [ProjectRuntimeItem]) {
         let uid = getuid()
-        let target = "gui/\(uid)/\(label)"
-        let result = ProjectShell.run("/bin/launchctl", arguments: ["bootout", target], timeout: 3)
-        AppLog.info("Projects", "尝试 bootout 演示 Agent", [
-            "label": label,
-            "code": result.exitCode,
-            "stderr": String(result.stderr.prefix(80))
-        ])
+        var labels = Set<String>()
+        for item in items where item.kind == .process {
+            if let tag = demoLaunchTag(fromTitle: item.title) {
+                labels.insert("app.daphnis.ridge.demo.\(tag)")
+            }
+        }
+        guard !labels.isEmpty else { return }
+        for label in labels.sorted() {
+            let target = "gui/\(uid)/\(label)"
+            let result = ProjectShell.run("/bin/launchctl", arguments: ["bootout", target], timeout: 3)
+            AppLog.info("Projects", "尝试 bootout 演示 Agent", [
+                "label": label,
+                "code": result.exitCode,
+                "stderr": String(result.stderr.prefix(80))
+            ])
+        }
+    }
+
+    /// `ridge-a-http.py` / `focal-b-http.py` → `ridge-a` / `focal-b`
+    nonisolated private static func demoLaunchTag(fromTitle title: String) -> String? {
+        let base = (title as NSString).lastPathComponent
+        let suffix = "-http.py"
+        guard base.hasSuffix(suffix) else { return nil }
+        let tag = String(base.dropLast(suffix.count))
+        guard !tag.isEmpty else { return nil }
+        return tag
     }
 
     func isReleasing(_ group: ProjectRuntimeGroup) -> Bool {
         releasingIDs.contains(group.id)
     }
 
-    /// 可释放的项目组（左侧 Running）；未归属端口排在末尾。
+    /// 可释放的项目组（左侧 Running）；只展示仍有进程的组，纯容器工程不占左侧。
     var runningGroups: [ProjectRuntimeGroup] {
-        let attributed = groups.filter { $0.project != nil }
-        let orphans = groups.filter { $0.project == nil }
+        let withProcess = groups.filter { group in
+            group.items.contains { $0.kind == .process }
+        }
+        let attributed = withProcess.filter { $0.project != nil }
+        let orphans = withProcess.filter { $0.project == nil }
         return attributed + orphans
     }
 
     var containerItems: [ProjectRuntimeItem] {
         groups.flatMap(\.items).filter { $0.kind == .container }
+    }
+
+    /// 停止单个容器（`docker stop`）。
+    func stopContainer(_ item: ProjectRuntimeItem) {
+        guard item.kind == .container, let cid = item.containerID, !cid.isEmpty else {
+            AppLog.warn("Projects", "停止容器跳过：无效项", ["item": item.title])
+            return
+        }
+        guard let group = groups.first(where: { g in g.items.contains(where: { $0.id == item.id }) }) else {
+            AppLog.warn("Projects", "停止容器跳过：找不到归属组", ["item": item.title])
+            return
+        }
+        AppLog.info("Projects", "停止容器", ["name": item.title, "id": String(cid.prefix(12))])
+        release(item: item, in: group)
+    }
+
+    /// 重启单个容器（`docker restart`）。
+    func restartContainer(_ item: ProjectRuntimeItem) {
+        guard item.kind == .container, let cid = item.containerID, !cid.isEmpty else {
+            AppLog.warn("Projects", "重启容器跳过：无效项", ["item": item.title])
+            return
+        }
+        let docker = ProjectShell.which("docker")
+            ?? "\(NSHomeDirectory())/.docker/bin/docker"
+        let name = item.title
+        AppLog.info("Projects", "重启容器", ["name": name, "id": String(cid.prefix(12))])
+        lastActionBanner = L10n.Projects.containerRestarting
+        Task.detached(priority: .userInitiated) {
+            var ok = false
+            if FileManager.default.isExecutableFile(atPath: docker) {
+                let result = ProjectShell.run(docker, arguments: ["restart", cid], timeout: 20)
+                ok = result.exitCode == 0
+                if !ok {
+                    AppLog.warn("Projects", "docker restart 失败", [
+                        "name": name,
+                        "code": result.exitCode,
+                        "stderr": String(result.stderr.prefix(120))
+                    ])
+                }
+            } else {
+                AppLog.warn("Projects", "docker 不可用，无法重启", ["name": name])
+            }
+            await MainActor.run {
+                self.lastActionBanner = ok
+                    ? L10n.Projects.containerRestartDone(name)
+                    : L10n.Projects.containerRestartFailed(name)
+                self.refresh(reason: "afterContainerRestart")
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    if self.lastActionBanner != nil {
+                        self.lastActionBanner = nil
+                    }
+                }
+            }
+        }
     }
 
     var activeWatch: ProjectWatchTarget? {
