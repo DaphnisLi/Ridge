@@ -27,6 +27,7 @@ enum L10n {
         static var island: String { tr("settings.section.island", "灵动岛") }
         static var controlDeck: String { tr("settings.section.control_deck", "控制台") }
         static var widgets: String { tr("settings.section.widgets", "小组件") }
+        static var resourceMonitor: String { tr("settings.section.resource_monitor", "资源监控") }
 
         static var presetTheme: String { tr("settings.island.preset_theme", "预设主题") }
         static var expandedWidth: String { tr("settings.island.expanded_width", "展开后宽度") }
@@ -751,6 +752,292 @@ enum L10n {
         }
         static func accessibilityLabel(_ notice: ProjectWatchEndedNotice) -> String {
             notice.message
+        }
+    }
+
+    // MARK: - Resource monitor
+
+    enum ResourceMonitor {
+        static var pageTitle: String { tr("resource_monitor.page_title", "RAM 监控与进程树") }
+        static var pageSubtitle: String {
+            tr(
+                "resource_monitor.page_subtitle",
+                "按 App 折叠子进程 · 高压时经岛内瞬时通知提示"
+            )
+        }
+        static var sampleInterval: String { tr("resource_monitor.sample_interval", "指标 2s · 进程树 6s") }
+        static var liveDispatch: String { tr("resource_monitor.live_dispatch", "Live Dispatch: 60 FPS") }
+        static var criticalOverload: String {
+            tr("resource_monitor.critical_overload", "严重超标")
+        }
+        static var engineReady: String { tr("resource_monitor.engine_ready", "引擎就绪") }
+        /// 岛内 / 设置页：同一动作、同一文案。
+        static var muteAlert: String { tr("resource_monitor.mute_alert", "免打扰（30m）") }
+        static var mutedBanner: String { tr("resource_monitor.muted_banner", "已免打扰 30 分钟") }
+        static var requestPermission: String {
+            tr("resource_monitor.request_permission", "申请权限")
+        }
+        static var permissionGranted: String {
+            tr("resource_monitor.permission_granted", "已授权")
+        }
+        static var permissionGrantedBanner: String {
+            tr("resource_monitor.permission_granted_banner", "输入监控已授权，开始统计击键")
+        }
+        static var purgeButton: String { tr("resource_monitor.purge_button", "强制回收内存") }
+        static var purgeShort: String { tr("resource_monitor.purge_short", "一键释放") }
+        static var purging: String { tr("resource_monitor.purging", "正在尽力回收内存…") }
+        static var purgeNoChange: String {
+            tr("resource_monitor.purge_no_change", "已尝试回收，用量未见明显下降")
+        }
+        static var purgeFailed: String {
+            tr("resource_monitor.purge_failed", "回收失败（可能需要更高权限）")
+        }
+        static func purgeDone(_ bytes: UInt64) -> String {
+            String(
+                format: String(localized: "resource_monitor.purge_done_format", defaultValue: "已尽力回收约 %@"),
+                byteString(bytes)
+            )
+        }
+
+        static var ramCard: String { tr("resource_monitor.ram_card", "物理 RAM 占用") }
+        static var swapCard: String { tr("resource_monitor.swap_card", "交换分区 Swap") }
+        static var cpuCard: String { tr("resource_monitor.cpu_card", "CPU 总负载") }
+        static var keystrokeCard: String { tr("resource_monitor.keystroke_card", "今日打字击键") }
+        static var switchCard: String { tr("resource_monitor.switch_card", "窗口焦点切换") }
+        static var keysUnit: String { tr("resource_monitor.keys_unit", "Keys") }
+        static var switchesUnit: String { tr("resource_monitor.switches_unit", "次") }
+        /// 焦点切换卡片右上角：标明主数字为今日累计。
+        static var todayCumulative: String {
+            tr("resource_monitor.today_cumulative", "今日累计")
+        }
+        static var highPressure: String { tr("resource_monitor.high_pressure", "内存高压") }
+        static func thresholdHint(_ percent: Int) -> String {
+            String(
+                format: String(localized: "resource_monitor.threshold_hint_format", defaultValue: "危险阈值: %d%%"),
+                percent
+            )
+        }
+        static var swapPressureLow: String { tr("resource_monitor.swap_pressure_low", "交换压力较低") }
+        /// Swap 落在 SSD 上，脚注按交换用量映射为 SSD 读写压力。
+        static var ssdPressureLow: String {
+            tr("resource_monitor.ssd_pressure_low", "SSD 读写压力: 较低")
+        }
+        static var ssdPressureMid: String {
+            tr("resource_monitor.ssd_pressure_mid", "SSD 读写压力: 中等")
+        }
+        static var ssdPressureHigh: String {
+            tr("resource_monitor.ssd_pressure_high", "SSD 读写压力: 偏高")
+        }
+        static func performanceCores(_ n: Int) -> String {
+            String(
+                format: String(localized: "resource_monitor.perf_cores_format", defaultValue: "%d核性能核心"),
+                n
+            )
+        }
+        static func chipTemp(_ chip: String, _ celsius: Double) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.chip_temp_format",
+                    defaultValue: "%@ (%.0f℃)"
+                ),
+                chip,
+                celsius
+            )
+        }
+        static var keystrokePeakPlaceholder: String {
+            tr("resource_monitor.keystroke_peak_placeholder", "峰值时段: —")
+        }
+        /// 焦点切换：0～80 良好，81～180 中等，>180 高频（次/小时）。
+        static var focusLevelGood: String {
+            tr("resource_monitor.focus_level_good", "专注良好")
+        }
+        static var focusLevelMid: String {
+            tr("resource_monitor.focus_level_mid", "专注中等")
+        }
+        static var focusLevelBusy: String {
+            tr("resource_monitor.focus_level_busy", "高频切换")
+        }
+        static func focusSwitchFootnote(_ perHour: Int, _ level: String) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.focus_switch_footnote_format",
+                    defaultValue: "平均每小时 %d 次 · %@"
+                ),
+                perHour,
+                level
+            )
+        }
+        static var topAppsTitle: String { tr("resource_monitor.top_apps_title", "Top 5 吃 RAM 巨无霸") }
+        /// 收起 Top App 下已展开的子进程树。
+        static var collapseHierarchy: String {
+            tr("resource_monitor.collapse_hierarchy", "折叠层级视图")
+        }
+        static var sortByRSS: String {
+            tr("resource_monitor.sort_by_rss", "排序: 物理内存占用 (RSS)")
+        }
+        static func childCount(_ n: Int) -> String {
+            String(
+                format: String(localized: "resource_monitor.child_count_format", defaultValue: "%d 个子进程"),
+                n
+            )
+        }
+        static var kill: String { tr("resource_monitor.kill", "结束") }
+        static var killNotFound: String { tr("resource_monitor.kill_not_found", "进程已不存在") }
+        static var killProtected: String {
+            tr("resource_monitor.kill_protected", "受保护进程，无法结束")
+        }
+        static var killPermissionDenied: String {
+            tr("resource_monitor.kill_permission_denied", "权限不足，无法结束该进程")
+        }
+        static func killOther(_ detail: String) -> String {
+            String(
+                format: String(localized: "resource_monitor.kill_other_format", defaultValue: "结束失败：%@"),
+                detail
+            )
+        }
+        static func killedBanner(_ name: String) -> String {
+            String(
+                format: String(localized: "resource_monitor.killed_banner_format", defaultValue: "已结束 %@"),
+                name
+            )
+        }
+        static var unknownApp: String { tr("resource_monitor.unknown_app", "未知应用") }
+        static var emptyTop: String { tr("resource_monitor.empty_top", "暂无第三方 App 占用数据") }
+        static var behaviorTitle: String { tr("resource_monitor.behavior_title", "行为诊断与 24h 时间线") }
+        static var behaviorHint: String {
+            tr(
+                "resource_monitor.behavior_hint",
+                "全天记录各个核心 App 的焦点驻留与内存增长轨迹。"
+            )
+        }
+        static var focusDistribution: String {
+            tr("resource_monitor.focus_distribution", "今日应用焦点驻留分布")
+        }
+        static var focusWindowNow: String {
+            tr("resource_monitor.focus_window_now", "00:00 – 现在")
+        }
+        static var ramWave: String { tr("resource_monitor.ram_wave", "今日 RAM 消耗波形 (GB)") }
+        static func ramWavePeak(_ gb: Double, _ time: String) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.ram_wave_peak_format",
+                    defaultValue: "峰值 %.1f GB @ %@"
+                ),
+                gb,
+                time
+            )
+        }
+        static var ramWaveNowSafe: String {
+            tr("resource_monitor.ram_wave_now_safe", "现在")
+        }
+        static var ramWaveNowCritical: String {
+            tr("resource_monitor.ram_wave_now_critical", "现在 (高危)")
+        }
+        static var heatmapTitle: String {
+            tr("resource_monitor.heatmap_title", "365 天研发击键 & 负荷热力")
+        }
+        /// 年累计紧凑数：≥1B → `1.2B`；≥1M → `4.2M`（含远超百万）；≥1K → `12.3K`；否则原数。
+        static func yearKeys(_ n: Int) -> String {
+            let compact: String
+            if n >= 1_000_000_000 {
+                compact = String(format: "%.1fB", Double(n) / 1_000_000_000.0)
+            } else if n >= 1_000_000 {
+                compact = String(format: "%.1fM", Double(n) / 1_000_000.0)
+            } else if n >= 1_000 {
+                compact = String(format: "%.1fK", Double(n) / 1_000.0)
+            } else {
+                compact = "\(n)"
+            }
+            return String(
+                format: String(localized: "resource_monitor.year_keys_format", defaultValue: "年累计 %@ 键"),
+                compact
+            )
+        }
+        static func activeStreak(_ days: Int) -> String {
+            String(
+                format: String(localized: "resource_monitor.active_streak_format", defaultValue: "连续活跃: %d 天"),
+                days
+            )
+        }
+        static var heatLow: String { tr("resource_monitor.heat_low", "低活跃") }
+        static var heatHigh: String { tr("resource_monitor.heat_high", "高负荷") }
+        static var alertPolicyTitle: String {
+            tr("resource_monitor.alert_policy_title", "自动化告警策略：RAM 过载")
+        }
+        static var alertActive: String { tr("resource_monitor.alert_active", "已开启") }
+        static var alertInactive: String { tr("resource_monitor.alert_inactive", "已关闭") }
+        static var alertPolicyBeforeThreshold: String {
+            tr("resource_monitor.alert_policy_before_threshold", "当 RAM 超过")
+        }
+        static func alertPolicyAfterThreshold(_ gb: Double) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.alert_policy_after_threshold_format",
+                    defaultValue: "%% 时，经岛内瞬时通知提示，并点名占用最高的 App（参考单 App %.0f GB）。"
+                ),
+                gb
+            )
+        }
+        static var ramThresholdField: String {
+            tr("resource_monitor.ram_threshold_field", "RAM 告警阈值")
+        }
+        static var alertToggle: String { tr("resource_monitor.alert_toggle", "启用自动化告警") }
+        static var keystrokeNeedPermission: String {
+            tr("resource_monitor.keystroke_need_permission", "未获输入监控权限，击键暂为 0")
+        }
+        static func noticeTitle(_ usedBytes: UInt64) -> String {
+            String(
+                format: String(localized: "resource_monitor.notice_title_format", defaultValue: "RAM 警告: %@"),
+                byteString(usedBytes)
+            )
+        }
+        static func noticeSubtitle(_ app: String, _ bytes: UInt64) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.notice_subtitle_format",
+                    defaultValue: "%@ 占用 %@"
+                ),
+                app,
+                byteString(bytes)
+            )
+        }
+        static func processesMonitored(_ monitored: Int, _ kernelHosted: Int) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.processes_monitored_format",
+                    defaultValue: "已监控进程总量: %d / 系统内核托管 %d"
+                ),
+                monitored,
+                kernelHosted
+            )
+        }
+        /// 焦点驻留展示：按分钟四舍五入；有驻留但不足 0.5 分钟仍显示 1m，避免长期「0m」。
+        static func durationHours(_ seconds: TimeInterval) -> String {
+            guard seconds > 0 else {
+                return String(
+                    format: String(localized: "resource_monitor.duration_m_format", defaultValue: "%dm"),
+                    0
+                )
+            }
+            var minutes = Int((seconds / 60.0).rounded())
+            if minutes == 0 { minutes = 1 }
+            let h = minutes / 60
+            let m = minutes % 60
+            if h > 0 {
+                return String(
+                    format: String(localized: "resource_monitor.duration_hm_format", defaultValue: "%dh %dm"),
+                    h,
+                    m
+                )
+            }
+            return String(
+                format: String(localized: "resource_monitor.duration_m_format", defaultValue: "%dm"),
+                m
+            )
+        }
+
+        private static func byteString(_ bytes: UInt64) -> String {
+            ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
         }
     }
 

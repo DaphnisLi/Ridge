@@ -93,10 +93,17 @@ final class IslandNoticeWidget: IslandWidget {
             "source": payload.sourceTag
         ])
 
-        scheduleAutoDismiss(for: payload.id)
+        // RAM 高压需用户处理（释放 / 忽略），不自动收起。
+        if case .ramPressure = payload {
+            dismissTask?.cancel()
+            dismissTask = nil
+            AppLog.debug("IslandNotice", "RAM 高压通知保持展示，直至用户操作")
+        } else {
+            scheduleAutoDismiss(for: payload.id)
+        }
     }
 
-    /// 满 3s 后若仍悬停在岛上则等待离开，再撤回。
+    /// 满 3s 后若仍悬停在岛上则等待离开，再撤回（不含 RAM 高压）。
     private func scheduleAutoDismiss(for noticeID: String) {
         dismissTask?.cancel()
         dismissTask = Task { @MainActor [weak self] in
@@ -167,9 +174,94 @@ private struct IslandNoticeCardView: View {
         switch payload {
         case .processEnded(let notice):
             ProcessEndedNoticeCard(notice: notice)
+        case .ramPressure(let notice):
+            RAMPressureNoticeCard(notice: notice)
         case .none:
             ProcessEndedNoticeCard(notice: nil)
         }
+    }
+}
+
+/// RAM 高压瞬时通知（`system.islandNotice` / `.ramPressure`）。
+private struct RAMPressureNoticeCard: View {
+    let notice: ResourceRAMPressureNotice
+
+    private let accentRed = Color(red: 1.0, green: 0.42, blue: 0.38)
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            HStack(alignment: .center, spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(accentRed.opacity(0.28))
+                        .frame(width: 28, height: 28)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(accentRed)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                        Text(String(format: "%.0f%%", notice.ramPercent))
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.75))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Capsule().fill(Color.white.opacity(0.16)))
+                    }
+                    Text(
+                        L10n.ResourceMonitor.noticeSubtitle(
+                            notice.topAppName,
+                            notice.topAppMemoryBytes
+                        )
+                    )
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.45))
+                    .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(3)
+
+            HStack(spacing: 8) {
+                Button {
+                    AppLog.info("IslandNotice", "RAM 通知：免打扰 30 分钟")
+                    ResourceMonitorSession.shared.muteAlerts30m()
+                    IslandNoticeCenter.shared.dismiss(id: notice.id)
+                } label: {
+                    Text(L10n.ResourceMonitor.muteAlert)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.88))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Capsule().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    AppLog.info("IslandNotice", "RAM 通知：一键释放")
+                    ResourceMonitorSession.shared.purgeMemory()
+                    IslandNoticeCenter.shared.dismiss(id: notice.id)
+                } label: {
+                    Text(L10n.ResourceMonitor.purgeShort)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.black)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color.white))
+                }
+                .buttonStyle(.plain)
+            }
+            .fixedSize()
+            .layoutPriority(2)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes))
     }
 }
 

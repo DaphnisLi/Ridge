@@ -40,6 +40,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
     case island
     case controlDeck
     case widgets
+    case resourceMonitor
 
     var id: String { rawValue }
 
@@ -48,6 +49,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .island: return L10n.Settings.island
         case .controlDeck: return L10n.Settings.controlDeck
         case .widgets: return L10n.Settings.widgets
+        case .resourceMonitor: return L10n.Settings.resourceMonitor
         }
     }
 
@@ -56,6 +58,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .island: return "rectangle.topthird.inset.filled"
         case .controlDeck: return "switch.2"
         case .widgets: return "rectangle.3.group"
+        case .resourceMonitor: return "chart.bar.xaxis"
         }
     }
 }
@@ -84,6 +87,8 @@ struct SettingsRootView: View {
                     ControlDeckSettingsPane()
                 case .widgets:
                     WidgetsSettingsPane(settings: widgetSettings)
+                case .resourceMonitor:
+                    ResourceMonitorSettingsPane()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

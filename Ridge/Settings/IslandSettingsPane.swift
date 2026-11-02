@@ -29,7 +29,8 @@ struct IslandSettingsPane: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(SettingsChrome.pageBackground)
         .onAppear {
-            // 设置窗级会话钉住展开；切到「小组件」页时不要在这里收起。
+            // 预热隐藏窗也会触发 onAppear；仅真可见时钉住展开。
+            guard MenuBarController.shared?.settingsWindow != nil else { return }
             IslandController.shared?.beginSettingsSession()
             AppLog.debug("Settings", "灵动岛设置页已显示")
         }

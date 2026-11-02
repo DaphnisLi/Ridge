@@ -16,9 +16,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         MeetingCalendarService.shared.start()
         NowPlayingService.shared.start()
         SoundSession.shared.start()
+        // 资源监控：系统采样 + 焦点；击键在有输入监控权限时生效。
+        ResourceMonitorSession.shared.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        ResourceMonitorSession.shared.stop()
         SoundSession.shared.stop()
         NowPlayingService.shared.stop()
         MeetingCalendarService.shared.stop()

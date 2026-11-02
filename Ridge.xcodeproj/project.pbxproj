@@ -7,13 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		001FE78E7D86EAA4502B8975 /* ResourceMonitorSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */; };
 		06D9881C8149C1F7395BAB29 /* IslandPanelShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */; };
 		07C3537DC59E89A52F22B961 /* SoundProcessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */; };
 		0A5B9B60AA7D728483C7BB2E /* IslandTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85DB713B5E38759909A00339 /* IslandTheme.swift */; };
+		0CC9D4C674F88D02017216DF /* ResourceMonitorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */; };
 		0FBB3671C2041665989E9FD0 /* ProjectReleaseDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */; };
+		13E3955C0A42DF5B0AF75847 /* ResourceMonitorModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */; };
 		144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */; };
 		17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */; };
+		19167EB80BB407F50CC8069A /* ResourceChipInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */; };
+		19B7A06C226E91AE5D54E862 /* ResourceActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A94D44D22EBF3A18C1804E7 /* ResourceActivityStore.swift */; };
 		1A5DDC7CD5AFE9DFE1664F76 /* ShelfClipboardDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */; };
+		1B559574B3122F5B1DE00207 /* ResourceKeystrokeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */; };
 		1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */; };
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
 		31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */; };
@@ -34,18 +40,22 @@
 		5F8170AFD69C5D0FB0C3FEDF /* MediaSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */; };
 		62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */; };
 		6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50603770034DE47EEF814877 /* L10n.swift */; };
+		685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */; };
 		72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
 		7321D80063E0CCA14B7539E6 /* AlwaysVisibleScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79667A99D118163528FB369 /* AlwaysVisibleScrollView.swift */; };
 		76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */; };
+		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
 		85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFC96E41744375F5D6F2529 /* SoundSession.swift */; };
 		85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */; };
+		873C084FA01131CEEC158099 /* ResourceMonitorSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */; };
 		90D890B66F172EDA7F680261 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */; };
 		9198703E93AAFF286FC6A778 /* SoundModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */; };
 		9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A380AA9950E13AF158422F15 /* IslandState.swift */; };
 		94145ED790F224EC91A1E6BA /* MeetingCountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D669A16E4C8C5DB311E03507 /* MeetingCountdownWidget.swift */; };
 		94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */; };
+		96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */; };
 		9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1266F73AC4146FF0C01385 /* RidgeApp.swift */; };
 		9E9C3420E3E847D32E5733ED /* WidgetSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */; };
 		A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5894114050B192E21DBC168B /* IslandContentView.swift */; };
@@ -69,6 +79,7 @@
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
+		E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */; };
 		E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073E52F82BA9EE649BA7890 /* IslandController.swift */; };
 		E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */; };
 		E6FB571B18D96B08343DFEF2 /* ShelfDropStagingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */; };
@@ -99,6 +110,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusTracker.swift; sourceTree = "<group>"; };
 		07EC22739F9DB8CD07D03E0B /* Ridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		088CFC576E84896E553FC0DD /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
 		0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCatalog.swift; sourceTree = "<group>"; };
@@ -106,12 +118,16 @@
 		11948404DA855E5880642096 /* WidgetRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRuntime.swift; sourceTree = "<group>"; };
 		1795489812D91800F557AA88 /* ControlDeckSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettingsPane.swift; sourceTree = "<group>"; };
 		1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectModels.swift; sourceTree = "<group>"; };
+		18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettings.swift; sourceTree = "<group>"; };
 		192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
+		29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceChipInfo.swift; sourceTree = "<group>"; };
 		2D5047AA5E636C0BAB3B1CD1 /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
 		2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFlyAnimator.swift; sourceTree = "<group>"; };
+		2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceKeystrokeMonitor.swift; sourceTree = "<group>"; };
 		30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDeckView.swift; sourceTree = "<group>"; };
+		320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorModels.swift; sourceTree = "<group>"; };
 		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
 		3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettings.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
@@ -147,14 +163,18 @@
 		97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingCalendarService.swift; sourceTree = "<group>"; };
 		9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryStore.swift; sourceTree = "<group>"; };
 		99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundProcessMonitor.swift; sourceTree = "<group>"; };
+		9A94D44D22EBF3A18C1804E7 /* ResourceActivityStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceActivityStore.swift; sourceTree = "<group>"; };
 		9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGeometry.swift; sourceTree = "<group>"; };
+		9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceCPUTemperature.swift; sourceTree = "<group>"; };
 		9C36C15A1A789E41F21DB58B /* MeetingIslandCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingIslandCardView.swift; sourceTree = "<group>"; };
 		A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundHostAppResolver.swift; sourceTree = "<group>"; };
 		A1E07CBB405FFB485642B9C0 /* ProjectProcessSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectProcessSupport.swift; sourceTree = "<group>"; };
 		A380AA9950E13AF158422F15 /* IslandState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandState.swift; sourceTree = "<group>"; };
 		A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseDeckView.swift; sourceTree = "<group>"; };
+		B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceSystemMetrics.swift; sourceTree = "<group>"; };
 		B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfClipboardDeckView.swift; sourceTree = "<group>"; };
 		B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaNowPlayingWidget.swift; sourceTree = "<group>"; };
+		BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSession.swift; sourceTree = "<group>"; };
 		BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAudioProperty.swift; sourceTree = "<group>"; };
 		BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSettingsPane.swift; sourceTree = "<group>"; };
 		BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLinkDetector.swift; sourceTree = "<group>"; };
@@ -174,6 +194,8 @@
 		E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRuntimeSampler.swift; sourceTree = "<group>"; };
 		E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropSession.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
+		F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettingsPane.swift; sourceTree = "<group>"; };
+		F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAppAggregator.swift; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -201,6 +223,24 @@
 				805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */,
 			);
 			path = Meeting;
+			sourceTree = "<group>";
+		};
+		17D82C287105B8F6FFC1BED0 /* ResourceMonitor */ = {
+			isa = PBXGroup;
+			children = (
+				9A94D44D22EBF3A18C1804E7 /* ResourceActivityStore.swift */,
+				F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */,
+				29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */,
+				9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */,
+				0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */,
+				2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */,
+				320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */,
+				BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */,
+				18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */,
+				F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */,
+				B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */,
+			);
+			path = ResourceMonitor;
 			sourceTree = "<group>";
 		};
 		2A565B209C491CD8B02FF35B /* Island */ = {
@@ -236,6 +276,7 @@
 				0D3085EE34BCDA5A9630E266 /* Meeting */,
 				92B4A2ED5A5028E8FCA74BE2 /* MenuBar */,
 				F32FC4174A3CC38AF90B8D79 /* Projects */,
+				17D82C287105B8F6FFC1BED0 /* ResourceMonitor */,
 				D2C332D1C56253B5EAA5B089 /* Settings */,
 				B669A13D9D57BA96F3DABB25 /* Shelf */,
 				6475114B0F370C8ABCCC842F /* Sound */,
@@ -524,6 +565,17 @@
 				7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */,
 				506AEFE51A96DEF1D6BF3308 /* ProjectSettings.swift in Sources */,
 				4A5AA554DC8AAEF759AABFC7 /* ProjectShell.swift in Sources */,
+				19B7A06C226E91AE5D54E862 /* ResourceActivityStore.swift in Sources */,
+				E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */,
+				685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */,
+				19167EB80BB407F50CC8069A /* ResourceChipInfo.swift in Sources */,
+				96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */,
+				1B559574B3122F5B1DE00207 /* ResourceKeystrokeMonitor.swift in Sources */,
+				13E3955C0A42DF5B0AF75847 /* ResourceMonitorModels.swift in Sources */,
+				001FE78E7D86EAA4502B8975 /* ResourceMonitorSession.swift in Sources */,
+				0CC9D4C674F88D02017216DF /* ResourceMonitorSettings.swift in Sources */,
+				873C084FA01131CEEC158099 /* ResourceMonitorSettingsPane.swift in Sources */,
+				7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */,
 				9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */,
 				CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */,
 				F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */,

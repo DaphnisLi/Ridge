@@ -12,6 +12,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     private var openSettingsObserver: NSObjectProtocol?
     private var appActiveObserver: NSObjectProtocol?
     private var appResignObserver: NSObjectProtocol?
+    private var prewarmWorkItem: DispatchWorkItem?
 
     /// 当前设置窗（可见时）。
     var settingsWindow: NSWindow? {
@@ -80,10 +81,19 @@ final class MenuBarController: NSObject, NSWindowDelegate {
             }
         }
 
+        // 空闲时预热设置窗，避免第一次点开卡一下。
+        let work = DispatchWorkItem { [weak self] in
+            self?.prewarmSettingsWindowIfNeeded()
+        }
+        prewarmWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6, execute: work)
+
         AppLog.info("Overlay", "菜单栏已就绪")
     }
 
     func stop() {
+        prewarmWorkItem?.cancel()
+        prewarmWorkItem = nil
         if let openSettingsObserver {
             NotificationCenter.default.removeObserver(openSettingsObserver)
             self.openSettingsObserver = nil
@@ -127,57 +137,43 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     }
 
     @objc private func openSettings() {
+        let openedAt = Date()
         AppLog.info("Settings", "打开设置窗")
         // 设置打开期间进入 regular，才能被 ⌘Tab 切回来；关闭后再变回 accessory。
         promoteForSettingsWindow()
 
-        if let existing = settingsWindowController?.window, existing.isVisible {
-            center(existing, on: Self.activeScreen())
-            existing.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            IslandController.shared?.beginSettingsSession()
-            return
-        }
-
-        // 关窗后再开：销毁旧窗，避免残留白底/旧布局。
-        if let stale = settingsWindowController?.window {
-            stale.delegate = nil
-            stale.close()
-            settingsWindowController = nil
-        }
-
-        let root = SettingsRootView(settings: IslandSettings.shared)
-        let hosting = NSHostingController(rootView: root)
-        hosting.view.wantsLayer = true
-        hosting.view.layer?.backgroundColor = SettingsChrome.nsPageBackground.cgColor
-
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 920, height: 620),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered,
-            defer: false
-        )
-        window.title = "Ridge"
-        window.titlebarAppearsTransparent = true
-        window.backgroundColor = SettingsChrome.nsPageBackground
-        window.contentViewController = hosting
-        window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 820, height: 520)
-        window.setContentSize(NSSize(width: 920, height: 620))
-        window.delegate = self
+        let window = ensureSettingsWindow()
         center(window, on: Self.activeScreen())
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        settingsWindowController = NSWindowController(window: window)
-        IslandController.shared?.beginSettingsSession()
-        AppLog.info("Settings", "设置窗已显示", ["chrome": "whitePage-grayCards"])
+
+        // 先把窗画出来，下一拍再钉岛，避免「建窗 + 展开岛」同帧抢主线程。
+        DispatchQueue.main.async {
+            self.syncIslandPreviewForCurrentSection()
+            AppLog.info("Settings", "设置窗已前置", [
+                "ms": Int(Date().timeIntervalSince(openedAt) * 1000),
+                "section": SettingsNavigator.shared.section.rawValue,
+                "reused": true
+            ])
+        }
+    }
+
+    /// 隐藏关闭：保留 hosting，下次打开不再冷启动 SwiftUI。
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender === settingsWindowController?.window else { return true }
+        WidgetFlyAnimator.shared.cancel()
+        ResourceMonitorSession.shared.setSettingsVisible(false)
+        IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
+        sender.orderOut(nil)
+        AppLog.info("Settings", "设置窗已隐藏（保留实例）")
+        demoteAfterSettingsClosed()
+        return false
     }
 
     func windowWillClose(_ notification: Notification) {
         guard let closing = notification.object as? NSWindow,
               closing === settingsWindowController?.window
         else { return }
-        // 关窗时 SwiftUI onDisappear 不一定触发；强制结束预览并收起岛。
         WidgetFlyAnimator.shared.cancel()
         IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
         AppLog.info("Settings", "设置窗关闭，结束灵动岛实时预览")
@@ -188,7 +184,6 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         guard let window = notification.object as? NSWindow,
               window === settingsWindowController?.window
         else { return }
-        // 失焦：岛恢复正常悬停，不再钉住。
         AppLog.info("Settings", "设置窗 resignKey", [
             "appActive": NSApp.isActive,
             "visible": window.isVisible,
@@ -233,6 +228,67 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     @objc private func quit() {
         AppLog.info("Overlay", "退出应用")
         NSApp.terminate(nil)
+    }
+
+    private func ensureSettingsWindow() -> NSWindow {
+        if let existing = settingsWindowController?.window {
+            return existing
+        }
+        let window = makeSettingsWindow()
+        settingsWindowController = NSWindowController(window: window)
+        AppLog.info("Settings", "设置窗已创建", ["chrome": "whitePage-grayCards"])
+        return window
+    }
+
+    private func prewarmSettingsWindowIfNeeded() {
+        guard settingsWindowController?.window == nil else { return }
+        let window = makeSettingsWindow()
+        // 放到屏外并先 layout 一次，不抢焦点、不切 activationPolicy。
+        window.setFrameOrigin(NSPoint(x: -10_000, y: -10_000))
+        window.orderBack(nil)
+        window.layoutIfNeeded()
+        window.contentView?.layoutSubtreeIfNeeded()
+        window.orderOut(nil)
+        settingsWindowController = NSWindowController(window: window)
+        AppLog.info("Settings", "设置窗已预热")
+    }
+
+    private func makeSettingsWindow() -> NSWindow {
+        let root = SettingsRootView(settings: IslandSettings.shared)
+        let hosting = NSHostingController(rootView: root)
+        hosting.view.wantsLayer = true
+        hosting.view.layer?.backgroundColor = SettingsChrome.nsPageBackground.cgColor
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 920, height: 620),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: true
+        )
+        window.title = "Ridge"
+        window.titlebarAppearsTransparent = true
+        window.backgroundColor = SettingsChrome.nsPageBackground
+        window.contentViewController = hosting
+        window.isReleasedWhenClosed = false
+        window.minSize = NSSize(width: 820, height: 520)
+        window.setContentSize(NSSize(width: 920, height: 620))
+        window.delegate = self
+        return window
+    }
+
+    /// 按当前侧栏页同步岛预览态（复用隐藏窗时 onAppear 不一定再跑）。
+    private func syncIslandPreviewForCurrentSection() {
+        switch SettingsNavigator.shared.section {
+        case .island:
+            ResourceMonitorSession.shared.setSettingsVisible(false)
+            IslandController.shared?.beginSettingsSession()
+        case .controlDeck, .widgets:
+            ResourceMonitorSession.shared.setSettingsVisible(false)
+            IslandController.shared?.beginSettingsSessionCollapsed()
+        case .resourceMonitor:
+            ResourceMonitorSession.shared.setSettingsVisible(true)
+            IslandController.shared?.beginSettingsSessionCollapsed()
+        }
     }
 
     private func center(_ window: NSWindow, on screen: NSScreen?) {

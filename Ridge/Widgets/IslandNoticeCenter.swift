@@ -5,10 +5,14 @@ import Foundation
 enum IslandNoticePayload: Identifiable, Hashable {
     /// 控制台监视的进程结束（与当前 `activeWatch` 一致；被替换的监视不投递）。
     case processEnded(ProjectWatchEndedNotice)
+    /// 资源监控：RAM 过载告警。
+    case ramPressure(ResourceRAMPressureNotice)
 
     var id: String {
         switch self {
         case .processEnded(let notice):
+            return notice.id
+        case .ramPressure(let notice):
             return notice.id
         }
     }
@@ -17,6 +21,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .processEnded:
             return "projects.watch"
+        case .ramPressure:
+            return "resource.ram"
         }
     }
 }
