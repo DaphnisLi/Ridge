@@ -407,8 +407,7 @@ final class IslandController: NSObject {
             return
         }
 
-        // 可点区 = 当前页可视面板；保展开区 = 整窗最大占位。
-        // 二者拆开：矮小组件页下半透明窗仍可点穿，但指针在占位内不收岛。
+        // 可点 / 保展开都以当前页可视面板为准；保展开略外扩，避免贴边抖动误收。
         let hit = pointerIslandHit(
             mouse: mouse,
             geometry: geometry,
@@ -624,11 +623,11 @@ final class IslandController: NSObject {
     private struct IslandPointerHit {
         /// 当前页可视面板（含刘海）：决定是否接收点击。
         let interactive: Bool
-        /// 整窗最大占位：决定是否保持展开。
+        /// 可视面板略外扩：决定是否保持展开；离开后应收岛。
         let retention: Bool
     }
 
-    /// 刘海始终算命中；展开后可点区跟当前页，保展开区跟整窗最大占位。
+    /// 刘海始终算命中；展开后可点 / 保展开都以当前页为准（保展开多一圈外扩）。
     private func pointerIslandHit(
         mouse: NSPoint,
         geometry: NotchGeometry,
@@ -644,21 +643,17 @@ final class IslandController: NSObject {
         }
 
         let width = CGFloat(IslandSettings.shared.expandedWidth)
-        let pageLayout = Self.expandedLayout(for: WidgetRuntime.shared)
-        let pageBody = geometry.expandedFrameOnScreen(width: width, layout: pageLayout)
-            .insetBy(dx: -2, dy: -2)
-        let interactive = pageBody.contains(mouse)
-
-        // 保展开：窗口最大占位再略外扩，避免「刚出可视面板就收」；翻页高度变化也不误收。
-        var retentionFrame = geometry.windowFrameOnScreen().insetBy(dx: -8, dy: -8)
+        var pageLayout = Self.expandedLayout(for: WidgetRuntime.shared)
+        // 刚从控制台翻到矮页：短暂沿用大热区，避免指针还在原下半截被当成离开。
         if let boost = hoverLayoutBoost, Date() < hoverLayoutBoostUntil {
-            let boosted = geometry.expandedFrameOnScreen(width: width, layout: boost)
-                .insetBy(dx: -8, dy: -8)
-            retentionFrame = retentionFrame.union(boosted)
+            pageLayout = boost
         } else if hoverLayoutBoost != nil {
             hoverLayoutBoost = nil
         }
-        let retention = retentionFrame.contains(mouse) || interactive
+        let pageBody = geometry.expandedFrameOnScreen(width: width, layout: pageLayout)
+        let interactive = pageBody.insetBy(dx: -2, dy: -2).contains(mouse)
+        // 外扩一圈防贴边抖动；仍跟可视面板走，移出屏幕别处必须能收。
+        let retention = pageBody.insetBy(dx: -16, dy: -16).contains(mouse) || interactive
         return IslandPointerHit(interactive: interactive, retention: retention)
     }
 
@@ -922,7 +917,7 @@ final class IslandController: NSObject {
             "pageLayout": "\(Self.expandedLayout(for: WidgetRuntime.shared))",
             "page": WidgetRuntime.shared.activeID ?? "nil",
             "boost": hoverLayoutBoost != nil,
-            "retention": "windowMax"
+            "retention": "pagePadded"
         ])
     }
 
@@ -1000,7 +995,10 @@ final class IslandController: NSObject {
         ])
         // 以 sink 收到的 appearance 为准，避免与 viewModel 时序错位时热区停在刘海尺寸。
         updateInteractiveFrame(expanded: appearance == .expanded)
-        IslandHaptics.play(settings.hapticIntensity)
+        // 仅展开时震动；收起保持安静。
+        if appearance == .expanded {
+            IslandHaptics.play(settings.hapticIntensity)
+        }
     }
 
     private func applyWindowFrame(animated: Bool) {
