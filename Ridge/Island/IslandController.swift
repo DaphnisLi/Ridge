@@ -407,11 +407,15 @@ final class IslandController: NSObject {
             return
         }
 
-        let over = pointerIsOverIsland(
+        // 可点区 = 当前页可视面板；保展开区 = 整窗最大占位。
+        // 二者拆开：矮小组件页下半透明窗仍可点穿，但指针在占位内不收岛。
+        let hit = pointerIslandHit(
             mouse: mouse,
             geometry: geometry,
             expanded: viewModel.isExpanded
         )
+        let overInteractive = hit.interactive
+        let overRetention = hit.retention
         let fileDrag = Self.isFileDragInProgress()
         let shelfEnabled = ControlDeckSettings.shared.isModuleEnabled("shelf")
         // 用「控制台展开框」作磁吸区：拖文件靠近时提前展开，不必顶到屏幕最上沿
@@ -421,20 +425,22 @@ final class IslandController: NSObject {
 
         // 仅在「接近 / 在岛上 / 投放区命中」且拖文件进行中时钉住；驶出即解除。
         let wantShelfHold = shelfEnabled
-            && (over || isShelfDropTargeted || approach)
+            && (overRetention || isShelfDropTargeted || approach)
             && (fileDrag || isShelfDropTargeted)
         if isShelfFileDragPinned != wantShelfHold {
             isShelfFileDragPinned = wantShelfHold
             if wantShelfHold {
                 ControlDeckSettings.shared.focusShelfForDrop()
                 AppLog.info("Island", "货架拖入：钉住展开", [
-                    "over": over,
+                    "interactive": overInteractive,
+                    "retention": overRetention,
                     "targeted": isShelfDropTargeted,
                     "approach": approach
                 ])
             } else {
                 AppLog.info("Island", "货架拖入：解除钉住", [
-                    "over": over,
+                    "interactive": overInteractive,
+                    "retention": overRetention,
                     "targeted": isShelfDropTargeted,
                     "fileDrag": fileDrag,
                     "approach": approach
@@ -453,14 +459,16 @@ final class IslandController: NSObject {
         // 窗体始终按展开尺寸占位；收起时刘海以外必须穿透。
         // 货架接近 / 投放命中时不穿透，否则收不到 onDrop。
         let shelfHold = isShelfFileDragPinned || isShelfDropTargeted
-        let shouldIgnore = !over && !isMouseDownInIsland && !shelfHold
+        let shouldIgnore = !overInteractive && !isMouseDownInIsland && !shelfHold
         setClickThrough(
             shouldIgnore,
-            reason: shelfHold ? "shelfDropHold" : (over ? "pointerOver" : (isMouseDownInIsland ? "dragHold" : "pointerAway"))
+            reason: shelfHold
+                ? "shelfDropHold"
+                : (overInteractive ? "pointerOver" : (isMouseDownInIsland ? "dragHold" : "pointerAway"))
         )
 
         if isSettingsLivePreview {
-            isPointerOverIsland = over
+            isPointerOverIsland = overRetention
             if !viewModel.isExpanded {
                 expand(reason: "settingsPreview")
             }
@@ -472,20 +480,25 @@ final class IslandController: NSObject {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             if !viewModel.isExpanded {
-                expand(reason: approach && !over ? "shelfDropApproach" : "shelfDrop")
+                expand(reason: approach && !overRetention ? "shelfDropApproach" : "shelfDrop")
             }
-            isPointerOverIsland = over || isShelfDropTargeted || approach
+            isPointerOverIsland = overRetention || isShelfDropTargeted || approach
             return
         }
 
-        if over == isPointerOverIsland { return }
-        isPointerOverIsland = over
+        if overRetention == isPointerOverIsland { return }
+        isPointerOverIsland = overRetention
 
-        if over {
+        if overRetention {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             expand(reason: "hover")
         } else if !isMouseDownInIsland {
+            AppLog.debug("Island", "指针离开保展开区，安排收起", [
+                "interactive": overInteractive,
+                "page": WidgetRuntime.shared.activeID ?? "nil",
+                "controlDeck": WidgetRuntime.shared.isControlDeckPage
+            ])
             scheduleCollapse()
         }
     }
@@ -608,48 +621,59 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 刘海本体始终算「在岛上」；展开后按「当前页实际面积」判断（见 `hoverRetentionLayout`）。
+    private struct IslandPointerHit {
+        /// 当前页可视面板（含刘海）：决定是否接收点击。
+        let interactive: Bool
+        /// 整窗最大占位：决定是否保持展开。
+        let retention: Bool
+    }
+
+    /// 刘海始终算命中；展开后可点区跟当前页，保展开区跟整窗最大占位。
+    private func pointerIslandHit(
+        mouse: NSPoint,
+        geometry: NotchGeometry,
+        expanded: Bool
+    ) -> IslandPointerHit {
+        // 略放大刘海热区，更容易指到。
+        let notchHit = geometry.notchFrame.insetBy(dx: -4, dy: -2)
+        if notchHit.contains(mouse) {
+            return IslandPointerHit(interactive: true, retention: true)
+        }
+        guard expanded else {
+            return IslandPointerHit(interactive: false, retention: false)
+        }
+
+        let width = CGFloat(IslandSettings.shared.expandedWidth)
+        let pageLayout = Self.expandedLayout(for: WidgetRuntime.shared)
+        let pageBody = geometry.expandedFrameOnScreen(width: width, layout: pageLayout)
+            .insetBy(dx: -2, dy: -2)
+        let interactive = pageBody.contains(mouse)
+
+        // 保展开：窗口最大占位再略外扩，避免「刚出可视面板就收」；翻页高度变化也不误收。
+        var retentionFrame = geometry.windowFrameOnScreen().insetBy(dx: -8, dy: -8)
+        if let boost = hoverLayoutBoost, Date() < hoverLayoutBoostUntil {
+            let boosted = geometry.expandedFrameOnScreen(width: width, layout: boost)
+                .insetBy(dx: -8, dy: -8)
+            retentionFrame = retentionFrame.union(boosted)
+        } else if hoverLayoutBoost != nil {
+            hoverLayoutBoost = nil
+        }
+        let retention = retentionFrame.contains(mouse) || interactive
+        return IslandPointerHit(interactive: interactive, retention: retention)
+    }
+
     private func pointerIsOverIsland(
         mouse: NSPoint,
         geometry: NotchGeometry,
         expanded: Bool
     ) -> Bool {
-        // 略放大刘海热区，更容易指到。
-        let notchHit = geometry.notchFrame.insetBy(dx: -4, dy: -2)
-        if notchHit.contains(mouse) {
-            return true
-        }
-        if expanded {
-            let layout = hoverRetentionLayout(for: WidgetRuntime.shared)
-            let width = CGFloat(IslandSettings.shared.expandedWidth)
-            let body = geometry.expandedFrameOnScreen(width: width, layout: layout)
-                .insetBy(dx: -2, dy: -2)
-            if body.contains(mouse) {
-                return true
-            }
-        }
-        return false
-    }
-
-    /// 悬停保留区跟当前页走：小组件用矮区，控制台用高区。
-    /// 仅在刚从控制台翻走的短窗口内临时抬到控制台高度，避免翻页误收。
-    private func hoverRetentionLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
-        if let boost = hoverLayoutBoost, Date() < hoverLayoutBoostUntil {
-            return boost
-        }
-        if hoverLayoutBoost != nil {
-            hoverLayoutBoost = nil
-        }
-        if runtime.isControlDeckPage { return .controlDeck }
-        if runtime.isTransientNoticePage { return .notice }
-        if runtime.isComboPage { return .combo }
-        return .standard
+        pointerIslandHit(mouse: mouse, geometry: geometry, expanded: expanded).retention
     }
 
     private func scheduleCollapse() {
         collapseWorkItem?.cancel()
         // 刚翻页时高度会变，给指针一点时间落在新面板上，避免误收。
-        let delay: TimeInterval = Date().timeIntervalSince(lastPageSwipeAt) < 0.45 ? 0.36 : 0.12
+        let delay: TimeInterval = Date().timeIntervalSince(lastPageSwipeAt) < 0.45 ? 0.36 : 0.22
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             // 收起前再确认一次，避免边缘抖动。
@@ -661,18 +685,25 @@ final class IslandController: NSObject {
             // 设置窗盖住岛展开区时，不算「还在岛上」（否则设计页永远收不起来）。
             if self.isPointerOverSettingsWindow(mouse), !self.isSettingsLivePreview {
                 self.isPointerOverIsland = false
+                AppLog.info("Island", "收起前复查：指针在设置窗", ["reason": "hoverEnd"])
                 self.collapse(reason: "hoverEnd")
                 return
             }
-            let stillOver = self.pointerIsOverIsland(
+            let hit = self.pointerIslandHit(
                 mouse: mouse,
                 geometry: geometry,
                 expanded: true
             )
-            if stillOver {
+            if hit.retention {
                 self.isPointerOverIsland = true
+                AppLog.debug("Island", "收起前复查：仍在保展开区，取消收起", [
+                    "interactive": hit.interactive
+                ])
                 return
             }
+            AppLog.info("Island", "收起前复查：已离开保展开区", [
+                "interactive": hit.interactive
+            ])
             self.collapse(reason: "hoverEnd")
         }
         collapseWorkItem = work
@@ -888,9 +919,10 @@ final class IslandController: NSObject {
         }
         updateInteractiveFrame(expanded: true)
         AppLog.debug("Island", "翻页后悬停热区", [
-            "hoverLayout": "\(hoverRetentionLayout(for: WidgetRuntime.shared))",
+            "pageLayout": "\(Self.expandedLayout(for: WidgetRuntime.shared))",
             "page": WidgetRuntime.shared.activeID ?? "nil",
-            "boost": hoverLayoutBoost != nil
+            "boost": hoverLayoutBoost != nil,
+            "retention": "windowMax"
         ])
     }
 

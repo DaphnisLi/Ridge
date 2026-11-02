@@ -74,6 +74,14 @@ struct ProjectReleaseDeckView: View {
                 "watches": session.watches.count
             ])
         }
+        .onChange(of: session.containerItems.count) { _, count in
+            // 展开态下容器被全部释放后，「收起」按钮会随空列表消失；改为自动收起。
+            guard containersExpanded, count == 0 else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                containersExpanded = false
+            }
+            AppLog.info("Projects", "容器已清空，自动收起列表", ["count": 0])
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(L10n.Projects.deckTitle)
     }
