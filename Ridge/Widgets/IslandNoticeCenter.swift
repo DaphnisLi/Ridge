@@ -7,12 +7,18 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case processEnded(ProjectWatchEndedNotice)
     /// 资源监控：RAM 过载告警。
     case ramPressure(ResourceRAMPressureNotice)
+    /// 外设低电（约 3s 自动收；同设备同态由会话边沿去重）。
+    case peripheralLowBattery(BatteryPeripheralNotice)
+    /// 外设满电（约 3s 自动收）。
+    case peripheralFullCharge(BatteryPeripheralNotice)
 
     var id: String {
         switch self {
         case .processEnded(let notice):
             return notice.id
         case .ramPressure(let notice):
+            return notice.id
+        case .peripheralLowBattery(let notice), .peripheralFullCharge(let notice):
             return notice.id
         }
     }
@@ -23,6 +29,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "projects.watch"
         case .ramPressure:
             return "resource.ram"
+        case .peripheralLowBattery:
+            return "battery.low"
+        case .peripheralFullCharge:
+            return "battery.full"
         }
     }
 }

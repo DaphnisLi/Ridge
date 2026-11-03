@@ -65,10 +65,12 @@ enum L10n {
         static var libraryIntro: String {
             tr(
                 "widgets.library.intro",
-                "打开开关后可在灵动岛各自成页展示。拖到另一张卡片可交换库顺序。电量、音量等功能磁贴请到「控制台」。"
+                "打开开关后可在灵动岛展示。功能磁贴与内容型小组件共用此库；拖到另一张卡片可交换内容型顺序。点击卡片进入预览与设置。"
             )
         }
         static var libraryTitle: String { tr("widgets.library.title", "小组件库") }
+        static var deckSectionTitle: String { tr("widgets.deck_section_title", "功能磁贴") }
+        static var contentSectionTitle: String { tr("widgets.content_section_title", "内容小组件") }
         static var libraryEmpty: String { tr("widgets.library.empty", "暂无可用小组件。") }
         static var notFound: String { tr("widgets.not_found", "找不到该小组件。") }
         static var cannotPreview: String { tr("widgets.cannot_preview", "无法预览") }
@@ -166,7 +168,7 @@ enum L10n {
 
         static var moduleBattery: String { tr("control_deck.module.battery", "电量与外设") }
         static var moduleBatterySummary: String {
-            tr("control_deck.module.battery_summary", "本机与键盘、鼠标等电量环形指示")
+            tr("control_deck.module.battery_summary", "已连接外设电量；低电与满电经岛内瞬时通知提示")
         }
         static var moduleVolume: String { tr("control_deck.module.volume", "输出音量") }
         static var moduleProjects: String { tr("control_deck.module.projects", "项目释放") }
@@ -256,6 +258,9 @@ enum L10n {
 
     enum Projects {
         static var deckTitle: String { tr("projects.deck.title", "项目释放") }
+        static var widgetSummary: String {
+            tr("projects.widget.summary", "监视项目进程占用，结束后经岛内通知提示")
+        }
         static var emptyState: String {
             tr("projects.deck.empty", "未发现占用中的项目进程。可在设置中添加项目根目录。")
         }
@@ -726,6 +731,155 @@ enum L10n {
                 "NSBluetoothAlwaysUsageDescription",
                 "Ridge 需要蓝牙权限以读取已连接耳机等设备的电量，并在控制台混音台中显示。"
             )
+        }
+    }
+
+    // MARK: - Battery（控制台电量与外设）
+
+    enum Battery {
+        static var emptyTitle: String { tr("battery.empty.title", "暂无外设电量") }
+        static var emptyHint: String {
+            tr("battery.empty.hint", "连接带电量报告的蓝牙键盘、鼠标或耳机后将显示在此")
+        }
+        static var statusCharging: String { tr("battery.status.charging", "充电中") }
+        static var statusCritical: String { tr("battery.status.critical", "电量过低") }
+        static var statusHealthy: String { tr("battery.status.healthy", "电量充足") }
+        static var statusModerate: String { tr("battery.status.moderate", "电量一般") }
+        static var statusConnected: String { tr("battery.status.connected", "已连接") }
+        static var statusUnknownBattery: String { tr("battery.status.unknown_battery", "电量不可用") }
+        static var badgeCharging: String { tr("battery.badge.charging", "充电") }
+        static var badgeNeedCharge: String { tr("battery.badge.need_charge", "需充电") }
+        static var leftBud: String { tr("battery.bud.left", "左耳") }
+        static var rightBud: String { tr("battery.bud.right", "右耳") }
+        static var caseBud: String { tr("battery.bud.case", "耳机盒") }
+
+        static var listeningOff: String { tr("battery.listening.off", "关闭") }
+        static var listeningNoiseCancellation: String {
+            tr("battery.listening.noise_cancellation", "降噪")
+        }
+        static var listeningTransparency: String {
+            tr("battery.listening.transparency", "通透")
+        }
+        static var listeningAdaptive: String {
+            tr("battery.listening.adaptive", "自适应")
+        }
+
+        static func listeningModeTitle(_ mode: BatteryListeningMode) -> String {
+            switch mode {
+            case .off: return listeningOff
+            case .noiseCancellation: return listeningNoiseCancellation
+            case .transparency: return listeningTransparency
+            case .adaptive: return listeningAdaptive
+            }
+        }
+
+        static var alertsTitle: String { tr("battery.alerts.title", "电量告警") }
+        static var alertsIntro: String {
+            tr(
+                "battery.alerts.intro",
+                "开启后可在灵动岛查看已连接外设电量。低电与满电经瞬时通知提示，约三秒后自动收起。"
+            )
+        }
+        static var forceExpandTitle: String {
+            tr("battery.alerts.force_expand_title", "严重低电量强制展开灵动岛")
+        }
+        static var forceExpandSubtitle: String {
+            tr(
+                "battery.alerts.force_expand_subtitle",
+                "当任一外设电量低于设定阈值时，自动展开刘海进行视觉警告"
+            )
+        }
+        static var lowAlertToggle: String { tr("battery.alerts.low_toggle", "低电量提醒") }
+        static var lowThreshold: String { tr("battery.alerts.low_threshold", "低电量触发阈值") }
+        static func lowThresholdHint(_ percent: Int) -> String {
+            String(
+                format: String(
+                    localized: "battery.alerts.low_threshold_hint_format",
+                    defaultValue: "电量 ≤ %d%% 且未在充电时提醒"
+                ),
+                percent
+            )
+        }
+        static var fullAlertToggle: String {
+            tr("battery.alerts.full_toggle", "充满电提醒（防止过充）")
+        }
+        static var fullAlertHint: String {
+            tr(
+                "battery.alerts.full_hint",
+                "外设电量达到 100% 时弹出灵动岛横幅，提醒及时移除充电线缆以保护电池"
+            )
+        }
+        static var snoozeHint: String {
+            tr("battery.alerts.snooze_hint", "提示卡上「稍后提醒」：该设备低电免打扰 30 分钟")
+        }
+        static var tipSectionTitle: String {
+            tr("battery.tip.section_title", "独立告警灵动岛展示")
+        }
+        static var tipSectionSubtitle: String {
+            tr(
+                "battery.tip.section_subtitle",
+                "低电量告警与满电防过充小提示；约三秒后自动收起，悬停时保持展示"
+            )
+        }
+        static var tipSampleMouse: String { tr("battery.tip.sample_mouse", "妙控鼠标 2") }
+        static var tipSampleKeyboard: String { tr("battery.tip.sample_keyboard", "妙控键盘") }
+        static func tipSampleLowDetail(_ threshold: Int) -> String {
+            String(
+                format: String(
+                    localized: "battery.tip.sample_low_detail_format",
+                    defaultValue: "已低于预设 %d%% 告警阈值"
+                ),
+                threshold
+            )
+        }
+        static func tipSampleLowFooter(_ percent: Int) -> String {
+            tipSampleLowDetail(percent)
+        }
+        static var tipSampleFullDetail: String {
+            tr("battery.tip.sample_full_detail", "电池已充满 · 建议拔除充电线缆")
+        }
+        static var tipSampleFullFooter: String {
+            tr("battery.tip.sample_full_footer", "已达满电状态")
+        }
+        static func tipLowBadge(_ percent: Int) -> String {
+            String(
+                format: String(
+                    localized: "battery.tip.low_badge_format",
+                    defaultValue: "%d%% 严重低电"
+                ),
+                percent
+            )
+        }
+        static var tipFullBadge: String { tr("battery.tip.full_badge", "100% 已充满") }
+        static var previewLowNotice: String { tr("battery.tip.preview_low", "预览低电提示") }
+        static var previewFullNotice: String { tr("battery.tip.preview_full", "预览满电提示") }
+        static var snoozeAction: String { tr("battery.tip.snooze_action", "稍后提醒") }
+
+        static func lowNoticeTitle(_ name: String) -> String {
+            String(
+                format: String(
+                    localized: "battery.notice.low_title_format",
+                    defaultValue: "%@ 电量过低"
+                ),
+                name
+            )
+        }
+        static func lowNoticeDetail(_ percent: Int, _ threshold: Int) -> String {
+            // percent 保留入参，便于调用点不变；副标题只展示阈值，不做剩余时长估算。
+            _ = percent
+            return tipSampleLowDetail(threshold)
+        }
+        static func fullNoticeTitle(_ name: String) -> String {
+            String(
+                format: String(
+                    localized: "battery.notice.full_title_format",
+                    defaultValue: "%@ 已充满"
+                ),
+                name
+            )
+        }
+        static var fullNoticeDetail: String {
+            tr("battery.notice.full_detail", "电池已充满 · 建议拔除充电线缆")
         }
     }
 

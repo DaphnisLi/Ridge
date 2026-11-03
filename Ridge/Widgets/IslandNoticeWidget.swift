@@ -176,8 +176,242 @@ private struct IslandNoticeCardView: View {
             ProcessEndedNoticeCard(notice: notice)
         case .ramPressure(let notice):
             RAMPressureNoticeCard(notice: notice)
+        case .peripheralLowBattery(let notice):
+            PeripheralBatteryNoticeCard(notice: notice, style: .low)
+        case .peripheralFullCharge(let notice):
+            PeripheralBatteryNoticeCard(notice: notice, style: .full)
         case .none:
             ProcessEndedNoticeCard(notice: nil)
+        }
+    }
+}
+
+/// 外设低电 / 满电信息条（约 3s 自动收；低电可「稍后提醒」30 分钟）。
+private struct PeripheralBatteryNoticeCard: View {
+    enum Style {
+        case low
+        case full
+    }
+
+    let notice: BatteryPeripheralNotice
+    let style: Style
+
+    private let accentRed = Color(red: 0.729, green: 0.102, blue: 0.102)
+    private let accentGreen = Color(red: 0.447, green: 0.996, blue: 0.533)
+
+    private var accent: Color {
+        style == .low ? accentRed : accentGreen
+    }
+
+    private var badge: String {
+        switch style {
+        case .low: return L10n.Battery.tipLowBadge(notice.percent)
+        case .full: return L10n.Battery.tipFullBadge
+        }
+    }
+
+    var body: some View {
+        Group {
+            if style == .full {
+                fullBody
+            } else {
+                lowBody
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(notice.deviceName)，\(badge)")
+    }
+
+    /// 满电：左发光图标（右下角闪电图标）+ 文案 + 右发光「100% 已充满」。
+    private var fullBody: some View {
+        HStack(alignment: .center, spacing: 12) {
+            fullDeviceIcon
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(notice.deviceName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(notice.detail)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.45))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(3)
+
+            fullChargePill
+                .fixedSize()
+                .layoutPriority(2)
+        }
+    }
+
+    private var fullDeviceIcon: some View {
+        ZStack(alignment: .bottomTrailing) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(accentGreen.opacity(0.85), lineWidth: 1.2)
+                    )
+                Image(systemName: notice.kind.systemSymbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.92))
+            }
+            .frame(width: 30, height: 30)
+            .shadow(color: accentGreen.opacity(0.75), radius: 7, x: 0, y: 0)
+            .shadow(color: accentGreen.opacity(0.40), radius: 14, x: 0, y: 0)
+
+            ZStack {
+                Circle()
+                    .fill(accentGreen)
+                    .frame(width: 12, height: 12)
+                    .shadow(color: accentGreen.opacity(0.85), radius: 4, x: 0, y: 0)
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 7, weight: .bold))
+                    .foregroundStyle(Color.black.opacity(0.88))
+            }
+            .offset(x: 3, y: 3)
+            .accessibilityHidden(true)
+        }
+        .frame(width: 30, height: 30)
+    }
+
+    private var fullChargePill: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 9, weight: .semibold))
+            Text(L10n.Battery.tipFullBadge)
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(accentGreen)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(accentGreen.opacity(0.14))
+                .overlay(
+                    Capsule().strokeBorder(accentGreen.opacity(0.75), lineWidth: 1)
+                )
+        )
+        .shadow(color: accentGreen.opacity(0.70), radius: 7, x: 0, y: 0)
+        .shadow(color: accentGreen.opacity(0.35), radius: 12, x: 0, y: 0)
+    }
+
+    /// 低电：左发光图标（右上角闪烁感叹号）+ 文案 + 右发光红胶囊（循环电量格 + 百分比）。
+    private var lowBody: some View {
+        HStack(alignment: .center, spacing: 10) {
+            lowDeviceIcon
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(notice.deviceName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(notice.detail)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.45))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(3)
+
+            lowChargePill
+                .fixedSize()
+                .layoutPriority(2)
+        }
+    }
+
+    private var lowDeviceIcon: some View {
+        ZStack(alignment: .topTrailing) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(accentRed.opacity(0.18))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(accentRed, lineWidth: 1.4)
+                    )
+                Image(systemName: notice.kind.systemSymbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(accentRed)
+            }
+            .frame(width: 30, height: 30)
+            .shadow(color: accentRed.opacity(0.95), radius: 8, x: 0, y: 0)
+            .shadow(color: accentRed.opacity(0.65), radius: 16, x: 0, y: 0)
+            .shadow(color: accentRed.opacity(0.35), radius: 22, x: 0, y: 0)
+
+            // 感叹号一闪一闪。
+            TimelineView(.animation(minimumInterval: 0.45, paused: false)) { context in
+                let on = Int(context.date.timeIntervalSinceReferenceDate / 0.45) % 2 == 0
+                ZStack {
+                    Circle()
+                        .fill(accentRed)
+                        .frame(width: 12, height: 12)
+                        .shadow(color: accentRed.opacity(on ? 1.0 : 0.35), radius: on ? 6 : 2, x: 0, y: 0)
+                    Image(systemName: "exclamationmark")
+                        .font(.system(size: 7, weight: .black))
+                        .foregroundStyle(.white)
+                }
+                .opacity(on ? 1.0 : 0.28)
+                .scaleEffect(on ? 1.0 : 0.92)
+            }
+            .offset(x: 3, y: -3)
+            .accessibilityHidden(true)
+        }
+        .frame(width: 30, height: 30)
+    }
+
+    private var lowChargePill: some View {
+        HStack(spacing: 5) {
+            CyclingBatteryBarsGlyph(tint: .white)
+            Text(L10n.Battery.tipLowBadge(notice.percent))
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(accentRed)
+                .overlay(
+                    Capsule().strokeBorder(accentRed.opacity(0.95), lineWidth: 1)
+                )
+        )
+        .shadow(color: accentRed.opacity(0.75), radius: 7, x: 0, y: 0)
+        .shadow(color: accentRed.opacity(0.40), radius: 12, x: 0, y: 0)
+    }
+}
+
+/// 低电胶囊内循环电量格：1 → 2 → 3 → 1 …
+private struct CyclingBatteryBarsGlyph: View {
+    var tint: Color = .white
+    private let period: TimeInterval = 0.42
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: period, paused: false)) { context in
+            let lit = Int(context.date.timeIntervalSinceReferenceDate / period) % 3 + 1
+            HStack(spacing: 1.2) {
+                HStack(spacing: 1.4) {
+                    ForEach(1...3, id: \.self) { index in
+                        RoundedRectangle(cornerRadius: 0.8, style: .continuous)
+                            .fill(index <= lit ? tint : tint.opacity(0.22))
+                            .frame(width: 2.4, height: 6.5)
+                    }
+                }
+                .padding(.horizontal, 2.2)
+                .padding(.vertical, 2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .strokeBorder(tint.opacity(0.95), lineWidth: 1)
+                )
+
+                RoundedRectangle(cornerRadius: 0.6, style: .continuous)
+                    .fill(tint.opacity(0.95))
+                    .frame(width: 1.4, height: 3.2)
+            }
+            .accessibilityHidden(true)
         }
     }
 }

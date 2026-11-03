@@ -1,0 +1,48 @@
+---
+description: 小组件设置预览：统一假数据组件，上直角下圆角；库卡与详情页同款
+alwaysApply: true
+---
+
+# 小组件设置预览
+
+设置里所有「岛上长什么样」的预览，**只走统一入口**，禁止各页自绘一套、禁止用实时空数据当预览。
+
+## 唯一入口
+
+| API | 路径 | 用途 |
+|---|---|---|
+| `WidgetSamplePreview.island(for:compact:)` | `Ridge/Widgets/WidgetSamplePreview.swift` | **唯一调用点**：库卡片开关区 + 点进详情页顶部预览 |
+| `WidgetIslandPreviewShell` | 同文件 | 壳：上直角、下圆角（`IslandPanelShape`）；一般不单独再包一层 |
+| 各 widget 的 `previewSample` / `sampleDevices` | 业务文件 | 假数据内容；由 `WidgetSamplePreview.content` 组装 |
+
+```swift
+// ✅ 库卡 / 详情页都这样
+WidgetSamplePreview.island(for: widgetID, compact: true)  // 列表卡
+WidgetSamplePreview.island(for: widgetID, compact: false) // 详情页
+
+// ❌ 禁止
+BatteryDeckView()                    // 实时设备，可能空
+WidgetPreviewFactory.makeView(...)   // 实况实例当设置预览
+自写 Capsule / 全圆角 RoundedRectangle 当岛预览壳
+MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
+```
+
+## 必须
+
+- **假数据**：无真实会议 / 未播媒体 / 无外设时预览仍完整可看；新 widget 在 `WidgetSamplePreview.content` 加 case + 样张
+- **外形统一**：预览岛 **左上、右上直角；左下、右下圆角**（`IslandPanelShape`），列表与详情同形状
+- **同款同内容**：同一 `widgetID` 在开关卡片与点进配置页的预览必须一致（仅 `compact` 尺寸不同）
+- 控制台磁贴 id：`system.controlDeck.battery` / `volume` / `projects` / `shelf`
+
+## 禁止
+
+- 设置预览直连 `BatterySession` / `NowPlaying` / 日历等实时源当主展示（真机岛上仍用实时）
+- 为某一个设置页再造预览壳或再写一套样张布局
+- 预览外形做成全圆角胶囊或四角同圆角（与真岛「贴顶直角」不一致）
+
+## 新小组件 checklist
+
+1. 业务侧提供 `previewSample`（或等价假数据）
+2. `WidgetSamplePreview.content` 增加对应 `id` 分支
+3. 库卡与配置页都只调 `WidgetSamplePreview.island(for:compact:)`
+4. 按 `dev-relaunch` 验收：无数据时预览仍非空，且两处样子一致

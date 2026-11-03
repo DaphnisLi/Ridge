@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 
 struct WidgetsSettingsPane: View {
     @ObservedObject var settings: WidgetSettings
+    @ObservedObject private var deckSettings = ControlDeckSettings.shared
     @ObservedObject private var navigator = SettingsNavigator.shared
     private let registry = WidgetRegistry.shared
 
@@ -12,6 +13,11 @@ struct WidgetsSettingsPane: View {
 
     private var libraryOrder: [WidgetID] {
         settings.order.filter { registry.manifest(for: $0)?.showsInLibrary == true }
+    }
+
+    /// 已落地的控制台功能磁贴（进小组件库，样式同卡片）。
+    private var liveDeckModules: [ControlDeckPlannedModule] {
+        deckSettings.plannedModules.filter(\.isLive)
     }
 
     var body: some View {
@@ -23,6 +29,7 @@ struct WidgetsSettingsPane: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
+                    deckLibrarySection
                     librarySection
                 }
                 .padding(.horizontal, 28)
@@ -41,10 +48,90 @@ struct WidgetsSettingsPane: View {
             // 小组件设计页用页内预览，真岛保持收起。
             IslandController.shared?.beginSettingsSessionCollapsed()
             consumePendingPreviewIfNeeded()
-            AppLog.debug("Settings", "小组件库页已显示", ["count": libraryOrder.count])
+            AppLog.debug("Settings", "小组件库页已显示", [
+                "widgets": libraryOrder.count,
+                "deck": liveDeckModules.count
+            ])
         }
         .onChange(of: navigator.openToken) { _, _ in
             consumePendingPreviewIfNeeded()
+        }
+    }
+
+    private var deckLibrarySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.Widgets.deckSectionTitle)
+                .font(.system(size: 15, weight: .semibold))
+
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 14),
+                    GridItem(.flexible(), spacing: 14)
+                ],
+                spacing: 14
+            ) {
+                ForEach(liveDeckModules) { module in
+                    deckCardCell(module)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func deckCardCell(_ module: ControlDeckPlannedModule) -> some View {
+        let pageID = ControlDeckSettings.pageIDPrefix + "." + module.id
+        ZStack(alignment: .topTrailing) {
+            NavigationLink(value: pageID) {
+                WidgetLibraryCard(
+                    widgetID: pageID,
+                    title: module.title,
+                    summary: deckSummary(for: module.id),
+                    isEnabled: deckSettings.isModuleEnabled(module.id)
+                )
+            }
+            .buttonStyle(.plain)
+
+            Toggle(
+                "",
+                isOn: Binding(
+                    get: { deckSettings.isModuleEnabled(module.id) },
+                    set: { enabled in
+                        handleDeckEnableChange(id: module.id, enabled: enabled)
+                    }
+                )
+            )
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .padding(10)
+        }
+        .background(WidgetCardScreenFrameReader(widgetID: pageID))
+    }
+
+    private func deckSummary(for id: String) -> String {
+        switch id {
+        case "battery": return L10n.ControlDeck.moduleBatterySummary
+        case "volume": return L10n.ControlDeck.moduleVolumeSummaryLive
+        case "projects": return L10n.Projects.widgetSummary
+        case "shelf": return L10n.ControlDeck.moduleShelfSummary
+        default: return ""
+        }
+    }
+
+    private func handleDeckEnableChange(id: String, enabled: Bool) {
+        deckSettings.setModuleEnabled(id, enabled)
+        if enabled {
+            let pageID = ControlDeckSettings.pageIDPrefix + "." + id
+            let source = WidgetCardFrameCache.shared.frame(for: pageID)
+            if let pane = ControlDeckSettings.Pane(rawValue: id) {
+                WidgetRuntime.shared.focusControlDeck(pane: pane)
+            }
+            IslandController.shared?.presentWidgetEnabled(pageID, fromScreenRect: source)
+            AppLog.info("Settings", "打开功能磁贴，同步上岛", ["id": id])
+        } else {
+            IslandController.shared?.beginSettingsSessionCollapsed()
+            WidgetRuntime.shared.recompute(reason: "deckModuleDisable")
+            AppLog.info("Settings", "关闭功能磁贴，同步下岛", ["id": id])
         }
     }
 
@@ -59,7 +146,7 @@ struct WidgetsSettingsPane: View {
 
     private var librarySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.Widgets.libraryTitle)
+            Text(L10n.Widgets.contentSectionTitle)
                 .font(.system(size: 15, weight: .semibold))
 
             if libraryOrder.isEmpty {
@@ -96,7 +183,9 @@ struct WidgetsSettingsPane: View {
         ZStack(alignment: .topTrailing) {
             NavigationLink(value: id) {
                 WidgetLibraryCard(
-                    manifest: manifest,
+                    widgetID: id,
+                    title: manifest.displayName,
+                    summary: manifest.summary,
                     isEnabled: settings.isEnabled(id)
                 )
             }
@@ -126,7 +215,9 @@ struct WidgetsSettingsPane: View {
             return NSItemProvider(object: id as NSString)
         } preview: {
             WidgetLibraryCard(
-                manifest: manifest,
+                widgetID: id,
+                title: manifest.displayName,
+                summary: manifest.summary,
                 isEnabled: settings.isEnabled(id)
             )
             .frame(width: 220)
@@ -257,11 +348,10 @@ private struct WidgetCardScreenFrameReader: NSViewRepresentable {
 // MARK: - 库卡片
 
 private struct WidgetLibraryCard: View {
-    let manifest: WidgetManifest
+    let widgetID: WidgetID
+    let title: String
+    let summary: String
     let isEnabled: Bool
-    @ObservedObject private var islandSettings = IslandSettings.shared
-
-    private var palette: IslandPalette { islandSettings.theme.palette }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -275,13 +365,9 @@ private struct WidgetLibraryCard: View {
                     endPoint: .bottomTrailing
                 )
 
-                // 列表卡片只用静态样张，避免每次 body 重建 IslandWidget 实例。
-                WidgetIslandPreviewChrome(
-                    manifest: manifest,
-                    palette: palette,
-                    compact: true
-                )
-                .padding(.horizontal, 16)
+                // 与详情页同一套假数据样张（上直角下圆角）。
+                WidgetSamplePreview.island(for: widgetID, compact: true)
+                    .padding(.horizontal, 14)
             }
             .frame(height: 120)
             .clipShape(
@@ -295,12 +381,12 @@ private struct WidgetLibraryCard: View {
             )
 
             VStack(alignment: .leading, spacing: 6) {
-                Text(manifest.displayName)
+                Text(title)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
-                Text(manifest.summary)
+                Text(summary)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -323,47 +409,53 @@ private struct WidgetLibraryCard: View {
 
 private struct WidgetPreviewPane: View {
     let widgetID: WidgetID
-    @ObservedObject private var islandSettings = IslandSettings.shared
     private let registry = WidgetRegistry.shared
+
+    private var deckPane: ControlDeckSettings.Pane? {
+        ControlDeckSettings.Pane.from(pageID: widgetID)
+    }
 
     private var manifest: WidgetManifest? {
         registry.manifest(for: widgetID)
     }
 
-    private var previewWidth: CGFloat {
-        min(CGFloat(islandSettings.expandedWidth), 420)
+    private var navigationTitleText: String {
+        if let deckPane {
+            return deckPane.title
+        }
+        if widgetID == "builtin.meeting" { return L10n.Widgets.meetingPreviewTitle }
+        if widgetID == "builtin.media" { return L10n.Widgets.mediaPreviewTitle }
+        return manifest?.displayName ?? L10n.Common.preview
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                if let manifest {
+                if let deckPane {
+                    deckConfig(for: deckPane)
+                } else if let manifest {
                     if widgetID == "builtin.meeting" {
-                        // 会议页自带岛预览与配置，不再套通用灰底预览。
                         MeetingWidgetConfigSection()
                     } else if widgetID == "builtin.media" {
                         MediaWidgetConfigSection()
                     } else {
-                        ZStack {
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.78, green: 0.84, blue: 0.90),
-                                    Color(red: 0.92, green: 0.94, blue: 0.96)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
+                        SettingsCard {
+                            VStack(spacing: 0) {
+                                WidgetSamplePreview.island(for: widgetID, compact: false)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 22)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        SettingsChrome.surfaceContainerLow,
+                                        SettingsChrome.surfaceContainer.opacity(0.50)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
                             )
-                            .frame(height: 240)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                            LiveWidgetIslandPreview(
-                                widgetID: widgetID,
-                                palette: islandSettings.theme.palette,
-                                width: previewWidth,
-                                height: 96,
-                                bottomRadius: CGFloat(islandSettings.bottomCornerRadius)
-                            )
-                            .padding(.horizontal, 28)
                         }
 
                         VStack(alignment: .leading, spacing: 8) {
@@ -385,94 +477,24 @@ private struct WidgetPreviewPane: View {
         }
         .scrollIndicators(.hidden)
         .background(SettingsChrome.pageBackground)
-        .navigationTitle(
-            widgetID == "builtin.meeting"
-                ? L10n.Widgets.meetingPreviewTitle
-                : widgetID == "builtin.media"
-                    ? L10n.Widgets.mediaPreviewTitle
-                    : (manifest?.displayName ?? L10n.Common.preview)
-        )
+        .navigationTitle(navigationTitleText)
         .onAppear {
             AppLog.info("Settings", "打开小组件预览", ["id": widgetID])
         }
     }
-}
 
-// MARK: - 静态 / 实况岛预览
-
-private struct WidgetIslandPreviewChrome: View {
-    let manifest: WidgetManifest
-    let palette: IslandPalette
-    var compact: Bool
-
-    private var previewHeight: CGFloat { compact ? 44 : 72 }
-    private var bottomRadius: CGFloat { compact ? 14 : 20 }
-
-    var body: some View {
-        let shape = IslandPanelShape(bottomRadius: bottomRadius)
-        HStack(spacing: 10) {
-            Image(systemName: WidgetLibraryStyle.symbol(for: manifest.id))
-                .font(.system(size: compact ? 14 : 18, weight: .semibold))
-                .foregroundStyle(palette.icon)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(manifest.displayName)
-                    .font(.system(size: compact ? 12 : 14, weight: .medium))
-                    .foregroundStyle(palette.title)
-                    .lineLimit(1)
-                if !compact {
-                    Text(manifest.summary)
-                        .font(.system(size: 11))
-                        .foregroundStyle(palette.secondary)
-                        .lineLimit(1)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, compact ? 14 : 18)
-        .frame(maxWidth: .infinity)
-        .frame(height: previewHeight)
-        .background(shape.fill(palette.fill))
-        .clipShape(shape)
-        .environment(\.islandPalette, palette)
-        .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
-    }
-}
-
-private struct LiveWidgetIslandPreview: View {
-    let widgetID: WidgetID
-    let palette: IslandPalette
-    let width: CGFloat
-    let height: CGFloat
-    let bottomRadius: CGFloat
-
-    var body: some View {
-        let shape = IslandPanelShape(bottomRadius: min(bottomRadius, height / 2, width / 2))
-        Group {
-            if let view = WidgetPreviewFactory.makeView(for: widgetID) {
-                view
-                    .padding(.horizontal, 12)
-            } else {
-                Text(L10n.Widgets.cannotPreview)
-                    .font(.system(size: 12))
-                    .foregroundStyle(palette.secondary)
-            }
-        }
-        .frame(width: width, height: height)
-        .background(shape.fill(palette.fill))
-        .clipShape(shape)
-        .environment(\.islandPalette, palette)
-        .shadow(color: .black.opacity(0.2), radius: 12, y: 5)
-    }
-}
-
-// MARK: - 样式辅助
-
-private enum WidgetLibraryStyle {
-    static func symbol(for id: WidgetID) -> String {
-        switch id {
-        case "builtin.meeting": return "calendar"
-        case "builtin.media": return "music.note.list"
-        default: return "rectangle.3.group"
+    @ViewBuilder
+    private func deckConfig(for pane: ControlDeckSettings.Pane) -> some View {
+        switch pane {
+        case .battery:
+            BatteryWidgetConfigSection()
+        case .volume:
+            VolumeWidgetConfigSection()
+        case .projects:
+            ProjectsWidgetConfigSection()
+        case .shelf:
+            ShelfWidgetConfigSection()
         }
     }
 }
+

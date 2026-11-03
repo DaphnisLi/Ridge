@@ -143,17 +143,26 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         promoteForSettingsWindow()
 
         let window = ensureSettingsWindow()
-        center(window, on: Self.activeScreen())
+        let screen = Self.activeScreen()
+        // 每次打开都套回预设尺寸并相对当前屏居中（避免复用窗留在旧位置/旧宽度）。
+        // NavigationSplitView 侧栏会在首帧之后再参与布局，可能把窗往右撑开；
+        // 因此先居中一次，orderFront 后再钉尺寸并二次居中。
+        applyDefaultSizeAndCenter(window, on: screen)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
         // 先把窗画出来，下一拍再钉岛，避免「建窗 + 展开岛」同帧抢主线程。
         DispatchQueue.main.async {
+            self.applyDefaultSizeAndCenter(window, on: screen)
             self.syncIslandPreviewForCurrentSection()
+            let visible = screen?.visibleFrame ?? .zero
+            let frame = window.frame
             AppLog.info("Settings", "设置窗已前置", [
                 "ms": Int(Date().timeIntervalSince(openedAt) * 1000),
                 "section": SettingsNavigator.shared.section.rawValue,
-                "reused": true
+                "frameW": Int(frame.width),
+                "leftGap": Int(frame.minX - visible.minX),
+                "rightGap": Int(visible.maxX - frame.maxX)
             ])
         }
     }
@@ -253,14 +262,18 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         AppLog.info("Settings", "设置窗已预热")
     }
 
+    private static let settingsDefaultSize = NSSize(width: 1200, height: 620)
+    private static let settingsMinSize = NSSize(width: 1080, height: 520)
+
     private func makeSettingsWindow() -> NSWindow {
         let root = SettingsRootView(settings: IslandSettings.shared)
         let hosting = NSHostingController(rootView: root)
         hosting.view.wantsLayer = true
         hosting.view.layer?.backgroundColor = SettingsChrome.nsPageBackground.cgColor
 
+        let size = Self.settingsDefaultSize
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 920, height: 620),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: true
@@ -270,8 +283,8 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         window.backgroundColor = SettingsChrome.nsPageBackground
         window.contentViewController = hosting
         window.isReleasedWhenClosed = false
-        window.minSize = NSSize(width: 820, height: 520)
-        window.setContentSize(NSSize(width: 920, height: 620))
+        window.minSize = Self.settingsMinSize
+        window.setContentSize(size)
         window.delegate = self
         return window
     }
@@ -282,7 +295,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         case .island:
             ResourceMonitorSession.shared.setSettingsVisible(false)
             IslandController.shared?.beginSettingsSession()
-        case .controlDeck, .widgets:
+        case .widgets:
             ResourceMonitorSession.shared.setSettingsVisible(false)
             IslandController.shared?.beginSettingsSessionCollapsed()
         case .resourceMonitor:
@@ -291,18 +304,30 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         }
     }
 
-    private func center(_ window: NSWindow, on screen: NSScreen?) {
+    /// 钉死内容尺寸后，按「内容矩形 → 外框」居中到指定屏的 visibleFrame。
+    private func applyDefaultSizeAndCenter(_ window: NSWindow, on screen: NSScreen?) {
+        let contentSize = Self.settingsDefaultSize
+        window.setContentSize(contentSize)
+        window.layoutIfNeeded()
+        window.contentView?.layoutSubtreeIfNeeded()
+        center(window, contentSize: contentSize, on: screen)
+    }
+
+    private func center(_ window: NSWindow, contentSize: NSSize, on screen: NSScreen?) {
         guard let screen else {
             window.center()
             return
         }
+        // 用 frameRect(forContentRect:) 拿含标题栏的外框，避免只按 content 宽算原点导致视觉偏一侧。
+        let frameSize = window.frameRect(
+            forContentRect: NSRect(origin: .zero, size: contentSize)
+        ).size
         let visible = screen.visibleFrame
-        let size = window.frame.size
         let origin = NSPoint(
-            x: visible.midX - size.width / 2,
-            y: visible.midY - size.height / 2
+            x: visible.midX - frameSize.width / 2,
+            y: visible.midY - frameSize.height / 2
         )
-        window.setFrame(NSRect(origin: origin, size: size), display: true)
+        window.setFrame(NSRect(origin: origin, size: frameSize), display: true)
     }
 
     private static func activeScreen() -> NSScreen? {

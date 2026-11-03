@@ -12,12 +12,13 @@ final class ControlDeckSettings: ObservableObject {
     static let pageID: WidgetID = pageIDPrefix
 
     /// 已落地、可上岛的模块 id。
-    static let liveModuleIDs: Set<String> = ["shelf", "volume", "projects"]
+    static let liveModuleIDs: Set<String> = ["shelf", "volume", "projects", "battery"]
 
     enum Pane: String, CaseIterable, Identifiable {
         case shelf
         case volume
         case projects
+        case battery
 
         var id: String { rawValue }
 
@@ -26,6 +27,7 @@ final class ControlDeckSettings: ObservableObject {
             case .shelf: return L10n.ControlDeck.moduleShelf
             case .volume: return L10n.ControlDeck.moduleVolume
             case .projects: return L10n.ControlDeck.moduleProjects
+            case .battery: return L10n.ControlDeck.moduleBattery
             }
         }
 
@@ -101,7 +103,7 @@ final class ControlDeckSettings: ObservableObject {
                 id: "battery",
                 title: L10n.ControlDeck.moduleBattery,
                 symbol: "battery.100.bolt",
-                isLive: false
+                isLive: true
             ),
             .init(
                 id: "focus",
@@ -175,6 +177,9 @@ final class ControlDeckSettings: ObservableObject {
         if modules["projects"] == true {
             ProjectReleaseSession.shared.start()
         }
+        if modules["battery"] == true {
+            BatterySession.shared.start()
+        }
         AppLog.debug("ControlDeck", "已加载控制台设置", [
             "enabled": isEnabled,
             "modules": modules.filter(\.value).map(\.key).sorted().joined(separator: ","),
@@ -203,6 +208,13 @@ final class ControlDeckSettings: ObservableObject {
                 ProjectReleaseSession.shared.start()
             } else {
                 ProjectReleaseSession.shared.stop()
+            }
+        }
+        if id == "battery" {
+            if enabled {
+                BatterySession.shared.start()
+            } else {
+                BatterySession.shared.stop()
             }
         }
 

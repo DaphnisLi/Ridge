@@ -14,6 +14,8 @@ struct ControlDeckIslandView: View {
                 SoundMixerDeckView()
             case .projects:
                 ProjectReleaseDeckView()
+            case .battery:
+                BatteryDeckView()
             case .none:
                 Color.clear
             }

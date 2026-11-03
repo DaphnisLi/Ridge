@@ -192,7 +192,10 @@ private struct IslandBody: View {
                                 .bottom,
                                 runtime.isTransientNoticePage
                                     ? 12
-                                    : (runtime.isShowingEmpty ? 16 : 8)
+                                    : (runtime.isShowingEmpty
+                                        ? 16
+                                        // 控制台避开岛底圆角，又不能吞掉太多可视高度。
+                                        : (runtime.isControlDeckPage ? 14 : 8))
                             )
                     }
 

@@ -17,7 +17,7 @@ struct MediaWidgetConfigSection: View {
     private var islandPreviewCard: some View {
         SettingsCard {
             VStack(spacing: 0) {
-                MediaIslandPreviewCapsule()
+                WidgetSamplePreview.island(for: "builtin.media", compact: false)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 22)
             }
@@ -119,59 +119,3 @@ struct MediaWidgetConfigSection: View {
     }
 }
 
-private struct MediaIslandPreviewCapsule: View {
-    var body: some View {
-        MediaIslandCardView.previewSample()
-            .padding(.horizontal, 12)
-            .padding(.vertical, 14)
-            .frame(maxWidth: 540)
-            .frame(minHeight: 148)
-            .background(
-                MediaIslandPreviewShape(bottomRadius: 26)
-                    .fill(Color.black.opacity(0.92))
-                    .overlay(
-                        MediaIslandPreviewShape(bottomRadius: 26)
-                            .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
-            )
-            .clipShape(MediaIslandPreviewShape(bottomRadius: 26))
-    }
-}
-
-private struct MediaIslandPreviewShape: Shape, InsettableShape {
-    var bottomRadius: CGFloat
-    var insetAmount: CGFloat = 0
-
-    func path(in rect: CGRect) -> Path {
-        let r = rect.insetBy(dx: insetAmount, dy: insetAmount)
-        let radius = max(0, min(bottomRadius, r.height / 2, r.width / 2) - insetAmount)
-        var path = Path()
-        path.move(to: CGPoint(x: r.minX, y: r.minY))
-        path.addLine(to: CGPoint(x: r.maxX, y: r.minY))
-        path.addLine(to: CGPoint(x: r.maxX, y: r.maxY - radius))
-        path.addArc(
-            center: CGPoint(x: r.maxX - radius, y: r.maxY - radius),
-            radius: radius,
-            startAngle: .degrees(0),
-            endAngle: .degrees(90),
-            clockwise: false
-        )
-        path.addLine(to: CGPoint(x: r.minX + radius, y: r.maxY))
-        path.addArc(
-            center: CGPoint(x: r.minX + radius, y: r.maxY - radius),
-            radius: radius,
-            startAngle: .degrees(90),
-            endAngle: .degrees(180),
-            clockwise: false
-        )
-        path.closeSubpath()
-        return path
-    }
-
-    func inset(by amount: CGFloat) -> MediaIslandPreviewShape {
-        var copy = self
-        copy.insetAmount += amount
-        return copy
-    }
-}

@@ -71,10 +71,10 @@ struct MeetingWidgetConfigSection: View {
     private var islandPreviewCard: some View {
         SettingsCard {
             VStack(spacing: 0) {
-                // 设计稿样张：始终展示「有会议」状态，不用真日历空态。
-                MeetingIslandPreviewCapsule(leadMinutes: settings.leadMinutes)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 22)
+                // 与库卡片同一套假数据样张（上直角下圆角）。
+                WidgetSamplePreview.island(for: "builtin.meeting", compact: false)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 22)
             }
             .frame(maxWidth: .infinity)
             .background(
@@ -478,68 +478,6 @@ struct MeetingWidgetConfigSection: View {
         customError = nil
         customName = ""
         customLink = ""
-    }
-}
-
-// MARK: - 岛胶囊预览（与岛上真机共用 MeetingIslandCardView）
-
-private struct MeetingIslandPreviewCapsule: View {
-    /// 与「提前提醒」联动的样张倒计时。
-    let leadMinutes: Int
-
-    var body: some View {
-        MeetingIslandCardView.previewSample(leadMinutes: leadMinutes)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 14)
-            .frame(maxWidth: 540)
-            .background(
-                MeetingIslandPreviewShape(bottomRadius: 26)
-                    .fill(Color.black.opacity(0.92))
-                    .overlay(
-                        MeetingIslandPreviewShape(bottomRadius: 26)
-                            .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
-                    )
-                    .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
-            )
-            .clipShape(MeetingIslandPreviewShape(bottomRadius: 26))
-    }
-}
-
-/// 设置页预览岛：顶部直角贴齐（仿刘海），仅底部圆角。
-private struct MeetingIslandPreviewShape: Shape, InsettableShape {
-    var bottomRadius: CGFloat
-    var insetAmount: CGFloat = 0
-
-    func path(in rect: CGRect) -> Path {
-        let r = rect.insetBy(dx: insetAmount, dy: insetAmount)
-        let radius = max(0, min(bottomRadius, r.height / 2, r.width / 2) - insetAmount)
-        var path = Path()
-        path.move(to: CGPoint(x: r.minX, y: r.minY))
-        path.addLine(to: CGPoint(x: r.maxX, y: r.minY))
-        path.addLine(to: CGPoint(x: r.maxX, y: r.maxY - radius))
-        path.addArc(
-            center: CGPoint(x: r.maxX - radius, y: r.maxY - radius),
-            radius: radius,
-            startAngle: .degrees(0),
-            endAngle: .degrees(90),
-            clockwise: false
-        )
-        path.addLine(to: CGPoint(x: r.minX + radius, y: r.maxY))
-        path.addArc(
-            center: CGPoint(x: r.minX + radius, y: r.maxY - radius),
-            radius: radius,
-            startAngle: .degrees(90),
-            endAngle: .degrees(180),
-            clockwise: false
-        )
-        path.closeSubpath()
-        return path
-    }
-
-    func inset(by amount: CGFloat) -> MeetingIslandPreviewShape {
-        var copy = self
-        copy.insetAmount += amount
-        return copy
     }
 }
 

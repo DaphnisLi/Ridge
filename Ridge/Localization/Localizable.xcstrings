@@ -1,6 +1,479 @@
 {
   "sourceLanguage": "zh-Hans",
   "strings": {
+    "battery.alerts.force_expand_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当任一外设电量低于设定阈值时，自动展开刘海进行视觉警告"
+          }
+        }
+      }
+    },
+    "battery.alerts.force_expand_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "严重低电量强制展开灵动岛"
+          }
+        }
+      }
+    },
+    "battery.alerts.full_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设电量达到 100% 时弹出灵动岛横幅，提醒及时移除充电线缆以保护电池"
+          }
+        }
+      }
+    },
+    "battery.alerts.full_toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充满电提醒（防止过充）"
+          }
+        }
+      }
+    },
+    "battery.alerts.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启后可在灵动岛查看已连接外设电量。低电与满电经瞬时通知提示，约三秒后自动收起。"
+          }
+        }
+      }
+    },
+    "battery.alerts.low_threshold": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电量触发阈值"
+          }
+        }
+      }
+    },
+    "battery.alerts.low_threshold_hint_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量 ≤ %d%% 且未在充电时提醒"
+          }
+        }
+      }
+    },
+    "battery.alerts.low_toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电量提醒"
+          }
+        }
+      }
+    },
+    "battery.alerts.snooze_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示卡上「稍后提醒」：该设备低电免打扰 30 分钟"
+          }
+        }
+      }
+    },
+    "battery.alerts.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量告警"
+          }
+        }
+      }
+    },
+    "battery.badge.charging": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充电"
+          }
+        }
+      }
+    },
+    "battery.badge.need_charge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需充电"
+          }
+        }
+      }
+    },
+    "battery.bud.case": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "耳机盒"
+          }
+        }
+      }
+    },
+    "battery.listening.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "battery.listening.noise_cancellation": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "降噪"
+          }
+        }
+      }
+    },
+    "battery.listening.transparency": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通透"
+          }
+        }
+      }
+    },
+    "battery.listening.adaptive": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自适应"
+          }
+        }
+      }
+    },
+    "battery.bud.left": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左耳"
+          }
+        }
+      }
+    },
+    "battery.bud.right": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右耳"
+          }
+        }
+      }
+    },
+    "battery.empty.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接带电量报告的蓝牙键盘、鼠标或耳机后将显示在此"
+          }
+        }
+      }
+    },
+    "battery.empty.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无外设电量"
+          }
+        }
+      }
+    },
+    "battery.notice.full_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电池已充满 · 建议拔除充电线缆"
+          }
+        }
+      }
+    },
+    "battery.notice.full_title_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 已充满"
+          }
+        }
+      }
+    },
+    "battery.notice.low_detail_format": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已低于预设 %d%% 告警阈值"
+          }
+        }
+      }
+    },
+    "battery.notice.low_title_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 电量过低"
+          }
+        }
+      }
+    },
+    "battery.status.charging": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充电中"
+          }
+        }
+      }
+    },
+    "battery.status.critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量过低"
+          }
+        }
+      }
+    },
+    "battery.status.healthy": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量充足"
+          }
+        }
+      }
+    },
+    "battery.status.moderate": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电量一般"
+          }
+        }
+      }
+    },
+    "battery.tip.full_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100% 已充满"
+          }
+        }
+      }
+    },
+    "battery.tip.low_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d%% 严重低电"
+          }
+        }
+      }
+    },
+    "battery.tip.preview_full": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览满电提示"
+          }
+        }
+      }
+    },
+    "battery.tip.preview_low": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预览低电提示"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_full_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "电池已充满 · 建议拔除充电线缆"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_full_footer": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已达满电状态"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "妙控键盘"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_low_detail": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已低于预设 %d%% 告警阈值"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_low_detail_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已低于预设 %d%% 告警阈值"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_low_footer_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已低于预设 %d%% 告警阈值"
+          }
+        }
+      }
+    },
+    "battery.tip.sample_mouse": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "妙控鼠标 2"
+          }
+        }
+      }
+    },
+    "battery.tip.section_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电量告警与满电防过充小提示；约三秒后自动收起，悬停时保持展示"
+          }
+        }
+      }
+    },
+    "battery.tip.section_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "独立告警灵动岛展示"
+          }
+        }
+      }
+    },
+    "battery.tip.snooze_action": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍后提醒"
+          }
+        }
+      }
+    },
     "common.add": {
       "extractionState": "manual",
       "localizations": {
@@ -172,7 +645,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本机与键盘、鼠标等电量环形指示"
+            "value": "已连接外设电量；低电与满电经岛内瞬时通知提示"
           }
         }
       }
@@ -210,6 +683,28 @@
         }
       }
     },
+    "control_deck.module.shelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "货架与剪贴板"
+          }
+        }
+      }
+    },
+    "control_deck.module.shelf_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖文件暂存到刘海，并找回复制过的文字、链接、颜色与截图"
+          }
+        }
+      }
+    },
     "control_deck.module.system": {
       "extractionState": "manual",
       "localizations": {
@@ -228,17 +723,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "CPU、内存等瞬时读数"
-          }
-        }
-      }
-    },
-    "control_deck.module.shelf": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "货架与剪贴板"
           }
         }
       }
@@ -415,6 +899,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "控制台"
+          }
+        }
+      }
+    },
+    "island_notice.ended.failed_headline": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "执行失败"
+          }
+        }
+      }
+    },
+    "island_notice.ended.headline": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进程已结束"
+          }
+        }
+      }
+    },
+    "island_notice.ended.success_headline": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "执行成功"
+          }
+        }
+      }
+    },
+    "island_notice.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "岛内通知"
+          }
+        }
+      }
+    },
+    "island_notice.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用瞬时通知（如监视结束），约三秒后收起"
           }
         }
       }
@@ -1123,39 +1662,6 @@
         }
       }
     },
-    "island_notice.ended.headline": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "进程已结束"
-          }
-        }
-      }
-    },
-    "island_notice.widget.name": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "岛内通知"
-          }
-        }
-      }
-    },
-    "island_notice.widget.summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "通用瞬时通知（如监视结束），约三秒后收起"
-          }
-        }
-      }
-    },
     "meeting.widget.name": {
       "extractionState": "manual",
       "localizations": {
@@ -1178,57 +1684,13 @@
         }
       }
     },
-    "projects.deck.empty": {
+    "projects.deck.auto_notify_on": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "未发现占用中的项目进程。可在设置中添加项目根目录。"
-          }
-        }
-      }
-    },
-    "projects.deck.running": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "运行中进程"
-          }
-        }
-      }
-    },
-    "projects.deck.watching": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "监视中进程"
-          }
-        }
-      }
-    },
-    "projects.deck.containers": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "容器 Docker"
-          }
-        }
-      }
-    },
-    "projects.deck.release_item_help": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "结束该命令进程"
+            "value": "异常自动通知已开启"
           }
         }
       }
@@ -1244,116 +1706,6 @@
         }
       }
     },
-    "projects.deck.expand_details": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "展开更多"
-          }
-        }
-      }
-    },
-    "projects.deck.tree_stream": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TREE STREAM"
-          }
-        }
-      }
-    },
-    "projects.deck.watching_active_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ACTIVE"
-          }
-        }
-      }
-    },
-    "projects.deck.duration_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "持续时长"
-          }
-        }
-      }
-    },
-    "projects.deck.cpu_usage": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CPU 占用"
-          }
-        }
-      }
-    },
-    "projects.deck.memory_usage": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "物理内存"
-          }
-        }
-      }
-    },
-    "projects.deck.cpu_limit_suffix": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "/ 限额 100%"
-          }
-        }
-      }
-    },
-    "projects.deck.auto_notify_on": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "异常自动通知已开启"
-          }
-        }
-      }
-    },
-    "projects.deck.running_stats_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 工程 · %d 进程"
-          }
-        }
-      }
-    },
-    "projects.deck.watching_active_count_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 活跃"
-          }
-        }
-      }
-    },
     "projects.deck.command_count_format": {
       "extractionState": "manual",
       "localizations": {
@@ -1361,105 +1713,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d 命令"
-          }
-        }
-      }
-    },
-    "projects.deck.project_cpu_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "∑ CPU %.1f%%"
-          }
-        }
-      }
-    },
-    "projects.deck.process_meta_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PID %d · CPU %.1f%% · %@"
-          }
-        }
-      }
-    },
-    "projects.deck.memory_peak_inline_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "(峰值 %@)"
-          }
-        }
-      }
-    },
-    "projects.deck.containers_running_badge_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 运行中"
-          }
-        }
-      }
-    },
-    "projects.deck.container_restart": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重启"
-          }
-        }
-      }
-    },
-    "projects.deck.container_stop": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "停止"
-          }
-        }
-      }
-    },
-    "projects.deck.container_restarting": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "正在重启容器…"
-          }
-        }
-      }
-    },
-    "projects.deck.container_restart_done_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已重启 %@"
-          }
-        }
-      }
-    },
-    "projects.deck.container_restart_failed_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "重启 %@ 失败"
           }
         }
       }
@@ -1486,134 +1739,68 @@
         }
       }
     },
-    "projects.deck.watching_empty": {
+    "projects.deck.container_restart": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在左侧点「监视」，进程结束后会在刘海处提示。"
+            "value": "重启"
           }
         }
       }
     },
-    "projects.deck.watch_action": {
+    "projects.deck.container_restart_done_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "监视"
+            "value": "已重启 %@"
           }
         }
       }
     },
-    "projects.deck.watching_action_on": {
+    "projects.deck.container_restart_failed_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "监视中"
+            "value": "重启 %@ 失败"
           }
         }
       }
     },
-    "projects.deck.release_help": {
+    "projects.deck.container_restarting": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "结束该项目下可释放的进程与容器"
+            "value": "正在重启容器…"
           }
         }
       }
     },
-    "projects.deck.release_done_format": {
+    "projects.deck.container_stop": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已释放 %@"
+            "value": "停止"
           }
         }
       }
     },
-    "projects.deck.release_partial_format": {
+    "projects.deck.containers": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 仍有 %d 个进程未结束"
-          }
-        }
-      }
-    },
-    "projects.deck.containers_empty": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "当前没有运行中的容器。"
-          }
-        }
-      }
-    },
-    "projects.deck.watching_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "计时从进程启动算起；结束后会提示成功或失败"
-          }
-        }
-      }
-    },
-    "projects.deck.watching_command_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@"
-          }
-        }
-      }
-    },
-    "projects.deck.resource_mem_cpu_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@"
-          }
-        }
-      }
-    },
-    "projects.deck.resource_mem_cpu_ports_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@ · %@"
-          }
-        }
-      }
-    },
-    "projects.deck.containers_summary_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 个运行中 · 占用 %@"
+            "value": "容器 Docker"
           }
         }
       }
@@ -1629,6 +1816,149 @@
         }
       }
     },
+    "projects.deck.containers_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前没有运行中的容器。"
+          }
+        }
+      }
+    },
+    "projects.deck.containers_running_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 运行中"
+          }
+        }
+      }
+    },
+    "projects.deck.containers_summary_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个运行中 · 占用 %@"
+          }
+        }
+      }
+    },
+    "projects.deck.cpu_limit_suffix": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ 限额 100%"
+          }
+        }
+      }
+    },
+    "projects.deck.cpu_usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU 占用"
+          }
+        }
+      }
+    },
+    "projects.deck.duration_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "耗时 %@"
+          }
+        }
+      }
+    },
+    "projects.deck.duration_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "持续时长"
+          }
+        }
+      }
+    },
+    "projects.deck.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未发现占用中的项目进程。可在设置中添加项目根目录。"
+          }
+        }
+      }
+    },
+    "projects.deck.ended_title_command_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "projects.deck.exit_tag_code_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "exit %d"
+          }
+        }
+      }
+    },
+    "projects.deck.exit_tag_ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ended"
+          }
+        }
+      }
+    },
+    "projects.deck.exit_tag_ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "exit 0"
+          }
+        }
+      }
+    },
+    "projects.deck.expand_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开更多"
+          }
+        }
+      }
+    },
     "projects.deck.group_count_format": {
       "extractionState": "manual",
       "localizations": {
@@ -1640,6 +1970,94 @@
         }
       }
     },
+    "projects.deck.hide": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起"
+          }
+        }
+      }
+    },
+    "projects.deck.image_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "镜像"
+          }
+        }
+      }
+    },
+    "projects.deck.log_not_found": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到该进程的日志文件"
+          }
+        }
+      }
+    },
+    "projects.deck.log_open_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法打开日志文件"
+          }
+        }
+      }
+    },
+    "projects.deck.memory_peak_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "峰值 %@"
+          }
+        }
+      }
+    },
+    "projects.deck.memory_peak_inline_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(峰值 %@)"
+          }
+        }
+      }
+    },
+    "projects.deck.memory_usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "物理内存"
+          }
+        }
+      }
+    },
+    "projects.deck.memory_used_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内存 %@"
+          }
+        }
+      }
+    },
     "projects.deck.more_items_format": {
       "extractionState": "manual",
       "localizations": {
@@ -1647,6 +2065,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "另有 %d 项"
+          }
+        }
+      }
+    },
+    "projects.deck.open_log": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日志"
+          }
+        }
+      }
+    },
+    "projects.deck.pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停"
+          }
+        }
+      }
+    },
+    "projects.deck.ports_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "端口 %@"
+          }
+        }
+      }
+    },
+    "projects.deck.process_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个进程"
+          }
+        }
+      }
+    },
+    "projects.deck.process_meta_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PID %d · CPU %.1f%% · %@"
+          }
+        }
+      }
+    },
+    "projects.deck.project_cpu_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "∑ CPU %.1f%%"
           }
         }
       }
@@ -1673,46 +2157,46 @@
         }
       }
     },
-    "projects.deck.pause": {
+    "projects.deck.release_done_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "暂停"
+            "value": "已释放 %@"
           }
         }
       }
     },
-    "projects.deck.stop": {
+    "projects.deck.release_help": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "停止"
+            "value": "结束该项目下可释放的进程与容器"
           }
         }
       }
     },
-    "projects.deck.show": {
+    "projects.deck.release_item_help": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "查看"
+            "value": "结束该命令进程"
           }
         }
       }
     },
-    "projects.deck.hide": {
+    "projects.deck.release_partial_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "收起"
+            "value": "%@ 仍有 %d 个进程未结束"
           }
         }
       }
@@ -1728,6 +2212,105 @@
         }
       }
     },
+    "projects.deck.resource_mem_cpu_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "projects.deck.resource_mem_cpu_ports_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · %@"
+          }
+        }
+      }
+    },
+    "projects.deck.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行中进程"
+          }
+        }
+      }
+    },
+    "projects.deck.running_stats_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 工程 · %d 进程"
+          }
+        }
+      }
+    },
+    "projects.deck.show": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看"
+          }
+        }
+      }
+    },
+    "projects.deck.status_badge_ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已结束"
+          }
+        }
+      }
+    },
+    "projects.deck.status_badge_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "失败"
+          }
+        }
+      }
+    },
+    "projects.deck.status_badge_success": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "成功"
+          }
+        }
+      }
+    },
+    "projects.deck.stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停止"
+          }
+        }
+      }
+    },
     "projects.deck.title": {
       "extractionState": "manual",
       "localizations": {
@@ -1735,6 +2318,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "项目释放"
+          }
+        }
+      }
+    },
+    "projects.deck.tree_stream": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TREE STREAM"
           }
         }
       }
@@ -1750,6 +2344,39 @@
         }
       }
     },
+    "projects.deck.unknown_container": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名容器"
+          }
+        }
+      }
+    },
+    "projects.deck.unknown_process": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知进程"
+          }
+        }
+      }
+    },
+    "projects.deck.view_log": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看日志"
+          }
+        }
+      }
+    },
     "projects.deck.view_only": {
       "extractionState": "manual",
       "localizations": {
@@ -1761,35 +2388,13 @@
         }
       }
     },
-    "projects.deck.watch_help": {
+    "projects.deck.watch_action": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "结束后在灵动岛提示"
-          }
-        }
-      }
-    },
-    "projects.deck.watch_ended_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已结束"
-          }
-        }
-      }
-    },
-    "projects.deck.watch_ended_headline": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "进程已结束"
+            "value": "监视"
           }
         }
       }
@@ -1805,6 +2410,160 @@
         }
       }
     },
+    "projects.deck.watch_ended_headline": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进程已结束"
+          }
+        }
+      }
+    },
+    "projects.deck.watch_ended_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已结束"
+          }
+        }
+      }
+    },
+    "projects.deck.watch_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束后在灵动岛提示"
+          }
+        }
+      }
+    },
+    "projects.deck.watch_outcome_failed_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "执行失败（退出码 %d）"
+          }
+        }
+      }
+    },
+    "projects.deck.watch_outcome_signaled_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "被信号终止（%@）"
+          }
+        }
+      }
+    },
+    "projects.deck.watch_outcome_success": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "执行成功"
+          }
+        }
+      }
+    },
+    "projects.deck.watch_outcome_unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已结束"
+          }
+        }
+      }
+    },
+    "projects.deck.watching": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "监视中进程"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_action_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "监视中"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_active_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 活跃"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_active_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACTIVE"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_command_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在左侧点「监视」，进程结束后会在刘海处提示。"
+          }
+        }
+      }
+    },
+    "projects.deck.watching_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计时从进程启动算起；结束后会提示成功或失败"
+          }
+        }
+      }
+    },
     "projects.settings.add_root": {
       "extractionState": "manual",
       "localizations": {
@@ -1812,28 +2571,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "添加目录"
-          }
-        }
-      }
-    },
-    "projects.settings.roots_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "项目扫描目录"
-          }
-        }
-      }
-    },
-    "projects.settings.roots_intro": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "填写代码所在的父文件夹，例如 ~/project。Ridge 会识别其中的项目，并汇总相关进程与容器。"
           }
         }
       }
@@ -1849,6 +2586,28 @@
         }
       }
     },
+    "projects.settings.roots_intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填写代码所在的父文件夹，例如 ~/project。Ridge 会识别其中的项目，并汇总相关进程与容器。"
+          }
+        }
+      }
+    },
+    "projects.settings.roots_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "项目扫描目录"
+          }
+        }
+      }
+    },
     "projects.watch.ended_format": {
       "extractionState": "manual",
       "localizations": {
@@ -1860,6 +2619,28 @@
         }
       }
     },
+    "projects.watch.ended_outcome_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · %@"
+          }
+        }
+      }
+    },
+    "projects.watch.ended_outcome_memory_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@ · %@ · %@"
+          }
+        }
+      }
+    },
     "projects.watch.notification_title": {
       "extractionState": "manual",
       "localizations": {
@@ -1867,6 +2648,270 @@
           "stringUnit": {
             "state": "translated",
             "value": "开发进程已结束"
+          }
+        }
+      }
+    },
+    "projects.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "监视项目进程占用，结束后经岛内通知提示"
+          }
+        }
+      }
+    },
+    "resource_monitor.behavior_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全天候无感记录应用驻留专注度、人机交互空闲节拍与击键脉冲。"
+          }
+        }
+      }
+    },
+    "resource_monitor.behavior_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 小时专注时间线"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_avg_min_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f 分"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_browser": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网页浏览器"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_ide": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发工具"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他应用"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_terminal": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "终端命令行"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_distribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24h 工作专注/空闲时序带"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_empty_rank": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日尚无应用驻留记录"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_keys_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 次"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_average": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均单次"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_keys": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "击键"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_longest": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最长连续"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_switches": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_rank_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统级真实事件"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_rank_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用聚焦驻留排行"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_share_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f%% 驻留"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_switch_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 次"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_tick_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现在"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_today_total_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日专注累计: "
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_window_range_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ - 现在"
+          }
+        }
+      }
+    },
+    "resource_monitor.heatmap_day_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d月%d日"
+          }
+        }
+      }
+    },
+    "resource_monitor.heatmap_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本年研发击键热力"
           }
         }
       }
@@ -2179,6 +3224,435 @@
         }
       }
     },
+    "shelf.clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空货架"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空历史"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制文字、链接、颜色或截图后会出现在这里"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.image_preview": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.search_clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除搜索"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.search_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无匹配内容"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.search_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索剪贴板记录…"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板历史"
+          }
+        }
+      }
+    },
+    "shelf.copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制"
+          }
+        }
+      }
+    },
+    "shelf.copy_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再次复制"
+          }
+        }
+      }
+    },
+    "shelf.deck.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "货架与剪贴板"
+          }
+        }
+      }
+    },
+    "shelf.drop_active_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已识别拖拽对象 · 准备自动就绪"
+          }
+        }
+      }
+    },
+    "shelf.drop_active_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "释放即可暂存入舱"
+          }
+        }
+      }
+    },
+    "shelf.drop_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖至此处暂存"
+          }
+        }
+      }
+    },
+    "shelf.drop_hint_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "任意文件均可暂存 · 悬停即存"
+          }
+        }
+      }
+    },
+    "shelf.drop_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续拖入可追加"
+          }
+        }
+      }
+    },
+    "shelf.drop_ram_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM 内存驻留 · 零磁盘磨损"
+          }
+        }
+      }
+    },
+    "shelf.just_copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "● 刚刚复制"
+          }
+        }
+      }
+    },
+    "shelf.kind.archive": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "压缩归档"
+          }
+        }
+      }
+    },
+    "shelf.kind.audio": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频"
+          }
+        }
+      }
+    },
+    "shelf.kind.document": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文档"
+          }
+        }
+      }
+    },
+    "shelf.kind.file": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件"
+          }
+        }
+      }
+    },
+    "shelf.kind.folder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件夹"
+          }
+        }
+      }
+    },
+    "shelf.kind.image": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片"
+          }
+        }
+      }
+    },
+    "shelf.kind.source": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "源码"
+          }
+        }
+      }
+    },
+    "shelf.kind.vector": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矢量素材"
+          }
+        }
+      }
+    },
+    "shelf.kind.video": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频"
+          }
+        }
+      }
+    },
+    "shelf.paste_direct": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直贴"
+          }
+        }
+      }
+    },
+    "shelf.pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "置顶"
+          }
+        }
+      }
+    },
+    "shelf.remove_item": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移出货架"
+          }
+        }
+      }
+    },
+    "shelf.show_in_finder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Finder 中显示"
+          }
+        }
+      }
+    },
+    "shelf.tab.all": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部"
+          }
+        }
+      }
+    },
+    "shelf.tab.color": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "颜色"
+          }
+        }
+      }
+    },
+    "shelf.tab.image": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "图片"
+          }
+        }
+      }
+    },
+    "shelf.tab.link": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "链接"
+          }
+        }
+      }
+    },
+    "shelf.tab.screenshot": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截图"
+          }
+        }
+      }
+    },
+    "shelf.tab.text": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文本"
+          }
+        }
+      }
+    },
+    "shelf.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "瞬时货架"
+          }
+        }
+      }
+    },
+    "shelf.unpin": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消置顶"
+          }
+        }
+      }
+    },
     "sound.app_idle": {
       "extractionState": "manual",
       "localizations": {
@@ -2465,6 +3939,28 @@
         }
       }
     },
+    "widgets.content_section_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "内容小组件"
+          }
+        }
+      }
+    },
+    "widgets.deck_section_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "功能磁贴"
+          }
+        }
+      }
+    },
     "widgets.empty.add": {
       "extractionState": "manual",
       "localizations": {
@@ -2526,7 +4022,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "打开开关后可在灵动岛各自成页展示。拖到另一张卡片可交换库顺序。电量、音量等功能磁贴请到「控制台」。"
+            "value": "打开开关后可在灵动岛展示。功能磁贴与内容型小组件共用此库；拖到另一张卡片可交换内容型顺序。点击卡片进入预览与设置。"
           }
         }
       }
@@ -2586,743 +4082,6 @@
         }
       }
     },
-    "control_deck.module.shelf_summary": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拖文件暂存到刘海，并找回复制过的文字、链接、颜色与截图"
-          }
-        }
-      }
-    },
-    "shelf.deck.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "货架与剪贴板"
-          }
-        }
-      }
-    },
-    "shelf.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "瞬时货架"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "剪贴板历史"
-          }
-        }
-      }
-    },
-    "shelf.drop_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拖至此处暂存"
-          }
-        }
-      }
-    },
-    "shelf.drop_hint_detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "任意文件均可暂存 · 悬停即存"
-          }
-        }
-      }
-    },
-    "shelf.drop_ram_badge": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "RAM 内存驻留 · 零磁盘磨损"
-          }
-        }
-      }
-    },
-    "shelf.drop_active_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "释放即可暂存入舱"
-          }
-        }
-      }
-    },
-    "shelf.drop_active_detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已识别拖拽对象 · 准备自动就绪"
-          }
-        }
-      }
-    },
-    "shelf.drop_more": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "继续拖入可追加"
-          }
-        }
-      }
-    },
-    "shelf.kind.file": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文件"
-          }
-        }
-      }
-    },
-    "shelf.kind.folder": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文件夹"
-          }
-        }
-      }
-    },
-    "shelf.show_in_finder": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在 Finder 中显示"
-          }
-        }
-      }
-    },
-    "shelf.clear": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "清空货架"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.clear": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "清空历史"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.search_placeholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "搜索剪贴板记录…"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.search_clear": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "清除搜索"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.search_empty": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无匹配内容"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.empty": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "复制文字、链接、颜色或截图后会出现在这里"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.image_preview": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "图片"
-          }
-        }
-      }
-    },
-    "shelf.copied": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已复制"
-          }
-        }
-      }
-    },
-    "shelf.copy_again": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "再次复制"
-          }
-        }
-      }
-    },
-    "shelf.pin": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "置顶"
-          }
-        }
-      }
-    },
-    "shelf.unpin": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "取消置顶"
-          }
-        }
-      }
-    },
-    "shelf.kind.document": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文档"
-          }
-        }
-      }
-    },
-    "shelf.kind.image": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "图片"
-          }
-        }
-      }
-    },
-    "shelf.kind.video": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "视频"
-          }
-        }
-      }
-    },
-    "shelf.kind.audio": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "音频"
-          }
-        }
-      }
-    },
-    "shelf.kind.source": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "源码"
-          }
-        }
-      }
-    },
-    "shelf.kind.archive": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "压缩归档"
-          }
-        }
-      }
-    },
-    "shelf.kind.vector": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "矢量素材"
-          }
-        }
-      }
-    },
-    "shelf.remove_item": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "移出货架"
-          }
-        }
-      }
-    },
-    "shelf.just_copied": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "● 刚刚复制"
-          }
-        }
-      }
-    },
-    "shelf.paste_direct": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "直贴"
-          }
-        }
-      }
-    },
-    "shelf.tab.all": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "全部"
-          }
-        }
-      }
-    },
-    "shelf.tab.text": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "文本"
-          }
-        }
-      }
-    },
-    "shelf.tab.link": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "链接"
-          }
-        }
-      }
-    },
-    "shelf.tab.color": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "颜色"
-          }
-        }
-      }
-    },
-    "shelf.tab.image": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "图片"
-          }
-        }
-      }
-    },
-    "shelf.tab.screenshot": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "截图"
-          }
-        }
-      }
-    },
-    "projects.deck.process_count_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 个进程"
-          }
-        }
-      }
-    },
-    "projects.deck.ports_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "端口 %@"
-          }
-        }
-      }
-    },
-    "projects.deck.unknown_process": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未知进程"
-          }
-        }
-      }
-    },
-    "projects.deck.unknown_container": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未命名容器"
-          }
-        }
-      }
-    },
-    "projects.deck.image_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "镜像"
-          }
-        }
-      }
-    },
-    "projects.deck.open_log": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日志"
-          }
-        }
-      }
-    },
-    "projects.deck.log_not_found": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未找到该进程的日志文件"
-          }
-        }
-      }
-    },
-    "projects.deck.log_open_failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "无法打开日志文件"
-          }
-        }
-      }
-    },
-    "projects.deck.watch_outcome_success": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "执行成功"
-          }
-        }
-      }
-    },
-    "projects.deck.watch_outcome_failed_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "执行失败（退出码 %d）"
-          }
-        }
-      }
-    },
-    "projects.deck.watch_outcome_signaled_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "被信号终止（%@）"
-          }
-        }
-      }
-    },
-    "projects.deck.watch_outcome_unknown": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已结束"
-          }
-        }
-      }
-    },
-    "projects.watch.ended_outcome_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@ · %@"
-          }
-        }
-      }
-    },
-    "island_notice.ended.success_headline": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "执行成功"
-          }
-        }
-      }
-    },
-    "island_notice.ended.failed_headline": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "执行失败"
-          }
-        }
-      }
-    },
-    "projects.watch.ended_outcome_memory_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ · %@ · %@ · %@"
-          }
-        }
-      }
-    },
-    "projects.deck.memory_peak_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "峰值 %@"
-          }
-        }
-      }
-    },
-    "projects.deck.memory_used_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "内存 %@"
-          }
-        }
-      }
-    },
-    "projects.deck.duration_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "耗时 %@"
-          }
-        }
-      }
-    },
-    "projects.deck.exit_tag_ok": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "exit 0"
-          }
-        }
-      }
-    },
-    "projects.deck.exit_tag_code_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "exit %d"
-          }
-        }
-      }
-    },
-    "projects.deck.exit_tag_ended": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ended"
-          }
-        }
-      }
-    },
-    "projects.deck.status_badge_success": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "成功"
-          }
-        }
-      }
-    },
-    "projects.deck.status_badge_failed": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "失败"
-          }
-        }
-      }
-    },
-    "projects.deck.status_badge_ended": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已结束"
-          }
-        }
-      }
-    },
-    "projects.deck.ended_title_command_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@"
-          }
-        }
-      }
-    },
-    "projects.deck.view_log": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "查看日志"
-          }
-        }
-      }
-    },
     "widgets.page_dots_corner_value_format": {
       "extractionState": "manual",
       "localizations": {
@@ -3334,255 +4093,24 @@
         }
       }
     },
-    "resource_monitor.behavior_title": {
+    "battery.status.connected": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "24 小时专注时间线"
+            "value": "已连接"
           }
         }
       }
     },
-    "resource_monitor.behavior_hint": {
+    "battery.status.unknown_battery": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "全天候无感记录应用驻留专注度、人机交互空闲节拍与击键脉冲。"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_distribution": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "24h 工作专注/空闲时序带"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_tick_now": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "现在"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_rank_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "应用聚焦驻留排行"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_rank_badge": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "系统级真实事件"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_share_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%.0f%% 驻留"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_metric_keys": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "击键"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_metric_switches": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "切换"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_metric_average": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "平均单次"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_metric_longest": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最长连续"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_keys_count_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 次"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_switch_count_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d 次"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_avg_min_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%.1f 分"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_category_browser": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "网页浏览器"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_category_ide": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "开发工具"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_category_terminal": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "终端命令行"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_category_other": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "其他应用"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_empty_rank": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今日尚无应用驻留记录"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_today_total_label": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今日专注累计: "
-          }
-        }
-      }
-    },
-    "resource_monitor.heatmap_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "本年研发击键热力"
-          }
-        }
-      }
-    },
-    "resource_monitor.heatmap_day_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%d月%d日"
-          }
-        }
-      }
-    },
-    "resource_monitor.focus_window_range_format": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ - 现在"
+            "value": "电量不可用"
           }
         }
       }

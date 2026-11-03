@@ -34,7 +34,8 @@ Ridge 功能（媒体、会议、状态、用户/AI 自定义等）一律做成 
 4. 在 `WidgetRegistry.registerBuiltins()`（内置）或加载器里：  
    `registry.register(TypedWidgetModule<YourWidget>())`。
 5. 不要改岛窗口几何 / 悬停逻辑；不要 `WidgetRuntime.shared` 从 widget 内部调用。
-6. 改完按 `dev-relaunch` 重启验收。
+6. **设置预览**：库卡与详情页一律 `WidgetSamplePreview.island(for:compact:)`（假数据 + 上直角下圆角）；细则见 `widget-preview.mdc`。
+7. 改完按 `dev-relaunch` 重启验收。
 
 ## 最小实现模板
 
@@ -81,8 +82,8 @@ final class ExampleWidget: IslandWidget {
 
 - 用户排序越靠前 → `priority` 越大；同级按 `requestDisplay` 时间先到先得。
 - **分页**：左右滑动切换页；默认每内容型组件独占一页。
-- **控制台**（`ControlDeck`）：独立于小组件库；设置侧栏单独一页；最多开启一个；岛上为双倍高度功能磁贴页（电量、音量等），不承载会议等内容型 widget。开关在 `ControlDeckSettings`；勿再做「拖小组件进组合页」。
-- 设置「小组件」只列出 `showsInLibrary`；库内拖放交换顺序；空态 `system.empty` 永不进列表。
+- **控制台**（`ControlDeck`）：岛上仍为双倍高度功能磁贴页（电量、音量等），不承载会议等内容型 widget；运行时开关在 `ControlDeckSettings`。**设置入口已并入「小组件」库**（同卡片样式：预览 + 开关 + 点进配置）；侧栏不再单独「控制台」页；勿再做「拖小组件进组合页」。
+- 设置「小组件」：功能磁贴（控制台 live 模块）+ `showsInLibrary` 内容组件；内容组件可拖放排序；空态 `system.empty` 永不进列表。
 - pin = 常驻内存（设置 UI 可隐藏，API 仍保留）；未 pin 离开展示后可销毁。
 - 持久化用 `context.storageKey("…")`，勿写全局裸 key。
 - `builtin.meeting`：EventKit 读系统日历会议 + 会前倒计时；从事件链接一键入会。预览页可配提前分钟与授权；始终单独成页，不进控制台。

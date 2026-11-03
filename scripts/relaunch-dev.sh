@@ -152,7 +152,9 @@ echo "==> Opening ${INSTALL_APP}"
 open "${INSTALL_APP}"
 
 sleep 0.4
-COUNT="$(pgrep -x "${APP_NAME}" | wc -l | tr -d ' ')"
+# pipefail 下 pgrep 无进程会非 0，不能直接进 $()。
+COUNT="$(pgrep -x "${APP_NAME}" 2>/dev/null | wc -l | tr -d ' ' || true)"
+COUNT="${COUNT:-0}"
 PATHS="$(ps -axo pid=,command= | grep "/${APP_NAME}.app/" | grep -v grep || true)"
 echo "==> Running processes (${COUNT}):"
 echo "${PATHS:-"(none)"}"
