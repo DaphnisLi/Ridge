@@ -5,10 +5,19 @@ struct RidgeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        // 无主窗口；设置由菜单栏打开居中大窗。
+        // 占位 Scene：真正设置窗由 MenuBarController 管理（固定 1200×620）。
+        // App 菜单「设置…」/ ⌘, 不得再走系统 Settings 小窗，否则尺寸不一致。
         Settings {
-            SettingsRootView(settings: IslandSettings.shared)
-                .frame(minWidth: 860, minHeight: 560)
+            EmptyView()
+        }
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button(L10n.Common.settings) {
+                    NotificationCenter.default.post(name: .ridgeOpenSettings, object: nil)
+                    AppLog.info("Settings", "App 菜单打开设置（统一大窗）")
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
     }
 }

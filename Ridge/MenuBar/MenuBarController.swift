@@ -262,16 +262,13 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         AppLog.info("Settings", "设置窗已预热")
     }
 
-    private static let settingsDefaultSize = NSSize(width: 1200, height: 620)
-    private static let settingsMinSize = NSSize(width: 1080, height: 520)
-
     private func makeSettingsWindow() -> NSWindow {
         let root = SettingsRootView(settings: IslandSettings.shared)
         let hosting = NSHostingController(rootView: root)
         hosting.view.wantsLayer = true
         hosting.view.layer?.backgroundColor = SettingsChrome.nsPageBackground.cgColor
 
-        let size = Self.settingsDefaultSize
+        let size = SettingsChrome.windowDefaultSize
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -283,7 +280,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         window.backgroundColor = SettingsChrome.nsPageBackground
         window.contentViewController = hosting
         window.isReleasedWhenClosed = false
-        window.minSize = Self.settingsMinSize
+        window.minSize = SettingsChrome.windowMinSize
         window.setContentSize(size)
         window.delegate = self
         return window
@@ -306,7 +303,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
 
     /// 钉死内容尺寸后，按「内容矩形 → 外框」居中到指定屏的 visibleFrame。
     private func applyDefaultSizeAndCenter(_ window: NSWindow, on screen: NSScreen?) {
-        let contentSize = Self.settingsDefaultSize
+        let contentSize = SettingsChrome.windowDefaultSize
         window.setContentSize(contentSize)
         window.layoutIfNeeded()
         window.contentView?.layoutSubtreeIfNeeded()

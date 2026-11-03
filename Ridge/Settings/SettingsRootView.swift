@@ -3,6 +3,10 @@ import SwiftUI
 
 /// 设置 UI 色板（对齐会议设置 HTML mock）。
 enum SettingsChrome {
+    /// 设置窗默认 / 最小内容尺寸（菜单栏与 App「设置…」共用，禁止另开一套）。
+    static let windowDefaultSize = NSSize(width: 1200, height: 620)
+    static let windowMinSize = NSSize(width: 1080, height: 520)
+
     /// 页面底 surface `#fbfbfd`
     static let pageBackground = Color(red: 0.984, green: 0.984, blue: 0.992)
     /// 卡片底 surface-container-lowest `#ffffff`
@@ -92,6 +96,13 @@ struct SettingsRootView: View {
         .navigationTitle(navigator.section.title)
         .preferredColorScheme(.light)
         .background(SettingsChrome.pageBackground)
-        .frame(minWidth: 860, minHeight: 560)
+        .frame(
+            minWidth: SettingsChrome.windowMinSize.width,
+            minHeight: SettingsChrome.windowMinSize.height
+        )
+        .frame(
+            idealWidth: SettingsChrome.windowDefaultSize.width,
+            idealHeight: SettingsChrome.windowDefaultSize.height
+        )
     }
 }
