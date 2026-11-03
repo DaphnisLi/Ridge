@@ -3,31 +3,10 @@ import SwiftUI
 
 /// 控制台「电量与外设」岛页：对齐稿面设备卡片（耳机三格 / 其它进度条）。
 struct BatteryDeckView: View {
-    /// 非 nil 时用假数据渲染（设置预览），不拉真实会话。
+    /// 非 nil 时用假数据渲染（设置预览），不订阅真实会话。
     var previewDevices: [BatteryDevice]? = nil
 
-    @ObservedObject private var session = BatterySession.shared
-
-    /// 稿面 secondary-fixed。
-    private let accentGreen = Color(red: 0.447, green: 0.996, blue: 0.533)
-    private let accentRed = Color(red: 0.729, green: 0.102, blue: 0.102)
-    /// 设备卡片底：更近黑（约 #141414）。
-    private let cardFill = Color(nsColor: NSColor(calibratedWhite: 0.08, alpha: 1))
-    private let cardBorder = Color.white.opacity(0.07)
-
-    /// 浮层 Panel 上系统 ScrollView 滚不动；不铺灰底，透出灵动岛黑色。
-    private let columnCount = 3
-    private let rowSpacing: CGFloat = 8
-    private let gridPadTop: CGFloat = 8
-    private let gridPadBottom: CGFloat = 8
-
-    private var isPreview: Bool { previewDevices != nil }
-
-    private var devices: [BatteryDevice] {
-        previewDevices ?? session.devices
-    }
-
-    /// 设置页样张设备（始终有内容可看）。
+    /// 设置页样张设备（始终有内容可看）。库卡预览偏窄，只放 2 台避免挤成一团。
     static var sampleDevices: [BatteryDevice] {
         [
             BatteryDevice(
@@ -55,22 +34,56 @@ struct BatteryDeckView: View {
                 casePercent: nil,
                 listeningMode: nil,
                 subtitle: L10n.Battery.statusCritical
-            ),
-            BatteryDevice(
-                id: "sample.keyboard",
-                name: L10n.Battery.tipSampleKeyboard,
-                kind: .keyboard,
-                percent: 100,
-                isCharging: false,
-                isLow: false,
-                leftPercent: nil,
-                rightPercent: nil,
-                casePercent: nil,
-                listeningMode: nil,
-                subtitle: L10n.Battery.statusHealthy
             )
         ]
     }
+
+    var body: some View {
+        Group {
+            if let previewDevices {
+                BatteryDeckCanvas(devices: previewDevices, isPreview: true)
+                    .onAppear {
+                        AppLog.debug("Battery", "电量控制台样张预览", ["devices": previewDevices.count])
+                    }
+            } else {
+                BatteryDeckLiveHost()
+            }
+        }
+        .accessibilityLabel(L10n.ControlDeck.moduleBattery)
+    }
+}
+
+/// 真机岛页：订阅会话。预览路径禁止走这里，否则设置库滚动会被电量刷新拖卡。
+private struct BatteryDeckLiveHost: View {
+    @ObservedObject private var session = BatterySession.shared
+
+    var body: some View {
+        BatteryDeckCanvas(devices: session.devices, isPreview: false)
+            .onAppear {
+                session.start()
+                session.refresh(reason: "deckAppear")
+                AppLog.info("Battery", "电量控制台页已显示", ["devices": session.devices.count])
+            }
+    }
+}
+
+/// 纯展示画布：不订阅 Session。
+private struct BatteryDeckCanvas: View {
+    let devices: [BatteryDevice]
+    let isPreview: Bool
+
+    /// 稿面 secondary-fixed。
+    private let accentGreen = Color(red: 0.447, green: 0.996, blue: 0.533)
+    private let accentRed = Color(red: 0.729, green: 0.102, blue: 0.102)
+    /// 设备卡片底：更近黑（约 #141414）。
+    private let cardFill = Color(nsColor: NSColor(calibratedWhite: 0.08, alpha: 1))
+    private let cardBorder = Color.white.opacity(0.07)
+
+    /// 浮层 Panel 上系统 ScrollView 滚不动；不铺灰底，透出灵动岛黑色。
+    private let columnCount = 3
+    private let rowSpacing: CGFloat = 8
+    private let gridPadTop: CGFloat = 8
+    private let gridPadBottom: CGFloat = 8
 
     var body: some View {
         Group {
@@ -79,7 +92,8 @@ struct BatteryDeckView: View {
             } else {
                 // 按视口高度均分行高，避免固定 maxHeight + clipped 把卡片底裁掉。
                 GeometryReader { geo in
-                    let rows = deviceRows
+                    let cols = layoutColumnCount
+                    let rows = deviceRows(columns: cols)
                     let rowCount = max(rows.count, 1)
                     let usable = geo.size.height
                         - gridPadTop
@@ -88,38 +102,48 @@ struct BatteryDeckView: View {
                     let fitted = floor(usable / CGFloat(rowCount))
                     // 行少时撑满视口；行多时保底高度，交给滚动。
                     // AirPods 三格黑底需要比进度条略高。
-                    let cardH = min(128, max(isPreview ? 96 : 108, fitted))
+                    let cardH = min(128, max(isPreview ? 112 : 108, fitted))
 
-                    AlwaysVisibleScrollView(viewportFill: nil) {
-                        VStack(spacing: rowSpacing) {
-                            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                                HStack(spacing: 10) {
-                                    ForEach(row) { device in
-                                        deviceCard(device)
+                    // 设置预览：单行样张，避免 AlwaysVisibleScrollView 在库卡滚动时拖累合成。
+                    // 预览列数跟设备数对齐，避免 2 台仍按 3 列挤窄。
+                    let grid = VStack(spacing: rowSpacing) {
+                        ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                            HStack(spacing: 10) {
+                                ForEach(row) { device in
+                                    deviceCard(device)
+                                        .frame(
+                                            maxWidth: .infinity,
+                                            minHeight: cardH,
+                                            maxHeight: cardH,
+                                            alignment: .topLeading
+                                        )
+                                }
+                                if !isPreview, row.count < cols {
+                                    ForEach(0..<(cols - row.count), id: \.self) { _ in
+                                        Color.clear
                                             .frame(
                                                 maxWidth: .infinity,
                                                 minHeight: cardH,
-                                                maxHeight: cardH,
-                                                alignment: .topLeading
+                                                maxHeight: cardH
                                             )
-                                    }
-                                    if row.count < columnCount {
-                                        ForEach(0..<(columnCount - row.count), id: \.self) { _ in
-                                            Color.clear
-                                                .frame(
-                                                    maxWidth: .infinity,
-                                                    minHeight: cardH,
-                                                    maxHeight: cardH
-                                                )
-                                        }
                                     }
                                 }
                             }
                         }
-                        .padding(.horizontal, isPreview ? 10 : 14)
-                        .padding(.top, gridPadTop)
-                        .padding(.bottom, gridPadBottom)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                    }
+                    .padding(.horizontal, isPreview ? 10 : 14)
+                    .padding(.top, gridPadTop)
+                    .padding(.bottom, gridPadBottom)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                    Group {
+                        if isPreview {
+                            grid
+                        } else {
+                            AlwaysVisibleScrollView(viewportFill: nil) {
+                                grid
+                            }
+                        }
                     }
                     .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
                     .onAppear {
@@ -135,23 +159,22 @@ struct BatteryDeckView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            guard !isPreview else {
-                AppLog.debug("Battery", "电量控制台样张预览", ["devices": devices.count])
-                return
-            }
-            session.start()
-            session.refresh(reason: "deckAppear")
-            AppLog.info("Battery", "电量控制台页已显示", ["devices": session.devices.count])
-        }
-        .accessibilityLabel(L10n.ControlDeck.moduleBattery)
     }
 
-    /// 每行最多 3 张，保证末行宽度与前排对齐。
-    private var deviceRows: [[BatteryDevice]] {
+    /// 预览按实际台数排（2 台就两列撑满）；真岛仍固定三列网格。
+    private var layoutColumnCount: Int {
+        if isPreview {
+            return max(1, min(devices.count, columnCount))
+        }
+        return columnCount
+    }
+
+    /// 每行最多 `columns` 张；真岛末行用空白补齐与前排对齐。
+    private func deviceRows(columns: Int) -> [[BatteryDevice]] {
         guard !devices.isEmpty else { return [] }
-        return stride(from: 0, to: devices.count, by: columnCount).map { start in
-            Array(devices[start..<min(start + columnCount, devices.count)])
+        let step = max(columns, 1)
+        return stride(from: 0, to: devices.count, by: step).map { start in
+            Array(devices[start..<min(start + step, devices.count)])
         }
     }
 

@@ -24,11 +24,6 @@ struct WidgetsSettingsPane: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text(L10n.Widgets.libraryIntro)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
                     deckLibrarySection
                     librarySection
                 }
@@ -122,6 +117,8 @@ struct WidgetsSettingsPane: View {
         deckSettings.setModuleEnabled(id, enabled)
         if enabled {
             let pageID = ControlDeckSettings.pageIDPrefix + "." + id
+            // 滚动后 layout 不再持续上报，开关前再采一次。
+            WidgetCardFrameCache.shared.refreshFromWindows()
             let source = WidgetCardFrameCache.shared.frame(for: pageID)
             if let pane = ControlDeckSettings.Pane(rawValue: id) {
                 WidgetRuntime.shared.focusControlDeck(pane: pane)
@@ -237,6 +234,7 @@ struct WidgetsSettingsPane: View {
     private func handleEnableChange(id: WidgetID, enabled: Bool) {
         settings.setEnabled(id, enabled: enabled)
         if enabled {
+            WidgetCardFrameCache.shared.refreshFromWindows()
             let source = WidgetCardFrameCache.shared.frame(for: id)
             IslandController.shared?.presentWidgetEnabled(id, fromScreenRect: source)
             AppLog.info("Settings", "打开小组件，同步上岛", ["id": id])
@@ -288,6 +286,7 @@ private struct WidgetCardReorderDropDelegate: DropDelegate {
 final class WidgetCardFrameCache {
     static let shared = WidgetCardFrameCache()
     private var frames: [WidgetID: CGRect] = [:]
+    private var reporters: [WidgetID: () -> Void] = [:]
 
     func set(_ id: WidgetID, _ rect: CGRect) {
         if let old = frames[id],
@@ -303,6 +302,21 @@ final class WidgetCardFrameCache {
     func frame(for id: WidgetID) -> CGRect? {
         frames[id]
     }
+
+    func register(_ id: WidgetID, reporter: @escaping () -> Void) {
+        reporters[id] = reporter
+    }
+
+    func unregister(_ id: WidgetID) {
+        reporters.removeValue(forKey: id)
+    }
+
+    /// 开关飞入前主动刷新可见卡的屏幕矩形。
+    func refreshFromWindows() {
+        for report in reporters.values {
+            report()
+        }
+    }
 }
 
 private struct WidgetCardScreenFrameReader: NSViewRepresentable {
@@ -316,20 +330,27 @@ private struct WidgetCardScreenFrameReader: NSViewRepresentable {
 
     func updateNSView(_ nsView: ReaderView, context: Context) {
         nsView.widgetID = widgetID
-        nsView.reportIfNeeded()
+        WidgetCardFrameCache.shared.register(widgetID) { [weak nsView] in
+            nsView?.reportIfNeeded()
+        }
+    }
+
+    static func dismantleNSView(_ nsView: ReaderView, coordinator: ()) {
+        WidgetCardFrameCache.shared.unregister(nsView.widgetID)
     }
 
     final class ReaderView: NSView {
         var widgetID: WidgetID = ""
 
-        override func layout() {
-            super.layout()
-            reportIfNeeded()
-        }
-
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            reportIfNeeded()
+            // 不在 layout 里刷坐标：滚动时 layout 极频，转换屏幕矩形会拖卡。
+            WidgetCardFrameCache.shared.register(widgetID) { [weak self] in
+                self?.reportIfNeeded()
+            }
+            DispatchQueue.main.async { [weak self] in
+                self?.reportIfNeeded()
+            }
         }
 
         func reportIfNeeded() {
@@ -358,11 +379,13 @@ private struct WidgetLibraryCard: View {
             ZStack {
                 SettingsChrome.cardBackground
 
-                // 与详情页同一套假数据样张（上直角下圆角）。
+                // 与详情页同一套假数据样张；drawingGroup 栅格化后滚动不再逐层重绘。
                 WidgetSamplePreview.island(for: widgetID, compact: true)
                     .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .drawingGroup(opaque: false)
             }
-            .frame(height: 120)
+            .frame(height: 220)
             .clipShape(
                 UnevenRoundedRectangle(
                     topLeadingRadius: 12,

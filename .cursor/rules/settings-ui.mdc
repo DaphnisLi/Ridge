@@ -78,6 +78,7 @@ SettingsBentoCard { ... }      // 白底 Bento
 | `SettingsSwitchRow` | 左标题（可副标题）+ 右开关 |
 | `SettingsSliderRow` | 标题 + 数值 chip + 无刻度滑条 + 两端文案 |
 | `SettingsSegmentedControl` | 浅底分段选择（预设 / 档位） |
+| `SettingsPermissionCard` | **仅未授权**置顶白卡（图标+标题说明+右侧操作）；已授权不渲染 |
 | `SettingsHairline` | 卡内细分割线 |
 | `SettingsFormRows` / `SettingsGroupedRows` | 卡内堆叠行 |
 | `SettingsPaneSection` | 「标题 + SettingsCard」 |

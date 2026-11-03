@@ -28,6 +28,7 @@ struct WidgetIslandPreviewShell<Content: View>: View {
 
     var body: some View {
         let shape = IslandPanelShape(bottomRadius: radius)
+        // 库卡 compact：去掉阴影，滚动时少做一层离屏模糊合成。
         content()
             .frame(maxWidth: .infinity)
             .background(
@@ -36,7 +37,11 @@ struct WidgetIslandPreviewShell<Content: View>: View {
                     .overlay(
                         shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
                     )
-                    .shadow(color: .black.opacity(compact ? 0.22 : 0.35), radius: compact ? 12 : 24, y: compact ? 6 : 12)
+                    .shadow(
+                        color: compact ? .clear : .black.opacity(0.35),
+                        radius: compact ? 0 : 24,
+                        y: compact ? 0 : 12
+                    )
             )
             .clipShape(shape)
     }
@@ -64,35 +69,11 @@ enum WidgetSamplePreview {
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
-            deckModuleSample(
-                symbol: "speaker.wave.2.fill",
-                title: L10n.ControlDeck.moduleVolume,
-                rows: [
-                    (L10n.Sound.masterOutputVolume, "62%"),
-                    (L10n.Sound.currentOutputDevice, "MacBook Pro Speakers")
-                ],
-                compact: compact
-            )
+            volumeSample(compact: compact)
         case "system.controlDeck.projects":
-            deckModuleSample(
-                symbol: "hammer.fill",
-                title: L10n.ControlDeck.moduleProjects,
-                rows: [
-                    (L10n.ControlDeck.moduleProjects, "Ridge"),
-                    (L10n.Projects.rootsTitle, "~/project/Ridge")
-                ],
-                compact: compact
-            )
+            projectsSample(compact: compact)
         case "system.controlDeck.shelf":
-            deckModuleSample(
-                symbol: "tray.full.fill",
-                title: L10n.ControlDeck.moduleShelf,
-                rows: [
-                    (L10n.Shelf.clipboardImagePreview, "12:41"),
-                    ("https://example.com", "12:38")
-                ],
-                compact: compact
-            )
+            shelfSample(compact: compact)
         default:
             genericSample(
                 title: WidgetRegistry.shared.manifest(for: id)?.displayName ?? id,
@@ -106,67 +87,45 @@ enum WidgetSamplePreview {
         let lead = max(MeetingSettings.shared.leadMinutes, 1)
         return MeetingIslandCardView.previewSample(leadMinutes: lead)
             .padding(.horizontal, compact ? 10 : 12)
-            .padding(.vertical, compact ? 8 : 14)
+            .padding(.vertical, compact ? 10 : 14)
             .frame(maxWidth: compact ? .infinity : 540)
-            .frame(minHeight: compact ? 64 : nil)
+            .frame(minHeight: compact ? 88 : nil)
     }
 
     private static func mediaSample(compact: Bool) -> some View {
         MediaIslandCardView.previewSample()
             .padding(.horizontal, compact ? 10 : 12)
-            .padding(.vertical, compact ? 8 : 14)
+            .padding(.vertical, compact ? 10 : 14)
             .frame(maxWidth: compact ? .infinity : 540)
-            .frame(minHeight: compact ? 64 : 148)
+            .frame(minHeight: compact ? 96 : 160)
     }
 
     private static func batterySample(compact: Bool) -> some View {
         BatteryDeckView(previewDevices: BatteryDeckView.sampleDevices)
-            .frame(height: compact ? 96 : 168)
+            .frame(height: compact ? 148 : 210)
             .padding(.horizontal, compact ? 6 : 0)
-            .padding(.vertical, compact ? 6 : 10)
+            .padding(.vertical, compact ? 8 : 12)
     }
 
-    private static func deckModuleSample(
-        symbol: String,
-        title: String,
-        rows: [(String, String)],
-        compact: Bool
-    ) -> some View {
-        VStack(alignment: .leading, spacing: compact ? 6 : 10) {
-            HStack(spacing: 8) {
-                Image(systemName: symbol)
-                    .font(.system(size: compact ? 13 : 15, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.92))
-                Text(title)
-                    .font(.system(size: compact ? 12 : 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
+    private static func volumeSample(compact: Bool) -> some View {
+        DeckVolumePreviewSample(compact: compact)
+            .frame(height: compact ? 168 : 230)
+            .padding(.horizontal, compact ? 8 : 12)
+            .padding(.vertical, compact ? 10 : 14)
+    }
 
-            ForEach(Array(rows.prefix(compact ? 1 : rows.count).enumerated()), id: \.offset) { _, row in
-                HStack {
-                    Text(row.0)
-                        .font(.system(size: compact ? 10 : 11))
-                        .foregroundStyle(.white.opacity(0.55))
-                        .lineLimit(1)
-                    Spacer(minLength: 8)
-                    Text(row.1)
-                        .font(.system(size: compact ? 10 : 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.88))
-                        .lineLimit(1)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, compact ? 6 : 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.white.opacity(0.07))
-                )
-            }
-        }
-        .padding(.horizontal, compact ? 12 : 16)
-        .padding(.vertical, compact ? 10 : 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
+    private static func projectsSample(compact: Bool) -> some View {
+        DeckProjectsPreviewSample(compact: compact)
+            .frame(height: compact ? 168 : 230)
+            .padding(.horizontal, compact ? 8 : 12)
+            .padding(.vertical, compact ? 10 : 14)
+    }
+
+    private static func shelfSample(compact: Bool) -> some View {
+        DeckShelfPreviewSample(compact: compact)
+            .frame(height: compact ? 168 : 230)
+            .padding(.horizontal, compact ? 8 : 12)
+            .padding(.vertical, compact ? 10 : 14)
     }
 
     private static func genericSample(title: String, symbol: String, compact: Bool) -> some View {
@@ -183,5 +142,648 @@ enum WidgetSamplePreview {
         .padding(.horizontal, compact ? 14 : 18)
         .frame(height: compact ? 44 : 56)
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - 控制台磁贴假数据样张（对齐真岛布局，库卡 / 详情共用）
+
+private struct DeckPreviewPanel<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .padding(8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            )
+    }
+}
+
+private struct DeckShelfPreviewSample: View {
+    var compact: Bool
+
+    private let accentBlue = Color(red: 0.23, green: 0.51, blue: 0.96)
+    private let accentPurple = Color(red: 0.545, green: 0.361, blue: 0.965)
+
+    var body: some View {
+        HStack(alignment: .top, spacing: compact ? 6 : 10) {
+            DeckPreviewPanel {
+                VStack(alignment: .leading, spacing: compact ? 5 : 7) {
+                    header(symbol: "shippingbox.fill", tint: accentBlue, title: L10n.Shelf.shelfTitle)
+                    shelfRow(badge: "PDF", tint: .red, name: L10n.Shelf.previewFilePDF, meta: "2.4 MB · \(L10n.Shelf.kindDocument)")
+                    shelfRow(badge: "DIR", tint: .cyan, name: L10n.Shelf.previewFileFolder, meta: L10n.Shelf.kindFolder)
+                    shelfRow(badge: "PNG", tint: .blue, name: L10n.Shelf.previewFilePNG, meta: "860 KB · \(L10n.Shelf.kindImage)")
+                }
+            }
+
+            DeckPreviewPanel {
+                VStack(alignment: .leading, spacing: compact ? 5 : 7) {
+                    clipboardHeader
+                    clipRow(symbol: "doc.text", tint: .orange, text: L10n.Shelf.previewClipText, time: L10n.Shelf.previewClipTimeRecent)
+                    clipRow(symbol: "link", tint: accentBlue, text: L10n.Shelf.previewClipLink, time: L10n.Shelf.previewClipTimeMid)
+                    if !compact {
+                        clipRow(symbol: "paintpalette.fill", tint: accentPurple, text: L10n.Shelf.previewClipColor, time: L10n.Shelf.previewClipTimeOlder)
+                    }
+                }
+            }
+        }
+    }
+
+    private var clipboardHeader: some View {
+        HStack(spacing: 6) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(accentPurple.opacity(0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(accentPurple.opacity(0.30), lineWidth: 1)
+                    )
+                Image(systemName: "doc.on.clipboard")
+                    .font(.system(size: compact ? 9 : 10, weight: .semibold))
+                    .foregroundStyle(accentPurple)
+            }
+            .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
+
+            Text(L10n.Shelf.clipboardTitle)
+                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+
+            Spacer(minLength: 4)
+
+            clipboardSearchField
+
+            Image(systemName: "trash")
+                .font(.system(size: compact ? 9 : 10, weight: .medium))
+                .foregroundStyle(.white.opacity(0.45))
+                .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.white.opacity(0.03))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                )
+        }
+    }
+
+    /// 假数据搜索框（不可编辑），对齐真岛剪贴板顶栏。
+    private var clipboardSearchField: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: compact ? 9 : 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.40))
+            Text(L10n.Shelf.clipboardSearchPlaceholder)
+                .font(.system(size: compact ? 9 : 10))
+                .foregroundStyle(.white.opacity(0.35))
+                .lineLimit(1)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, compact ? 7 : 9)
+        .padding(.vertical, compact ? 4 : 6)
+        .frame(minWidth: compact ? 72 : 96, maxWidth: compact ? 120 : 180)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.black.opacity(0.35))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                )
+        )
+    }
+
+    private func header(symbol: String, tint: Color, title: String) -> some View {
+        HStack(spacing: 6) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(tint.opacity(0.15))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(tint.opacity(0.30), lineWidth: 1)
+                    )
+                Image(systemName: symbol)
+                    .font(.system(size: compact ? 9 : 10, weight: .semibold))
+                    .foregroundStyle(tint)
+            }
+            .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
+            Text(title)
+                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func shelfRow(badge: String, tint: Color, name: String, meta: String) -> some View {
+        HStack(spacing: 6) {
+            Text(badge)
+                .font(.system(size: 8, weight: .bold, design: .rounded))
+                .foregroundStyle(tint.opacity(0.95))
+                .frame(width: compact ? 26 : 30, height: compact ? 22 : 26)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(tint.opacity(0.16))
+                )
+            VStack(alignment: .leading, spacing: 1) {
+                Text(name)
+                    .font(.system(size: compact ? 10 : 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .lineLimit(1)
+                if !compact {
+                    Text(meta)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.38))
+                        .lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, compact ? 4 : 5)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+        )
+    }
+
+    private func clipRow(symbol: String, tint: Color, text: String, time: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 14)
+            Text(text)
+                .font(.system(size: compact ? 10 : 11))
+                .foregroundStyle(.white.opacity(0.88))
+                .lineLimit(1)
+            Spacer(minLength: 4)
+            Text(time)
+                .font(.system(size: 8))
+                .foregroundStyle(.white.opacity(0.38))
+                .fixedSize()
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, compact ? 4 : 5)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.03))
+        )
+    }
+}
+
+private struct DeckVolumePreviewSample: View {
+    var compact: Bool
+
+    private let accent = Color(red: 0.678, green: 0.776, blue: 1.0)
+    private let accentGreen = Color(red: 0.325, green: 0.882, blue: 0.435)
+    private let blueMid = Color(red: 0.510, green: 0.659, blue: 1.0)
+
+    var body: some View {
+        HStack(alignment: .top, spacing: compact ? 6 : 10) {
+            DeckPreviewPanel {
+                VStack(alignment: .leading, spacing: compact ? 6 : 8) {
+                    HStack {
+                        HStack(spacing: 4) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .font(.system(size: compact ? 10 : 11))
+                                .foregroundStyle(accent)
+                            Text(L10n.Sound.masterOutputVolume)
+                                .font(.system(size: compact ? 10 : 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.85))
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 0)
+                        Text("62%")
+                            .font(.system(size: compact ? 11 : 12, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(.white)
+                    }
+
+                    volumeTrack(fill: 0.62, colors: [
+                        Color(red: 0.23, green: 0.51, blue: 1.0),
+                        blueMid,
+                        accent
+                    ])
+
+                    Text(L10n.Sound.currentOutputDevice)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.40))
+                        .textCase(.uppercase)
+                        .padding(.top, 2)
+
+                    deviceCard(
+                        symbol: "laptopcomputer",
+                        name: L10n.Sound.previewDeviceSpeakers,
+                        selected: true
+                    )
+                    deviceCard(
+                        symbol: "headphones",
+                        name: L10n.Sound.previewDeviceAirPods,
+                        selected: false,
+                        battery: 78
+                    )
+                }
+            }
+
+            DeckPreviewPanel {
+                VStack(alignment: .leading, spacing: compact ? 6 : 8) {
+                    HStack {
+                        HStack(spacing: 4) {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: compact ? 10 : 11))
+                                .foregroundStyle(.white.opacity(0.55))
+                            Text(L10n.Sound.perAppMix)
+                                .font(.system(size: compact ? 10 : 11, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.75))
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 0)
+                        Text(L10n.Sound.activeSources(2))
+                            .font(.system(size: 9, weight: .medium).monospaced())
+                            .foregroundStyle(accentGreen)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .fill(accentGreen.opacity(0.12))
+                            )
+                    }
+
+                    appRow(name: L10n.Sound.previewAppMusic, volume: 0.72, playing: true)
+                    appRow(name: L10n.Sound.previewAppSafari, volume: 0.40, playing: false)
+                }
+            }
+        }
+    }
+
+    private func volumeTrack(fill: CGFloat, colors: [Color]) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.15))
+                Capsule()
+                    .fill(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(geo.size.width * fill, 8))
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 10, height: 10)
+                    .offset(x: max(0, min(geo.size.width - 10, geo.size.width * fill - 5)))
+            }
+        }
+        .frame(height: 10)
+    }
+
+    private func deviceCard(symbol: String, name: String, selected: Bool, battery: Int? = nil) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(selected ? accentGreen : .white.opacity(0.55))
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(name)
+                    .font(.system(size: compact ? 10 : 11, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(selected ? .white : .white.opacity(0.72))
+                    .lineLimit(1)
+                if selected {
+                    Text(L10n.Sound.activeOutput)
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.42))
+                }
+            }
+            Spacer(minLength: 0)
+            if let battery {
+                Text("\(battery)%")
+                    .font(.system(size: 9, weight: .medium).monospacedDigit())
+                    .foregroundStyle(.white.opacity(0.55))
+            } else if selected {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(accentGreen)
+            }
+        }
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(selected ? Color.white.opacity(0.09) : Color.clear)
+        )
+    }
+
+    private func appRow(name: String, volume: CGFloat, playing: Bool) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(Color.white.opacity(0.12))
+                .frame(width: 18, height: 18)
+                .overlay(
+                    Image(systemName: "app.fill")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.white.opacity(0.7))
+                )
+            VStack(alignment: .leading, spacing: 1) {
+                Text(name)
+                    .font(.system(size: compact ? 10 : 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.95))
+                    .lineLimit(1)
+                Text(playing ? L10n.Sound.appPlaying : L10n.Sound.appIdle)
+                    .font(.system(size: 8).monospaced())
+                    .foregroundStyle(.white.opacity(0.40))
+            }
+            .frame(width: compact ? 44 : 56, alignment: .leading)
+
+            volumeTrack(fill: volume, colors: [accent.opacity(0.85), accent])
+                .frame(maxWidth: .infinity)
+
+            Text("\(Int((volume * 100).rounded()))%")
+                .font(.system(size: 10, weight: .medium).monospacedDigit())
+                .foregroundStyle(.white.opacity(0.80))
+                .frame(width: 28, alignment: .trailing)
+        }
+    }
+}
+
+private struct DeckProjectsPreviewSample: View {
+    var compact: Bool
+
+    private let accentBlue = Color(red: 0.231, green: 0.510, blue: 0.965)
+    private let accentCyan = Color(red: 0.024, green: 0.714, blue: 0.831)
+    private let accentAmber = Color(red: 0.961, green: 0.620, blue: 0.043)
+    private let accentEmerald = Color(red: 0.204, green: 0.827, blue: 0.600)
+
+    var body: some View {
+        HStack(alignment: .top, spacing: compact ? 6 : 10) {
+            DeckPreviewPanel {
+                runningPreview
+            }
+
+            VStack(spacing: compact ? 6 : 8) {
+                DeckPreviewPanel {
+                    VStack(alignment: .leading, spacing: compact ? 5 : 6) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "eye.fill")
+                                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                                .foregroundStyle(accentAmber)
+                            Text(L10n.Projects.watchingTitle)
+                                .font(.system(size: compact ? 10 : 11, weight: .bold))
+                                .foregroundStyle(.white)
+                            Spacer(minLength: 0)
+                            HStack(spacing: 3) {
+                                Circle().fill(accentEmerald).frame(width: 5, height: 5)
+                                Text(L10n.Projects.watchingActiveLabel)
+                                    .font(.system(size: 8, weight: .semibold).monospaced())
+                                    .foregroundStyle(accentEmerald)
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: 4) {
+                                Text(L10n.Projects.previewProjectName)
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.white.opacity(0.45))
+                                Text("/")
+                                    .foregroundStyle(.white.opacity(0.25))
+                                Text(L10n.Projects.previewCommandBuild)
+                                    .font(.system(size: 10, weight: .bold).monospaced())
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                            }
+                            HStack {
+                                Text("PID 18422")
+                                    .font(.system(size: 9).monospacedDigit())
+                                    .foregroundStyle(.white.opacity(0.45))
+                                Spacer(minLength: 0)
+                                Text("12:08")
+                                    .font(.system(size: 10, weight: .bold).monospacedDigit())
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        .padding(6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Color.black.opacity(0.35))
+                        )
+                    }
+                }
+
+                DeckPreviewPanel {
+                    VStack(alignment: .leading, spacing: compact ? 5 : 6) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "shippingbox.fill")
+                                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                                .foregroundStyle(accentCyan)
+                            Text(L10n.Projects.containersTitle)
+                                .font(.system(size: compact ? 10 : 11, weight: .bold))
+                                .foregroundStyle(.white)
+                            Spacer(minLength: 0)
+                        }
+
+                        HStack(spacing: 6) {
+                            containerChip(L10n.Projects.previewContainerDB, port: 5432)
+                            containerChip(L10n.Projects.previewContainerCache, port: 6379)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// 对齐真岛「运行中进程」：顶栏 + 工程折叠行 + 树形命令行（监视 / 释放）。
+    private var runningPreview: some View {
+        VStack(alignment: .leading, spacing: compact ? 6 : 8) {
+            HStack(spacing: 5) {
+                Image(systemName: "folder.badge.gearshape")
+                    .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                    .foregroundStyle(accentBlue)
+                Text(L10n.Projects.runningTitle)
+                    .font(.system(size: compact ? 10 : 11, weight: .bold))
+                    .foregroundStyle(.white)
+                Spacer(minLength: 0)
+                HStack(spacing: 3) {
+                    Circle()
+                        .fill(accentEmerald)
+                        .frame(width: 5, height: 5)
+                    Text(L10n.Projects.treeStreamLabel)
+                        .font(.system(size: 8, weight: .medium).monospaced())
+                        .foregroundStyle(.white.opacity(0.45))
+                }
+            }
+            .padding(.bottom, 3)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.05))
+                    .frame(height: 1)
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 5) {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .frame(width: 10)
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(accentAmber)
+                    Text(L10n.Projects.previewProjectName)
+                        .font(.system(size: compact ? 11 : 12, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    Text(L10n.Projects.commandCount(2))
+                        .font(.system(size: 8, weight: .medium).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.45))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.05)))
+                    Spacer(minLength: 4)
+                    Text(L10n.Projects.projectCPU(17.5))
+                        .font(.system(size: 8).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.45))
+                    Text("412 MB")
+                        .font(.system(size: 8).monospacedDigit())
+                        .foregroundStyle(.white.opacity(0.45))
+                }
+                .padding(6)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.white.opacity(0.04))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
+                        )
+                )
+
+                VStack(spacing: 4) {
+                    processRow(
+                        title: L10n.Projects.previewCommandBuild,
+                        port: nil,
+                        meta: L10n.Projects.processMeta(18422, 12.4, "286 MB"),
+                        watching: true
+                    )
+                    processRow(
+                        title: L10n.Projects.previewCommandDev,
+                        port: 5173,
+                        meta: L10n.Projects.processMeta(19001, 5.1, "126 MB"),
+                        watching: false
+                    )
+                }
+                .padding(.leading, 14)
+            }
+        }
+    }
+
+    private func processRow(title: String, port: Int?, meta: String, watching: Bool) -> some View {
+        HStack(spacing: 5) {
+            treeBranchMark
+            Circle()
+                .fill(watching ? accentBlue : accentEmerald)
+                .frame(width: 5, height: 5)
+                .overlay {
+                    if watching {
+                        Circle()
+                            .fill(accentBlue.opacity(0.55))
+                            .frame(width: 5, height: 5)
+                            .scaleEffect(1.6)
+                            .opacity(0.5)
+                    }
+                }
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Text(title)
+                        .font(.system(size: compact ? 10 : 11, weight: watching ? .bold : .semibold).monospaced())
+                        .foregroundStyle(watching ? Color(red: 0.75, green: 0.85, blue: 1.0) : .white)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    if let port {
+                        Text(":\(port)")
+                            .font(.system(size: 8, weight: .medium).monospacedDigit())
+                            .foregroundStyle(Color(red: 0.925, green: 0.282, blue: 0.600))
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color(red: 0.925, green: 0.282, blue: 0.600).opacity(0.18))
+                            )
+                    }
+                }
+                Text(meta)
+                    .font(.system(size: 8).monospacedDigit())
+                    .foregroundStyle(watching ? accentBlue.opacity(0.75) : .white.opacity(0.40))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if watching {
+                HStack(spacing: 2) {
+                    Image(systemName: "eye.fill")
+                        .font(.system(size: 8, weight: .semibold))
+                    Text(L10n.Projects.watchingActionOn)
+                        .font(.system(size: 9, weight: .medium))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 5).fill(accentBlue))
+            } else {
+                Text(L10n.Projects.watchAction)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.88))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.white.opacity(0.10)))
+            }
+
+            Text(L10n.Projects.release)
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(Color(red: 0.97, green: 0.44, blue: 0.44))
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 5).fill(Color.red.opacity(0.10)))
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(watching ? accentBlue.opacity(0.10) : Color.black.opacity(0.40))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(
+                            watching ? accentBlue.opacity(0.30) : Color.white.opacity(0.04),
+                            lineWidth: 1
+                        )
+                )
+        )
+    }
+
+    private var treeBranchMark: some View {
+        Path { path in
+            path.move(to: CGPoint(x: 4, y: 0))
+            path.addLine(to: CGPoint(x: 4, y: 10))
+            path.addLine(to: CGPoint(x: 10, y: 10))
+        }
+        .stroke(Color.white.opacity(0.14), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
+        .frame(width: 12, height: 14)
+    }
+
+    private func containerChip(_ title: String, port: Int) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 3) {
+                Circle().fill(accentEmerald).frame(width: 4, height: 4)
+                Text(title)
+                    .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+            }
+            Text(":\(port)")
+                .font(.system(size: 8).monospacedDigit())
+                .foregroundStyle(.white.opacity(0.40))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.black.opacity(0.35))
+        )
     }
 }

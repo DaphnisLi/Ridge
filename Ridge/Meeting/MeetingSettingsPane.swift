@@ -23,8 +23,9 @@ struct MeetingWidgetConfigSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            islandPreviewCard
+            // 未授权置顶；已授权整卡不展示。
             authCard
+            islandPreviewCard
             leadMinutesCard
             supportedPlatformsCard
             customAppsCard
@@ -72,58 +73,47 @@ struct MeetingWidgetConfigSection: View {
         SettingsIslandPreviewCard(widgetID: "builtin.meeting")
     }
 
-    // MARK: - 日历授权
+    // MARK: - 日历授权（仅未授权时置顶展示）
 
     private var authCard: some View {
-        SettingsCard {
-            HStack(alignment: .center, spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(SettingsChrome.secondary.opacity(0.15))
-                    Image(systemName: "calendar")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(SettingsChrome.secondary)
-                }
-                .frame(width: 32, height: 32)
+        SettingsPermissionCard(
+            status: calendarPermissionStatus,
+            symbol: "calendar",
+            tint: SettingsChrome.secondary,
+            title: L10n.Meeting.calendarAccess,
+            subtitle: calendarPermissionSubtitle,
+            requestTitle: L10n.Meeting.calendarAllow,
+            requestSymbol: "key.fill",
+            action: calendarPermissionAction
+        )
+    }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.Meeting.calendarAccess)
-                        .font(.system(size: 13.5, weight: .semibold))
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    Text(authDescription)
-                        .font(.system(size: 12))
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 8)
-
-                authAction
-            }
-            .padding(16)
+    private var calendarPermissionStatus: SettingsPermissionCard.Status {
+        switch calendar.authStatus {
+        case .authorized:
+            return .authorized
+        case .notDetermined:
+            return isRequestingAuth ? .busy : .request
+        case .denied, .restricted:
+            return .openSettings
         }
     }
 
-    @ViewBuilder
-    private var authAction: some View {
+    private var calendarPermissionSubtitle: String {
+        switch calendar.authStatus {
+        case .denied, .restricted:
+            return L10n.Meeting.calendarDeniedDesc
+        default:
+            return L10n.Meeting.calendarDesc
+        }
+    }
+
+    private var calendarPermissionAction: (() -> Void)? {
         switch calendar.authStatus {
         case .authorized:
-            HStack(spacing: 6) {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(SettingsChrome.secondary)
-                Text(L10n.Meeting.calendarAuthorized)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(SettingsChrome.secondary)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(SettingsChrome.secondary.opacity(0.12))
-            )
+            return nil
         case .notDetermined:
-            Button {
+            return {
                 guard !isRequestingAuth else { return }
                 resignFields()
                 isRequestingAuth = true
@@ -132,36 +122,13 @@ struct MeetingWidgetConfigSection: View {
                     _ = await calendar.requestAccess()
                     isRequestingAuth = false
                 }
-            } label: {
-                if isRequestingAuth {
-                    Text(L10n.Common.requesting)
-                        .font(.system(size: 12, weight: .medium))
-                } else {
-                    Label(L10n.Meeting.calendarAllow, systemImage: "key.fill")
-                        .font(.system(size: 12, weight: .medium))
-                }
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .tint(SettingsChrome.primary)
-            .disabled(isRequestingAuth)
         case .denied, .restricted:
-            Button(L10n.Common.openSystemSettings) {
+            return {
                 resignFields()
                 calendar.openSystemPrivacySettings()
                 AppLog.info("Meeting", "设置页打开系统日历隐私")
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-        }
-    }
-
-    private var authDescription: String {
-        switch calendar.authStatus {
-        case .authorized, .notDetermined:
-            return L10n.Meeting.calendarDesc
-        case .denied, .restricted:
-            return L10n.Meeting.calendarDeniedDesc
         }
     }
 

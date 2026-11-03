@@ -4323,6 +4323,292 @@
           }
         }
       }
+    },
+    "shelf.preview.file_pdf": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设计规范.pdf"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "shelf.preview.file_folder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assets"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "shelf.preview.file_png": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "封面草稿.png"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "shelf.preview.clip_text": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下周评审改到周四 15:00"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "shelf.preview.clip_link": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "https://github.com/ridge/app"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "shelf.preview.clip_color": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "#0071E3"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "sound.preview.device_speakers": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MacBook Pro 扬声器"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "sound.preview.device_airpods": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirPods Pro"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "sound.preview.app_music": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音乐"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "sound.preview.app_safari": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safari"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "projects.preview.project_name": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridge"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "projects.preview.command_build": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xcodebuild"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "projects.preview.command_dev": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vite"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "projects.preview.container_db": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "postgres"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "projects.preview.container_cache": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "redis"
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
+    "shelf.preview.clip_time_recent": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 分钟前"
+          }
+        }
+      }
+    },
+    "shelf.preview.clip_time_mid": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 分钟前"
+          }
+        }
+      }
+    },
+    "shelf.preview.clip_time_older": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 分钟前"
+          }
+        }
+      }
+    },
+    "settings.section.resource_monitor": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM 监控与进程树"
+          }
+        }
+      }
+    },
+    "resource_monitor.page_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM 监控与进程树"
+          }
+        }
+      }
+    },
+    "common.authorized": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已授权"
+          }
+        }
+      }
+    },
+    "resource_monitor.permission_access": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入监控权限"
+          }
+        }
+      }
+    },
+    "resource_monitor.permission_access_desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于统计击键次数与专注活跃度"
+          }
+        }
+      }
+    },
+    "sound.screen_capture_access": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕录制权限"
+          }
+        }
+      }
+    },
+    "sound.screen_capture_access_desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于按 App 独立调节音量（不会录制画面）"
+          }
+        }
+      }
+    },
+    "sound.screen_capture_allow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权屏幕录制"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -84,6 +84,15 @@ struct ShelfItem: Identifiable, Hashable {
         }
     }
 
+    /// 设置预览假数据（不访问磁盘）。
+    init(previewName: String, isDirectory: Bool = false, byteCount: UInt64? = nil) {
+        self.id = UUID()
+        self.url = URL(fileURLWithPath: "/Preview/\(previewName)")
+        self.name = previewName
+        self.isDirectory = isDirectory
+        self.byteCount = byteCount
+    }
+
     var icon: NSImage {
         NSWorkspace.shared.icon(forFile: url.path)
     }

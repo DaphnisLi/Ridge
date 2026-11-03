@@ -100,6 +100,17 @@ struct ControlDeckSettingsPane: View {
 
     private var mixerPrefsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
+            SettingsPermissionCard(
+                status: sound.tapAvailability == .needsScreenCapture ? .request : .authorized,
+                symbol: "rectangle.dashed.badge.record",
+                tint: SettingsChrome.primary,
+                title: L10n.Sound.screenCaptureAccess,
+                subtitle: L10n.Sound.screenCaptureAccessDesc,
+                requestTitle: L10n.Sound.screenCaptureAllow,
+                requestSymbol: "rectangle.dashed.badge.record",
+                action: { sound.requestScreenCaptureAccess() }
+            )
+
             Text(L10n.Sound.mixerPrefsTitle)
                 .font(.system(size: 15, weight: .semibold))
             Text(L10n.Sound.mixerPrefsIntro)
@@ -119,13 +130,6 @@ struct ControlDeckSettingsPane: View {
             )
 
             HStack(spacing: 10) {
-                if sound.tapAvailability == .needsScreenCapture {
-                    Button(L10n.Sound.grantScreenCapture) {
-                        sound.requestScreenCaptureAccess()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                }
                 Button(L10n.Sound.resetAppVolumes) {
                     sound.resetAppVolumes()
                 }

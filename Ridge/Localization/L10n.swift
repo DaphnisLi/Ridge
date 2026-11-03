@@ -18,6 +18,7 @@ enum L10n {
         static var requesting: String { tr("common.requesting", "请求中…") }
         static var comingSoon: String { tr("common.coming_soon", "即将推出") }
         static var authorize: String { tr("common.authorize", "授权") }
+        static var authorized: String { tr("common.authorized", "已授权") }
         static var minuteUnit: String { tr("common.minute_unit", "分") }
     }
 
@@ -27,7 +28,7 @@ enum L10n {
         static var island: String { tr("settings.section.island", "灵动岛") }
         static var controlDeck: String { tr("settings.section.control_deck", "控制台") }
         static var widgets: String { tr("settings.section.widgets", "小组件") }
-        static var resourceMonitor: String { tr("settings.section.resource_monitor", "资源监控") }
+        static var resourceMonitor: String { tr("settings.section.resource_monitor", "RAM 监控与进程树") }
 
         static var islandPageTitle: String { tr("settings.island.page_title", "灵动岛设置") }
         static var islandPageSubtitle: String {
@@ -155,6 +156,18 @@ enum L10n {
         static var grantScreenCapture: String {
             tr("sound.grant_screen_capture", "授权屏幕录制以启用按 App 音量")
         }
+        static var screenCaptureAccess: String {
+            tr("sound.screen_capture_access", "屏幕录制权限")
+        }
+        static var screenCaptureAccessDesc: String {
+            tr(
+                "sound.screen_capture_access_desc",
+                "用于按 App 独立调节音量（不会录制画面）"
+            )
+        }
+        static var screenCaptureAllow: String {
+            tr("sound.screen_capture_allow", "授权屏幕录制")
+        }
         static var needsMacOS142Body: String {
             tr("sound.needs_macos142_body", "按 App 独立音量需要 macOS 14.2 或更高版本。")
         }
@@ -169,6 +182,14 @@ enum L10n {
             )
         }
         static var moduleLive: String { tr("sound.module_live", "已启用") }
+        static var previewDeviceSpeakers: String {
+            tr("sound.preview.device_speakers", "MacBook Pro 扬声器")
+        }
+        static var previewDeviceAirPods: String {
+            tr("sound.preview.device_airpods", "AirPods Pro")
+        }
+        static var previewAppMusic: String { tr("sound.preview.app_music", "音乐") }
+        static var previewAppSafari: String { tr("sound.preview.app_safari", "Safari") }
     }
 
     // MARK: - Control deck
@@ -295,6 +316,11 @@ enum L10n {
         static var emptyState: String {
             tr("projects.deck.empty", "未发现占用中的项目进程。可在设置中添加项目根目录。")
         }
+        static var previewProjectName: String { tr("projects.preview.project_name", "Ridge") }
+        static var previewCommandBuild: String { tr("projects.preview.command_build", "xcodebuild") }
+        static var previewCommandDev: String { tr("projects.preview.command_dev", "vite") }
+        static var previewContainerDB: String { tr("projects.preview.container_db", "postgres") }
+        static var previewContainerCache: String { tr("projects.preview.container_cache", "redis") }
         static var runningTitle: String { tr("projects.deck.running", "运行中进程") }
         static var watchingTitle: String { tr("projects.deck.watching", "监视中进程") }
         static var containersTitle: String { tr("projects.deck.containers", "容器 Docker") }
@@ -618,6 +644,19 @@ enum L10n {
             tr("shelf.clipboard.search_empty", "无匹配内容")
         }
         static var clipboardImagePreview: String { tr("shelf.clipboard.image_preview", "图片") }
+        static var previewFilePDF: String { tr("shelf.preview.file_pdf", "设计规范.pdf") }
+        static var previewFileFolder: String { tr("shelf.preview.file_folder", "Assets") }
+        static var previewFilePNG: String { tr("shelf.preview.file_png", "封面草稿.png") }
+        static var previewClipText: String {
+            tr("shelf.preview.clip_text", "下周评审改到周四 15:00")
+        }
+        static var previewClipLink: String {
+            tr("shelf.preview.clip_link", "https://github.com/ridge/app")
+        }
+        static var previewClipColor: String { tr("shelf.preview.clip_color", "#0071E3") }
+        static var previewClipTimeRecent: String { tr("shelf.preview.clip_time_recent", "2 分钟前") }
+        static var previewClipTimeMid: String { tr("shelf.preview.clip_time_mid", "5 分钟前") }
+        static var previewClipTimeOlder: String { tr("shelf.preview.clip_time_older", "12 分钟前") }
         static var copied: String { tr("shelf.copied", "已复制") }
         static var justCopied: String { tr("shelf.just_copied", "● 刚刚复制") }
         static var pasteDirect: String { tr("shelf.paste_direct", "直贴") }
@@ -961,6 +1000,15 @@ enum L10n {
         static var mutedBanner: String { tr("resource_monitor.muted_banner", "已免打扰 30 分钟") }
         static var requestPermission: String {
             tr("resource_monitor.request_permission", "申请权限")
+        }
+        static var permissionAccess: String {
+            tr("resource_monitor.permission_access", "输入监控权限")
+        }
+        static var permissionAccessDesc: String {
+            tr(
+                "resource_monitor.permission_access_desc",
+                "用于统计击键次数与专注活跃度"
+            )
         }
         static var permissionGranted: String {
             tr("resource_monitor.permission_granted", "已授权")

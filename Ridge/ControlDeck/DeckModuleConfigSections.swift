@@ -31,6 +31,17 @@ struct VolumeWidgetConfigSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // 未授权置顶；已授权整卡不展示。
+            SettingsPermissionCard(
+                status: sound.tapAvailability == .needsScreenCapture ? .request : .authorized,
+                symbol: "rectangle.dashed.badge.record",
+                tint: SettingsChrome.primary,
+                title: L10n.Sound.screenCaptureAccess,
+                subtitle: L10n.Sound.screenCaptureAccessDesc,
+                requestTitle: L10n.Sound.screenCaptureAllow,
+                requestSymbol: "rectangle.dashed.badge.record",
+                action: { sound.requestScreenCaptureAccess() }
+            )
             previewChrome(moduleID: "volume")
             SettingsCard {
                 VStack(alignment: .leading, spacing: 12) {
@@ -48,13 +59,6 @@ struct VolumeWidgetConfigSection: View {
                         isOn: $soundSettings.rememberVolumes
                     )
                     HStack(spacing: 10) {
-                        if sound.tapAvailability == .needsScreenCapture {
-                            Button(L10n.Sound.grantScreenCapture) {
-                                sound.requestScreenCaptureAccess()
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                        }
                         Button(L10n.Sound.resetAppVolumes) {
                             sound.resetAppVolumes()
                         }

@@ -224,23 +224,7 @@ struct SettingsSegmentedControl: View {
     var body: some View {
         HStack(spacing: 6) {
             ForEach(items) { item in
-                let label = Text(item.title)
-                    .font(item.selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
-                    .foregroundStyle(item.selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
-                            .fill(item.selected ? Color.white : Color.clear)
-                            .shadow(color: item.selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
-                    )
-
-                if item.isInteractive {
-                    Button(action: item.action) { label }
-                        .buttonStyle(.plain)
-                } else {
-                    label
-                }
+                segment(item)
             }
         }
         .padding(4)
@@ -248,6 +232,32 @@ struct SettingsSegmentedControl: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(SettingsChrome.surfaceContainer.opacity(0.7))
         )
+    }
+
+    @ViewBuilder
+    private func segment(_ item: Item) -> some View {
+        let shape = RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
+        let label = Text(item.title)
+            .font(item.selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
+            .foregroundStyle(item.selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.vertical, 6)
+            .background(
+                shape
+                    .fill(item.selected ? Color.white : Color.clear)
+                    .shadow(color: item.selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
+            )
+            // plain Button 默认只点文字；整块长方形都要可点。
+            .contentShape(shape)
+
+        if item.isInteractive {
+            Button(action: item.action) { label }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+        } else {
+            label
+                .frame(maxWidth: .infinity)
+        }
     }
 }
 
@@ -257,5 +267,132 @@ struct SettingsHairline: View {
         Rectangle()
             .fill(Color.black.opacity(0.05))
             .frame(height: 1)
+    }
+}
+
+/// 未授权权限卡（白底 + 图标 + 标题说明 + 右侧操作）。
+/// **已授权时整卡不渲染**——用户侧只会出现「未授权」态，禁止再造「已授权」徽章或页内第二套授权 UI。
+struct SettingsPermissionCard: View {
+    enum Status: Equatable {
+        case authorized
+        case request
+        case openSettings
+        case busy
+    }
+
+    var status: Status
+    let symbol: String
+    var tint: Color = SettingsChrome.secondary
+    let title: String
+    let subtitle: String
+    var requestTitle: String = L10n.Common.authorize
+    var requestSymbol: String = "hand.raised.fill"
+    var openSettingsTitle: String = L10n.Common.openSystemSettings
+    var openSettingsSymbol: String = "gearshape"
+    var busyTitle: String = L10n.Common.requesting
+    var action: (() -> Void)? = nil
+
+    var body: some View {
+        if status != .authorized {
+            SettingsCard {
+                HStack(alignment: .center, spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(tint.opacity(0.15))
+                        Image(systemName: symbol)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(tint)
+                    }
+                    .frame(width: 32, height: 32)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(SettingsChrome.Font.rowTitle.weight(.semibold))
+                            .foregroundStyle(SettingsChrome.onSurface)
+                        Text(subtitle)
+                            .font(SettingsChrome.Font.body)
+                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    trailingAction
+                }
+                .padding(SettingsChrome.Spacing.cardPadding)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(title)。\(subtitle)")
+        }
+    }
+
+    @ViewBuilder
+    private var trailingAction: some View {
+        switch status {
+        case .authorized:
+            EmptyView()
+        case .request:
+            Button {
+                action?()
+            } label: {
+                actionChip(
+                    title: requestTitle,
+                    symbol: requestSymbol,
+                    foreground: SettingsChrome.primary,
+                    background: SettingsChrome.primary.opacity(0.12)
+                )
+            }
+            .buttonStyle(.plain)
+            .help(requestTitle)
+        case .openSettings:
+            Button {
+                action?()
+            } label: {
+                actionChip(
+                    title: openSettingsTitle,
+                    symbol: openSettingsSymbol,
+                    foreground: SettingsChrome.onSurface,
+                    background: SettingsChrome.surfaceContainer
+                )
+            }
+            .buttonStyle(.plain)
+            .help(openSettingsTitle)
+        case .busy:
+            actionChip(
+                title: busyTitle,
+                symbol: nil,
+                foreground: SettingsChrome.onSurfaceVariant,
+                background: SettingsChrome.surfaceContainer,
+                showsProgress: true
+            )
+        }
+    }
+
+    private func actionChip(
+        title: String,
+        symbol: String?,
+        foreground: Color,
+        background: Color,
+        showsProgress: Bool = false
+    ) -> some View {
+        HStack(spacing: 6) {
+            if showsProgress {
+                ProgressView()
+                    .controlSize(.small)
+            } else if let symbol {
+                Image(systemName: symbol)
+                    .font(SettingsChrome.Font.iconInline)
+            }
+            Text(title)
+                .font(SettingsChrome.Font.label)
+        }
+        .foregroundStyle(foreground)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
+                .fill(background)
+        )
     }
 }

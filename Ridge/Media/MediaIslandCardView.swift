@@ -206,7 +206,7 @@ struct MediaIslandCardView: View {
         MediaIslandCardView(
             title: L10n.Media.previewSampleTitle,
             artist: L10n.Media.previewSampleArtist,
-            artwork: nil,
+            artwork: makePreviewArtwork(),
             appIcon: NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Music")
                 .map { NSWorkspace.shared.icon(forFile: $0.path) },
             isPlaying: true,
@@ -214,6 +214,37 @@ struct MediaIslandCardView: View {
             elapsedText: "2:59",
             durationText: "-1:28"
         )
+    }
+
+    /// 假封面：珊瑚渐变 + 音符，避免样张左侧空白。
+    private static func makePreviewArtwork() -> NSImage {
+        let size = NSSize(width: 128, height: 128)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        defer { image.unlockFocus() }
+
+        let rect = NSRect(origin: .zero, size: size)
+        NSGradient(colors: [
+            NSColor(calibratedRed: 1.0, green: 0.42, blue: 0.29, alpha: 1),
+            NSColor(calibratedRed: 0.55, green: 0.10, blue: 0.38, alpha: 1),
+            NSColor(calibratedRed: 0.18, green: 0.06, blue: 0.28, alpha: 1)
+        ])?.draw(in: rect, angle: -48)
+
+        if let symbol = NSImage(systemSymbolName: "music.note", accessibilityDescription: nil)?
+            .withSymbolConfiguration(
+                NSImage.SymbolConfiguration(pointSize: 46, weight: .semibold)
+                    .applying(NSImage.SymbolConfiguration(paletteColors: [.white.withAlphaComponent(0.92)]))
+            ) {
+            let noteSize = NSSize(width: 52, height: 52)
+            let noteRect = NSRect(
+                x: (size.width - noteSize.width) / 2,
+                y: (size.height - noteSize.height) / 2 - 2,
+                width: noteSize.width,
+                height: noteSize.height
+            )
+            symbol.draw(in: noteRect, from: .zero, operation: .sourceOver, fraction: 1)
+        }
+        return image
     }
 }
 

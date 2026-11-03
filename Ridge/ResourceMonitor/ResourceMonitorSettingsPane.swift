@@ -11,6 +11,16 @@ struct ResourceMonitorSettingsPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                // 未授权置顶；已授权整卡不展示。
+                SettingsPermissionCard(
+                    status: session.inputMonitoringGranted ? .authorized : .request,
+                    symbol: "hand.raised.fill",
+                    tint: Color(red: 0.42, green: 0.30, blue: 0.86),
+                    title: L10n.ResourceMonitor.permissionAccess,
+                    subtitle: L10n.ResourceMonitor.permissionAccessDesc,
+                    requestTitle: L10n.ResourceMonitor.requestPermission,
+                    action: { session.requestInputMonitoring() }
+                )
                 header
                 if let banner = session.lastActionBanner {
                     Text(banner)
@@ -61,33 +71,20 @@ struct ResourceMonitorSettingsPane: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Image(systemName: "cpu")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 26, height: 26)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(SettingsChrome.primary)
-                        )
-                    Text(L10n.ResourceMonitor.pageTitle)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    if session.snapshot.ramPercent >= settings.ramThresholdPercent {
-                        HStack(spacing: 5) {
-                            Circle()
-                                .fill(SettingsChrome.error)
-                                .frame(width: 6, height: 6)
-                            Text(L10n.ResourceMonitor.highPressure)
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .foregroundStyle(SettingsChrome.error)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(SettingsChrome.error.opacity(0.12)))
+        HStack(alignment: .center, spacing: 12) {
+            HStack(spacing: 8) {
+                if session.snapshot.ramPercent >= settings.ramThresholdPercent {
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(SettingsChrome.error)
+                            .frame(width: 6, height: 6)
+                        Text(L10n.ResourceMonitor.highPressure)
+                            .font(.system(size: 11, weight: .semibold))
                     }
+                    .foregroundStyle(SettingsChrome.error)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(SettingsChrome.error.opacity(0.12)))
                 }
                 HStack(spacing: 6) {
                     Text(L10n.ResourceMonitor.pageSubtitle)
@@ -101,7 +98,6 @@ struct ResourceMonitorSettingsPane: View {
             }
             Spacer(minLength: 8)
             HStack(spacing: 8) {
-                permissionButton
                 Button {
                     session.muteAlerts30m()
                 } label: {
@@ -137,34 +133,6 @@ struct ResourceMonitorSettingsPane: View {
                 .disabled(session.isPurging)
             }
         }
-    }
-
-    private var permissionButton: some View {
-        let granted = session.inputMonitoringGranted
-        return Button {
-            guard !granted else { return }
-            session.requestInputMonitoring()
-        } label: {
-            Label(
-                granted ? L10n.ResourceMonitor.permissionGranted : L10n.ResourceMonitor.requestPermission,
-                systemImage: granted ? "checkmark.shield.fill" : "hand.raised.fill"
-            )
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(granted ? SettingsChrome.secondary : SettingsChrome.onSurface)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(
-                        granted
-                            ? SettingsChrome.secondary.opacity(0.14)
-                            : SettingsChrome.surfaceContainer
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .disabled(granted)
-        .help(granted ? L10n.ResourceMonitor.permissionGranted : L10n.ResourceMonitor.requestPermission)
     }
 
     // MARK: - Metrics
