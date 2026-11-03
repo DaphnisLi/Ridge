@@ -57,11 +57,12 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
 
     var systemImage: String {
         switch self {
-        case .island: return "rectangle.topthird.inset.filled"
-        case .widgets: return "rectangle.3.group"
-        case .resourceMonitor: return "chart.bar.xaxis"
+        case .island: return "capsule.fill"
+        case .widgets: return "square.grid.2x2.fill"
+        case .resourceMonitor: return "chart.bar.fill"
         }
     }
+
 }
 
 struct SettingsRootView: View {

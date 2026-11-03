@@ -11,7 +11,8 @@ alwaysApply: true
 
 | API | 路径 | 用途 |
 |---|---|---|
-| `WidgetSamplePreview.island(for:compact:)` | `Ridge/Widgets/WidgetSamplePreview.swift` | **唯一调用点**：库卡片开关区 + 点进详情页顶部预览 |
+| `SettingsIslandPreviewCard` | `Ridge/Widgets/WidgetSamplePreview.swift` | **详情页外包卡**：白底 `SettingsCard` + 假数据岛 |
+| `WidgetSamplePreview.island(for:compact:)` | 同文件 | 库卡 / 需内嵌时调用；勿再铺灰渐变底 |
 | `WidgetIslandPreviewShell` | 同文件 | 壳：上直角、下圆角（`IslandPanelShape`）；一般不单独再包一层 |
 | 各 widget 的 `previewSample` / `sampleDevices` | 业务文件 | 假数据内容；由 `WidgetSamplePreview.content` 组装 |
 

@@ -28,24 +28,7 @@ struct BatteryWidgetConfigSection: View {
     // MARK: - 岛预览
 
     private var islandPreviewCard: some View {
-        SettingsCard {
-            VStack(spacing: 0) {
-                WidgetSamplePreview.island(for: "system.controlDeck.battery", compact: false)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 18)
-            }
-            .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [
-                        SettingsChrome.surfaceContainerLow,
-                        SettingsChrome.surfaceContainer.opacity(0.50)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-        }
+        SettingsIslandPreviewCard(widgetID: "system.controlDeck.battery")
     }
 
     private var headerBlock: some View {

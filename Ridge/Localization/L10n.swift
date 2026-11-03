@@ -29,18 +29,49 @@ enum L10n {
         static var widgets: String { tr("settings.section.widgets", "小组件") }
         static var resourceMonitor: String { tr("settings.section.resource_monitor", "资源监控") }
 
-        static var presetTheme: String { tr("settings.island.preset_theme", "预设主题") }
+        static var islandPageTitle: String { tr("settings.island.page_title", "灵动岛设置") }
+        static var islandPageSubtitle: String {
+            tr(
+                "settings.island.page_subtitle",
+                "紧凑模块化布局，精细调控色彩、物理几何形变与触觉反馈"
+            )
+        }
+        static var presetTheme: String { tr("settings.island.preset_theme", "预设主题外观") }
+        static var themeCountBadge: String { tr("settings.island.theme_count_badge", "5 款精美预设") }
+        static var themeClickHint: String { tr("settings.island.theme_click_hint", "点击即刻无缝换肤") }
+        static var themeInUse: String { tr("settings.island.theme_in_use", "使用中") }
+        static var geometryTitle: String { tr("settings.island.geometry_title", "尺寸与几何微调") }
+        static var matrixLabel: String { tr("settings.island.matrix_label", "矩阵") }
+        static var geometryPreview: String { tr("settings.island.geometry_preview", "动态形态预览") }
+        static var presetCompact: String { tr("settings.island.preset_compact", "紧凑型") }
+        static var presetBalanced: String { tr("settings.island.preset_balanced", "均衡型") }
+        static var presetWide: String { tr("settings.island.preset_wide", "宽屏型") }
+        static var presetCustom: String { tr("settings.island.preset_custom", "自定义") }
         static var expandedWidth: String { tr("settings.island.expanded_width", "展开后宽度") }
         static var widthNarrow: String { tr("settings.island.width_narrow", "窄") }
         static var widthWide: String { tr("settings.island.width_wide", "宽") }
         static var bottomCorner: String { tr("settings.island.bottom_corner", "下圆角") }
         static var cornerSquare: String { tr("settings.island.corner_square", "直角") }
         static var cornerRound: String { tr("settings.island.corner_round", "圆润") }
+        static var motionTitle: String { tr("settings.island.motion_title", "动画与触觉感知") }
         static var animationSpeed: String { tr("settings.island.animation_speed", "展开动画速度") }
         static var speedSlow: String { tr("settings.island.speed_slow", "慢") }
         static var speedFast: String { tr("settings.island.speed_fast", "快") }
+        static var speedSnap: String { tr("settings.island.speed_snap", "疾速") }
+        static var speedStandard: String { tr("settings.island.speed_standard", "标准") }
+        static var speedSmooth: String { tr("settings.island.speed_smooth", "丝滑") }
         static var hapticIntensity: String { tr("settings.island.haptic_intensity", "震感强度") }
+        static var hapticTapticHint: String { tr("settings.island.haptic_taptic", "Taptic") }
         static var hideInFullscreen: String { tr("settings.island.hide_in_fullscreen", "全屏时禁用灵动岛") }
+        static var hideFullscreenBadge: String {
+            tr("settings.island.hide_fullscreen_badge", "智能避让免打扰")
+        }
+        static var hideFullscreenSubtitle: String {
+            tr(
+                "settings.island.hide_fullscreen_subtitle",
+                "运行全屏沉浸应用、游戏或影视全屏播放时自动隐藏，防止视线遮挡与误触"
+            )
+        }
 
         static var hapticOff: String { tr("settings.haptic.off", "关") }
         static var hapticLight: String { tr("settings.haptic.light", "轻") }

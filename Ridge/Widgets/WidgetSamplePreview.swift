@@ -1,6 +1,21 @@
 import AppKit
 import SwiftUI
 
+/// 设置页「岛预览」外包卡：白底 SettingsCard + 假数据岛；库卡 / 详情页统一用这个。
+struct SettingsIslandPreviewCard: View {
+    let widgetID: WidgetID
+    var compact: Bool = false
+
+    var body: some View {
+        SettingsCard {
+            WidgetSamplePreview.island(for: widgetID, compact: compact)
+                .padding(.horizontal, compact ? 14 : 20)
+                .padding(.vertical, compact ? 16 : 22)
+                .frame(maxWidth: .infinity)
+        }
+    }
+}
+
 /// 设置页岛预览壳（上直角、下圆角）。新预览请调 `WidgetSamplePreview.island`，勿单独再包壳。
 struct WidgetIslandPreviewShell<Content: View>: View {
     var compact: Bool = false

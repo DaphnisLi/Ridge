@@ -3037,13 +3037,222 @@
         }
       }
     },
+    "settings.island.page_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "灵动岛设置"
+          }
+        }
+      }
+    },
+    "settings.island.page_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紧凑模块化布局，精细调控色彩、物理几何形变与触觉反馈"
+          }
+        }
+      }
+    },
     "settings.island.preset_theme": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "预设主题"
+            "value": "预设主题外观"
+          }
+        }
+      }
+    },
+    "settings.island.theme_count_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 款精美预设"
+          }
+        }
+      }
+    },
+    "settings.island.theme_click_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击即刻无缝换肤"
+          }
+        }
+      }
+    },
+    "settings.island.theme_in_use": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用中"
+          }
+        }
+      }
+    },
+    "settings.island.geometry_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尺寸与几何微调"
+          }
+        }
+      }
+    },
+    "settings.island.matrix_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "矩阵"
+          }
+        }
+      }
+    },
+    "settings.island.geometry_preview": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动态形态预览"
+          }
+        }
+      }
+    },
+    "settings.island.preset_compact": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紧凑型"
+          }
+        }
+      }
+    },
+    "settings.island.preset_balanced": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "均衡型"
+          }
+        }
+      }
+    },
+    "settings.island.preset_wide": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "宽屏型"
+          }
+        }
+      }
+    },
+    "settings.island.preset_custom": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义"
+          }
+        }
+      }
+    },
+    "settings.island.motion_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "动画与触觉感知"
+          }
+        }
+      }
+    },
+    "settings.island.speed_snap": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "疾速"
+          }
+        }
+      }
+    },
+    "settings.island.speed_standard": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准"
+          }
+        }
+      }
+    },
+    "settings.island.speed_smooth": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "丝滑"
+          }
+        }
+      }
+    },
+    "settings.island.haptic_taptic": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taptic"
+          }
+        }
+      }
+    },
+    "settings.island.hide_fullscreen_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能避让免打扰"
+          }
+        }
+      }
+    },
+    "settings.island.hide_fullscreen_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运行全屏沉浸应用、游戏或影视全屏播放时自动隐藏，防止视线遮挡与误触"
           }
         }
       }

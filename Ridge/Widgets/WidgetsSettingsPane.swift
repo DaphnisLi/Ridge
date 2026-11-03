@@ -356,14 +356,7 @@ private struct WidgetLibraryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.78, green: 0.84, blue: 0.90),
-                        Color(red: 0.90, green: 0.92, blue: 0.94)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                SettingsChrome.cardBackground
 
                 // 与详情页同一套假数据样张（上直角下圆角）。
                 WidgetSamplePreview.island(for: widgetID, compact: true)
@@ -394,8 +387,9 @@ private struct WidgetLibraryCard: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
-            .background(SettingsChrome.surfaceContainerLow.opacity(0.55))
+            .background(SettingsChrome.cardBackground)
         }
+        .background(SettingsChrome.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -439,24 +433,7 @@ private struct WidgetPreviewPane: View {
                     } else if widgetID == "builtin.media" {
                         MediaWidgetConfigSection()
                     } else {
-                        SettingsCard {
-                            VStack(spacing: 0) {
-                                WidgetSamplePreview.island(for: widgetID, compact: false)
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 22)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                LinearGradient(
-                                    colors: [
-                                        SettingsChrome.surfaceContainerLow,
-                                        SettingsChrome.surfaceContainer.opacity(0.50)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                        }
+                        SettingsIslandPreviewCard(widgetID: widgetID)
 
                         VStack(alignment: .leading, spacing: 8) {
                             Text(manifest.displayName)

@@ -15,24 +15,7 @@ struct MediaWidgetConfigSection: View {
     }
 
     private var islandPreviewCard: some View {
-        SettingsCard {
-            VStack(spacing: 0) {
-                WidgetSamplePreview.island(for: "builtin.media", compact: false)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 22)
-            }
-            .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [
-                        SettingsChrome.surfaceContainerLow,
-                        SettingsChrome.surfaceContainer.opacity(0.50)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-        }
+        SettingsIslandPreviewCard(widgetID: "builtin.media")
     }
 
     private var introCard: some View {

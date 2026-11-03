@@ -69,25 +69,7 @@ struct MeetingWidgetConfigSection: View {
     // MARK: - 岛预览
 
     private var islandPreviewCard: some View {
-        SettingsCard {
-            VStack(spacing: 0) {
-                // 与库卡片同一套假数据样张（上直角下圆角）。
-                WidgetSamplePreview.island(for: "builtin.meeting", compact: false)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 22)
-            }
-            .frame(maxWidth: .infinity)
-            .background(
-                LinearGradient(
-                    colors: [
-                        SettingsChrome.surfaceContainerLow,
-                        SettingsChrome.surfaceContainer.opacity(0.50)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-        }
+        SettingsIslandPreviewCard(widgetID: "builtin.meeting")
     }
 
     // MARK: - 日历授权

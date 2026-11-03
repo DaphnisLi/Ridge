@@ -161,23 +161,5 @@ struct ProjectsWidgetConfigSection: View {
 @MainActor
 @ViewBuilder
 private func previewChrome(moduleID: String) -> some View {
-    let pageID = ControlDeckSettings.pageIDPrefix + "." + moduleID
-    SettingsCard {
-        VStack(spacing: 0) {
-            WidgetSamplePreview.island(for: pageID, compact: false)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 22)
-        }
-        .frame(maxWidth: .infinity)
-        .background(
-            LinearGradient(
-                colors: [
-                    SettingsChrome.surfaceContainerLow,
-                    SettingsChrome.surfaceContainer.opacity(0.50)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-    }
+    SettingsIslandPreviewCard(widgetID: ControlDeckSettings.pageIDPrefix + "." + moduleID)
 }
