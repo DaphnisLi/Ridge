@@ -3333,6 +3333,259 @@
           }
         }
       }
+    },
+    "resource_monitor.behavior_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 小时专注时间线"
+          }
+        }
+      }
+    },
+    "resource_monitor.behavior_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全天候无感记录应用驻留专注度、人机交互空闲节拍与击键脉冲。"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_distribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24h 工作专注/空闲时序带"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_tick_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现在"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_rank_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用聚焦驻留排行"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_rank_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统级真实事件"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_share_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f%% 驻留"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_keys": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "击键"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_switches": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_average": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平均单次"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_metric_longest": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最长连续"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_keys_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 次"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_switch_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 次"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_avg_min_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f 分"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_browser": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网页浏览器"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_ide": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发工具"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_terminal": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "终端命令行"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_category_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他应用"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_empty_rank": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日尚无应用驻留记录"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_today_total_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日专注累计: "
+          }
+        }
+      }
+    },
+    "resource_monitor.heatmap_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本年研发击键热力"
+          }
+        }
+      }
+    },
+    "resource_monitor.heatmap_day_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d月%d日"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_window_range_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ - 现在"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

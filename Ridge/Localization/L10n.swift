@@ -847,6 +847,15 @@ enum L10n {
         static var keystrokePeakPlaceholder: String {
             tr("resource_monitor.keystroke_peak_placeholder", "峰值时段: —")
         }
+        static func keystrokePeak(_ range: String) -> String {
+            String(
+                format: String(
+                    localized: "resource_monitor.keystroke_peak_format",
+                    defaultValue: "峰值时段: %@"
+                ),
+                range
+            )
+        }
         /// 焦点切换：0～80 良好，81～180 中等，>180 高频（次/小时）。
         static var focusLevelGood: String {
             tr("resource_monitor.focus_level_good", "专注良好")
@@ -903,38 +912,99 @@ enum L10n {
         }
         static var unknownApp: String { tr("resource_monitor.unknown_app", "未知应用") }
         static var emptyTop: String { tr("resource_monitor.empty_top", "暂无第三方 App 占用数据") }
-        static var behaviorTitle: String { tr("resource_monitor.behavior_title", "行为诊断与 24h 时间线") }
+        static var behaviorTitle: String { tr("resource_monitor.behavior_title", "24 小时专注时间线") }
         static var behaviorHint: String {
             tr(
                 "resource_monitor.behavior_hint",
-                "全天记录各个核心 App 的焦点驻留与内存增长轨迹。"
+                "全天候无感记录应用驻留专注度、人机交互空闲节拍与击键脉冲。"
             )
         }
         static var focusDistribution: String {
-            tr("resource_monitor.focus_distribution", "今日应用焦点驻留分布")
+            tr("resource_monitor.focus_distribution", "24h 工作专注/空闲时序带")
         }
-        static var focusWindowNow: String {
-            tr("resource_monitor.focus_window_now", "00:00 – 现在")
-        }
-        static var ramWave: String { tr("resource_monitor.ram_wave", "今日 RAM 消耗波形 (GB)") }
-        static func ramWavePeak(_ gb: Double, _ time: String) -> String {
+        static func focusWindowRange(_ start: Date) -> String {
             String(
                 format: String(
-                    localized: "resource_monitor.ram_wave_peak_format",
-                    defaultValue: "峰值 %.1f GB @ %@"
+                    localized: "resource_monitor.focus_window_range_format",
+                    defaultValue: "%@ - 现在"
                 ),
-                gb,
-                time
+                focusClock(start)
             )
         }
-        static var ramWaveNowSafe: String {
-            tr("resource_monitor.ram_wave_now_safe", "现在")
+        static var focusTickNow: String { tr("resource_monitor.focus_tick_now", "现在") }
+        static func focusClock(_ date: Date) -> String {
+            let f = DateFormatter()
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.dateFormat = "HH:mm"
+            return f.string(from: date)
         }
-        static var ramWaveNowCritical: String {
-            tr("resource_monitor.ram_wave_now_critical", "现在 (高危)")
+        static var focusRankTitle: String {
+            tr("resource_monitor.focus_rank_title", "应用聚焦驻留排行")
+        }
+        static var focusRankBadge: String {
+            tr("resource_monitor.focus_rank_badge", "系统级真实事件")
+        }
+        static var focusTodayTotalLabel: String {
+            tr("resource_monitor.focus_today_total_label", "今日专注累计: ")
+        }
+        static func focusSharePercent(_ percent: Double) -> String {
+            String(
+                format: String(localized: "resource_monitor.focus_share_format", defaultValue: "%.0f%% 驻留"),
+                percent
+            )
+        }
+        static var focusMetricKeys: String { tr("resource_monitor.focus_metric_keys", "击键") }
+        static var focusMetricSwitches: String { tr("resource_monitor.focus_metric_switches", "切换") }
+        static var focusMetricAverage: String { tr("resource_monitor.focus_metric_average", "平均单次") }
+        static var focusMetricLongest: String { tr("resource_monitor.focus_metric_longest", "最长连续") }
+        static func focusKeystrokeCount(_ n: Int) -> String {
+            let f = NumberFormatter()
+            f.numberStyle = .decimal
+            let body = f.string(from: NSNumber(value: n)) ?? "\(n)"
+            return String(
+                format: String(localized: "resource_monitor.focus_keys_count_format", defaultValue: "%@ 次"),
+                body
+            )
+        }
+        static func focusSwitchCount(_ n: Int) -> String {
+            String(
+                format: String(localized: "resource_monitor.focus_switch_count_format", defaultValue: "%d 次"),
+                n
+            )
+        }
+        /// 平均单次：分钟一位小数，如 `5.0 分`。
+        static func focusAverageMinutes(_ seconds: TimeInterval) -> String {
+            let minutes = max(0, seconds / 60.0)
+            return String(
+                format: String(localized: "resource_monitor.focus_avg_min_format", defaultValue: "%.1f 分"),
+                minutes
+            )
+        }
+        static var focusCategoryBrowser: String {
+            tr("resource_monitor.focus_category_browser", "网页浏览器")
+        }
+        static var focusCategoryIDE: String {
+            tr("resource_monitor.focus_category_ide", "开发工具")
+        }
+        static var focusCategoryTerminal: String {
+            tr("resource_monitor.focus_category_terminal", "终端命令行")
+        }
+        static var focusCategoryOther: String {
+            tr("resource_monitor.focus_category_other", "其他应用")
+        }
+        static var focusEmptyRank: String {
+            tr("resource_monitor.focus_empty_rank", "今日尚无应用驻留记录")
         }
         static var heatmapTitle: String {
-            tr("resource_monitor.heatmap_title", "365 天研发击键 & 负荷热力")
+            tr("resource_monitor.heatmap_title", "本年研发击键热力")
+        }
+        /// 热力格悬停：`11月3日`。
+        static func heatmapDayLabel(month: Int, day: Int) -> String {
+            String(
+                format: String(localized: "resource_monitor.heatmap_day_format", defaultValue: "%d月%d日"),
+                month,
+                day
+            )
         }
         /// 年累计紧凑数：≥1B → `1.2B`；≥1M → `4.2M`（含远超百万）；≥1K → `12.3K`；否则原数。
         static func yearKeys(_ n: Int) -> String {

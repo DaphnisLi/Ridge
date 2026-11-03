@@ -20,13 +20,14 @@ struct ResourceMonitorSettingsPane: View {
                 metricsGrid
                 // 左进程约 3/5、右栏约 2/5；不用 ScrollView 内 containerRelativeFrame（易布局死循环卡死）。
                 ResourceMonitorRatioSplit(leftFraction: 0.6, spacing: 16) {
-                    topAppsCard
                     VStack(alignment: .leading, spacing: 12) {
-                        behaviorCard
+                        topAppsCard
                         heatmapCard
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .clipped()
+                    behaviorCard
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .clipped()
                 }
                 alertPolicyBar
             }
@@ -228,7 +229,8 @@ struct ResourceMonitorSettingsPane: View {
                 tint: keystrokePurple,
                 badge: .trendIcon,
                 footnote: session.inputMonitoringGranted
-                    ? L10n.ResourceMonitor.keystrokePeakPlaceholder
+                    ? (session.keystrokePeakRangeText.map(L10n.ResourceMonitor.keystrokePeak)
+                        ?? L10n.ResourceMonitor.keystrokePeakPlaceholder)
                     : L10n.ResourceMonitor.keystrokeNeedPermission
             )
             metricCard(
@@ -655,89 +657,292 @@ struct ResourceMonitorSettingsPane: View {
     // MARK: - Behavior / heatmap
 
     private var behaviorCard: some View {
-        let slices = session.focusSlices
-        let totalFocus = max(1, slices.reduce(0) { $0 + $1.seconds })
+        let ranks = session.focusRanks
+        let timeline = session.focusTimeline
+        // 时序上出现的 App 都分配调色板色，禁止落到「灰」被当成未知第三态。
+        let colorIndexByBundle = Self.focusColorMap(ranks: ranks, timeline: timeline)
+        let featuredID = ranks.max(by: { $0.keystrokes < $1.keystrokes })?.bundleID
+        // 窗口：今日首次活动 → 现在（随时间变长，跨日清空后重锚）。
+        let windowStart = session.focusTimelineAnchor ?? Date()
+        let windowEnd = Date()
+        let windowSpan = max(30, windowEnd.timeIntervalSince(windowStart))
+        let tickDates = Self.timelineTickDates(start: windowStart, end: windowEnd)
         return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(keystrokePurple)
-                    )
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.ResourceMonitor.behaviorTitle)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    Text(L10n.ResourceMonitor.behaviorHint)
-                        .font(.system(size: 12))
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+            HStack(spacing: 8) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(keystrokePurple)
+                Text(L10n.ResourceMonitor.behaviorTitle)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(SettingsChrome.onSurface)
             }
 
-            HStack(alignment: .firstTextBaseline) {
-                Text(L10n.ResourceMonitor.focusDistribution)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                Spacer(minLength: 8)
-                Text(L10n.ResourceMonitor.focusWindowNow)
-                    .font(.system(size: 11, design: .monospaced))
+            Text(L10n.ResourceMonitor.behaviorHint)
+                .font(.system(size: 12))
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Label {
+                        Text(L10n.ResourceMonitor.focusDistribution)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(SettingsChrome.onSurface)
+                    } icon: {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    }
+                    Spacer(minLength: 8)
+                    Text(
+                        session.focusTimelineAnchor.map(L10n.ResourceMonitor.focusWindowRange)
+                            ?? L10n.ResourceMonitor.focusTickNow
+                    )
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                }
+
+                // 真实时序：左端=今日首次使用，右端=现在；底色仅表示长时间无记录（如关机）。
+                GeometryReader { geo in
+                    let width = geo.size.width
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(SettingsChrome.surfaceContainer)
+                            .frame(width: width, height: geo.size.height)
+                        ForEach(timeline) { segment in
+                            let startOffset = max(0, segment.start.timeIntervalSince(windowStart))
+                            let endOffset = min(
+                                windowSpan,
+                                max(startOffset, segment.end.timeIntervalSince(windowStart))
+                            )
+                            let x = width * CGFloat(startOffset / windowSpan)
+                            let w = width * CGFloat((endOffset - startOffset) / windowSpan)
+                            let colorIdx = colorIndexByBundle[segment.bundleID] ?? 0
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .fill(focusColor(colorIdx).opacity(0.9))
+                                .frame(width: max(2, w), height: geo.size.height)
+                                .offset(x: x)
+                                .help(
+                                    "\(segment.name) · \(L10n.ResourceMonitor.focusClock(segment.start))–\(L10n.ResourceMonitor.focusClock(segment.end))"
+                                )
+                        }
+                    }
+                }
+                .frame(height: 28)
+                .padding(3)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(SettingsChrome.surfaceContainer)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                HStack {
+                    ForEach(Array(tickDates.enumerated()), id: \.offset) { index, date in
+                        if index == tickDates.count - 1 {
+                            Text(L10n.ResourceMonitor.focusTickNow)
+                        } else {
+                            Text(L10n.ResourceMonitor.focusClock(date))
+                        }
+                        if index < tickDates.count - 1 { Spacer(minLength: 0) }
+                    }
+                }
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(L10n.ResourceMonitor.focusRankTitle)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Text(L10n.ResourceMonitor.focusRankBadge)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            Capsule().fill(SettingsChrome.surfaceContainer)
+                        )
+                    Spacer(minLength: 6)
+                    HStack(spacing: 0) {
+                        Text(L10n.ResourceMonitor.focusTodayTotalLabel)
+                            .font(.system(size: 11))
+                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        Text(L10n.ResourceMonitor.durationHours(session.todayFocusTotalSeconds))
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(SettingsChrome.onSurface)
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                }
+
+                if ranks.isEmpty {
+                    Text(L10n.ResourceMonitor.focusEmptyRank)
+                        .font(.system(size: 12))
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 8)
+                } else {
+                    ForEach(ranks) { rank in
+                        focusRankRow(rank, featured: rank.bundleID == featuredID)
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .background(cardChrome)
+    }
+
+    @ViewBuilder
+    private func focusRankRow(_ rank: ResourceFocusRank, featured: Bool) -> some View {
+        let tint = focusColor(rank.colorIndex)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: focusCategorySymbol(rank.category))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 22, height: 22)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(tint.opacity(0.15))
+                    )
+                Text(rank.name)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(SettingsChrome.onSurface)
+                    .lineLimit(1)
+                Text(focusCategoryLabel(rank.category))
+                    .font(.system(size: 10, design: .monospaced).weight(featured ? .medium : .regular))
+                    .foregroundStyle(featured ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        Capsule().fill(
+                            featured
+                                ? SettingsChrome.primary.opacity(0.12)
+                                : SettingsChrome.surfaceContainerHighest
+                        )
+                    )
+                Spacer(minLength: 6)
+                Text(L10n.ResourceMonitor.durationHours(rank.seconds))
+                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(SettingsChrome.onSurface)
+                Text(L10n.ResourceMonitor.focusSharePercent(rank.sharePercent))
+                    .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(SettingsChrome.onSurfaceVariant)
             }
 
             GeometryReader { geo in
-                HStack(spacing: 3) {
-                    if slices.isEmpty {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(SettingsChrome.surfaceContainer)
-                            .frame(width: geo.size.width)
-                    } else {
-                        ForEach(slices) { slice in
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(focusColor(slice.colorIndex))
-                                .frame(width: max(6, geo.size.width * CGFloat(slice.seconds / totalFocus)))
-                                .help("\(slice.name) · \(L10n.ResourceMonitor.durationHours(slice.seconds))")
-                        }
-                    }
+                ZStack(alignment: .leading) {
+                    Capsule().fill(SettingsChrome.surfaceContainer)
+                    Capsule()
+                        .fill(tint.opacity(0.85))
+                        .frame(width: max(4, geo.size.width * CGFloat(min(1, rank.sharePercent / 100))))
                 }
             }
-            .frame(height: 28)
+            .frame(height: 6)
 
             LazyVGrid(
-                columns: [
-                    GridItem(.flexible(minimum: 0), spacing: 8, alignment: .leading),
-                    GridItem(.flexible(minimum: 0), spacing: 8, alignment: .leading)
-                ],
-                alignment: .leading,
-                spacing: 8
+                columns: Array(repeating: GridItem(.flexible(minimum: 0), spacing: 6), count: 4),
+                spacing: 6
             ) {
-                ForEach(slices) { slice in
-                    HStack(spacing: 6) {
-                        Circle().fill(focusColor(slice.colorIndex)).frame(width: 8, height: 8)
-                        Text("\(slice.name) (\(L10n.ResourceMonitor.durationHours(slice.seconds)))")
-                            .font(.system(size: 11))
-                            .foregroundStyle(SettingsChrome.onSurface)
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                focusMetricCell(
+                    icon: "keyboard",
+                    iconTint: tint,
+                    title: L10n.ResourceMonitor.focusMetricKeys,
+                    value: L10n.ResourceMonitor.focusKeystrokeCount(rank.keystrokes),
+                    valueTint: featured ? SettingsChrome.primary : SettingsChrome.onSurface
+                )
+                focusMetricCell(
+                    icon: "arrow.left.arrow.right",
+                    iconTint: SettingsChrome.onSurfaceVariant,
+                    title: L10n.ResourceMonitor.focusMetricSwitches,
+                    value: L10n.ResourceMonitor.focusSwitchCount(rank.switches),
+                    valueTint: SettingsChrome.onSurface
+                )
+                focusMetricCell(
+                    icon: "timer",
+                    iconTint: SettingsChrome.primary,
+                    title: L10n.ResourceMonitor.focusMetricAverage,
+                    value: L10n.ResourceMonitor.focusAverageMinutes(rank.averageSessionSeconds),
+                    valueTint: SettingsChrome.onSurface
+                )
+                focusMetricCell(
+                    icon: "trophy",
+                    iconTint: SettingsChrome.secondary,
+                    title: L10n.ResourceMonitor.focusMetricLongest,
+                    value: L10n.ResourceMonitor.durationHours(rank.longestSessionSeconds),
+                    valueTint: featured ? SettingsChrome.secondary : SettingsChrome.onSurface
+                )
             }
-
-            ResourceRAMWaveChart(
-                samples: session.ramSamples,
-                thresholdPercent: settings.ramThresholdPercent,
-                currentPercent: session.snapshot.ramPercent,
-                accent: SettingsChrome.primary,
-                critical: deepRAMRed
-            )
-            .padding(.top, 4)
         }
-        .padding(14)
-        .background(cardChrome)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(SettingsChrome.surfaceContainerLow.opacity(0.7))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(
+                    featured ? SettingsChrome.primary.opacity(0.35) : SettingsChrome.cardStroke,
+                    lineWidth: featured ? 1.2 : SettingsChrome.cardStrokeWidth
+                )
+        )
+    }
+
+    private func focusMetricCell(
+        icon: String,
+        iconTint: Color,
+        title: String,
+        value: String,
+        valueTint: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label {
+                Text(title)
+                    .font(.system(size: 10))
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            } icon: {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(iconTint)
+            }
+            .labelStyle(.titleAndIcon)
+            Text(value)
+                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .foregroundStyle(valueTint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(SettingsChrome.cardBackground.opacity(0.85))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(SettingsChrome.cardStroke.opacity(0.6), lineWidth: 0.5)
+        )
+    }
+
+    private func focusCategoryLabel(_ category: ResourceFocusCategory) -> String {
+        switch category {
+        case .browser: return L10n.ResourceMonitor.focusCategoryBrowser
+        case .ide: return L10n.ResourceMonitor.focusCategoryIDE
+        case .terminal: return L10n.ResourceMonitor.focusCategoryTerminal
+        case .other: return L10n.ResourceMonitor.focusCategoryOther
+        }
+    }
+
+    private func focusCategorySymbol(_ category: ResourceFocusCategory) -> String {
+        switch category {
+        case .browser: return "globe"
+        case .ide: return "chevron.left.forwardslash.chevron.right"
+        case .terminal: return "terminal"
+        case .other: return "app"
+        }
     }
 
     private var heatmapCard: some View {
@@ -764,9 +969,10 @@ struct ResourceMonitorSettingsPane: View {
                     .lineLimit(1)
             }
 
-            // 按可用宽度折行，多加几行把 365 天全铺开，不裁切、不横向滚。
+            // 按可用宽度折行；格数 = 首次使用日（或本年 1/1）至今，不裁切、不横向滚。
             ResourceHeatmapCanvas(days: days)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 6) {
                 Text(L10n.ResourceMonitor.heatLow)
@@ -862,10 +1068,14 @@ struct ResourceMonitorSettingsPane: View {
                         )
                         .textFieldStyle(.plain)
                         .onSubmit { commitRamThreshold() }
-                        .onChange(of: ramThresholdDraft) { _, _ in
-                            // 仅允许数字；提交时再钳制范围。
-                            let filtered = ramThresholdDraft.filter(\.isNumber)
-                            if filtered != ramThresholdDraft { ramThresholdDraft = filtered }
+                        .onChange(of: ramThresholdDraft) { _, newValue in
+                            let filtered = newValue.filter(\.isNumber)
+                            if filtered != newValue {
+                                ramThresholdDraft = filtered
+                                return
+                            }
+                            // 已是合法阈值则即时写入，无需回车。
+                            applyRamThresholdIfComplete(filtered)
                         }
                     Text(L10n.ResourceMonitor.alertPolicyAfterThreshold(settings.singleAppAlertGB))
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
@@ -901,13 +1111,21 @@ struct ResourceMonitorSettingsPane: View {
         }
     }
 
-    /// 提交 RAM 阈值：默认 85，合法范围 50…99。
+    /// 输入过程中：仅当草稿已是 50…99 时立刻生效。
+    private func applyRamThresholdIfComplete(_ draft: String) {
+        guard let n = Int(draft), (50...99).contains(n) else { return }
+        guard abs(settings.ramThresholdPercent - Double(n)) > 0.01 else { return }
+        settings.ramThresholdPercent = Double(n)
+        AppLog.info("ResourceMonitor", "用户修改 RAM 告警阈值", ["percent": n, "via": "typing"])
+    }
+
+    /// 回车 / 收尾：钳制到 50…99 并写回草稿。
     private func commitRamThreshold() {
         let raw = Int(ramThresholdDraft) ?? Int(settings.ramThresholdPercent.rounded())
         let clamped = min(99, max(50, raw))
         if abs(settings.ramThresholdPercent - Double(clamped)) > 0.01 {
             settings.ramThresholdPercent = Double(clamped)
-            AppLog.info("ResourceMonitor", "用户修改 RAM 告警阈值", ["percent": clamped])
+            AppLog.info("ResourceMonitor", "用户修改 RAM 告警阈值", ["percent": clamped, "via": "submit"])
         }
         ramThresholdDraft = "\(clamped)"
     }
@@ -946,14 +1164,45 @@ struct ResourceMonitorSettingsPane: View {
     }
 
     private func focusColor(_ index: Int) -> Color {
+        // 全部用鲜明色；不再用灰（易与「无记录」底色混淆）。
         let palette: [Color] = [
             Color(red: 0.92, green: 0.26, blue: 0.21),
             SettingsChrome.primary,
             Color(red: 0.30, green: 0.29, blue: 0.79),
             SettingsChrome.secondary,
-            SettingsChrome.onSurfaceVariant
+            Color(red: 0.90, green: 0.55, blue: 0.12)
         ]
         return palette[index % palette.count]
+    }
+
+    /// 排行优先占色，时序里多出来的 App 依次接调色板。
+    private static func focusColorMap(
+        ranks: [ResourceFocusRank],
+        timeline: [ResourceFocusTimelineSegment]
+    ) -> [String: Int] {
+        var map: [String: Int] = [:]
+        for rank in ranks {
+            map[rank.bundleID] = rank.colorIndex
+        }
+        var next = ranks.count
+        for segment in timeline where map[segment.bundleID] == nil {
+            map[segment.bundleID] = next % 5
+            next += 1
+        }
+        return map
+    }
+
+    /// 时序刻度：起点…均匀中间点…终点（终点在 UI 显示为「现在」）。
+    private static func timelineTickDates(start: Date, end: Date) -> [Date] {
+        let span = end.timeIntervalSince(start)
+        guard span > 0 else { return [start, end] }
+        if span < 5 * 60 {
+            return [start, end]
+        }
+        if span < 30 * 60 {
+            return [start, start.addingTimeInterval(span / 2), end]
+        }
+        return [0.0, 0.25, 0.5, 0.75, 1.0].map { start.addingTimeInterval(span * $0) }
     }
 
 }
@@ -997,89 +1246,252 @@ private struct ResourceMonitorRatioSplit: Layout {
     }
 }
 
-/// 按日横排热力：第一行画满再折第二行；格子均分宽度，行距均匀。
-private struct ResourceHeatmapCanvas: View {
+/// 按日横排热力：AppKit 单视图绘制 + 本地浮层日期，避免 SwiftUI 悬停刷状态卡死。
+private struct ResourceHeatmapCanvas: NSViewRepresentable {
     let days: [ResourceDayAggregate]
 
-    private let preferredCell: CGFloat = 10
-    private let gap: CGFloat = 3
-    @State private var canvasWidth: CGFloat = 0
-
-    var body: some View {
-        let metrics = Self.layout(
-            dayCount: days.count,
-            width: max(canvasWidth, 1),
-            preferredCell: preferredCell,
-            gap: gap
-        )
-        Canvas { context, _ in
-            let cell = metrics.cell
-            let cols = metrics.cols
-            for (index, day) in days.enumerated() {
-                let row = index / cols
-                let col = index % cols
-                let x = CGFloat(col) * (cell + gap)
-                let y = CGFloat(row) * (cell + gap)
-                let rect = CGRect(x: x, y: y, width: cell, height: cell)
-                context.fill(
-                    Path(roundedRect: rect, cornerRadius: max(1.5, cell * 0.18)),
-                    with: .color(Self.color(for: day))
-                )
-            }
-        }
-        .frame(maxWidth: .infinity, minHeight: metrics.height, maxHeight: metrics.height, alignment: .topLeading)
-        .background(
-            GeometryReader { geo in
-                Color.clear
-                    .onAppear { canvasWidth = geo.size.width }
-                    .onChange(of: geo.size.width) { _, newWidth in
-                        canvasWidth = newWidth
-                    }
-            }
-        )
+    func makeNSView(context: Context) -> ResourceHeatmapNSView {
+        let view = ResourceHeatmapNSView()
+        view.days = days
+        return view
     }
 
-    private struct LayoutMetrics {
+    func updateNSView(_ nsView: ResourceHeatmapNSView, context: Context) {
+        guard nsView.days != days else { return }
+        nsView.days = days
+        nsView.needsDisplay = true
+        nsView.invalidateIntrinsicContentSize()
+    }
+}
+
+private final class ResourceHeatmapNSView: NSView {
+    var days: [ResourceDayAggregate] = [] {
+        didSet { hideTip() }
+    }
+
+    private let cellSize: CGFloat = 10
+    private let gap: CGFloat = 3
+    private var tipBubble: NSView!
+    private var tipLabel: NSTextField!
+    private var lastLayoutWidth: CGFloat = -1
+
+    override var isFlipped: Bool { true }
+    override var isOpaque: Bool { false }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        commonInit()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        commonInit()
+    }
+
+    private func commonInit() {
+        wantsLayer = true
+        // 气泡可盖住上方标题，不额外撑开与标题的间距。
+        layer?.masksToBounds = false
+
+        let bubble = NSView(frame: .zero)
+        bubble.wantsLayer = true
+        bubble.isHidden = true
+        bubble.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.72).cgColor
+        bubble.layer?.cornerRadius = 6
+        bubble.layer?.masksToBounds = true
+
+        let label = NSTextField(labelWithString: "")
+        label.isBezeled = false
+        label.drawsBackground = false
+        label.backgroundColor = .clear
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 11, weight: .medium)
+        label.alignment = .center
+        bubble.addSubview(label)
+
+        addSubview(bubble)
+        tipBubble = bubble
+        tipLabel = label
+    }
+
+    override var intrinsicContentSize: NSSize {
+        let width = bounds.width > 1 ? bounds.width : 240
+        return NSSize(width: NSView.noIntrinsicMetric, height: metrics(forWidth: width).height)
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        relaxClippingAncestors()
+    }
+
+    override func layout() {
+        super.layout()
+        relaxClippingAncestors()
+        if abs(bounds.width - lastLayoutWidth) > 0.5 {
+            lastLayoutWidth = bounds.width
+            invalidateIntrinsicContentSize()
+            needsDisplay = true
+        }
+    }
+
+    /// 让气泡能盖住上方标题，不被 SwiftUI / AppKit 祖先裁切。
+    private func relaxClippingAncestors() {
+        var node: NSView? = self
+        var depth = 0
+        while let view = node, depth < 8 {
+            view.clipsToBounds = false
+            view.layer?.masksToBounds = false
+            if view is NSScrollView { break }
+            node = view.superview
+            depth += 1
+        }
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        let options: NSTrackingArea.Options = [
+            .activeInKeyWindow,
+            .mouseMoved,
+            .mouseEnteredAndExited,
+            .inVisibleRect
+        ]
+        addTrackingArea(NSTrackingArea(rect: .zero, options: options, owner: self, userInfo: nil))
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let m = metrics(forWidth: bounds.width)
+        let corner = max(1.5, cellSize * 0.18)
+        for (index, day) in days.enumerated() {
+            let row = index / m.cols
+            let col = index % m.cols
+            let x = CGFloat(col) * (cellSize + gap)
+            let y = CGFloat(row) * (cellSize + gap)
+            let rect = NSRect(x: x, y: y, width: cellSize, height: cellSize)
+            let path = NSBezierPath(roundedRect: rect, xRadius: corner, yRadius: corner)
+            Self.nsColor(for: day).setFill()
+            path.fill()
+        }
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        guard let hit = cellHit(at: point) else {
+            hideTip()
+            return
+        }
+        tipLabel.stringValue = hit.tip
+        tipLabel.sizeToFit()
+        let padX: CGFloat = 8
+        let padY: CGFloat = 4
+        let bubbleSize = NSSize(
+            width: tipLabel.frame.width + padX * 2,
+            height: tipLabel.frame.height + padY * 2
+        )
+        tipLabel.frame = NSRect(
+            x: padX,
+            y: padY,
+            width: tipLabel.frame.width,
+            height: tipLabel.frame.height
+        )
+        // 严格锚在当前格子水平中心正上方；不夹到画布边缘（否则前几格看起来位置不变）。
+        let origin = NSPoint(
+            x: hit.rect.midX - bubbleSize.width / 2,
+            y: hit.rect.minY - bubbleSize.height - 4
+        )
+        tipBubble.frame = NSRect(origin: origin, size: bubbleSize)
+        tipBubble.isHidden = false
+        tipBubble.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.72).cgColor
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        hideTip()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        // 不抢焦点、不冒泡处理，避免设置页卡顿。
+    }
+
+    private func hideTip() {
+        tipBubble?.isHidden = true
+    }
+
+    private struct CellHit {
+        var tip: String
+        var rect: NSRect
+    }
+
+    private func cellHit(at point: NSPoint) -> CellHit? {
+        let m = metrics(forWidth: bounds.width)
+        guard m.cols > 0, point.x >= 0, point.y >= 0 else { return nil }
+        let col = Int(point.x / (cellSize + gap))
+        let row = Int(point.y / (cellSize + gap))
+        guard col >= 0, col < m.cols, row >= 0 else { return nil }
+        let inCellX = point.x - CGFloat(col) * (cellSize + gap)
+        let inCellY = point.y - CGFloat(row) * (cellSize + gap)
+        guard inCellX <= cellSize, inCellY <= cellSize else { return nil }
+        let index = row * m.cols + col
+        guard days.indices.contains(index) else { return nil }
+        let rect = NSRect(
+            x: CGFloat(col) * (cellSize + gap),
+            y: CGFloat(row) * (cellSize + gap),
+            width: cellSize,
+            height: cellSize
+        )
+        return CellHit(tip: Self.dayTip(days[index].dayKey), rect: rect)
+    }
+
+    private struct Metrics {
         var cols: Int
-        var cell: CGFloat
         var height: CGFloat
     }
 
-    private static func layout(
-        dayCount: Int,
-        width: CGFloat,
-        preferredCell: CGFloat,
-        gap: CGFloat
-    ) -> LayoutMetrics {
-        let count = max(1, dayCount)
-        let usable = max(width, preferredCell)
-        var cols = max(1, Int(floor((usable + gap) / (preferredCell + gap))))
+    private func metrics(forWidth width: CGFloat) -> Metrics {
+        let count = max(1, days.count)
+        let usable = max(width, cellSize)
+        var cols = max(1, Int(floor((usable + gap) / (cellSize + gap))))
         cols = min(cols, count)
-        let cell = max(6, (usable - CGFloat(max(0, cols - 1)) * gap) / CGFloat(cols))
         let rows = max(1, Int(ceil(Double(count) / Double(cols))))
-        let height = CGFloat(rows) * cell + CGFloat(max(0, rows - 1)) * gap
-        return LayoutMetrics(cols: cols, cell: cell, height: height)
+        let height = CGFloat(rows) * cellSize + CGFloat(max(0, rows - 1)) * gap
+        return Metrics(cols: cols, height: height)
     }
 
-    /// 活跃度分档（图例 5 格）：只按当日击键，与 RAM 无关。
+    private static func dayTip(_ dayKey: String) -> String {
+        let parts = dayKey.split(separator: "-")
+        guard parts.count == 3,
+              let month = Int(parts[1]),
+              let day = Int(parts[2])
+        else { return dayKey }
+        return L10n.ResourceMonitor.heatmapDayLabel(month: month, day: day)
+    }
+
     static func activityBand(for day: ResourceDayAggregate) -> Int {
         switch day.keystrokes {
         case 0: return 0
         case 1..<500: return 1
         case 500..<2_000: return 2
         case 2_000..<5_000: return 3
-        default: return 4 // ≥5000
+        default: return 4
         }
     }
 
     static func color(for day: ResourceDayAggregate) -> Color {
-        let hot = Color(red: 0.72, green: 0.08, blue: 0.10)
+        Color(nsColor: nsColor(for: day))
+    }
+
+    private static func nsColor(for day: ResourceDayAggregate) -> NSColor {
+        let hot = NSColor(red: 0.72, green: 0.08, blue: 0.10, alpha: 1)
         switch activityBand(for: day) {
-        case 0: return SettingsChrome.surfaceContainer
-        case 1: return SettingsChrome.primary.opacity(0.25)
-        case 2: return SettingsChrome.primary.opacity(0.45)
-        case 3: return SettingsChrome.primary.opacity(0.7)
-        default: return hot
+        case 0:
+            return NSColor(red: 0.937, green: 0.937, blue: 0.949, alpha: 1)
+        case 1:
+            return NSColor(SettingsChrome.primary).withAlphaComponent(0.25)
+        case 2:
+            return NSColor(SettingsChrome.primary).withAlphaComponent(0.45)
+        case 3:
+            return NSColor(SettingsChrome.primary).withAlphaComponent(0.7)
+        default:
+            return hot
         }
     }
 }
@@ -1167,132 +1579,6 @@ private struct ResourceTreeBranch: View {
             )
         }
         .accessibilityHidden(true)
-    }
-}
-
-/// 今日 RAM 消耗波形（GB）：峰值标注、阈值虚线、时轴、「现在 / 高危」。
-private struct ResourceRAMWaveChart: View {
-    let samples: [ResourceRAMSample]
-    let thresholdPercent: Double
-    let currentPercent: Double
-    let accent: Color
-    let critical: Color
-
-    var body: some View {
-        let peak = samples.max(by: { $0.usedGB < $1.usedGB })
-        let hotNow = currentPercent >= thresholdPercent
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(L10n.ResourceMonitor.ramWave)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                Spacer(minLength: 8)
-                if let peak {
-                    Text(L10n.ResourceMonitor.ramWavePeak(peak.usedGB, Self.timeLabel(peak.at)))
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(critical)
-                }
-            }
-
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(SettingsChrome.surfaceContainerLow)
-                chartCanvas
-                    .padding(.horizontal, 8)
-                    .padding(.top, 10)
-                    .padding(.bottom, 6)
-            }
-            .frame(height: 88)
-
-            HStack {
-                ForEach(axisLabels, id: \.self) { label in
-                    Text(label)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    if label != axisLabels.last { Spacer(minLength: 0) }
-                }
-                Spacer(minLength: 8)
-                Text(hotNow ? L10n.ResourceMonitor.ramWaveNowCritical : L10n.ResourceMonitor.ramWaveNowSafe)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(hotNow ? critical : SettingsChrome.onSurfaceVariant)
-            }
-        }
-    }
-
-    private var chartCanvas: some View {
-        GeometryReader { geo in
-            let maxGB = max(samples.map(\.usedGB).max() ?? 1, 1)
-            // 用最近采样反推物理总量，阈值线对齐「物理 RAM 占用」百分比阈值。
-            let totalGB: Double = {
-                if let last = samples.last, last.percent > 1 {
-                    return max(last.usedGB / (last.percent / 100.0), maxGB)
-                }
-                return maxGB
-            }()
-            let thresholdGB = totalGB * (thresholdPercent / 100.0)
-            let yMax = max(maxGB * 1.05, thresholdGB * 1.05, 1)
-            let pts = points(in: geo.size, yMax: yMax)
-            ZStack {
-                if pts.count >= 2 {
-                    Path { path in
-                        path.move(to: pts[0])
-                        for p in pts.dropFirst() { path.addLine(to: p) }
-                        if let last = pts.last, let first = pts.first {
-                            path.addLine(to: CGPoint(x: last.x, y: geo.size.height))
-                            path.addLine(to: CGPoint(x: first.x, y: geo.size.height))
-                            path.closeSubpath()
-                        }
-                    }
-                    .fill(
-                        LinearGradient(
-                            colors: [accent.opacity(0.22), accent.opacity(0.04)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-
-                    Path { path in
-                        path.move(to: pts[0])
-                        for p in pts.dropFirst() { path.addLine(to: p) }
-                    }
-                    .stroke(accent, lineWidth: 1.6)
-                }
-
-                let y = geo.size.height * (1 - CGFloat(thresholdGB / yMax))
-                Path { path in
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: geo.size.width, y: y))
-                }
-                .stroke(critical.opacity(0.85), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
-            }
-        }
-    }
-
-    private var axisLabels: [String] {
-        guard let first = samples.first?.at, let last = samples.last?.at else {
-            return ["—"]
-        }
-        let span = max(last.timeIntervalSince(first), 1)
-        let marks = [0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0]
-        return marks.map { Self.timeLabel(first.addingTimeInterval(span * $0)) }
-    }
-
-    private func points(in size: CGSize, yMax: Double) -> [CGPoint] {
-        guard !samples.isEmpty else { return [] }
-        let step = size.width / CGFloat(max(1, samples.count - 1))
-        return samples.enumerated().map { index, sample in
-            CGPoint(
-                x: CGFloat(index) * step,
-                y: size.height * (1 - CGFloat(sample.usedGB / yMax))
-            )
-        }
-    }
-
-    private static func timeLabel(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.dateFormat = "HH:mm"
-        return f.string(from: date)
     }
 }
 

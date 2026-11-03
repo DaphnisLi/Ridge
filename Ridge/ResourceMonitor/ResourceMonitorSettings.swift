@@ -22,7 +22,7 @@ final class ResourceMonitorSettings: ObservableObject {
         }
     }
 
-    /// RAM 占用阈值（百分比，默认 85）。
+    /// RAM 占用阈值（百分比，默认 95）。
     @Published var ramThresholdPercent: Double {
         didSet {
             defaults.set(ramThresholdPercent, forKey: Key.ramThreshold)
@@ -54,8 +54,9 @@ final class ResourceMonitorSettings: ObservableObject {
     }
 
     private init() {
+        // 默认关闭自动化告警；首次安装阈值为 95%。
         alertEnabled = defaults.object(forKey: Key.alertEnabled) as? Bool ?? false
-        let threshold = defaults.object(forKey: Key.ramThreshold) as? Double ?? 85
+        let threshold = defaults.object(forKey: Key.ramThreshold) as? Double ?? 95
         ramThresholdPercent = min(99, max(50, threshold))
         singleAppAlertGB = defaults.object(forKey: Key.singleAppGB) as? Double ?? 8
         if let ts = defaults.object(forKey: Key.muteUntil) as? Double, ts > 0 {

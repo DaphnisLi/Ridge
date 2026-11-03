@@ -76,11 +76,38 @@ struct ResourceFocusSlice: Identifiable, Equatable {
     var colorIndex: Int
 }
 
-/// 今日 RAM 波形一点：时刻 + 已用 GB + 占用百分比。
-struct ResourceRAMSample: Equatable {
-    var at: Date
-    var usedGB: Double
-    var percent: Double
+/// 24h 时序带上的一段连续前台驻留（按真实起止时间，可同 App 多次出现）。
+struct ResourceFocusTimelineSegment: Identifiable, Equatable, Codable {
+    var id: String
+    var bundleID: String
+    var name: String
+    var start: Date
+    var end: Date
+}
+
+enum ResourceFocusCategory: String, Equatable {
+    case browser
+    case ide
+    case terminal
+    case other
+}
+
+/// 应用聚焦驻留排行（24h 专注时间线）。
+struct ResourceFocusRank: Identifiable, Equatable {
+    var id: String { bundleID }
+    var bundleID: String
+    var name: String
+    var category: ResourceFocusCategory
+    var seconds: TimeInterval
+    /// 占今日总驻留 0…100。
+    var sharePercent: Double
+    var keystrokes: Int
+    var switches: Int
+    /// 平均单次驻留秒。
+    var averageSessionSeconds: TimeInterval
+    /// 最长连续驻留秒。
+    var longestSessionSeconds: TimeInterval
+    var colorIndex: Int
 }
 
 struct ResourceRAMPressureNotice: Hashable, Identifiable {

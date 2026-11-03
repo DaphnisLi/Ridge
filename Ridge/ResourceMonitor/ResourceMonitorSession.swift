@@ -15,9 +15,17 @@ final class ResourceMonitorSession: ObservableObject {
     private var userCollapsedExpand = false
     /// 今日击键 / 切换（降低整页对 ActivityStore 的轮询）。
     @Published private(set) var todayKeystrokes = 0
+    /// 今日击键峰值整点时段文案，如 `12:00–13:00`；尚无击键为 nil。
+    @Published private(set) var keystrokePeakRangeText: String?
     @Published private(set) var todaySwitches = 0
     @Published private(set) var focusSlices: [ResourceFocusSlice] = []
-    @Published private(set) var ramSamples: [ResourceRAMSample] = []
+    @Published private(set) var focusRanks: [ResourceFocusRank] = []
+    /// 今日真实时序段（按切换交错着色；窗口=首次活动→现在）。
+    @Published private(set) var focusTimeline: [ResourceFocusTimelineSegment] = []
+    /// 时序带起点（今日首次前台）；无活动为 nil。
+    @Published private(set) var focusTimelineAnchor: Date?
+    /// 今日所有 App 驻留总秒。
+    @Published private(set) var todayFocusTotalSeconds: TimeInterval = 0
     @Published private(set) var yearDays: [ResourceDayAggregate] = []
     /// 输入监控（击键）是否已授权。
     @Published private(set) var inputMonitoringGranted = false
@@ -197,20 +205,41 @@ final class ResourceMonitorSession: ObservableObject {
         let today = activity.todayAggregate()
         if todayKeystrokes != today.keystrokes { todayKeystrokes = today.keystrokes }
         if todaySwitches != today.appSwitches { todaySwitches = today.appSwitches }
-
-        let slices = activity.todayFocusSlices()
-        if slices != focusSlices { focusSlices = slices }
-
-        // 波形降采样，避免设置页拖垮主线程。
-        let series = activity.todayRamSamples()
-        let nextSeries: [ResourceRAMSample]
-        if series.count > 120 {
-            let step = max(1, series.count / 120)
-            nextSeries = stride(from: 0, to: series.count, by: step).map { series[$0] }
+        let peakText: String?
+        if let peak = activity.peakKeystrokeHourRange() {
+            peakText = String(format: "%02d:00–%02d:00", peak.startHour, peak.endHour)
         } else {
-            nextSeries = series
+            peakText = nil
         }
-        if nextSeries != ramSamples { ramSamples = nextSeries }
+        if peakText != keystrokePeakRangeText { keystrokePeakRangeText = peakText }
+
+        let ranks = activity.todayFocusRanks(limit: 5)
+        if ranks != focusRanks {
+            focusRanks = ranks
+            AppLog.debug("ResourceMonitor", "专注驻留排行已刷新", [
+                "count": ranks.count,
+                "top": ranks.first?.name ?? "",
+                "topKeys": ranks.first?.keystrokes ?? 0
+            ])
+        }
+        let slices = ranks.map {
+            ResourceFocusSlice(
+                bundleID: $0.bundleID,
+                name: $0.name,
+                seconds: $0.seconds,
+                colorIndex: $0.colorIndex
+            )
+        }
+        if slices != focusSlices { focusSlices = slices }
+        let timeline = activity.todayFocusTimeline()
+        if timeline != focusTimeline {
+            focusTimeline = timeline
+            AppLog.debug("ResourceMonitor", "专注时序带已刷新", ["segments": timeline.count])
+        }
+        let anchor = activity.todayFocusTimelineAnchor()
+        if anchor != focusTimelineAnchor { focusTimelineAnchor = anchor }
+        let totalFocus = activity.todayTotalFocusSeconds()
+        if totalFocus != todayFocusTotalSeconds { todayFocusTotalSeconds = totalFocus }
 
         // 年热力含「今日」击键；设置页内与今日累计同频刷新，避免年累计落后一大截。
         let days = activity.yearAggregates()

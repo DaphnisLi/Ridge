@@ -44,9 +44,8 @@ final class ResourceFocusTracker {
 
     private func noteFrontmost(countSwitch: Bool = true) {
         guard let app = NSWorkspace.shared.frontmostApplication else { return }
-        // Ridge 自身前台时暂停计时，避免把设置页时长算给上一 App。
+        // Ridge 自身前台：不打断上一 App 时序（否则看设置页会大片留白，被误认为「没在用 App」）。
         if app.bundleIdentifier == Bundle.main.bundleIdentifier {
-            ResourceActivityStore.shared.pauseFocus()
             return
         }
         guard let bid = app.bundleIdentifier, !bid.isEmpty else { return }
