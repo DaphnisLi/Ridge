@@ -46,9 +46,9 @@ struct IslandSettingsPane: View {
         VStack(spacing: 0) {
             ScrollView {
                 // 标题 / 说明在顶栏左上，页内从主题卡开始。
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
                     themeCard
-                    Grid(horizontalSpacing: 14, verticalSpacing: 14) {
+                    Grid(horizontalSpacing: SettingsChrome.Spacing.stack, verticalSpacing: SettingsChrome.Spacing.stack) {
                         GridRow(alignment: .top) {
                             geometryCard
                             motionCard
@@ -56,7 +56,7 @@ struct IslandSettingsPane: View {
                     }
                     fullscreenCard
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
                 .padding(.top, 16)
                 .padding(.bottom, 16)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -103,12 +103,12 @@ struct IslandSettingsPane: View {
                 AppLog.info("Settings", "已恢复默认设置")
             } label: {
                 Label(L10n.Common.restoreDefaults, systemImage: "arrow.counterclockwise")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(SettingsChrome.Font.label)
             }
             .buttonStyle(.bordered)
             .controlSize(.regular)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
         .padding(.vertical, 12)
         .background(SettingsChrome.pageBackground.opacity(0.92))
         .overlay(alignment: .top) {
@@ -121,9 +121,9 @@ struct IslandSettingsPane: View {
     // MARK: - Theme
 
     private var themeCard: some View {
-        bentoCard {
+        SettingsBentoCard {
             HStack(alignment: .firstTextBaseline) {
-                cardTitle(
+                SettingsBentoCardTitle(
                     symbol: "paintpalette.fill",
                     tint: SettingsChrome.primary,
                     title: L10n.Settings.presetTheme,
@@ -131,7 +131,7 @@ struct IslandSettingsPane: View {
                 )
                 Spacer(minLength: 8)
                 Text(L10n.Settings.themeClickHint)
-                    .font(.system(size: 11))
+                    .font(SettingsChrome.Font.caption)
                     .foregroundStyle(SettingsChrome.onSurfaceVariant)
             }
 
@@ -161,9 +161,9 @@ struct IslandSettingsPane: View {
     }
 
     private var geometryCard: some View {
-        bentoCard {
+        SettingsBentoCard {
             HStack {
-                cardTitle(
+                SettingsBentoCardTitle(
                     symbol: "arrow.up.left.and.arrow.down.right",
                     tint: Color(red: 0.35, green: 0.40, blue: 0.95),
                     title: L10n.Settings.geometryTitle
@@ -171,10 +171,10 @@ struct IslandSettingsPane: View {
                 Spacer(minLength: 8)
                 HStack(spacing: 4) {
                     Text(L10n.Settings.matrixLabel)
-                        .font(.system(size: 10, design: .monospaced))
+                        .font(SettingsChrome.Font.monoCaption)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     Text("\(Int(settings.expandedWidth.rounded())) pt × \(Int(settings.bottomCornerRadius.rounded())) pt")
-                        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                        .font(SettingsChrome.Font.monoEmphasis)
                         .foregroundStyle(SettingsChrome.onSurface)
                 }
                 .padding(.horizontal, 10)
@@ -184,8 +184,8 @@ struct IslandSettingsPane: View {
 
             geometryPresetBar
 
-            VStack(spacing: 14) {
-                bentoSlider(
+            VStack(spacing: SettingsChrome.Spacing.stack) {
+                SettingsSliderRow(
                     title: L10n.Settings.expandedWidth,
                     valueText: "\(Int(settings.expandedWidth.rounded())) pt",
                     value: $settings.expandedWidth,
@@ -194,7 +194,7 @@ struct IslandSettingsPane: View {
                     leading: "\(L10n.Settings.widthNarrow) (\(Int(IslandSettings.expandedWidthRange.lowerBound)))",
                     trailing: "\(L10n.Settings.widthWide) (\(Int(IslandSettings.expandedWidthRange.upperBound)))"
                 )
-                bentoSlider(
+                SettingsSliderRow(
                     title: L10n.Settings.bottomCorner,
                     valueText: "\(Int(settings.bottomCornerRadius.rounded())) pt",
                     value: $settings.bottomCornerRadius,
@@ -207,16 +207,14 @@ struct IslandSettingsPane: View {
 
             HStack {
                 Text(L10n.Settings.geometryPreview)
-                    .font(.system(size: 11))
+                    .font(SettingsChrome.Font.caption)
                     .foregroundStyle(SettingsChrome.onSurfaceVariant)
                 Spacer(minLength: 8)
                 geometryMiniPreview
             }
             .padding(.top, 4)
             .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(Color.black.opacity(0.05))
-                    .frame(height: 1)
+                SettingsHairline()
                     .padding(.top, -8)
             }
         }
@@ -224,51 +222,42 @@ struct IslandSettingsPane: View {
 
     private var geometryPresetBar: some View {
         let active = matchedGeometryPreset
-        return HStack(spacing: 6) {
-            geometryPresetButton(.compact, title: L10n.Settings.presetCompact, active: active)
-            geometryPresetButton(.balanced, title: L10n.Settings.presetBalanced, active: active)
-            geometryPresetButton(.wide, title: L10n.Settings.presetWide, active: active)
-            Text(L10n.Settings.presetCustom)
-                .font(.system(size: 11, weight: active == .custom ? .semibold : .medium))
-                .foregroundStyle(active == .custom ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(active == .custom ? Color.white : Color.clear)
-                        .shadow(color: active == .custom ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
-                )
-        }
-        .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(SettingsChrome.surfaceContainer.opacity(0.7))
-        )
-    }
-
-    private func geometryPresetButton(
-        _ preset: GeometryPreset,
-        title: String,
-        active: GeometryPreset
-    ) -> some View {
-        let selected = active == preset
-        return Button {
-            if let width = preset.width { settings.expandedWidth = width }
-            if let radius = preset.radius { settings.bottomCornerRadius = radius }
-            AppLog.info("Settings", "几何预设", ["preset": "\(preset)"])
-        } label: {
-            Text(title)
-                .font(.system(size: 11, weight: selected ? .semibold : .medium))
-                .foregroundStyle(selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(selected ? Color.white : Color.clear)
-                        .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
-                )
-        }
-        .buttonStyle(.plain)
+        return SettingsSegmentedControl(items: [
+            .init(
+                id: "compact",
+                title: L10n.Settings.presetCompact,
+                selected: active == .compact
+            ) {
+                if let width = GeometryPreset.compact.width { settings.expandedWidth = width }
+                if let radius = GeometryPreset.compact.radius { settings.bottomCornerRadius = radius }
+                AppLog.info("Settings", "几何预设", ["preset": "compact"])
+            },
+            .init(
+                id: "balanced",
+                title: L10n.Settings.presetBalanced,
+                selected: active == .balanced
+            ) {
+                if let width = GeometryPreset.balanced.width { settings.expandedWidth = width }
+                if let radius = GeometryPreset.balanced.radius { settings.bottomCornerRadius = radius }
+                AppLog.info("Settings", "几何预设", ["preset": "balanced"])
+            },
+            .init(
+                id: "wide",
+                title: L10n.Settings.presetWide,
+                selected: active == .wide
+            ) {
+                if let width = GeometryPreset.wide.width { settings.expandedWidth = width }
+                if let radius = GeometryPreset.wide.radius { settings.bottomCornerRadius = radius }
+                AppLog.info("Settings", "几何预设", ["preset": "wide"])
+            },
+            .init(
+                id: "custom",
+                title: L10n.Settings.presetCustom,
+                selected: active == .custom,
+                isInteractive: false,
+                action: {}
+            ),
+        ])
     }
 
     private var geometryMiniPreview: some View {
@@ -316,16 +305,16 @@ struct IslandSettingsPane: View {
     }
 
     private var motionCard: some View {
-        bentoCard {
+        SettingsBentoCard {
             HStack {
-                cardTitle(
+                SettingsBentoCardTitle(
                     symbol: "waveform.path",
                     tint: Color(red: 0.95, green: 0.45, blue: 0.20),
                     title: L10n.Settings.motionTitle
                 )
                 Spacer(minLength: 8)
                 Text(speedTagText)
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(SettingsChrome.Font.monoCaption)
                     .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
@@ -338,39 +327,25 @@ struct IslandSettingsPane: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(L10n.Settings.animationSpeed)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(SettingsChrome.Font.label)
                         .foregroundStyle(SettingsChrome.onSurface)
                     Spacer(minLength: 0)
                     Text(String(format: "%.1f×", settings.animationSpeed))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .font(SettingsChrome.Font.monoLabel)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                 }
 
-                HStack(spacing: 6) {
-                    ForEach(SpeedPreset.allCases, id: \.rawValue) { preset in
-                        let selected = matchedSpeedPreset == preset
-                        Button {
+                SettingsSegmentedControl(
+                    items: SpeedPreset.allCases.map { preset in
+                        .init(
+                            id: "\(preset.rawValue)",
+                            title: "\(preset.title) (\(String(format: "%.1f×", preset.rawValue)))",
+                            selected: matchedSpeedPreset == preset
+                        ) {
                             settings.animationSpeed = preset.rawValue
                             AppLog.info("Settings", "动画速度预设", ["speed": preset.rawValue])
-                        } label: {
-                            Text("\(preset.title) (\(String(format: "%.1f×", preset.rawValue)))")
-                                .font(.system(size: 11, weight: selected ? .semibold : .medium))
-                                .foregroundStyle(selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(selected ? Color.white : Color.clear)
-                                        .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
-                                )
                         }
-                        .buttonStyle(.plain)
                     }
-                }
-                .padding(4)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(SettingsChrome.surfaceContainer.opacity(0.7))
                 )
 
                 // 不用 step，避免 macOS Slider 在轨道下画出刻度点。
@@ -386,17 +361,17 @@ struct IslandSettingsPane: View {
                     Spacer(minLength: 0)
                     Text("\(L10n.Settings.speedFast) (2.0×)")
                 }
-                .font(.system(size: 10))
+                .font(SettingsChrome.Font.footnote)
                 .foregroundStyle(SettingsChrome.onSurfaceVariant)
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     Text(L10n.Settings.hapticIntensity)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(SettingsChrome.Font.label)
                         .foregroundStyle(SettingsChrome.onSurface)
                     Text("(\(L10n.Settings.hapticTapticHint))")
-                        .font(.system(size: 11))
+                        .font(SettingsChrome.Font.caption)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     Circle()
                         .fill(SettingsChrome.secondary)
@@ -404,37 +379,21 @@ struct IslandSettingsPane: View {
                     Spacer(minLength: 0)
                 }
 
-                HStack(spacing: 4) {
-                    ForEach(IslandHapticIntensity.allCases) { level in
-                        let selected = settings.hapticIntensity == level
-                        Button {
+                SettingsSegmentedControl(
+                    items: IslandHapticIntensity.allCases.map { level in
+                        .init(
+                            id: "\(level.rawValue)",
+                            title: level.title,
+                            selected: settings.hapticIntensity == level
+                        ) {
                             settings.hapticIntensity = level
-                        } label: {
-                            Text(level.title)
-                                .font(.system(size: 11, weight: selected ? .semibold : .medium))
-                                .foregroundStyle(selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(selected ? Color.white : Color.clear)
-                                        .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
-                                )
                         }
-                        .buttonStyle(.plain)
                     }
-                }
-                .padding(4)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(SettingsChrome.surfaceContainer.opacity(0.7))
                 )
             }
             .padding(.top, 6)
             .overlay(alignment: .top) {
-                Rectangle()
-                    .fill(Color.black.opacity(0.05))
-                    .frame(height: 1)
+                SettingsHairline()
             }
         }
     }
@@ -442,13 +401,13 @@ struct IslandSettingsPane: View {
     // MARK: - Fullscreen
 
     private var fullscreenCard: some View {
-        bentoCard {
+        SettingsBentoCard {
             HStack(alignment: .center, spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(Color(red: 0.90, green: 0.98, blue: 0.93))
                     Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(SettingsChrome.Font.iconTile)
                         .foregroundStyle(Color(red: 0.16, green: 0.65, blue: 0.40))
                 }
                 .frame(width: 32, height: 32)
@@ -456,17 +415,17 @@ struct IslandSettingsPane: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         Text(L10n.Settings.hideInFullscreen)
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(SettingsChrome.Font.cardTitle)
                             .foregroundStyle(SettingsChrome.onSurface)
                         Text(L10n.Settings.hideFullscreenBadge)
-                            .font(.system(size: 10))
+                            .font(SettingsChrome.Font.micro)
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
                             .background(Capsule().fill(SettingsChrome.surfaceContainer))
                     }
                     Text(L10n.Settings.hideFullscreenSubtitle)
-                        .font(.system(size: 11))
+                        .font(SettingsChrome.Font.caption)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -479,188 +438,6 @@ struct IslandSettingsPane: View {
         }
     }
 
-    // MARK: - Shared chrome
-
-    private func bentoCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            content()
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(SettingsChrome.cardBackground)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.05), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.03), radius: 3, y: 1)
-        )
-    }
-
-    private func cardTitle(
-        symbol: String,
-        tint: Color,
-        title: String,
-        badge: String? = nil
-    ) -> some View {
-        HStack(spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(tint.opacity(0.12))
-                Image(systemName: symbol)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(tint)
-            }
-            .frame(width: 24, height: 24)
-
-            Text(title)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(SettingsChrome.onSurface)
-
-            if let badge {
-                Text(badge)
-                    .font(.system(size: 10))
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .fill(SettingsChrome.surfaceContainer)
-                    )
-            }
-        }
-    }
-
-    private func bentoSlider(
-        title: String,
-        valueText: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        step: Double,
-        leading: String,
-        trailing: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(SettingsChrome.onSurface)
-                Spacer(minLength: 0)
-                Text(valueText)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .fill(SettingsChrome.surfaceContainerLow)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                    .strokeBorder(SettingsChrome.outline.opacity(0.55), lineWidth: 1)
-                            )
-                    )
-            }
-            // 不用 step，避免 macOS Slider 在轨道下画出刻度点；松手时按 step 取整。
-            Slider(
-                value: Binding(
-                    get: { value.wrappedValue },
-                    set: { next in
-                        let snapped = (next / step).rounded() * step
-                        value.wrappedValue = min(max(snapped, range.lowerBound), range.upperBound)
-                    }
-                ),
-                in: range
-            )
-            HStack {
-                Text(leading)
-                Spacer(minLength: 0)
-                Text(trailing)
-            }
-            .font(.system(size: 10))
-            .foregroundStyle(SettingsChrome.onSurfaceVariant)
-        }
-    }
-}
-
-// MARK: - 布局组件（仿系统触控板设置；其它设置页复用）
-
-struct SettingsPaneSection<Content: View>: View {
-    let title: String
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.primary)
-            SettingsCard { content }
-        }
-    }
-}
-
-struct SettingsCard<Content: View>: View {
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        content
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(SettingsChrome.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
-                    )
-            )
-    }
-}
-
-struct SettingsFormRows<Content: View>: View {
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(spacing: 0) {
-            content
-        }
-    }
-}
-
-struct SettingsGroupedRows<Content: View>: View {
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        SettingsFormRows { content }
-    }
-}
-
-struct SettingsSwitchRow: View {
-    let title: String
-    var subtitle: String? = nil
-    @Binding var isOn: Bool
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.primary)
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Toggle("", isOn: $isOn)
-                .labelsHidden()
-                .toggleStyle(.switch)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-    }
 }
 
 private struct IslandThemeChip: View {
@@ -677,13 +454,13 @@ private struct IslandThemeChip: View {
 
                 HStack(spacing: 4) {
                     Text(theme.title)
-                        .font(.system(size: 11, weight: selected ? .semibold : .medium))
+                        .font(selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
                         .foregroundStyle(SettingsChrome.onSurface)
                         .lineLimit(1)
                     Spacer(minLength: 2)
                     if selected {
                         Text(L10n.Settings.themeInUse)
-                            .font(.system(size: 9, weight: .medium))
+                            .font(SettingsChrome.Font.badgeTiny)
                             .foregroundStyle(SettingsChrome.primary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)

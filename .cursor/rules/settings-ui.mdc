@@ -1,0 +1,113 @@
+---
+description: 设置页通用 UI — 色板/字号/卡片/表单控件一律走 SettingsChrome + SettingsUI
+alwaysApply: true
+---
+
+# 设置页通用 UI
+
+设置窗（菜单栏 / App「设置…」同一大窗）里的颜色、字号、卡片、表单控件**必须复用**现有令牌与组件。禁止页内再抄一套灰底卡、硬编码字号或自绘开关行。
+
+权威代码：
+
+| 路径 | 内容 |
+|---|---|
+| `Ridge/Settings/SettingsRootView.swift` → `SettingsChrome` | 色板、字号、间距、圆角、窗尺寸 |
+| `Ridge/Settings/SettingsUI.swift` | `SettingsCard` / `SettingsBentoCard` / `SettingsSwitchRow` / `SettingsSliderRow` 等 |
+| `Ridge/Widgets/WidgetSamplePreview.swift` | 岛预览：`SettingsIslandPreviewCard`（细则见 `widget-preview.mdc`） |
+
+## 色板（`SettingsChrome`）
+
+| Token | 用途 |
+|---|---|
+| `pageBackground` | 整页底 |
+| `cardBackground` | **所有设置小卡片底 = 白** |
+| `surfaceContainerLow` / `surfaceContainer` | 嵌套浅底、分段条、chip；**不作主卡底** |
+| `onSurface` | 主文案 |
+| `onSurfaceVariant` | 次要说明 |
+| `primary` / `primaryContainer` | 强调、选中描边 |
+| `secondary` | 成功 / 绿色指示 |
+| `error` | 危险 |
+| `outline` / `outlineVariant` / `cardStroke` | 描边 |
+| `placeholder` | 输入占位 |
+
+```swift
+// ❌ 禁止
+.background(LinearGradient(...surfaceContainerLow...))  // 当预览/表单主卡底
+.foregroundStyle(.primary)                              // 设置正文请用 onSurface
+Color.gray / Color(white: 0.95)                         // 另起色板
+
+// ✅
+SettingsCard { ... }           // 白底
+SettingsBentoCard { ... }      // 白底 Bento
+.foregroundStyle(SettingsChrome.onSurface)
+```
+
+## 字号（`SettingsChrome.Font`）
+
+| Token | 大约 | 用途 |
+|---|---|---|
+| `pageTitle` | 18 bold | 页内大标题（少用） |
+| `sectionTitle` | 15 semibold | 分区标题 |
+| `rowTitle` | 13 | 开关行主文案 |
+| `cardTitle` | 12 semibold | 卡内标题 / 滑条标签 |
+| `body` | 12 | 正文 |
+| `label` | 12 medium | 卡内标签 |
+| `caption` | 11 | 副文案 |
+| `chip` / `chipSelected` | 11 | 分段条 |
+| `footnote` / `micro` | 10 | 刻度、徽章 |
+| `badgeTiny` | 9 | 「使用中」等 |
+| `monoValue` / `monoCaption` / `monoLabel` / `monoEmphasis` | 10–12 mono | 数值 |
+| `iconInline` / `iconTile` | 11 / 14 | SF Symbol |
+
+禁止在设置页写裸 `.font(.system(size: 13))`；新样式先加到 `SettingsChrome.Font`。
+
+## 间距 / 圆角
+
+- 页左右：`Spacing.pageHorizontal`（28）
+- 卡间距：`Spacing.stack`（14）
+- 卡内边距：`Spacing.cardPadding`（16）
+- 标准卡圆角：`Radius.card`（12）；Bento：`Radius.bento`（16）
+
+## 通用组件（优先用）
+
+| 组件 | 场景 |
+|---|---|
+| `SettingsCard` | 说明块、开关组、列表块（白底） |
+| `SettingsBentoCard` | 模块化大卡（主题 / 几何等） |
+| `SettingsBentoCardTitle` | Bento 卡图标标题 + 可选 badge |
+| `SettingsSwitchRow` | 左标题（可副标题）+ 右开关 |
+| `SettingsSliderRow` | 标题 + 数值 chip + 无刻度滑条 + 两端文案 |
+| `SettingsSegmentedControl` | 浅底分段选择（预设 / 档位） |
+| `SettingsHairline` | 卡内细分割线 |
+| `SettingsFormRows` / `SettingsGroupedRows` | 卡内堆叠行 |
+| `SettingsPaneSection` | 「标题 + SettingsCard」 |
+| `SettingsIslandPreviewCard` | 详情页岛预览外包（白底 + 假数据） |
+
+```swift
+// ✅ 新设置块
+SettingsCard {
+    SettingsSwitchRow(title: L10n.…, subtitle: L10n.…, isOn: $flag)
+}
+SettingsBentoCard {
+    SettingsBentoCardTitle(symbol: "…", tint: SettingsChrome.primary, title: L10n.…)
+    SettingsSliderRow(title: …, valueText: …, value: $x, range: …, step: …, leading: …, trailing: …)
+}
+```
+
+## 窗尺寸
+
+`SettingsChrome.windowDefaultSize`（1200×620）/ `windowMinSize`；开关入口一律 `MenuBarController` 大窗（见既有实现），勿再开系统 Settings 小窗。
+
+## 禁止
+
+- 设置页再造第二套色板 / 字号表 / 开关行 / 白卡组件
+- 预览卡或表单主卡用灰渐变底（嵌套控件浅底除外）
+- 硬编码与 token 不一致的 magics（如随意 `cornerRadius: 18` 当主卡）
+
+## 扩展 checklist
+
+1. 新颜色 / 字号 → 先写入 `SettingsChrome`，再引用  
+2. 新表单控件 → 放进 `SettingsUI.swift`，各业务页只调用  
+3. 岛预览 → `SettingsIslandPreviewCard` / `WidgetSamplePreview`（`widget-preview.mdc`）  
+4. 文案 → `L10n`（`i18n.mdc`）  
+5. `dev-relaunch` 验收
