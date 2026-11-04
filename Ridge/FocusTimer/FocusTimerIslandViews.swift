@@ -139,6 +139,7 @@ struct FocusTimerStandbyView: View {
     }
 
     var body: some View {
+        // 左右翼贴边拉开，勿挤在胶囊中段。
         HStack(spacing: 0) {
             HStack(spacing: 8) {
                 FocusTimerProgressRing(
@@ -152,7 +153,7 @@ struct FocusTimerStandbyView: View {
                     .foregroundStyle(Color.white.opacity(0.55))
                     .lineLimit(1)
             }
-            Spacer(minLength: 8)
+            Spacer(minLength: 16)
             HStack(spacing: 8) {
                 Text(
                     isOvertime
@@ -167,6 +168,7 @@ struct FocusTimerStandbyView: View {
                     .opacity(0.95)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 

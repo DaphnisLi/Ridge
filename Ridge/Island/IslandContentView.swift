@@ -250,13 +250,11 @@ private struct IslandBody: View {
                         .allowsHitTesting(false)
                 }
             } else if focusTimer.showsCompactStandby {
+                // 左右翼贴胶囊边：用满 compact 宽，内边距略收，避免内容挤在中段。
                 FocusTimerStandbyView(snapshot: focusTimer.snapshot)
-                    .padding(.horizontal, IslandChrome.contentHorizontal)
+                    .padding(.horizontal, 8)
                     .frame(
-                        width: max(
-                            0,
-                            NotchGeometry.focusTimerCompactWidth - IslandChrome.horizontalInsetTotal
-                        ),
+                        width: NotchGeometry.focusTimerCompactWidth,
                         height: max(
                             0,
                             NotchGeometry.focusTimerCompactHeight - 4
