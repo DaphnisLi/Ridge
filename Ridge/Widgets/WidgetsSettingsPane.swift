@@ -442,44 +442,68 @@ private struct WidgetPreviewPane: View {
         }
         if widgetID == "builtin.meeting" { return L10n.Widgets.meetingPreviewTitle }
         if widgetID == "builtin.media" { return L10n.Widgets.mediaPreviewTitle }
+        if widgetID == "builtin.focusTimer" { return L10n.Widgets.focusTimerPreviewTitle }
         return manifest?.displayName ?? L10n.Common.preview
     }
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                if let deckPane {
-                    deckConfig(for: deckPane)
-                } else if let manifest {
-                    if widgetID == "builtin.meeting" {
-                        MeetingWidgetConfigSection()
-                    } else if widgetID == "builtin.media" {
-                        MediaWidgetConfigSection()
-                    } else {
-                        SettingsIslandPreviewCard(widgetID: widgetID)
+    /// 自带 ScrollView + 贴底「恢复默认」栏的配置页，外层不再包一层滚动。
+    private var ownsPinnedRestoreFooter: Bool {
+        widgetID == "builtin.meeting" || widgetID == "builtin.focusTimer"
+    }
 
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(manifest.displayName)
-                                .font(.system(size: 22, weight: .semibold))
-                            Text(manifest.summary)
-                                .font(.system(size: 13))
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+    var body: some View {
+        Group {
+            if ownsPinnedRestoreFooter {
+                pinnedRestoreConfigBody
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        scrollableConfigBody
                     }
-                } else {
-                    Text(L10n.Widgets.notFound)
-                        .foregroundStyle(.secondary)
+                    .padding(28)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .scrollIndicators(.hidden)
             }
-            .padding(28)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .scrollIndicators(.hidden)
         .background(SettingsChrome.pageBackground)
         .navigationTitle(navigationTitleText)
         .onAppear {
             AppLog.info("Settings", "打开小组件预览", ["id": widgetID])
+        }
+    }
+
+    @ViewBuilder
+    private var pinnedRestoreConfigBody: some View {
+        if widgetID == "builtin.meeting" {
+            MeetingWidgetConfigSection()
+        } else if widgetID == "builtin.focusTimer" {
+            FocusTimerWidgetConfigSection()
+        }
+    }
+
+    @ViewBuilder
+    private var scrollableConfigBody: some View {
+        if let deckPane {
+            deckConfig(for: deckPane)
+        } else if let manifest {
+            if widgetID == "builtin.media" {
+                MediaWidgetConfigSection()
+            } else {
+                SettingsIslandPreviewCard(widgetID: widgetID)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(manifest.displayName)
+                        .font(.system(size: 22, weight: .semibold))
+                    Text(manifest.summary)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        } else {
+            Text(L10n.Widgets.notFound)
+                .foregroundStyle(.secondary)
         }
     }
 

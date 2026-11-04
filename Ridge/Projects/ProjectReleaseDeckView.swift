@@ -61,9 +61,6 @@ struct ProjectReleaseDeckView: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
             session.start()

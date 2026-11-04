@@ -78,6 +78,18 @@ final class IslandController: NSObject {
                 self?.handleAppearanceChange(appearance)
             }
 
+        viewModel.$panelSize
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] size in
+                AppLog.debug("Overlay", "面板尺寸变更，刷新可点区", [
+                    "w": size.width,
+                    "h": size.height
+                ])
+                self?.updateInteractiveFrame()
+            }
+            .store(in: &settingsObservers)
+
         settings.$hideInFullscreen
             .removeDuplicates()
             .dropFirst()
@@ -125,12 +137,54 @@ final class IslandController: NSObject {
             }
             .store(in: &settingsObservers)
 
+        // 翻页：控制台内换模块，或滑到番茄页时立刻套对应画布（避免沿用上一页 300×660 / 刘海 30）。
+        WidgetRuntime.shared.$activeID
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] id in
+                guard let self else { return }
+                if id == FocusTimerWidget.manifest.id {
+                    self.applyFocusTimerPanelSizeIfNeeded(reason: "page")
+                }
+                self.updateInteractiveFrame()
+                self.applyWindowFrame(animated: false)
+            }
+            .store(in: &settingsObservers)
+
         WidgetRuntime.shared.$isTransientNoticePage
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] notice in
                 AppLog.info("Island", "瞬时通知页尺寸切换", ["notice": notice])
                 self?.updatePagePanEnabled()
+                self?.updateInteractiveFrame()
+                self?.applyWindowFrame(animated: false)
+            }
+            .store(in: &settingsObservers)
+
+        FocusTimerSession.shared.$phase
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] phase in
+                AppLog.info("Island", "番茄计时态切换，刷新收起尺寸", ["phase": phase.rawValue])
+                // 终局等比进行中更高：立刻套画布，避免 Preference 仍按 80pt 矮框裁掉备注热区。
+                self?.applyFocusTimerPanelSizeIfNeeded(phase: phase, reason: "phase")
+                self?.updateInteractiveFrame()
+                self?.applyWindowFrame(animated: true)
+            }
+            .store(in: &settingsObservers)
+
+        // 电量页台数变化：≤3 一行高 / >3 两行高。
+        BatterySession.shared.$devices
+            .map(\.count)
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] count in
+                guard Self.isBatteryControlDeckPage(WidgetRuntime.shared) else { return }
+                AppLog.info("Island", "电量外设台数变化，刷新岛高", [
+                    "devices": count,
+                    "layout": "\(NotchGeometry.controlDeckBatteryLayout(deviceCount: count))"
+                ])
                 self?.updateInteractiveFrame()
                 self?.applyWindowFrame(animated: false)
             }
@@ -305,7 +359,15 @@ final class IslandController: NSObject {
     }
 
     func expand(reason: String) {
-        guard !viewModel.isExpanded else { return }
+        // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
+        if viewModel.isExpanded {
+            if reason.contains("focusTimer") {
+                applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
+                updateInteractiveFrame(expanded: true)
+                ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
+            }
+            return
+        }
         AppLog.info("Island", "展开灵动岛", [
             "reason": reason,
             "expanded": true,
@@ -314,10 +376,50 @@ final class IslandController: NSObject {
             "prevKey": Self.describeKeyWindow()
         ])
         viewModel.expand()
+        // 番茄页：先写入态对应面板，避免可点区停在刘海 30pt（日志里 expand 后 h=30 导致点不了）。
+        applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
         // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
         updateInteractiveFrame(expanded: true)
         ensureIslandInteractionReady(reason: "expand:\(reason)")
         startScrollPagingMonitors()
+    }
+
+    /// 当前是番茄页时按 phase 写入内容画布尺寸。
+    /// 终局必须抬高可点框：停在进行中 ~80pt 时备注落在 interactiveFrame 外，表现为「点不了输入」。
+    private func applyFocusTimerPanelSizeIfNeeded(
+        phase: FocusTimerPhase? = nil,
+        reason: String
+    ) {
+        guard WidgetRuntime.shared.activeID == FocusTimerWidget.manifest.id else { return }
+        let resolved = phase ?? FocusTimerSession.shared.phase
+        // 终局即使尚未 expand 也先写入，避免首帧沿用刘海 30pt / 进行中 80pt。
+        guard viewModel.isExpanded
+            || reason.hasPrefix("expand:")
+            || resolved == .completed
+            || reason == "phase"
+            || reason == "page"
+        else { return }
+        let size = FocusTimerContentSize.panelSize(
+            phase: resolved,
+            notchHeight: viewModel.notchHeight
+        )
+        viewModel.applyMeasuredPanelSize(size)
+        updateInteractiveFrame(expanded: viewModel.isExpanded || resolved == .completed)
+        AppLog.warn("Island", "番茄面板尺寸已套用", [
+            "reason": reason,
+            "phase": resolved.rawValue,
+            "w": Int(size.width),
+            "h": Int(size.height),
+            "panelW": Int(viewModel.panelSize.width),
+            "panelH": Int(viewModel.panelSize.height)
+        ])
+    }
+
+    /// 计时结束专用：保证切页 + 展开后可点区立刻覆盖终局备注。
+    func applyFocusTimerCompletedLayout(reason: String) {
+        applyFocusTimerPanelSizeIfNeeded(phase: .completed, reason: reason)
+        updateInteractiveFrame(expanded: true)
+        ensureIslandInteractionReady(reason: reason)
     }
 
     func collapse(reason: String) {
@@ -331,12 +433,21 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "货架投放区命中中，忽略收起", ["targeted": true])
             return
         }
+        // 指针离开：正在编辑则先卸焦再收；避免「点输入框瞬间误判离开」时直接 dismiss 终局。
+        if reason == "hoverEnd", IslandInteractionFocus.isEditing(in: window) {
+            _ = window.makeFirstResponder(nil)
+            AppLog.warn("Island", "指针离开，已结束文本编辑并继续收起")
+        }
         AppLog.info("Island", "收起灵动岛", [
             "reason": reason,
             "expanded": false,
             "wasKey": window.isKeyWindow,
             "key": Self.describeKeyWindow()
         ])
+        // 番茄终局：收起不丢已入库记录，回到选时；备注需点「保存」才会写入。
+        if FocusTimerSession.shared.phase == .completed {
+            FocusTimerSession.shared.dismissCompletion()
+        }
         viewModel.collapse()
         updateInteractiveFrame(expanded: false)
         stopScrollPagingMonitors()
@@ -591,21 +702,7 @@ final class IslandController: NSObject {
             ])
             return
         }
-
-        var promoted = false
-        if NSApp.activationPolicy() != .regular {
-            NSApp.setActivationPolicy(.regular)
-            promoted = true
-        }
-        NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
-        AppLog.info("Overlay", "岛交互就绪", [
-            "reason": reason,
-            "promoted": promoted,
-            "appActive": NSApp.isActive,
-            "islandKey": window.isKeyWindow,
-            "policy": NSApp.activationPolicy() == .regular ? "regular" : "accessory"
-        ])
+        IslandInteractionFocus.prepare(window: window, reason: "islandReady:\(reason)")
     }
 
     /// 收起后若设置窗未开，降回 accessory，避免常驻 Dock。
@@ -627,7 +724,7 @@ final class IslandController: NSObject {
         let retention: Bool
     }
 
-    /// 刘海始终算命中；展开后可点 / 保展开都以当前页为准（保展开多一圈外扩）。
+    /// 刘海始终算命中；展开后可点 / 保展开跟内容撑开的 `panelSize` 走（勿再用 layout 估算框）。
     private func pointerIslandHit(
         mouse: NSPoint,
         geometry: NotchGeometry,
@@ -642,15 +739,15 @@ final class IslandController: NSObject {
             return IslandPointerHit(interactive: false, retention: false)
         }
 
-        let width = CGFloat(IslandSettings.shared.expandedWidth)
-        var pageLayout = Self.expandedLayout(for: WidgetRuntime.shared)
-        // 刚从控制台翻到矮页：短暂沿用大热区，避免指针还在原下半截被当成离开。
+        var pageBody = geometry.panelFrameOnScreen(size: viewModel.panelSize)
+        // 刚从控制台翻到矮页：短暂并入大热区，避免指针还在原下半截被当成离开。
         if let boost = hoverLayoutBoost, Date() < hoverLayoutBoostUntil {
-            pageLayout = boost
+            let width = CGFloat(IslandSettings.shared.expandedWidth)
+            let boostFrame = geometry.expandedFrameOnScreen(width: width, layout: boost)
+            pageBody = pageBody.union(boostFrame)
         } else if hoverLayoutBoost != nil {
             hoverLayoutBoost = nil
         }
-        let pageBody = geometry.expandedFrameOnScreen(width: width, layout: pageLayout)
         let interactive = pageBody.insetBy(dx: -2, dy: -2).contains(mouse)
         // 外扩一圈防贴边抖动；仍跟可视面板走，移出屏幕别处必须能收。
         let retention = pageBody.insetBy(dx: -16, dy: -16).contains(mouse) || interactive
@@ -696,8 +793,12 @@ final class IslandController: NSObject {
                 ])
                 return
             }
-            AppLog.info("Island", "收起前复查：已离开保展开区", [
-                "interactive": hit.interactive
+            // 编辑中也收：collapse(hoverEnd) 会先卸焦再收起；勿在此挡收，否则移出岛外岛不消失。
+            AppLog.warn("Island", "收起前复查：已离开保展开区", [
+                "interactive": hit.interactive,
+                "panelW": Int(self.viewModel.panelSize.width),
+                "panelH": Int(self.viewModel.panelSize.height),
+                "editing": IslandInteractionFocus.isEditing(in: self.window)
             ])
             self.collapse(reason: "hoverEnd")
         }
@@ -713,10 +814,27 @@ final class IslandController: NSObject {
     }
 
     private static func expandedLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
-        if runtime.isControlDeckPage { return .controlDeck }
+        if runtime.isControlDeckPage {
+            if isBatteryControlDeckPage(runtime) {
+                return NotchGeometry.controlDeckBatteryLayout(
+                    deviceCount: BatterySession.shared.devices.count
+                )
+            }
+            return .controlDeck
+        }
         if runtime.isTransientNoticePage { return .notice }
         if runtime.isComboPage { return .combo }
+        if runtime.activeID == FocusTimerWidget.manifest.id { return .focusTimer }
         return .standard
+    }
+
+    private static func isBatteryControlDeckPage(_ runtime: WidgetRuntime) -> Bool {
+        if let id = runtime.activeID,
+           ControlDeckSettings.Pane.from(pageID: id) == .battery
+        {
+            return true
+        }
+        return runtime.isControlDeckPage && ControlDeckSettings.shared.activePane == .battery
     }
 
     // MARK: - Layout
@@ -962,29 +1080,20 @@ final class IslandController: NSObject {
         viewModel.notchHeight = preferred.1.notchHeight
         viewModel.notchWidth = preferred.1.notchWidth
         viewModel.isVisibleOnDisplay = true
-        let requestedW = CGFloat(settings.expandedWidth)
-        let expanded = preferred.1.expandedSize(width: requestedW)
         viewModel.maxExpandedWidth = preferred.1.maxExpandedWidth
+        if !viewModel.isExpanded {
+            viewModel.panelSize = preferred.1.compactSize
+        }
         AppLog.info("Notch", "对齐刘海", [
             "reason": reason,
             "display": Int(preferred.1.screenID),
             "notchW": preferred.1.notchWidth,
             "notchH": preferred.1.notchHeight,
-            "panelW": expanded.width,
-            "panelH": expanded.height,
-            "windowW": preferred.1.windowSize.width,
-            "requestedW": requestedW,
-            "clamped": abs(requestedW - expanded.width) > 0.5
+            "panelW": viewModel.panelSize.width,
+            "panelH": viewModel.panelSize.height,
+            "windowW": preferred.1.windowSize.width
         ])
-        if abs(requestedW - expanded.width) > 0.5 {
-            AppLog.warn("Island", "展开宽度已按屏幕/刘海钳制", [
-                "requested": requestedW,
-                "maxW": preferred.1.maxExpandedWidth,
-                "minW": preferred.1.notchWidth,
-                "usedW": expanded.width
-            ])
-        }
-        // 窗口固定最大宽占位；面板在窗内居中变宽，避免裁圆角。
+        // 窗口固定最大宽占位；面板由内容测量撑开，在窗内居中。
         applyWindowFrame(animated: false)
         updateVisibility()
     }
@@ -1005,16 +1114,7 @@ final class IslandController: NSObject {
         guard let geometry else { return }
         _ = animated // 窗体尺寸不跟宽度做 AppKit 动画，避免与 SwiftUI 面板抢裁切。
         viewModel.maxExpandedWidth = geometry.maxExpandedWidth
-        let requestedW = CGFloat(settings.expandedWidth)
-        let layout = Self.expandedLayout(for: WidgetRuntime.shared)
-        let panel = geometry.expandedSize(width: requestedW, layout: layout)
-        if abs(requestedW - panel.width) > 0.5, layout != .controlDeck {
-            AppLog.warn("Island", "展开宽度已按屏幕/刘海钳制", [
-                "requested": requestedW,
-                "usedW": panel.width
-            ])
-        }
-        // 窗口始终按控制台最大占位；面板随当前页布局变化。
+        // 窗口始终按最大占位；可见面板宽高由内容测量写入 viewModel.panelSize。
         let frame = geometry.windowFrameOnScreen()
         window.setFrame(frame, display: true)
         hostingView?.frame = hitTestView.bounds
@@ -1022,10 +1122,8 @@ final class IslandController: NSObject {
         AppLog.debug("Island", "窗口占位已更新", [
             "windowW": frame.width,
             "windowH": frame.height,
-            "panelW": panel.width,
-            "panelH": panel.height,
-            "layout": "\(layout)",
-            "requestedW": requestedW
+            "panelW": viewModel.panelSize.width,
+            "panelH": viewModel.panelSize.height
         ])
 
         if viewModel.isVisibleOnDisplay && !viewModel.isHiddenForFullscreen {
@@ -1034,18 +1132,11 @@ final class IslandController: NSObject {
     }
 
     private func updateInteractiveFrame(expanded: Bool? = nil) {
-        guard let geometry else { return }
+        guard geometry != nil else { return }
         let windowFrame = window.frame
         let isExpanded = expanded ?? viewModel.isExpanded
-        let panel: CGSize
-        if isExpanded {
-            panel = geometry.expandedSize(
-                width: CGFloat(settings.expandedWidth),
-                layout: Self.expandedLayout(for: WidgetRuntime.shared)
-            )
-        } else {
-            panel = geometry.compactSize
-        }
+        // 展开 / 收起 / 待命一律以内容（或收起几何）写入的 panelSize 为准。
+        let panel = viewModel.panelSize
         // 面板在窗内水平居中、贴顶（AppKit 原点左下）。
         let interactive = CGRect(
             x: (windowFrame.width - panel.width) / 2,
@@ -1063,8 +1154,7 @@ final class IslandController: NSObject {
             "w": Int(interactive.width),
             "h": Int(interactive.height),
             "clickThrough": window.ignoresMouseEvents,
-            "controlDeck": WidgetRuntime.shared.isControlDeckPage,
-            "layout": "\(Self.expandedLayout(for: WidgetRuntime.shared))"
+            "controlDeck": WidgetRuntime.shared.isControlDeckPage
         ]
         if WidgetRuntime.shared.isControlDeckPage || isExpanded {
             AppLog.info("Overlay", "可点区域已更新", fields)

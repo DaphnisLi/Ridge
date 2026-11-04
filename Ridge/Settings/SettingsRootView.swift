@@ -46,6 +46,10 @@ enum SettingsChrome {
     enum Font {
         /// 侧栏 / 顶栏分区名旁的详情大标题（少用；一般用系统 navigationTitle）。
         static let pageTitle = SwiftUI.Font.system(size: 18, weight: .bold)
+        /// 番茄预设档位大号分钟。
+        static let heroMetric = SwiftUI.Font.system(size: 28, weight: .bold, design: .rounded)
+        /// 概览指标 / 并排预设档位的中号数值（约 22）。
+        static let metricEmphasis = SwiftUI.Font.system(size: 22, weight: .bold, design: .rounded)
         /// `SettingsPaneSection` 标题。
         static let sectionTitle = SwiftUI.Font.system(size: 15, weight: .semibold)
         /// 表单行主文案（开关行等）。

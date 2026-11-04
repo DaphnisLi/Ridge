@@ -8,6 +8,7 @@ struct IslandContentView: View {
     @ObservedObject var runtime: WidgetRuntime
     @ObservedObject private var controlDeck = ControlDeckSettings.shared
     @ObservedObject private var shelfDropSession = ShelfDropSession.shared
+    @ObservedObject private var focusTimer = FocusTimerSession.shared
     @State private var shelfDropTargeted = false
 
     private var shelfDropEnabled: Bool {
@@ -15,50 +16,33 @@ struct IslandContentView: View {
     }
 
     private var compactSize: CGSize {
-        CGSize(
+        // 番茄计时中：收起态加宽，左右翼展示待命倒计时（对齐 Live Activity）。
+        if focusTimer.showsCompactStandby {
+            return CGSize(
+                width: NotchGeometry.pixelAlign(
+                    max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.focusTimerCompactWidth)
+                ),
+                height: NotchGeometry.pixelAlign(
+                    max(viewModel.notchHeight * NotchGeometry.compactScale, NotchGeometry.focusTimerCompactHeight)
+                )
+            )
+        }
+        return CGSize(
             width: NotchGeometry.pixelAlign(viewModel.notchWidth * NotchGeometry.compactScale),
             height: NotchGeometry.pixelAlign(viewModel.notchHeight * NotchGeometry.compactScale)
         )
     }
 
-    private var expandedSize: CGSize {
-        let rawWidth = CGFloat(settings.expandedWidth)
-        let layout: NotchGeometry.ExpandedLayout = {
-            if runtime.isControlDeckPage { return .controlDeck }
-            if runtime.isTransientNoticePage { return .notice }
-            if runtime.isComboPage { return .combo }
-            return .standard
-        }()
-        // 与 NotchGeometry.expandedSize 同一套规则（控制台会抬到约 660×300+）。
-        let preferred = runtime.isControlDeckPage
-            ? max(rawWidth, NotchGeometry.controlDeckPreferredWidth)
-            : rawWidth
-        let width = min(max(preferred, viewModel.notchWidth), viewModel.maxExpandedWidth)
-        let baseH = viewModel.notchHeight * NotchGeometry.fixedExpandedHeightMultiplier
-        let height: CGFloat = {
-            switch layout {
-            case .standard: return baseH
-            case .combo: return baseH * 2
-            case .controlDeck:
-                return max(
-                    viewModel.notchHeight * NotchGeometry.controlDeckHeightMultiplier,
-                    NotchGeometry.controlDeckMinHeight
-                )
-            case .notice:
-                return max(
-                    viewModel.notchHeight * NotchGeometry.noticeHeightMultiplier,
-                    viewModel.notchHeight + 34
-                )
-            }
-        }()
-        return CGSize(
-            width: NotchGeometry.pixelAlign(width),
-            height: NotchGeometry.pixelAlign(height)
-        )
-    }
-
+    /// 可见面板尺寸：收起用刘海/待命；展开用内容测量结果（viewModel.panelSize）。
     private var bodySize: CGSize {
-        viewModel.isExpanded ? expandedSize : compactSize
+        if viewModel.isExpanded {
+            let measured = viewModel.panelSize
+            if measured.width > 1, measured.height > 1 {
+                return measured
+            }
+            return compactSize
+        }
+        return compactSize
     }
 
     private var appliedBottomRadius: CGFloat {
@@ -84,12 +68,15 @@ struct IslandContentView: View {
                     bottomRadius: appliedBottomRadius,
                     fill: settings.theme.nsFillColor
                 )
+                .frame(width: bodySize.width, height: bodySize.height)
+
                 if shelfDropEnabled, viewModel.isExpanded, shelfDropSession.isActive {
                     // 拖入中：整岛切成暂存区 UI，松手 / 离开后恢复。
                     ShelfDropStagingView(highlighted: true, fillsIsland: true)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
                         .padding(.top, max(28, viewModel.notchHeight + 4))
-                        .padding(.bottom, 16)
+                        .padding(.bottom, IslandChrome.contentBottom)
+                        .frame(width: bodySize.width, height: bodySize.height)
                         .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 } else {
                     IslandBody(
@@ -97,9 +84,13 @@ struct IslandContentView: View {
                         notchHeight: viewModel.notchHeight,
                         runtime: runtime
                     )
+                    // 按内容固有尺寸布局，再上报给 ViewModel；勿先铺满面板。
+                    .fixedSize(horizontal: true, vertical: true)
+                    .reportIslandPanelSize()
                 }
             }
-            .frame(width: bodySize.width, height: bodySize.height)
+            // 面板框跟已测尺寸走；内容用 fixedSize 自撑，避免矮框 clip 把新页热区裁掉。
+            .frame(width: bodySize.width, height: bodySize.height, alignment: .top)
             .animation(.easeOut(duration: 0.18), value: shelfDropSession.isActive)
             .clipShape(shape)
             // 整块面板都要可命中，避免透明子区把点击漏给下层页面。
@@ -117,16 +108,58 @@ struct IslandContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.islandPalette, palette)
+        .environment(\.islandNotchHeight, viewModel.notchHeight)
         .animation(islandSpring, value: viewModel.appearance)
         .animation(islandSpring, value: runtime.contentEpoch)
         .animation(islandSpring, value: settings.bottomCornerRadius)
-        .animation(islandSpring, value: settings.expandedWidth)
         .animation(islandSpring, value: settings.theme)
-        .animation(islandSpring, value: runtime.isComboPage)
-        .animation(islandSpring, value: runtime.isControlDeckPage)
-        .animation(islandSpring, value: runtime.isTransientNoticePage)
+        .animation(islandSpring, value: viewModel.panelSize)
+        .animation(islandSpring, value: focusTimer.showsCompactStandby)
+        .animation(islandSpring, value: focusTimer.snapshot.remainingSeconds)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
+        .onPreferenceChange(IslandPanelSizeKey.self) { size in
+            guard viewModel.isExpanded || focusTimer.showsCompactStandby else { return }
+            guard size.width > 1, size.height > 1 else { return }
+            var resolved = size
+            // 番茄：高度始终不低于态下限；宽度仅终局抬升（选时等由内容测量，避免右侧虚空）。
+            if viewModel.isExpanded,
+               runtime.activeID == FocusTimerWidget.manifest.id
+            {
+                let floor = FocusTimerContentSize.panelSize(
+                    phase: focusTimer.phase,
+                    notchHeight: viewModel.notchHeight
+                )
+                let floorWidth = FocusTimerContentSize.shouldFloorWidth(phase: focusTimer.phase)
+                // 终局：宽高都不得低于下限（矮框会把备注裁出可点区）。
+                let needFloorWidth = floorWidth && resolved.width + 0.5 < floor.width
+                let needFloorHeight = resolved.height + 0.5 < floor.height
+                if needFloorWidth || needFloorHeight {
+                    AppLog.warn("Island", "番茄 Preference 已按下限校正", [
+                        "prefW": Int(resolved.width),
+                        "prefH": Int(resolved.height),
+                        "floorW": Int(floor.width),
+                        "floorH": Int(floor.height),
+                        "floorWidth": floorWidth,
+                        "phase": focusTimer.phase.rawValue
+                    ])
+                    resolved = CGSize(
+                        width: floorWidth ? max(resolved.width, floor.width) : resolved.width,
+                        height: max(resolved.height, floor.height)
+                    )
+                }
+            }
+            viewModel.applyMeasuredPanelSize(resolved)
+        }
+        .onAppear {
+            syncCompactPanelSizeIfNeeded()
+        }
+        .onChange(of: viewModel.appearance) { _, _ in
+            syncCompactPanelSizeIfNeeded()
+        }
+        .onChange(of: focusTimer.showsCompactStandby) { _, _ in
+            syncCompactPanelSizeIfNeeded()
+        }
         .onChange(of: shelfDropTargeted) { _, targeted in
             let active = targeted && shelfDropEnabled
             IslandController.shared?.setShelfDropTargeted(active)
@@ -159,6 +192,16 @@ struct IslandContentView: View {
         }
     }
 
+    /// 收起（含番茄待命）时用几何尺寸；展开交给内容 Preference。
+    private func syncCompactPanelSizeIfNeeded() {
+        if viewModel.isExpanded { return }
+        let next = compactSize
+        guard abs(next.width - viewModel.panelSize.width) > 0.5
+            || abs(next.height - viewModel.panelSize.height) > 0.5
+        else { return }
+        viewModel.panelSize = next
+    }
+
     private var islandSpring: Animation {
         .spring(response: settings.springDuration, dampingFraction: settings.springDamping)
     }
@@ -168,72 +211,70 @@ private struct IslandBody: View {
     let isExpanded: Bool
     let notchHeight: CGFloat
     @ObservedObject var runtime: WidgetRuntime
+    @ObservedObject private var focusTimer = FocusTimerSession.shared
     @Environment(\.islandPalette) private var palette
 
     var body: some View {
         Group {
             if isExpanded {
-                ZStack(alignment: .top) {
-                    VStack(spacing: 0) {
-                        // 瞬时通知：不再单独垫 topChrome，整块内容由下方统一 padding.top 下推。
-                        if !runtime.isTransientNoticePage {
-                            topChrome
-                        }
-
-                        WidgetHostView(runtime: runtime)
-                            .padding(.horizontal, 12)
-                            .padding(
-                                .top,
-                                runtime.isTransientNoticePage
-                                    ? max(32, (notchHeight * 0.5 + 4) * 2)
-                                    : 0
-                            )
-                            .padding(
-                                .bottom,
-                                runtime.isTransientNoticePage
-                                    ? 12
-                                    : (runtime.isShowingEmpty
-                                        ? 16
-                                        // 控制台避开岛底圆角，又不能吞掉太多可视高度。
-                                        : (runtime.isControlDeckPage ? 14 : 8))
-                            )
+                VStack(spacing: 0) {
+                    // 可选顶栏标题（在统一顶距之下）；会议 / 媒体 / 番茄 title 为空，不占行。
+                    if showsShellTitle {
+                        Text(runtime.activeTitle)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(palette.title)
+                            .lineLimit(1)
+                            .padding(.horizontal, IslandChrome.contentHorizontal)
+                            .padding(.bottom, 4)
                     }
 
-                    // 左上 / 右上：前面几页 / 后面几页。
+                    WidgetHostView(runtime: runtime)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                }
+                // 所有展开页同一套顶距（含控制台）；瞬时通知略抬高。
+                .padding(
+                    .top,
+                    runtime.isTransientNoticePage
+                        ? IslandChrome.noticeTopInset(notchHeight: notchHeight)
+                        : IslandChrome.expandedTopInset(notchHeight: notchHeight)
+                )
+                // 终局备注行贴底：底距略收，避免输入框下大块空黑。
+                .padding(
+                    .bottom,
+                    focusTimer.phase == .completed ? 8 : IslandChrome.contentBottom
+                )
+                // 角点用 overlay，避免 Spacer 把 fixedSize 撑成无限宽。
+                .overlay(alignment: .top) {
                     IslandPageCornerDots(runtime: runtime)
                         .padding(.top, max(6, notchHeight * 0.22))
                         .allowsHitTesting(false)
                 }
+            } else if focusTimer.showsCompactStandby {
+                FocusTimerStandbyView(snapshot: focusTimer.snapshot)
+                    .padding(.horizontal, IslandChrome.contentHorizontal)
+                    .frame(
+                        width: max(
+                            0,
+                            NotchGeometry.focusTimerCompactWidth - IslandChrome.horizontalInsetTotal
+                        ),
+                        height: max(
+                            0,
+                            NotchGeometry.focusTimerCompactHeight - 4
+                        )
+                    )
+                    .allowsHitTesting(false)
             } else {
                 Color.clear
+                    .frame(width: 1, height: 1)
             }
         }
     }
 
-    @ViewBuilder
-    private var topChrome: some View {
-        if runtime.isControlDeckPage {
-            // 控制台不显示标题行；顶部留出刘海盲区，避免按钮落在摄像头缺口上点不到。
-            Color.clear
-                .frame(height: max(8, notchHeight - 6))
-                .accessibilityHidden(true)
-        } else if !runtime.isShowingEmpty, !runtime.activeTitle.isEmpty {
-            HStack {
-                Text(runtime.activeTitle)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(palette.title)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, max(12, notchHeight + 2))
-        } else if !runtime.isShowingEmpty {
-            // 会议 / 媒体等自带标题的内容页：留足刘海盲区，避免曲名顶进摄像头缺口。
-            Color.clear
-                .frame(height: max(12, notchHeight + 2))
-                .accessibilityHidden(true)
-        } else {
-            Color.clear.frame(height: 10)
-        }
+    /// 壳层标题行：控制台 / 空态不显示；内容组件 `title` 为空则不显示。
+    private var showsShellTitle: Bool {
+        !runtime.isTransientNoticePage
+            && !runtime.isControlDeckPage
+            && !runtime.isShowingEmpty
+            && !runtime.activeTitle.isEmpty
     }
 }

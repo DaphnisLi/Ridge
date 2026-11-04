@@ -66,6 +66,8 @@ enum WidgetSamplePreview {
             meetingSample(compact: compact)
         case "builtin.media":
             mediaSample(compact: compact)
+        case "builtin.focusTimer":
+            focusTimerSample(compact: compact)
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
@@ -98,6 +100,14 @@ enum WidgetSamplePreview {
             .padding(.vertical, compact ? 10 : 14)
             .frame(maxWidth: compact ? .infinity : 540)
             .frame(minHeight: compact ? 96 : 160)
+    }
+
+    private static func focusTimerSample(compact: Bool) -> some View {
+        FocusTimerIslandCardView.previewSample(phase: .running, compact: compact)
+            .padding(.horizontal, compact ? 10 : 12)
+            .padding(.vertical, compact ? 8 : 12)
+            .frame(maxWidth: compact ? .infinity : 540)
+            .frame(minHeight: compact ? 44 : 72)
     }
 
     private static func batterySample(compact: Bool) -> some View {

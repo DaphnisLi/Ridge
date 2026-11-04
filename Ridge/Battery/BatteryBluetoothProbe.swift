@@ -127,14 +127,15 @@ enum BatteryBluetoothProbe {
 
     // MARK: - Listening mode
 
-    /// 同名其它 paired 设备上再试一次聆听模式（AirPods 偶发双记录）。
+    /// 同名其它已连接 paired 设备上再试一次聆听模式（AirPods 偶发双记录）。
+    /// 未连接别名不探测，避免把盒内/幽灵记录当成在线。
     private static func readListeningModeFromPairedAlias(
         named name: String,
         excludingAddress: String
     ) -> BatteryListeningMode? {
         let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] ?? []
         let key = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        for device in paired {
+        for device in paired where device.isConnected() {
             let otherName = (device.name ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .lowercased()

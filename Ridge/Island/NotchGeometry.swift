@@ -16,15 +16,22 @@ struct NotchGeometry: Equatable {
 
     /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
     static let compactScale: CGFloat = 0.96
-    /// 普通展开页高度 = 刘海高 × 此倍率；组合页再 ×2。
-    /// 媒体卡（封面 + 律动条 + 进度 + 控制 + 分页点）纵向更高；5× 会裁切经典展开布局。
+    /// 番茄倒计时收起待命（左右翼）最小尺寸。
+    static let focusTimerCompactWidth: CGFloat = 288
+    static let focusTimerCompactHeight: CGFloat = 44
+    /// 以下常量为各内容模块的**画布参考**（控制台等 GeometryReader 页自报尺寸用），
+    /// 不再由壳层按 ExpandedLayout 写死可见面板宽高；展开面板由内容测量 + IslandChrome 撑开。
     static let fixedExpandedHeightMultiplier: CGFloat = 6
-    /// 瞬时通知（进程结束）：矮胶囊（日志按钮与名称同行）。
     static let noticeHeightMultiplier: CGFloat = 2.65
-    /// 控制台混音台：稿面约 660×320，按刘海倍率抬高并设下限。
+    /// 控制台混音台：内容模块参考面板约 660×300（含壳层 chrome 时）。
     static let controlDeckPreferredWidth: CGFloat = 660
     static let controlDeckHeightMultiplier: CGFloat = 8.5
     static let controlDeckMinHeight: CGFloat = 300
+    /// 电量页：每行最多 3 台，最多 2 行；一行时岛高只撑一行，避免空出第二行。
+    static let batteryDeckColumns: Int = 3
+    static let batteryDeckMaxRows: Int = 2
+    static let controlDeckBatterySingleRowMinHeight: CGFloat = 178
+    static let controlDeckBatteryDualRowMinHeight: CGFloat = 300
 
     var compactSize: CGSize {
         CGSize(
@@ -55,16 +62,43 @@ struct NotchGeometry: Equatable {
         max(notchHeight * Self.controlDeckHeightMultiplier, Self.controlDeckMinHeight)
     }
 
+    /// 电量页一行（≤3 台）高度。
+    var controlDeckBatterySingleRowHeight: CGFloat {
+        max(notchHeight * 5.0, Self.controlDeckBatterySingleRowMinHeight)
+    }
+
+    /// 电量页两行（>3 台）高度。
+    var controlDeckBatteryDualRowHeight: CGFloat {
+        max(
+            notchHeight * Self.controlDeckHeightMultiplier,
+            Self.controlDeckBatteryDualRowMinHeight
+        )
+    }
+
     /// 进程结束等瞬时通知高度（贴刘海）。
     var noticeExpandedHeight: CGFloat {
         max(notchHeight * Self.noticeHeightMultiplier, notchHeight + 34)
     }
 
+    /// 窗口占位与旧调用方仍可能用到的布局枚举；可见面板以内容测量为准。
     enum ExpandedLayout {
         case standard
         case combo
         case controlDeck
+        /// 电量外设：仅一行卡片。
+        case controlDeckBatterySingle
+        /// 电量外设：两行卡片。
+        case controlDeckBatteryDual
         case notice
+        /// 番茄倒计时内容页。
+        case focusTimer
+    }
+
+    /// 按已连接外设台数选择电量页岛高（每行 3 台，最多两行）。
+    static func controlDeckBatteryLayout(deviceCount: Int) -> ExpandedLayout {
+        deviceCount > batteryDeckColumns
+            ? .controlDeckBatteryDual
+            : .controlDeckBatterySingle
     }
 
     /// 可见岛面板尺寸。
@@ -75,19 +109,23 @@ struct NotchGeometry: Equatable {
     func expandedSize(width: CGFloat, layout: ExpandedLayout) -> CGSize {
         let preferredWidth: CGFloat = {
             switch layout {
-            case .controlDeck:
+            case .controlDeck, .controlDeckBatterySingle, .controlDeckBatteryDual:
                 return max(width, Self.controlDeckPreferredWidth)
-            case .standard, .combo, .notice:
+            case .standard, .combo, .notice, .focusTimer:
                 return width
             }
         }()
-        let clamped = min(max(preferredWidth, notchWidth), maxExpandedWidth)
+        let clamped = min(preferredWidth, maxExpandedWidth)
+        // 仅作窗口占位 / 兜底；真面板尺寸由 IslandContentView 测量。
         let height: CGFloat = {
             switch layout {
             case .standard: return standardExpandedHeight
             case .combo: return comboExpandedHeight
             case .controlDeck: return controlDeckExpandedHeight
+            case .controlDeckBatterySingle: return controlDeckBatterySingleRowHeight
+            case .controlDeckBatteryDual: return controlDeckBatteryDualRowHeight
             case .notice: return noticeExpandedHeight
+            case .focusTimer: return noticeExpandedHeight
             }
         }()
         return CGSize(
@@ -99,16 +137,22 @@ struct NotchGeometry: Equatable {
     /// 浮层窗口占位：按控制台最大高度，避免翻页裁切。
     var windowSize: CGSize {
         let deck = expandedSize(width: maxExpandedWidth, layout: .controlDeck)
+        let batteryTall = expandedSize(width: maxExpandedWidth, layout: .controlDeckBatteryDual)
         let combo = expandedSize(width: maxExpandedWidth, layout: .combo)
         return CGSize(
-            width: max(deck.width, combo.width),
-            height: max(deck.height, combo.height)
+            width: max(deck.width, batteryTall.width, combo.width),
+            height: max(deck.height, batteryTall.height, combo.height)
         )
     }
 
     /// 展开态面板在屏幕坐标中的矩形（顶边对齐屏幕顶，水平以刘海居中）。
     func expandedFrameOnScreen(width: CGFloat, layout: ExpandedLayout = .standard) -> CGRect {
         centeredTopFrame(size: expandedSize(width: width, layout: layout))
+    }
+
+    /// 按实测面板尺寸贴顶居中（悬停热区 / 可点区与内容撑开一致）。
+    func panelFrameOnScreen(size: CGSize) -> CGRect {
+        centeredTopFrame(size: size)
     }
 
     /// 窗口在屏幕上的矩形（最大宽度占位）。

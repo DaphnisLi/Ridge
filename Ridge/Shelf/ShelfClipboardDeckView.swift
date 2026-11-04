@@ -35,9 +35,6 @@ struct ShelfClipboardDeckView: View {
                     )
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 6)
-        .padding(.bottom, 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
             clipboard.start()

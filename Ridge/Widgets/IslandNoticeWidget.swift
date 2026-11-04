@@ -218,7 +218,7 @@ private struct PeripheralBatteryNoticeCard: View {
                 lowBody
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(minWidth: 320)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(notice.deviceName)，\(badge)")
     }
@@ -493,7 +493,7 @@ private struct RAMPressureNoticeCard: View {
             .fixedSize()
             .layoutPriority(2)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(minWidth: 380)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes))
     }
@@ -554,7 +554,7 @@ private struct ProcessEndedNoticeCard: View {
                 viewLogButton
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(minWidth: 360)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
             notice.map(L10n.IslandNotice.accessibilityLabel)

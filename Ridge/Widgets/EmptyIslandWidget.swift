@@ -71,6 +71,7 @@ private struct EmptyIslandView: View {
             .buttonStyle(.plain)
             .padding(.top, 2)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(width: 280)
+        .padding(.vertical, 8)
     }
 }

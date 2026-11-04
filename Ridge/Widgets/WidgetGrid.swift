@@ -33,6 +33,16 @@ enum WidgetGridBoard {
     static let contentHorizontalInset: CGFloat = 24
     static let chromeHeight: CGFloat = 56
 
+    /// 组合页内容画布宽度（不含 IslandChrome）；由网格自己撑开岛宽。
+    static let preferredContentWidth: CGFloat = 560
+
+    /// 组合页内容画布尺寸（仅网格区，不含壳层 chrome / padding）。
+    static var preferredContentSize: CGSize {
+        let metrics = cellMetrics(forWidth: preferredContentWidth + contentHorizontalInset)
+        let gridH = metrics.cellHeight * CGFloat(rows) + spacing * CGFloat(rows - 1)
+        return CGSize(width: preferredContentWidth, height: gridH)
+    }
+
     /// 根据岛展开宽估算面板高度（含标题 / 分页点区域）。
     static func expandedPanelHeight(forWidth width: CGFloat) -> CGFloat {
         let metrics = cellMetrics(forWidth: width)

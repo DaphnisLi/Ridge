@@ -2977,7 +2977,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "下圆角"
+            "value": "下圆角曲率半径"
           }
         }
       }
@@ -3109,7 +3109,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "尺寸与几何微调"
+            "value": "下圆角物理曲率微调"
           }
         }
       }
@@ -3131,7 +3131,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "动态形态预览"
+            "value": "下圆角动态形态预览"
           }
         }
       }
@@ -4606,6 +4606,1348 @@
           "stringUnit": {
             "state": "translated",
             "value": "授权屏幕录制"
+          }
+        }
+      }
+    },
+    "widgets.focus_timer_preview_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "番茄倒计时"
+          }
+        }
+      }
+    },
+    "focus_timer.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "番茄倒计时"
+          }
+        }
+      }
+    },
+    "focus_timer.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选时起钟、计时待命与加时收拢，常驻灵动岛"
+          }
+        }
+      }
+    },
+    "focus_timer.stage.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MacBook 灵动岛五态实时映射仿真"
+          }
+        }
+      }
+    },
+    "focus_timer.phase.picking": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选时起钟态"
+          }
+        }
+      }
+    },
+    "focus_timer.phase.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计时进行中"
+          }
+        }
+      }
+    },
+    "focus_timer.phase.overtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顺延加时中"
+          }
+        }
+      }
+    },
+    "focus_timer.phase.completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "终局收拢态"
+          }
+        }
+      }
+    },
+    "focus_timer.focusing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注中"
+          }
+        }
+      }
+    },
+    "focus_timer.overtime_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加时中"
+          }
+        }
+      }
+    },
+    "focus_timer.picking.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设定专注时长并起钟"
+          }
+        }
+      }
+    },
+    "focus_timer.picking.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷预设 或 自选分钟"
+          }
+        }
+      }
+    },
+    "focus_timer.start": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始计时"
+          }
+        }
+      }
+    },
+    "focus_timer.remaining": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剩余"
+          }
+        }
+      }
+    },
+    "focus_timer.finish_early": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束"
+          }
+        }
+      }
+    },
+    "focus_timer.finish_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成收工"
+          }
+        }
+      }
+    },
+    "focus_timer.save_record": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成命名"
+          }
+        }
+      }
+    },
+    "focus_timer.completed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计时完成"
+          }
+        }
+      }
+    },
+    "focus_timer.auto_archived_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已自动归档"
+          }
+        }
+      }
+    },
+    "focus_timer.note_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "记录已入库，点击添加标题（可选）"
+          }
+        }
+      }
+    },
+    "focus_timer.default_time_name_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认按时间命名"
+          }
+        }
+      }
+    },
+    "focus_timer.custom_session_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义专注"
+          }
+        }
+      }
+    },
+    "focus_timer.preview_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "排查异步死锁并重构"
+          }
+        }
+      }
+    },
+    "focus_timer.preset_chip_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%dm %@"
+          }
+        }
+      }
+    },
+    "focus_timer.preset_minutes_chip_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%dm"
+          }
+        }
+      }
+    },
+    "focus_timer.minutes_abbrev": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "m"
+          }
+        }
+      }
+    },
+    "focus_timer.planned_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总设 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.elapsed_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已过 %@"
+          }
+        }
+      }
+    },
+    "focus_timer.extend_chip_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%dm"
+          }
+        }
+      }
+    },
+    "focus_timer.extend_again_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "微调 +%dm"
+          }
+        }
+      }
+    },
+    "focus_timer.overtime_added_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%dm 顺延"
+          }
+        }
+      }
+    },
+    "focus_timer.total_planned_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总计 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.base_minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基础 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.overtime_minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顺延 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.total_focus_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总专注 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.tomato": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准番茄"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.tomato_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半小时专注块"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.sprint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短时冲刺"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.sprint_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速同步与收口"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.deep": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深度专注"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.deep_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沉浸编码攻关"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.long": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长跑冲刺"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.long_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大块心流时段"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.break": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短息调养"
+          }
+        }
+      }
+    },
+    "focus_timer.preset.break_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "远眺补水拉伸"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日专注概览"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.today_stats": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日统计"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.today_total": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日累计"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.times_unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.focus_hours": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日专注工时"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.minutes_unit": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分钟"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.focus_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注时长核心聚焦"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.overtime_sprint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顺延冲刺"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.footer_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注数据随计时实时更新"
+          }
+        }
+      }
+    },
+    "focus_timer.overview.focus_mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注模式"
+          }
+        }
+      }
+    },
+    "focus_timer.presets.reset_defaults": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置默认"
+          }
+        }
+      }
+    },
+    "focus_timer.col.preset": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预设标准倒计时"
+          }
+        }
+      }
+    },
+    "focus_timer.col.preset_sub_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已完成 %d 轮 (守时率 100%)"
+          }
+        }
+      }
+    },
+    "focus_timer.col.custom": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义自由倒计时"
+          }
+        }
+      }
+    },
+    "focus_timer.col.custom_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户键盘精准指定 / 自由滑轨"
+          }
+        }
+      }
+    },
+    "focus_timer.col.overtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "深度加时与顺延冲刺"
+          }
+        }
+      }
+    },
+    "focus_timer.col.overtime_sub": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原定时长扣响后主动延展 (高心流)"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.preset_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日暂无预设倒计时记录"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.preset_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始倒计时后自动在此归档"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.custom_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日暂无自由倒计时记录"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.custom_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "单次自定义时长记录将展示在此"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.overtime_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日尚未产生顺延加时"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.overtime_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计时结束后的专注顺延时长将在此统计"
+          }
+        }
+      }
+    },
+    "focus_timer.on_time": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准时扣响"
+          }
+        }
+      }
+    },
+    "focus_timer.achieve_percent_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "达成 %d%%"
+          }
+        }
+      }
+    },
+    "focus_timer.presets.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "预设标准倒计时配置"
+          }
+        }
+      }
+    },
+    "focus_timer.presets.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "维护灵动岛快捷选择与标准轮次的默认档位"
+          }
+        }
+      }
+    },
+    "focus_timer.extend_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "每次加时步长"
+          }
+        }
+      }
+    },
+    "focus_timer.presets.slot_count_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 档位"
+          }
+        }
+      }
+    },
+    "focus_timer.extend_step_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顺延步长"
+          }
+        }
+      }
+    },
+    "focus_timer.extend_step_chip_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%dm"
+          }
+        }
+      }
+    },
+    "focus_timer.preset_adjust_minus_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "-%d"
+          }
+        }
+      }
+    },
+    "focus_timer.preset_adjust_plus_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%d"
+          }
+        }
+      }
+    },
+    "focus_timer.phase.standby": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准待命态"
+          }
+        }
+      }
+    },
+    "focus_timer.tab.badge_custom": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自选"
+          }
+        }
+      }
+    },
+    "focus_timer.tab.badge_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "总结"
+          }
+        }
+      }
+    },
+    "focus_timer.col.preset_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 轮记录"
+          }
+        }
+      }
+    },
+    "focus_timer.col.custom_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自由输入 %d 轮"
+          }
+        }
+      }
+    },
+    "focus_timer.col.overtime_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 轮顺延"
+          }
+        }
+      }
+    },
+    "focus_timer.custom_precision": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定精度 ±0s"
+          }
+        }
+      }
+    },
+    "focus_timer.badge.tomato_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "番茄 #%02d"
+          }
+        }
+      }
+    },
+    "focus_timer.badge.break_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "短息 #%02d"
+          }
+        }
+      }
+    },
+    "focus_timer.badge.long_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "长跑 #%02d"
+          }
+        }
+      }
+    },
+    "focus_timer.badge.custom_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "键入 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.badge.overtime_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%dm 顺延"
+          }
+        }
+      }
+    },
+    "focus_timer.overtime_breakdown_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原定 %dm + 顺延 %dm"
+          }
+        }
+      }
+    },
+    "focus_timer.baseline_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "基准线 (%dm)"
+          }
+        }
+      }
+    },
+    "focus_timer.flow_extend_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%dm (心流延伸)"
+          }
+        }
+      }
+    },
+    "focus_timer.preset_coverage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "标准模版覆盖率"
+          }
+        }
+      }
+    },
+    "focus_timer.preset_coverage_value_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%dm (100% 达成)"
+          }
+        }
+      }
+    },
+    "focus_timer.extra_flow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日捕获额外心流时长"
+          }
+        }
+      }
+    },
+    "settings.island.geometry_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专为 MacBook 顶部刘海贴合设计，顶部平直贴边，底部双圆角曲率精细调校"
+          }
+        }
+      }
+    },
+    "settings.island.curvature_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前曲率:"
+          }
+        }
+      }
+    },
+    "settings.island.curvature_badge_named_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %d pt"
+          }
+        }
+      }
+    },
+    "settings.island.curvature_badge_custom_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自定义 %d pt"
+          }
+        }
+      }
+    },
+    "settings.island.geometry_preview_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "顶部平直贴顶 · 双下圆角实时联动"
+          }
+        }
+      }
+    },
+    "settings.island.corner_preset_flat": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平角"
+          }
+        }
+      }
+    },
+    "settings.island.corner_preset_classic": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经典"
+          }
+        }
+      }
+    },
+    "settings.island.corner_preset_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "默认"
+          }
+        }
+      }
+    },
+    "settings.island.corner_preset_round": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "圆润"
+          }
+        }
+      }
+    },
+    "settings.island.corner_round_max": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最大圆润"
+          }
+        }
+      }
+    },
+    "focus_timer.untitled": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未命名专注"
+          }
+        }
+      }
+    },
+    "focus_timer.fill_title_action": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ 补填事项名称"
+          }
+        }
+      }
+    },
+    "focus_timer.fill_title_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入事项名称…"
+          }
+        }
+      }
+    },
+    "focus_timer.save_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "focus_timer.status_pending_fill": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态 A 待填"
+          }
+        }
+      }
+    },
+    "focus_timer.ended_early_status": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提前结束"
+          }
+        }
+      }
+    },
+    "focus_timer.finished_on_time_status": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "准时结束"
+          }
+        }
+      }
+    },
+    "focus_timer.badge.planned_minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%02dm"
+          }
+        }
+      }
+    },
+    "focus_timer.overtime_plus_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%dm"
+          }
+        }
+      }
+    },
+    "focus_timer.status_editing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态 B: 输入保存中"
+          }
+        }
+      }
+    },
+    "focus_timer.quick_tag.review": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需求评审"
+          }
+        }
+      }
+    },
+    "focus_timer.quick_tag.bug": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "排查Bug"
+          }
+        }
+      }
+    },
+    "focus_timer.quick_tag.deep": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "技术攻关"
+          }
+        }
+      }
+    },
+    "focus_timer.esc_to_close": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持 Esc 键原位关闭"
+          }
+        }
+      }
+    },
+    "focus_timer.time_range_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始: %@ - 结束: %@"
+          }
+        }
+      }
+    },
+    "focus_timer.col.today_completed_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日已完成 %d 次"
           }
         }
       }

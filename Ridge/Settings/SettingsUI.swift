@@ -270,6 +270,41 @@ struct SettingsHairline: View {
     }
 }
 
+/// 「恢复默认设置」公共按钮。样式以灵动岛设置页为准：`bordered` + 逆时针图标。
+/// 各配置页只传 `action`，禁止再抄一套 plain 灰字链接。
+struct SettingsRestoreDefaultsButton: View {
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(L10n.Common.restoreDefaults, systemImage: "arrow.counterclockwise")
+                .font(SettingsChrome.Font.label)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
+    }
+}
+
+/// 贴底固定的「恢复默认设置」栏：滚动区在上、本栏在下，滑动时位置不变（灵动岛设置页同款）。
+struct SettingsRestoreDefaultsFooter: View {
+    var action: () -> Void
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 0)
+            SettingsRestoreDefaultsButton(action: action)
+        }
+        .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
+        .padding(.vertical, 12)
+        .background(SettingsChrome.pageBackground.opacity(0.92))
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.black.opacity(0.05))
+                .frame(height: 1)
+        }
+    }
+}
+
 /// 未授权权限卡（白底 + 图标 + 标题说明 + 右侧操作）。
 /// **已授权时整卡不渲染**——用户侧只会出现「未授权」态，禁止再造「已授权」徽章或页内第二套授权 UI。
 struct SettingsPermissionCard: View {

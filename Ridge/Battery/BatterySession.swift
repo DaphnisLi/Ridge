@@ -1,4 +1,5 @@
 import Combine
+import CoreAudio
 import Foundation
 
 /// 外设电量会话：合并 IOBluetooth / IOHID / BLE / system_profiler，驱动控制台与告警。
@@ -262,13 +263,95 @@ final class BatterySession: ObservableObject {
             }
         }
 
-        return byAddress.values.sorted {
+        // 耳机 / 耳麦：IOBluetooth / system_profiler 常把「仅有 BLE 电量链路」标成已连接
+        //（AirPods 在盒内附近尤其如此），但用户侧蓝牙并未真正接上。以 CoreAudio 是否
+        // 出现对应蓝牙音频输出为准，避免电量页误报「耳机已连接」。
+        let audioNames = connectedBluetoothAudioNames()
+        let kept = byAddress.values.filter { device in
+            guard isWirelessAudioKind(device.kind) else { return true }
+            if device.id.hasPrefix("hid.") { return true }
+            let matched = matchesBluetoothAudio(deviceName: device.name, audioNames: audioNames)
+            if !matched {
+                AppLog.info("Battery", "忽略无音频路由的耳机/耳麦", [
+                    "name": device.name,
+                    "kind": device.kind.rawValue,
+                    "audioOutputs": audioNames.sorted().joined(separator: "|")
+                ])
+            }
+            return matched
+        }
+
+        return kept.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
     }
 
     private static func normalizeName(_ raw: String) -> String {
         raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private static func isWirelessAudioKind(_ kind: BatteryDeviceKind) -> Bool {
+        kind == .headphones || kind == .headset
+    }
+
+    /// 当前 HAL 里的蓝牙/蓝牙 LE 输出设备名（已规范化）。
+    private static func connectedBluetoothAudioNames() -> Set<String> {
+        let ids: [AudioObjectID] = CoreAudioProperty.getArray(
+            object: .system,
+            kAudioHardwarePropertyDevices
+        )
+        var names = Set<String>()
+        for id in ids {
+            let transport: UInt32 = CoreAudioProperty.get(
+                object: id,
+                kAudioDevicePropertyTransportType
+            ) ?? 0
+            guard transport == kAudioDeviceTransportTypeBluetooth
+                || transport == kAudioDeviceTransportTypeBluetoothLE
+            else { continue }
+            // 只要有输出声道就认作可用音频路由（不必是当前默认输出）。
+            var address = AudioObjectPropertyAddress(
+                mSelector: kAudioDevicePropertyStreamConfiguration,
+                mScope: kAudioObjectPropertyScopeOutput,
+                mElement: kAudioObjectPropertyElementMain
+            )
+            var dataSize: UInt32 = 0
+            guard AudioObjectGetPropertyDataSize(id, &address, 0, nil, &dataSize) == noErr,
+                  dataSize > 0
+            else { continue }
+            let raw = UnsafeMutableRawPointer.allocate(
+                byteCount: Int(dataSize),
+                alignment: MemoryLayout<AudioBufferList>.alignment
+            )
+            defer { raw.deallocate() }
+            guard AudioObjectGetPropertyData(id, &address, 0, nil, &dataSize, raw) == noErr else {
+                continue
+            }
+            let list = raw.assumingMemoryBound(to: AudioBufferList.self)
+            var channels = 0
+            for buffer in UnsafeMutableAudioBufferListPointer(list) {
+                channels += Int(buffer.mNumberChannels)
+            }
+            guard channels > 0 else { continue }
+            if let name = CoreAudioProperty.getCFString(
+                object: id,
+                kAudioDevicePropertyDeviceNameCFString
+            ) {
+                let key = normalizeName(name)
+                if !key.isEmpty { names.insert(key) }
+            }
+        }
+        return names
+    }
+
+    private static func matchesBluetoothAudio(deviceName: String, audioNames: Set<String>) -> Bool {
+        let key = normalizeName(deviceName)
+        guard !key.isEmpty else { return false }
+        if audioNames.contains(key) { return true }
+        for audio in audioNames {
+            if audio.contains(key) || key.contains(audio) { return true }
+        }
+        return false
     }
 
     private static func subtitle(

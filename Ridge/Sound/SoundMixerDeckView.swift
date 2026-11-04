@@ -21,9 +21,6 @@ struct SoundMixerDeckView: View {
                     .frame(width: rightW, height: geo.size.height, alignment: .topLeading)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 10)
-        .padding(.bottom, 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
             sound.start()

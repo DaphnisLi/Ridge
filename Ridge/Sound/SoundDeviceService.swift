@@ -35,12 +35,34 @@ enum SoundDeviceService {
 
             let sources = outputDataSources(id)
             let currentSource = currentOutputDataSource(id)
+            let jackConnected = outputJackIsConnected(id)
 
             if !sources.isEmpty {
-                // 内建声卡常见：扬声器 + 耳机 两条 DataSource；蓝牙等也可能有多路。
+                // 内建声卡常见：扬声器 + 耳机 两条 DataSource；未插孔时「耳机」仍会出现在
+                // DataSources 列表里，若不加过滤会像「已连接」一样一直显示在混音台。
+                var visibleSources: [UInt32] = []
                 for source in sources {
                     let sourceName = dataSourceName(device: id, sourceID: source) ?? name
-                    let endpointUID = sources.count == 1
+                    if shouldOmitHeadphoneDataSource(
+                        name: sourceName,
+                        sourceID: source,
+                        currentSource: currentSource,
+                        jackConnected: jackConnected
+                    ) {
+                        AppLog.debug("Sound", "跳过未连接的耳机数据源", [
+                            "name": sourceName,
+                            "uid": uid,
+                            "source": source,
+                            "jack": jackConnected.map { $0 ? "in" : "out" } ?? "n/a"
+                        ])
+                        continue
+                    }
+                    visibleSources.append(source)
+                }
+
+                for source in visibleSources {
+                    let sourceName = dataSourceName(device: id, sourceID: source) ?? name
+                    let endpointUID = visibleSources.count == 1
                         ? uid
                         : "\(uid)\(dataSourceUIDMarker)\(source)"
                     let isDefault = isDefaultDevice && (currentSource == nil || currentSource == source)
@@ -306,6 +328,38 @@ enum SoundDeviceService {
             kAudioDevicePropertyDataSource,
             scope: kAudioObjectPropertyScopeOutput
         )
+    }
+
+    /// `nil` = 设备不支持插孔状态（仍按名称过滤未选中的耳机源）。
+    private static func outputJackIsConnected(_ id: AudioObjectID) -> Bool? {
+        guard let value: UInt32 = CoreAudioProperty.get(
+            object: id,
+            kAudioDevicePropertyJackIsConnected,
+            scope: kAudioObjectPropertyScopeOutput
+        ) else {
+            return nil
+        }
+        return value != 0
+    }
+
+    private static func isHeadphoneDataSourceName(_ name: String) -> Bool {
+        let lower = name.lowercased()
+        return lower.contains("headphone") || name.contains("耳机")
+    }
+
+    /// 未插线时 HAL 仍可能枚举「耳机」DataSource；混音台只保留真正可用或当前选中的。
+    private static func shouldOmitHeadphoneDataSource(
+        name: String,
+        sourceID: UInt32,
+        currentSource: UInt32?,
+        jackConnected: Bool?
+    ) -> Bool {
+        guard isHeadphoneDataSourceName(name) else { return false }
+        if currentSource == sourceID { return false }
+        if let jackConnected {
+            return !jackConnected
+        }
+        return true
     }
 
     private static func dataSourceName(device: AudioObjectID, sourceID: UInt32) -> String? {

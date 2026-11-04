@@ -3,27 +3,21 @@ import SwiftUI
 struct IslandSettingsPane: View {
     @ObservedObject var settings: IslandSettings
 
-    private enum GeometryPreset: Equatable {
-        case compact
-        case balanced
-        case wide
-        case custom
+    /// 下圆角曲率预设（对齐稿面：平角 / 经典 / 默认 / 圆润）。
+    private enum CornerRadiusPreset: Double, CaseIterable, Identifiable {
+        case flat = 8
+        case classic = 18
+        case standard = 24
+        case round = 32
 
-        var width: Double? {
-            switch self {
-            case .compact: return 320
-            case .balanced: return 400
-            case .wide: return 520
-            case .custom: return nil
-            }
-        }
+        var id: Double { rawValue }
 
-        var radius: Double? {
+        var title: String {
             switch self {
-            case .compact: return 12
-            case .balanced: return 18
-            case .wide: return 24
-            case .custom: return nil
+            case .flat: return L10n.Settings.cornerPresetFlat
+            case .classic: return L10n.Settings.cornerPresetClassic
+            case .standard: return L10n.Settings.cornerPresetDefault
+            case .round: return L10n.Settings.cornerPresetRound
             }
         }
     }
@@ -63,7 +57,10 @@ struct IslandSettingsPane: View {
             }
             .scrollIndicators(.hidden)
 
-            footerBar
+            SettingsRestoreDefaultsFooter {
+                settings.restoreDefaults()
+                AppLog.info("Settings", "已恢复默认设置")
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(SettingsChrome.pageBackground)
@@ -85,36 +82,8 @@ struct IslandSettingsPane: View {
         .onChange(of: settings.bottomCornerRadius) { _, value in
             AppLog.info("Settings", "下圆角已更新", ["radius": value])
         }
-        .onChange(of: settings.expandedWidth) { _, value in
-            AppLog.info("Settings", "展开宽度", ["width": value])
-        }
         .onChange(of: settings.theme) { _, value in
             AppLog.info("Settings", "预设主题", ["theme": value.rawValue])
-        }
-    }
-
-    // MARK: - Header / Footer
-
-    private var footerBar: some View {
-        HStack {
-            Spacer(minLength: 0)
-            Button {
-                settings.restoreDefaults()
-                AppLog.info("Settings", "已恢复默认设置")
-            } label: {
-                Label(L10n.Common.restoreDefaults, systemImage: "arrow.counterclockwise")
-                    .font(SettingsChrome.Font.label)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
-        }
-        .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
-        .padding(.vertical, 12)
-        .background(SettingsChrome.pageBackground.opacity(0.92))
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Color.black.opacity(0.05))
-                .frame(height: 1)
         }
     }
 
@@ -148,32 +117,36 @@ struct IslandSettingsPane: View {
         }
     }
 
-    // MARK: - Geometry
+    // MARK: - 下圆角曲率
 
-    private var matchedGeometryPreset: GeometryPreset {
-        for preset: GeometryPreset in [.compact, .balanced, .wide] {
-            if abs((preset.width ?? -1) - settings.expandedWidth) < 0.5,
-               abs((preset.radius ?? -1) - settings.bottomCornerRadius) < 0.5 {
-                return preset
-            }
+    private var matchedCornerPreset: CornerRadiusPreset? {
+        CornerRadiusPreset.allCases.first {
+            abs($0.rawValue - settings.bottomCornerRadius) < 0.5
         }
-        return .custom
+    }
+
+    private var currentCurvatureBadge: String {
+        let pts = Int(settings.bottomCornerRadius.rounded())
+        if let preset = matchedCornerPreset {
+            return L10n.Settings.curvatureBadgeNamed(preset.title, pts)
+        }
+        return L10n.Settings.curvatureBadgeCustom(pts)
     }
 
     private var geometryCard: some View {
         SettingsBentoCard {
-            HStack {
+            HStack(alignment: .center) {
                 SettingsBentoCardTitle(
-                    symbol: "arrow.up.left.and.arrow.down.right",
+                    symbol: "rectangle.portrait.bottomhalf.inset.filled",
                     tint: Color(red: 0.35, green: 0.40, blue: 0.95),
                     title: L10n.Settings.geometryTitle
                 )
                 Spacer(minLength: 8)
                 HStack(spacing: 4) {
-                    Text(L10n.Settings.matrixLabel)
+                    Text(L10n.Settings.curvatureLabel)
                         .font(SettingsChrome.Font.monoCaption)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    Text("\(Int(settings.expandedWidth.rounded())) pt × \(Int(settings.bottomCornerRadius.rounded())) pt")
+                    Text(currentCurvatureBadge)
                         .font(SettingsChrome.Font.monoEmphasis)
                         .foregroundStyle(SettingsChrome.onSurface)
                 }
@@ -182,110 +155,89 @@ struct IslandSettingsPane: View {
                 .background(Capsule().fill(SettingsChrome.surfaceContainer.opacity(0.9)))
             }
 
-            geometryPresetBar
+            Text(L10n.Settings.geometrySubtitle)
+                .font(SettingsChrome.Font.caption)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .fixedSize(horizontal: false, vertical: true)
 
-            VStack(spacing: SettingsChrome.Spacing.stack) {
-                SettingsSliderRow(
-                    title: L10n.Settings.expandedWidth,
-                    valueText: "\(Int(settings.expandedWidth.rounded())) pt",
-                    value: $settings.expandedWidth,
-                    range: IslandSettings.expandedWidthRange,
-                    step: 5,
-                    leading: "\(L10n.Settings.widthNarrow) (\(Int(IslandSettings.expandedWidthRange.lowerBound)))",
-                    trailing: "\(L10n.Settings.widthWide) (\(Int(IslandSettings.expandedWidthRange.upperBound)))"
-                )
-                SettingsSliderRow(
-                    title: L10n.Settings.bottomCorner,
-                    valueText: "\(Int(settings.bottomCornerRadius.rounded())) pt",
-                    value: $settings.bottomCornerRadius,
-                    range: 0...36,
-                    step: 1,
-                    leading: "\(L10n.Settings.cornerSquare) (0 pt)",
-                    trailing: "\(L10n.Settings.cornerRound) (36 pt)"
-                )
-            }
+            cornerPresetBar
 
-            HStack {
-                Text(L10n.Settings.geometryPreview)
-                    .font(SettingsChrome.Font.caption)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+            SettingsSliderRow(
+                title: L10n.Settings.bottomCorner,
+                valueText: "\(Int(settings.bottomCornerRadius.rounded())) pt",
+                value: Binding(
+                    get: { settings.bottomCornerRadius },
+                    set: { settings.bottomCornerRadius = min(max($0, 0), 32) }
+                ),
+                range: 0...32,
+                step: 1,
+                leading: "\(L10n.Settings.cornerSquare) (0 pt)",
+                trailing: "\(L10n.Settings.cornerRoundMax) (32 pt)"
+            )
+
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.Settings.geometryPreview)
+                        .font(SettingsChrome.Font.label)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Text(L10n.Settings.geometryPreviewHint)
+                        .font(SettingsChrome.Font.footnote)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                }
                 Spacer(minLength: 8)
                 geometryMiniPreview
             }
-            .padding(.top, 4)
+            .padding(.top, 8)
             .overlay(alignment: .top) {
                 SettingsHairline()
-                    .padding(.top, -8)
             }
         }
     }
 
-    private var geometryPresetBar: some View {
-        let active = matchedGeometryPreset
-        return SettingsSegmentedControl(items: [
-            .init(
-                id: "compact",
-                title: L10n.Settings.presetCompact,
-                selected: active == .compact
-            ) {
-                if let width = GeometryPreset.compact.width { settings.expandedWidth = width }
-                if let radius = GeometryPreset.compact.radius { settings.bottomCornerRadius = radius }
-                AppLog.info("Settings", "几何预设", ["preset": "compact"])
-            },
-            .init(
-                id: "balanced",
-                title: L10n.Settings.presetBalanced,
-                selected: active == .balanced
-            ) {
-                if let width = GeometryPreset.balanced.width { settings.expandedWidth = width }
-                if let radius = GeometryPreset.balanced.radius { settings.bottomCornerRadius = radius }
-                AppLog.info("Settings", "几何预设", ["preset": "balanced"])
-            },
-            .init(
-                id: "wide",
-                title: L10n.Settings.presetWide,
-                selected: active == .wide
-            ) {
-                if let width = GeometryPreset.wide.width { settings.expandedWidth = width }
-                if let radius = GeometryPreset.wide.radius { settings.bottomCornerRadius = radius }
-                AppLog.info("Settings", "几何预设", ["preset": "wide"])
-            },
-            .init(
-                id: "custom",
-                title: L10n.Settings.presetCustom,
-                selected: active == .custom,
-                isInteractive: false,
-                action: {}
-            ),
-        ])
+    private var cornerPresetBar: some View {
+        let active = matchedCornerPreset
+        return SettingsSegmentedControl(
+            items: CornerRadiusPreset.allCases.map { preset in
+                .init(
+                    id: "\(Int(preset.rawValue))",
+                    title: "\(preset.title) (\(Int(preset.rawValue)) pt)",
+                    selected: active == preset
+                ) {
+                    settings.bottomCornerRadius = preset.rawValue
+                    AppLog.info("Settings", "下圆角预设", [
+                        "preset": preset.title,
+                        "radius": preset.rawValue
+                    ])
+                }
+            }
+        )
     }
 
+    /// 顶部平直贴顶、底部双圆角；曲率联动，宽度固定（稿面 170pt 迷你岛）。
     private var geometryMiniPreview: some View {
         let palette = settings.theme.palette
-        let previewW = 80 + (settings.expandedWidth - IslandSettings.expandedWidthRange.lowerBound)
-            * (100 / max(IslandSettings.expandedWidthRange.upperBound - IslandSettings.expandedWidthRange.lowerBound, 1))
-        let radius = min(max(settings.bottomCornerRadius, 0), 24)
+        let radius = min(max(settings.bottomCornerRadius, 0), 32)
         return HStack(spacing: 6) {
             Circle()
-                .fill(palette.icon)
+                .fill(Color.white)
                 .frame(width: 6, height: 6)
             Capsule()
-                .fill(palette.accentFill.opacity(0.7))
-                .frame(width: 24, height: 4)
+                .fill(Color.white.opacity(0.6))
+                .frame(width: 28, height: 4)
         }
-        .padding(.horizontal, 10)
-        .frame(width: min(max(previewW, 72), 180), height: 20)
+        .padding(.horizontal, 14)
+        .frame(width: 170, height: 24)
         .background(
             UnevenRoundedRectangle(
-                topLeadingRadius: 4,
+                topLeadingRadius: 0,
                 bottomLeadingRadius: radius,
                 bottomTrailingRadius: radius,
-                topTrailingRadius: 4,
+                topTrailingRadius: 0,
                 style: .continuous
             )
             .fill(palette.fill)
+            .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
         )
-        .animation(.easeOut(duration: 0.15), value: settings.expandedWidth)
         .animation(.easeOut(duration: 0.15), value: settings.bottomCornerRadius)
         .animation(.easeOut(duration: 0.15), value: settings.theme)
     }

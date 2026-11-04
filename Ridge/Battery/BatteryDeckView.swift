@@ -80,32 +80,38 @@ private struct BatteryDeckCanvas: View {
     private let cardBorder = Color.white.opacity(0.07)
 
     /// 浮层 Panel 上系统 ScrollView 滚不动；不铺灰底，透出灵动岛黑色。
-    private let columnCount = 3
+    private let columnCount = NotchGeometry.batteryDeckColumns
+    private let maxRows = NotchGeometry.batteryDeckMaxRows
     private let rowSpacing: CGFloat = 8
     private let gridPadTop: CGFloat = 8
     private let gridPadBottom: CGFloat = 8
+    /// AirPods 三格黑底需要比进度条略高；一行时按此高度，不撑成两行空白。
+    private var preferredCardHeight: CGFloat { isPreview ? 112 : 116 }
 
     var body: some View {
         Group {
             if devices.isEmpty {
                 emptyState
             } else {
-                // 按视口高度均分行高，避免固定 maxHeight + clipped 把卡片底裁掉。
                 GeometryReader { geo in
                     let cols = layoutColumnCount
                     let rows = deviceRows(columns: cols)
-                    let rowCount = max(rows.count, 1)
+                    // 岛高最多按两行算；超出部分在两行视口内滚动。
+                    let visualRowCount = min(max(rows.count, 1), maxRows)
                     let usable = geo.size.height
                         - gridPadTop
                         - gridPadBottom
-                        - CGFloat(rowCount - 1) * rowSpacing
-                    let fitted = floor(usable / CGFloat(rowCount))
-                    // 行少时撑满视口；行多时保底高度，交给滚动。
-                    // AirPods 三格黑底需要比进度条略高。
-                    let cardH = min(128, max(isPreview ? 112 : 108, fitted))
+                        - CGFloat(visualRowCount - 1) * rowSpacing
+                    let fitted = floor(usable / CGFloat(visualRowCount))
+                    let cardH: CGFloat = {
+                        if visualRowCount <= 1 {
+                            // 一行：贴近首选高度，勿把卡片拉成半屏。
+                            return min(preferredCardHeight, max(isPreview ? 96 : 108, fitted))
+                        }
+                        return min(128, max(preferredCardHeight, fitted))
+                    }()
 
                     // 设置预览：单行样张，避免 AlwaysVisibleScrollView 在库卡滚动时拖累合成。
-                    // 预览列数跟设备数对齐，避免 2 台仍按 3 列挤窄。
                     let grid = VStack(spacing: rowSpacing) {
                         ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                             HStack(spacing: 10) {
@@ -131,7 +137,7 @@ private struct BatteryDeckCanvas: View {
                             }
                         }
                     }
-                    .padding(.horizontal, isPreview ? 10 : 14)
+                    .padding(.horizontal, isPreview ? 10 : 0)
                     .padding(.top, gridPadTop)
                     .padding(.bottom, gridPadBottom)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -149,7 +155,8 @@ private struct BatteryDeckCanvas: View {
                     .onAppear {
                         AppLog.info("Battery", "电量页布局", [
                             "viewportH": geo.size.height,
-                            "rows": rowCount,
+                            "rows": rows.count,
+                            "visualRows": visualRowCount,
                             "cardH": cardH,
                             "devices": devices.count,
                             "preview": isPreview

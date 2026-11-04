@@ -41,19 +41,36 @@ enum L10n {
         static var themeCountBadge: String { tr("settings.island.theme_count_badge", "5 款精美预设") }
         static var themeClickHint: String { tr("settings.island.theme_click_hint", "点击即刻无缝换肤") }
         static var themeInUse: String { tr("settings.island.theme_in_use", "使用中") }
-        static var geometryTitle: String { tr("settings.island.geometry_title", "尺寸与几何微调") }
-        static var matrixLabel: String { tr("settings.island.matrix_label", "矩阵") }
-        static var geometryPreview: String { tr("settings.island.geometry_preview", "动态形态预览") }
-        static var presetCompact: String { tr("settings.island.preset_compact", "紧凑型") }
-        static var presetBalanced: String { tr("settings.island.preset_balanced", "均衡型") }
-        static var presetWide: String { tr("settings.island.preset_wide", "宽屏型") }
+        static var geometryTitle: String {
+            tr("settings.island.geometry_title", "下圆角物理曲率微调")
+        }
+        static var geometrySubtitle: String {
+            tr(
+                "settings.island.geometry_subtitle",
+                "专为 MacBook 顶部刘海贴合设计，顶部平直贴边，底部双圆角曲率精细调校"
+            )
+        }
+        static var curvatureLabel: String { tr("settings.island.curvature_label", "当前曲率:") }
+        static func curvatureBadgeNamed(_ name: String, _ pts: Int) -> String {
+            String(format: tr("settings.island.curvature_badge_named_format", "%@ %d pt"), name, pts)
+        }
+        static func curvatureBadgeCustom(_ pts: Int) -> String {
+            String(format: tr("settings.island.curvature_badge_custom_format", "自定义 %d pt"), pts)
+        }
+        static var geometryPreview: String {
+            tr("settings.island.geometry_preview", "下圆角动态形态预览")
+        }
+        static var geometryPreviewHint: String {
+            tr("settings.island.geometry_preview_hint", "顶部平直贴顶 · 双下圆角实时联动")
+        }
+        static var cornerPresetFlat: String { tr("settings.island.corner_preset_flat", "平角") }
+        static var cornerPresetClassic: String { tr("settings.island.corner_preset_classic", "经典") }
+        static var cornerPresetDefault: String { tr("settings.island.corner_preset_default", "默认") }
+        static var cornerPresetRound: String { tr("settings.island.corner_preset_round", "圆润") }
         static var presetCustom: String { tr("settings.island.preset_custom", "自定义") }
-        static var expandedWidth: String { tr("settings.island.expanded_width", "展开后宽度") }
-        static var widthNarrow: String { tr("settings.island.width_narrow", "窄") }
-        static var widthWide: String { tr("settings.island.width_wide", "宽") }
-        static var bottomCorner: String { tr("settings.island.bottom_corner", "下圆角") }
+        static var bottomCorner: String { tr("settings.island.bottom_corner", "下圆角曲率半径") }
         static var cornerSquare: String { tr("settings.island.corner_square", "直角") }
-        static var cornerRound: String { tr("settings.island.corner_round", "圆润") }
+        static var cornerRoundMax: String { tr("settings.island.corner_round_max", "最大圆润") }
         static var motionTitle: String { tr("settings.island.motion_title", "动画与触觉感知") }
         static var animationSpeed: String { tr("settings.island.animation_speed", "展开动画速度") }
         static var speedSlow: String { tr("settings.island.speed_slow", "慢") }
@@ -115,6 +132,9 @@ enum L10n {
         }
         static var meetingPreviewTitle: String { tr("widgets.meeting_preview_title", "下一场会议提醒设置") }
         static var mediaPreviewTitle: String { tr("widgets.media_preview_title", "正在播放") }
+        static var focusTimerPreviewTitle: String {
+            tr("widgets.focus_timer_preview_title", "番茄倒计时")
+        }
         static var emptySummary: String { tr("widgets.empty.summary", "尚未添加小组件时的提示") }
         static var emptyTitle: String { tr("widgets.empty.title", "尚未添加小组件") }
         static var emptySubtitle: String { tr("widgets.empty.subtitle", "启用或添加后，内容会显示在这里") }
@@ -1341,6 +1361,272 @@ enum L10n {
 
         private static func byteString(_ bytes: UInt64) -> String {
             ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+        }
+    }
+
+    // MARK: - Focus Timer（番茄倒计时）
+
+    enum FocusTimer {
+        static var widgetName: String { tr("focus_timer.widget.name", "番茄倒计时") }
+        static var widgetSummary: String {
+            tr("focus_timer.widget.summary", "选时起钟、计时待命与加时收拢，常驻灵动岛")
+        }
+
+        static var stageTitle: String {
+            tr("focus_timer.stage.title", "MacBook 灵动岛五态实时映射仿真")
+        }
+        static var phaseStandby: String { tr("focus_timer.phase.standby", "标准待命态") }
+        static var phasePicking: String { tr("focus_timer.phase.picking", "选时起钟态") }
+        static var phaseRunning: String { tr("focus_timer.phase.running", "计时进行中") }
+        static var phaseOvertime: String { tr("focus_timer.phase.overtime", "顺延加时中") }
+        static var phaseCompleted: String { tr("focus_timer.phase.completed", "终局收拢态") }
+        static var tabBadgeCustom: String { tr("focus_timer.tab.badge_custom", "自选") }
+        static var tabBadgeSummary: String { tr("focus_timer.tab.badge_summary", "总结") }
+
+        static var focusing: String { tr("focus_timer.focusing", "专注中") }
+        static var overtimeBadge: String { tr("focus_timer.overtime_badge", "加时中") }
+        static var pickingTitle: String {
+            tr("focus_timer.picking.title", "设定专注时长并起钟")
+        }
+        static var pickingHint: String {
+            tr("focus_timer.picking.hint", "快捷预设 或 自选分钟")
+        }
+        static var start: String { tr("focus_timer.start", "开始计时") }
+        static var remaining: String { tr("focus_timer.remaining", "剩余") }
+        static var finishEarly: String { tr("focus_timer.finish_early", "结束") }
+        static var finishDone: String { tr("focus_timer.finish_done", "完成收工") }
+        /// 终局按钮：把用户填入的标题写回已入库记录。
+        static var saveRecord: String { tr("focus_timer.save_record", "完成命名") }
+        static var completedTitle: String {
+            tr("focus_timer.completed.title", "计时完成")
+        }
+        static var autoArchivedBadge: String {
+            tr("focus_timer.auto_archived_badge", "已自动归档")
+        }
+        static var notePlaceholder: String {
+            tr("focus_timer.note_placeholder", "记录已入库，点击添加标题（可选）")
+        }
+        static var defaultTimeNameHint: String {
+            tr("focus_timer.default_time_name_hint", "默认按时间命名")
+        }
+        static var customSessionTitle: String {
+            tr("focus_timer.custom_session_title", "自定义专注")
+        }
+        static var previewNote: String {
+            tr("focus_timer.preview_note", "排查异步死锁并重构")
+        }
+
+        static func presetChip(minutes: Int, title: String) -> String {
+            String(format: tr("focus_timer.preset_chip_format", "%dm %@"), minutes, title)
+        }
+        static func presetMinutesChip(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.preset_minutes_chip_format", "%dm"), minutes)
+        }
+        static var minutesAbbrev: String {
+            tr("focus_timer.minutes_abbrev", "m")
+        }
+        static func plannedLabel(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.planned_format", "总设 %dm"), minutes)
+        }
+        static func elapsedLabel(_ clock: String) -> String {
+            String(format: tr("focus_timer.elapsed_format", "已过 %@"), clock)
+        }
+        static func extendChip(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.extend_chip_format", "+%dm"), minutes)
+        }
+        static func extendAgain(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.extend_again_format", "微调 +%dm"), minutes)
+        }
+        static func overtimeAdded(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.overtime_added_format", "+%dm 顺延"), minutes)
+        }
+        static func totalPlanned(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.total_planned_format", "总计 %dm"), minutes)
+        }
+        static func baseMinutes(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.base_minutes_format", "基础 %dm"), minutes)
+        }
+        static func overtimeMinutesLabel(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.overtime_minutes_format", "顺延 %dm"), minutes)
+        }
+        static func totalFocus(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.total_focus_format", "总专注 %dm"), minutes)
+        }
+
+        static var presetSprint: String { tr("focus_timer.preset.sprint", "短时冲刺") }
+        static var presetSprintHint: String { tr("focus_timer.preset.sprint_hint", "快速同步与收口") }
+        static var presetTomato: String { tr("focus_timer.preset.tomato", "标准番茄") }
+        static var presetTomatoHint: String { tr("focus_timer.preset.tomato_hint", "半小时专注块") }
+        static var presetDeep: String { tr("focus_timer.preset.deep", "深度专注") }
+        static var presetDeepHint: String { tr("focus_timer.preset.deep_hint", "沉浸编码攻关") }
+        static var presetLong: String { tr("focus_timer.preset.long", "长跑冲刺") }
+        static var presetLongHint: String { tr("focus_timer.preset.long_hint", "大块心流时段") }
+        static var presetBreak: String { tr("focus_timer.preset.break", "短息调养") }
+        static var presetBreakHint: String { tr("focus_timer.preset.break_hint", "远眺补水拉伸") }
+
+        static var overviewTitle: String {
+            tr("focus_timer.overview.title", "今日专注概览")
+        }
+        static var overviewTodayStats: String {
+            tr("focus_timer.overview.today_stats", "今日统计")
+        }
+        static var overviewTodayTotal: String {
+            tr("focus_timer.overview.today_total", "今日累计")
+        }
+        static var overviewTimesUnit: String {
+            tr("focus_timer.overview.times_unit", "次")
+        }
+        static var overviewFocusHours: String {
+            tr("focus_timer.overview.focus_hours", "今日专注工时")
+        }
+        static var overviewMinutesUnit: String {
+            tr("focus_timer.overview.minutes_unit", "分钟")
+        }
+        static var overviewFocusHint: String {
+            tr("focus_timer.overview.focus_hint", "专注时长核心聚焦")
+        }
+        static var overviewOvertimeSprint: String {
+            tr("focus_timer.overview.overtime_sprint", "顺延冲刺")
+        }
+        static var overviewFooterHint: String {
+            tr("focus_timer.overview.footer_hint", "专注数据随计时实时更新")
+        }
+        static var overviewFocusMode: String {
+            tr("focus_timer.overview.focus_mode", "专注模式")
+        }
+        static var presetsResetDefaults: String {
+            tr("focus_timer.presets.reset_defaults", "重置默认")
+        }
+
+        static var colPreset: String { tr("focus_timer.col.preset", "预设标准倒计时") }
+        static var colCustom: String { tr("focus_timer.col.custom", "自定义自由倒计时") }
+        static var colOvertime: String { tr("focus_timer.col.overtime", "深度加时与顺延冲刺") }
+        static func todayCompletedCount(_ count: Int) -> String {
+            String(format: tr("focus_timer.col.today_completed_format", "今日已完成 %d 次"), count)
+        }
+        /// 三栏角标（对齐稿面：N 轮记录 / 自由输入 N 轮 / N 轮顺延）。
+        static func colPresetBadge(_ count: Int) -> String {
+            String(format: tr("focus_timer.col.preset_badge_format", "%d 轮记录"), count)
+        }
+        static func colCustomBadge(_ count: Int) -> String {
+            String(format: tr("focus_timer.col.custom_badge_format", "自由输入 %d 轮"), count)
+        }
+        static func colOvertimeBadge(_ count: Int) -> String {
+            String(format: tr("focus_timer.col.overtime_badge_format", "%d 轮顺延"), count)
+        }
+        static var historyEmptyPresetTitle: String {
+            tr("focus_timer.history_empty.preset_title", "今日暂无预设倒计时记录")
+        }
+        static var historyEmptyPresetHint: String {
+            tr("focus_timer.history_empty.preset_hint", "开始倒计时后自动在此归档")
+        }
+        static var historyEmptyCustomTitle: String {
+            tr("focus_timer.history_empty.custom_title", "今日暂无自由倒计时记录")
+        }
+        static var historyEmptyCustomHint: String {
+            tr("focus_timer.history_empty.custom_hint", "单次自定义时长记录将展示在此")
+        }
+        static var historyEmptyOvertimeTitle: String {
+            tr("focus_timer.history_empty.overtime_title", "今日尚未产生顺延加时")
+        }
+        static var historyEmptyOvertimeHint: String {
+            tr("focus_timer.history_empty.overtime_hint", "计时结束后的专注顺延时长将在此统计")
+        }
+        static var onTime: String { tr("focus_timer.on_time", "准时扣响") }
+        static var customPrecision: String {
+            tr("focus_timer.custom_precision", "自定精度 ±0s")
+        }
+        static func achievePercent(_ value: Int) -> String {
+            String(format: tr("focus_timer.achieve_percent_format", "达成 %d%%"), value)
+        }
+        /// 看板左上角：用户开钟时点选的计划时长（如 05m / 25m）。
+        static func badgePlannedMinutes(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.badge.planned_minutes_format", "%02dm"), minutes)
+        }
+        /// 顺延栏左下角加时（如 +10m）。
+        static func overtimePlusMinutes(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.overtime_plus_format", "+%dm"), minutes)
+        }
+        static func badgeTomato(_ n: Int) -> String {
+            String(format: tr("focus_timer.badge.tomato_format", "番茄 #%02d"), n)
+        }
+        static func badgeBreak(_ n: Int) -> String {
+            String(format: tr("focus_timer.badge.break_format", "短息 #%02d"), n)
+        }
+        static func badgeLong(_ n: Int) -> String {
+            String(format: tr("focus_timer.badge.long_format", "长跑 #%02d"), n)
+        }
+        static func badgeCustom(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.badge.custom_format", "键入 %dm"), minutes)
+        }
+        static func badgeOvertime(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.badge.overtime_format", "+%dm 顺延"), minutes)
+        }
+        static func overtimeBreakdown(planned: Int, overtime: Int) -> String {
+            String(
+                format: tr("focus_timer.overtime_breakdown_format", "原定 %dm + 顺延 %dm"),
+                planned,
+                overtime
+            )
+        }
+        static func baseline(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.baseline_format", "基准线 (%dm)"), minutes)
+        }
+        static func flowExtend(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.flow_extend_format", "+%dm (心流延伸)"), minutes)
+        }
+        static var untitled: String { tr("focus_timer.untitled", "未命名专注") }
+        static var fillTitleAction: String {
+            tr("focus_timer.fill_title_action", "+ 补填事项名称")
+        }
+        static var fillTitlePlaceholder: String {
+            tr("focus_timer.fill_title_placeholder", "输入事项名称…")
+        }
+        static var saveTitle: String { tr("focus_timer.save_title", "保存") }
+        static var statusPendingFill: String {
+            tr("focus_timer.status_pending_fill", "状态 A 待填")
+        }
+        static var endedEarlyStatus: String {
+            tr("focus_timer.ended_early_status", "提前结束")
+        }
+        static var finishedOnTimeStatus: String {
+            tr("focus_timer.finished_on_time_status", "准时结束")
+        }
+        static var statusEditing: String {
+            tr("focus_timer.status_editing", "状态 B: 输入保存中")
+        }
+        static var quickTagReview: String { tr("focus_timer.quick_tag.review", "需求评审") }
+        static var quickTagBug: String { tr("focus_timer.quick_tag.bug", "排查Bug") }
+        static var quickTagDeep: String { tr("focus_timer.quick_tag.deep", "技术攻关") }
+        static var escToClose: String {
+            tr("focus_timer.esc_to_close", "支持 Esc 键原位关闭")
+        }
+        static func timeRange(_ start: String, _ end: String) -> String {
+            String(format: tr("focus_timer.time_range_format", "开始: %@ - 结束: %@"), start, end)
+        }
+        static var presetsTitle: String {
+            tr("focus_timer.presets.title", "预设标准倒计时配置")
+        }
+        static var presetsSubtitle: String {
+            tr("focus_timer.presets.subtitle", "维护灵动岛快捷选择与标准轮次的默认档位")
+        }
+        static func presetsSlotCount(_ count: Int) -> String {
+            String(format: tr("focus_timer.presets.slot_count_format", "%d 档位"), count)
+        }
+        static var extendStep: String {
+            tr("focus_timer.extend_step", "每次加时步长")
+        }
+        static var extendStepShort: String {
+            tr("focus_timer.extend_step_short", "顺延步长")
+        }
+        static func extendStepChip(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.extend_step_chip_format", "+%dm"), minutes)
+        }
+        static func presetAdjustMinus(_ step: Int) -> String {
+            String(format: tr("focus_timer.preset_adjust_minus_format", "-%d"), step)
+        }
+        static func presetAdjustPlus(_ step: Int) -> String {
+            String(format: tr("focus_timer.preset_adjust_plus_format", "+%d"), step)
         }
     }
 

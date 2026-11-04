@@ -24,7 +24,9 @@
 		1B559574B3122F5B1DE00207 /* ResourceKeystrokeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */; };
 		1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */; };
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
+		2C788BA6744639A237447AD0 /* FocusTimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95222AB63D89FF5FA90D6EA9 /* FocusTimerModels.swift */; };
 		2D0ACB6972E7E69F1F96A9B2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C0C31143233D22C2EF32D30 /* IOKit.framework */; };
+		3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */; };
 		31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */; };
 		3936513DBBA9C04D204678B8 /* ProjectReleaseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */; };
 		3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7694C35719C53E4F238252E3 /* IslandSettings.swift */; };
@@ -48,6 +50,7 @@
 		62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */; };
 		6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50603770034DE47EEF814877 /* L10n.swift */; };
 		685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */; };
+		6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */; };
 		6C3175BFD0949B4AEEE41FD1 /* BatterySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880C963E64D0E720AFA4F20F /* BatterySettings.swift */; };
 		72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
@@ -74,6 +77,7 @@
 		AB381B4B47D62E0AD24F5D92 /* WidgetHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */; };
 		AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BB2FAF48572CDD36E2974F /* IslandWidget.swift */; };
 		AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */; };
+		B1E5D50DB91D355DCD3D6DA6 /* FocusTimerTitleBackfillCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */; };
 		B20B99352F2BB4E10A110518 /* MeetingSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */; };
 		B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */; };
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
@@ -87,11 +91,14 @@
 		CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED55417055983E937B47576 /* DisplayMonitor.swift */; };
 		CDC499FAA1266C841E226F08 /* DeckModuleConfigSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D12129654C47EAFD49CB6E /* DeckModuleConfigSections.swift */; };
 		CE979D3CE7CFAEEC6877C829 /* WidgetSamplePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476E748467E663BFC1133613 /* WidgetSamplePreview.swift */; };
+		CEA1B8BA1F4B24184D83F9A2 /* FocusTimerSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */; };
 		CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */; };
 		D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */; };
 		D206341C8F877895151A8C55 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */; };
 		D3131253CE98D17A73798553 /* SoundDeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BFECE714321CB884F2A555 /* SoundDeviceService.swift */; };
+		D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
+		E32D4090FC3C65B56B5F3870 /* FocusTimerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */; };
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
 		E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */; };
@@ -102,6 +109,7 @@
 		E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888652166B6E000A14995BED /* IslandNoticeCenter.swift */; };
 		E86CFE0FA7133009ACF2445E /* IslandOpaqueFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */; };
 		EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */; };
+		F0263A1227C125DC1629107D /* FocusTimerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */; };
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
 		F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11948404DA855E5880642096 /* WidgetRuntime.swift */; };
 		F57A8E3B6E53EEEF4BE83B6E /* IslandNoticeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */; };
@@ -138,6 +146,7 @@
 		192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
 		219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBluetoothProbe.swift; sourceTree = "<group>"; };
+		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
 		29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceChipInfo.swift; sourceTree = "<group>"; };
 		2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySystemProfilerProbe.swift; sourceTree = "<group>"; };
@@ -158,6 +167,7 @@
 		4C0C31143233D22C2EF32D30 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseSession.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerWidget.swift; sourceTree = "<group>"; };
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
 		5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetContextImpl.swift; sourceTree = "<group>"; };
 		57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -165,6 +175,7 @@
 		5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
 		5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandNoticeWidget.swift; sourceTree = "<group>"; };
+		6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSession.swift; sourceTree = "<group>"; };
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -186,6 +197,7 @@
 		8B7B868652010E80E7A1FACC /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
 		93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryWidgetConfigSection.swift; sourceTree = "<group>"; };
 		933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectShell.swift; sourceTree = "<group>"; };
+		95222AB63D89FF5FA90D6EA9 /* FocusTimerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerModels.swift; sourceTree = "<group>"; };
 		95BFECE714321CB884F2A555 /* SoundDeviceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundDeviceService.swift; sourceTree = "<group>"; };
 		97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingCalendarService.swift; sourceTree = "<group>"; };
@@ -201,9 +213,11 @@
 		A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseDeckView.swift; sourceTree = "<group>"; };
 		A89C6CF2F1E33BD5FAE10DE2 /* BatteryCoreBluetoothMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryCoreBluetoothMonitor.swift; sourceTree = "<group>"; };
 		A9D12129654C47EAFD49CB6E /* DeckModuleConfigSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckModuleConfigSections.swift; sourceTree = "<group>"; };
+		AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandChrome.swift; sourceTree = "<group>"; };
 		B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceSystemMetrics.swift; sourceTree = "<group>"; };
 		B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfClipboardDeckView.swift; sourceTree = "<group>"; };
 		B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaNowPlayingWidget.swift; sourceTree = "<group>"; };
+		B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerTitleBackfillCard.swift; sourceTree = "<group>"; };
 		BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSession.swift; sourceTree = "<group>"; };
 		BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAudioProperty.swift; sourceTree = "<group>"; };
 		BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSettingsPane.swift; sourceTree = "<group>"; };
@@ -226,6 +240,8 @@
 		E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRuntimeSampler.swift; sourceTree = "<group>"; };
 		E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropSession.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
+		E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettings.swift; sourceTree = "<group>"; };
+		E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettingsPane.swift; sourceTree = "<group>"; };
 		F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettingsPane.swift; sourceTree = "<group>"; };
 		F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAppAggregator.swift; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
@@ -246,6 +262,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0308FADC0BC583E5A2A4B5A1 /* FocusTimer */ = {
+			isa = PBXGroup;
+			children = (
+				220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */,
+				95222AB63D89FF5FA90D6EA9 /* FocusTimerModels.swift */,
+				6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */,
+				E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */,
+				E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */,
+				B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */,
+				52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */,
+			);
+			path = FocusTimer;
+			sourceTree = "<group>";
+		};
 		067FD7939F4B3CC048E6FC92 /* Battery */ = {
 			isa = PBXGroup;
 			children = (
@@ -300,6 +330,7 @@
 			children = (
 				BED55417055983E937B47576 /* DisplayMonitor.swift */,
 				20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */,
+				AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */,
 				5894114050B192E21DBC168B /* IslandContentView.swift */,
 				1073E52F82BA9EE649BA7890 /* IslandController.swift */,
 				41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */,
@@ -323,6 +354,7 @@
 				CCAAEBC039CA4E7363411A1D /* App */,
 				067FD7939F4B3CC048E6FC92 /* Battery */,
 				EFDE474CD3132D7D1ACA9802 /* ControlDeck */,
+				0308FADC0BC583E5A2A4B5A1 /* FocusTimer */,
 				2A565B209C491CD8B02FF35B /* Island */,
 				AC72FD61D32CE3BA33F2B556 /* Localization */,
 				61864BFFC78D89E10A875476 /* Logging */,
@@ -600,7 +632,15 @@
 				CDC499FAA1266C841E226F08 /* DeckModuleConfigSections.swift in Sources */,
 				CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */,
 				AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */,
+				D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */,
+				2C788BA6744639A237447AD0 /* FocusTimerModels.swift in Sources */,
+				E32D4090FC3C65B56B5F3870 /* FocusTimerSession.swift in Sources */,
+				F0263A1227C125DC1629107D /* FocusTimerSettings.swift in Sources */,
+				CEA1B8BA1F4B24184D83F9A2 /* FocusTimerSettingsPane.swift in Sources */,
+				B1E5D50DB91D355DCD3D6DA6 /* FocusTimerTitleBackfillCard.swift in Sources */,
+				6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */,
 				AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */,
+				3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */,
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
 				7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */,

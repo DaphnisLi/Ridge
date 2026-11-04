@@ -2,6 +2,7 @@ import SwiftUI
 
 /// 岛展开区宿主：当前页内容。
 /// 分页点改到岛左上 / 右上角（见 `IslandPageCornerDots`）；左右切换仍由 AppKit 拖拽 / 触控板横滑处理。
+/// 尺寸由各页内容自行撑开，禁止在此铺 `maxWidth/maxHeight: .infinity`。
 struct WidgetHostView: View {
     @ObservedObject var runtime: WidgetRuntime
 
@@ -11,7 +12,6 @@ struct WidgetHostView: View {
                 ControlDeckIslandView()
                     .id(runtime.contentEpoch)
             } else if runtime.isShowingEmpty || !runtime.isComboPage {
-                // 空态 / 普通单组件页：铺满。
                 runtime.activeView()
                     .id(runtime.contentEpoch)
             } else {
@@ -22,54 +22,55 @@ struct WidgetHostView: View {
                 .id(runtime.contentEpoch)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.18), value: runtime.pageIndex)
         .contentShape(Rectangle())
     }
 }
 
 /// 4×2 固定板：按 placement 绝对定位；未放满也按一行四格顺序排。
+/// 画布宽高由网格自己给出，供岛壳测量。
 private struct WidgetPageGridView: View {
     let placements: [WidgetGridPlacement]
     @ObservedObject var runtime: WidgetRuntime
 
-    var body: some View {
-        GeometryReader { geo in
-            let metrics = WidgetGridBoard.cellMetrics(forWidth: geo.size.width + WidgetGridBoard.contentHorizontalInset)
-            let cellW = metrics.cellWidth
-            let cellH = min(
-                metrics.cellHeight,
-                (geo.size.height - WidgetGridBoard.spacing) / CGFloat(WidgetGridBoard.rows)
-            )
-            let gridW = cellW * CGFloat(WidgetGridBoard.columns)
-                + WidgetGridBoard.spacing * CGFloat(WidgetGridBoard.columns - 1)
-            let gridH = cellH * CGFloat(WidgetGridBoard.rows)
-                + WidgetGridBoard.spacing * CGFloat(WidgetGridBoard.rows - 1)
-            let originX = (geo.size.width - gridW) / 2
-            let originY = max((geo.size.height - gridH) / 2, 0)
+    private var canvasSize: CGSize {
+        WidgetGridBoard.preferredContentSize
+    }
 
-            ZStack(alignment: .topLeading) {
-                ForEach(placements) { placement in
-                    let frame = cellFrame(
-                        placement: placement,
-                        cellW: cellW,
-                        cellH: cellH,
-                        originX: originX,
-                        originY: originY
+    var body: some View {
+        let metrics = WidgetGridBoard.cellMetrics(
+            forWidth: canvasSize.width + WidgetGridBoard.contentHorizontalInset
+        )
+        let cellW = metrics.cellWidth
+        let cellH = metrics.cellHeight
+        let gridW = cellW * CGFloat(WidgetGridBoard.columns)
+            + WidgetGridBoard.spacing * CGFloat(WidgetGridBoard.columns - 1)
+        let gridH = cellH * CGFloat(WidgetGridBoard.rows)
+            + WidgetGridBoard.spacing * CGFloat(WidgetGridBoard.rows - 1)
+        let originX = (canvasSize.width - gridW) / 2
+        let originY = max((canvasSize.height - gridH) / 2, 0)
+
+        ZStack(alignment: .topLeading) {
+            ForEach(placements) { placement in
+                let frame = cellFrame(
+                    placement: placement,
+                    cellW: cellW,
+                    cellH: cellH,
+                    originX: originX,
+                    originY: originY
+                )
+                runtime.view(for: placement.id)
+                    .padding(6)
+                    .frame(width: frame.width, height: frame.height)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.primary.opacity(0.08))
                     )
-                    runtime.view(for: placement.id)
-                        .padding(6)
-                        .frame(width: frame.width, height: frame.height)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.primary.opacity(0.08))
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .position(x: frame.midX, y: frame.midY)
-                }
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .position(x: frame.midX, y: frame.midY)
             }
-            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
         }
+        .frame(width: canvasSize.width, height: canvasSize.height, alignment: .topLeading)
     }
 
     private func cellFrame(

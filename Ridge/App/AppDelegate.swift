@@ -7,7 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        AppLog.info("Overlay", "Ridge 启动", [
+        AppLog.warn("Overlay", "Ridge 启动", [
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         ])
         island.start()

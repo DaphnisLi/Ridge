@@ -32,7 +32,8 @@ final class IslandSettings: ObservableObject {
         static let animationSpeed = 1.0
         static let hideInFullscreen = false
         static let hapticIntensity = IslandHapticIntensity.medium
-        static let bottomCornerRadius = 18.0
+        /// 稿面「默认」档：24 pt。
+        static let bottomCornerRadius = 24.0
         /// 展开宽度（pt，逻辑像素）。
         static let expandedWidth: Double = 400
         static let theme = IslandTheme.midnight

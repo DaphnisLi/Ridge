@@ -22,28 +22,32 @@ struct MeetingWidgetConfigSection: View {
     private let leadPresets = [5, 10, 15]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // 未授权置顶；已授权整卡不展示。
-            authCard
-            islandPreviewCard
-            leadMinutesCard
-            supportedPlatformsCard
-            customAppsCard
-
-            HStack {
-                Spacer(minLength: 0)
-                Button(L10n.Common.restoreDefaults) {
-                    resignFields()
-                    settings.restoreDefaults()
-                    leadText = "\(settings.leadMinutes)"
-                    AppLog.info("Meeting", "用户恢复默认设置")
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // 未授权置顶；已授权整卡不展示。
+                    authCard
+                    islandPreviewCard
+                    leadMinutesCard
+                    supportedPlatformsCard
+                    customAppsCard
                 }
-                .buttonStyle(.plain)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.top, 4)
+            .scrollIndicators(.hidden)
+
+            SettingsRestoreDefaultsFooter {
+                resignFields()
+                settings.restoreDefaults()
+                leadText = "\(settings.leadMinutes)"
+                AppLog.info("Meeting", "用户恢复默认设置")
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(SettingsChrome.pageBackground)
         .onAppear {
             leadText = "\(settings.leadMinutes)"
             calendar.start()

@@ -88,8 +88,7 @@ struct MeetingIslandCardView: View {
                 .accessibilityLabel(L10n.Meeting.joinA11y)
             }
         }
-        .padding(.horizontal, 6)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(minWidth: 360)
     }
 
     /// 设置页样张。

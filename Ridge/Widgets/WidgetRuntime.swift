@@ -258,6 +258,30 @@ final class WidgetRuntime: ObservableObject {
         recompute(reason: "settingsFocus")
     }
 
+    /// 强制切到指定内容页（番茄终局命名等）。
+    /// 即使用户正停在其它页，也要抢回该页以便输入。
+    func revealPage(_ id: WidgetID, reason: String) {
+        guard registry.manifest(for: id)?.kind == .content else { return }
+        guard settings.isEnabled(id) else {
+            AppLog.warn("Widget", "强制切页跳过：未启用", ["id": id, "reason": reason])
+            return
+        }
+        _ = ensureInstance(id)
+        if demandTimestamps[id] == nil {
+            demandTimestamps[id] = Date()
+        }
+        let already = browseOverrideID == id || activeID == id
+        browseOverrideID = id
+        recompute(reason: "reveal:\(reason)")
+        AppLog.info("Widget", "强制切页", [
+            "id": id,
+            "reason": reason,
+            "already": already,
+            "index": pageIndex,
+            "pages": pageIDs.count
+        ])
+    }
+
     func recompute(reason: String) {
         for id in Array(demandTimestamps.keys) {
             let kind = registry.manifest(for: id)?.kind

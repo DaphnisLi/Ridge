@@ -34,8 +34,9 @@ Ridge 功能（媒体、会议、状态、用户/AI 自定义等）一律做成 
 4. 在 `WidgetRegistry.registerBuiltins()`（内置）或加载器里：  
    `registry.register(TypedWidgetModule<YourWidget>())`。
 5. 不要改岛窗口几何 / 悬停逻辑；不要 `WidgetRuntime.shared` 从 widget 内部调用。
-6. **设置预览**：库卡与详情页一律 `WidgetSamplePreview.island(for:compact:)`（假数据 + 上直角下圆角）；细则见 `widget-preview.mdc`。
-7. 改完按 `dev-relaunch` 重启验收。
+6. **岛尺寸与边距**：展开面板宽高由 **内容撑开**（`IslandPanelSizeKey` 测量 → `IslandViewModel.panelSize`）；壳层只加 `IslandChrome` 内边距并 clamp。widget **禁止**再加外圈 `.padding` 去「离岛边」，也 **禁止**依赖壳层按 layout 写死宽高。GeometryReader 类页面（控制台等）在模块内自报画布尺寸（如 `ControlDeckContentSize`）。
+7. **设置预览**：库卡与详情页一律 `WidgetSamplePreview.island(for:compact:)`（假数据 + 上直角下圆角）；细则见 `widget-preview.mdc`。
+8. 改完按 `dev-relaunch` 重启验收。
 
 ## 最小实现模板
 

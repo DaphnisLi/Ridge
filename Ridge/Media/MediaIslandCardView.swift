@@ -63,8 +63,7 @@ struct MediaIslandCardView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 2)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        .frame(width: 320)
     }
 
     private var artworkView: some View {
