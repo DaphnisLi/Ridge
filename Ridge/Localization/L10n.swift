@@ -133,7 +133,7 @@ enum L10n {
         static var meetingPreviewTitle: String { tr("widgets.meeting_preview_title", "下一场会议提醒设置") }
         static var mediaPreviewTitle: String { tr("widgets.media_preview_title", "正在播放") }
         static var focusTimerPreviewTitle: String {
-            tr("widgets.focus_timer_preview_title", "番茄倒计时")
+            tr("widgets.focus_timer_preview_title", "专注计时")
         }
         static var emptySummary: String { tr("widgets.empty.summary", "尚未添加小组件时的提示") }
         static var emptyTitle: String { tr("widgets.empty.title", "尚未添加小组件") }
@@ -1364,17 +1364,14 @@ enum L10n {
         }
     }
 
-    // MARK: - Focus Timer（番茄倒计时）
+    // MARK: - Focus Timer（专注计时）
 
     enum FocusTimer {
-        static var widgetName: String { tr("focus_timer.widget.name", "番茄倒计时") }
+        static var widgetName: String { tr("focus_timer.widget.name", "专注计时") }
         static var widgetSummary: String {
             tr("focus_timer.widget.summary", "选时起钟、计时待命与加时收拢，常驻灵动岛")
         }
 
-        static var stageTitle: String {
-            tr("focus_timer.stage.title", "MacBook 灵动岛五态实时映射仿真")
-        }
         static var phaseStandby: String { tr("focus_timer.phase.standby", "标准待命态") }
         static var phasePicking: String { tr("focus_timer.phase.picking", "选时起钟态") }
         static var phaseRunning: String { tr("focus_timer.phase.running", "计时进行中") }
@@ -1455,7 +1452,7 @@ enum L10n {
 
         static var presetSprint: String { tr("focus_timer.preset.sprint", "短时冲刺") }
         static var presetSprintHint: String { tr("focus_timer.preset.sprint_hint", "快速同步与收口") }
-        static var presetTomato: String { tr("focus_timer.preset.tomato", "标准番茄") }
+        static var presetTomato: String { tr("focus_timer.preset.tomato", "标准专注") }
         static var presetTomatoHint: String { tr("focus_timer.preset.tomato_hint", "半小时专注块") }
         static var presetDeep: String { tr("focus_timer.preset.deep", "深度专注") }
         static var presetDeepHint: String { tr("focus_timer.preset.deep_hint", "沉浸编码攻关") }
@@ -1548,7 +1545,7 @@ enum L10n {
             String(format: tr("focus_timer.overtime_plus_format", "+%dm"), minutes)
         }
         static func badgeTomato(_ n: Int) -> String {
-            String(format: tr("focus_timer.badge.tomato_format", "番茄 #%02d"), n)
+            String(format: tr("focus_timer.badge.tomato_format", "专注 #%02d"), n)
         }
         static func badgeBreak(_ n: Int) -> String {
             String(format: tr("focus_timer.badge.break_format", "短息 #%02d"), n)

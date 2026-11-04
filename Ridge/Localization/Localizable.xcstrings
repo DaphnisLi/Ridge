@@ -4616,7 +4616,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "番茄倒计时"
+            "value": "专注计时"
           }
         }
       }
@@ -4627,7 +4627,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "番茄倒计时"
+            "value": "专注计时"
           }
         }
       }
@@ -4639,17 +4639,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "选时起钟、计时待命与加时收拢，常驻灵动岛"
-          }
-        }
-      }
-    },
-    "focus_timer.stage.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "MacBook 灵动岛五态实时映射仿真"
           }
         }
       }
@@ -5001,7 +4990,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "标准番茄"
+            "value": "标准专注"
           }
         }
       }
@@ -5551,7 +5540,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "番茄 #%02d"
+            "value": "专注 #%02d"
           }
         }
       }

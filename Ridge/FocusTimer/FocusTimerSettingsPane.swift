@@ -61,7 +61,6 @@ struct FocusTimerWidgetConfigSection: View {
 
     private var islandStageCard: some View {
         SettingsIslandStage(
-            title: L10n.FocusTimer.stageTitle,
             options: FocusTimerPreviewTab.allCases.map(stageOption),
             selection: Binding(
                 get: { previewTab.rawValue },

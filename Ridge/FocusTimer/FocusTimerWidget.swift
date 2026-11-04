@@ -52,12 +52,12 @@ final class FocusTimerWidget: IslandWidget {
     }
 
     func onAppear() {
-        context.log("番茄倒计时 onAppear")
+        context.log("专注计时 onAppear")
         syncEnabled(reason: "appear")
     }
 
     func onDisappear() {
-        context.log("番茄倒计时 onDisappear")
+        context.log("专注计时 onDisappear")
     }
 
     func refresh() {
