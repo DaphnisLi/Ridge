@@ -11,26 +11,35 @@ alwaysApply: true
 
 | API | 路径 | 用途 |
 |---|---|---|
-| `SettingsIslandPreviewCard` | `Ridge/Widgets/WidgetSamplePreview.swift` | **详情页外包卡**：白底 `SettingsCard` + 假数据岛 |
-| `WidgetSamplePreview.island(for:compact:)` | 同文件 | 库卡 / 需内嵌时调用；勿再铺灰渐变底 |
+| `SettingsIslandStage` | `Ridge/Widgets/WidgetSamplePreview.swift` | **统一舞台**：灰底仿真台 + 黑岛；多形态 Tab（仅 `options.count > 1` 时显示） |
+| `SettingsIslandPreviewCard` | 同文件 | 详情页单形态便捷封装（内部走 `SettingsIslandStage`） |
+| `WidgetSamplePreview.island(for:compact:)` | 同文件 | 库卡内嵌黑岛；背景用 `surfaceContainer` 灰底，勿再铺白卡 |
 | `WidgetIslandPreviewShell` | 同文件 | 壳：上直角、下圆角（`IslandPanelShape`）；一般不单独再包一层 |
 | 各 widget 的 `previewSample` / `sampleDevices` | 业务文件 | 假数据内容；由 `WidgetSamplePreview.content` 组装 |
 
 ```swift
-// ✅ 库卡 / 详情页都这样
-WidgetSamplePreview.island(for: widgetID, compact: true)  // 列表卡
-WidgetSamplePreview.island(for: widgetID, compact: false) // 详情页
+// ✅ 详情页单形态
+SettingsIslandPreviewCard(widgetID: widgetID)
+
+// ✅ 多形态（如番茄五态）
+SettingsIslandStage(title: …, options: …, selection: $id) { option in … }
+
+// ✅ 库卡
+WidgetSamplePreview.island(for: widgetID, compact: true)  // 外层灰底
 
 // ❌ 禁止
 BatteryDeckView()                    // 实时设备，可能空
 WidgetPreviewFactory.makeView(...)   // 实况实例当设置预览
 自写 Capsule / 全圆角 RoundedRectangle 当岛预览壳
+白底 SettingsCard 包岛预览 / 各页自造灰渐变舞台
 MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
 ```
 
 ## 必须
 
 - **假数据**：无真实会议 / 未播媒体 / 无外设时预览仍完整可看；新 widget 在 `WidgetSamplePreview.content` 加 case + 样张
+- **舞台灰底**：详情预览一律 `SettingsIslandStage`（`surfaceContainer`）；库卡岛背后同色，禁止白底衬岛
+- **形态 Tab**：`options.count > 1` 才显示选择题；仅一种形态不展示
 - **外形统一**：预览岛 **左上、右上直角；左下、右下圆角**（`IslandPanelShape`），列表与详情同形状
 - **同款同内容**：同一 `widgetID` 在开关卡片与点进配置页的预览必须一致（仅 `compact` 尺寸不同）
 - 控制台磁贴 id：`system.controlDeck.battery` / `volume` / `projects` / `shelf`
@@ -38,12 +47,13 @@ MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
 ## 禁止
 
 - 设置预览直连 `BatterySession` / `NowPlaying` / 日历等实时源当主展示（真机岛上仍用实时）
-- 为某一个设置页再造预览壳或再写一套样张布局
+- 为某一个设置页再造预览壳、灰底舞台或再写一套样张布局
 - 预览外形做成全圆角胶囊或四角同圆角（与真岛「贴顶直角」不一致）
+- 仅一种形态仍画出选择题条
 
 ## 新小组件 checklist
 
 1. 业务侧提供 `previewSample`（或等价假数据）
 2. `WidgetSamplePreview.content` 增加对应 `id` 分支
-3. 库卡与配置页都只调 `WidgetSamplePreview.island(for:compact:)`
+3. 详情页用 `SettingsIslandPreviewCard`（或多形态 `SettingsIslandStage`）；库卡用 `WidgetSamplePreview.island` + 灰底
 4. 按 `dev-relaunch` 验收：无数据时预览仍非空，且两处样子一致

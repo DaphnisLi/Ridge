@@ -377,7 +377,8 @@ private struct WidgetLibraryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack {
-                SettingsChrome.cardBackground
+                // 与详情页舞台同色：灰底衬黑岛。
+                SettingsChrome.surfaceContainer
 
                 // 与详情页同一套假数据样张；drawingGroup 栅格化后滚动不再逐层重绘。
                 WidgetSamplePreview.island(for: widgetID, compact: true)

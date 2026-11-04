@@ -1,25 +1,176 @@
 import AppKit
 import SwiftUI
 
-/// 设置页「岛预览」外包卡：白底 SettingsCard + 假数据岛；库卡 / 详情页统一用这个。
+// MARK: - 统一岛预览舞台（灰底 + 可选多形态 Tab）
+
+/// 设置页岛预览的一种形态；多于 1 个时才显示上方选择题。
+struct SettingsIslandStageOption: Identifiable, Hashable {
+    let id: String
+    var title: String
+    var badge: String
+    var symbol: String
+    var tint: Color
+    /// 岛最大宽度；`nil` 表示不设上限。
+    var maxIslandWidth: CGFloat? = nil
+    /// `true`：黑岛贴合内容宽（展开态）；`false`：拉到 `maxIslandWidth` / 舞台宽（待命等）。
+    var hugsContent: Bool = false
+    var bottomRadius: CGFloat = 26
+    var minStageHeight: CGFloat = 148
+    /// 传给 `WidgetIslandPreviewShell`：紧凑样张去掉重阴影。
+    var compactShell: Bool = false
+}
+
+/// 设置页统一岛预览舞台：灰底仿真台 + 黑岛；多形态时显示选择题，仅一种时隐藏。
+struct SettingsIslandStage<Content: View>: View {
+    var title: String? = nil
+    var options: [SettingsIslandStageOption]
+    @Binding var selection: String
+    @ViewBuilder var content: (SettingsIslandStageOption) -> Content
+
+    private var selectedOption: SettingsIslandStageOption {
+        options.first(where: { $0.id == selection }) ?? options[0]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let title, !title.isEmpty {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(SettingsChrome.secondary)
+                        .frame(width: 10, height: 10)
+                    Text(title)
+                        .font(SettingsChrome.Font.sectionTitle)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Spacer(minLength: 0)
+                }
+            }
+
+            if options.count > 1 {
+                LazyVGrid(
+                    columns: Array(
+                        repeating: GridItem(.flexible(), spacing: 8),
+                        count: min(options.count, 5)
+                    ),
+                    spacing: 8
+                ) {
+                    ForEach(options) { option in
+                        stageTab(option)
+                    }
+                }
+            }
+
+            stageCanvas
+        }
+        .padding(SettingsChrome.Spacing.cardPadding)
+        .background(
+            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
+                .fill(SettingsChrome.surfaceContainerLow)
+        )
+    }
+
+    private var stageCanvas: some View {
+        let option = selectedOption
+        let island = WidgetIslandPreviewShell(
+            compact: option.compactShell,
+            bottomRadius: option.bottomRadius,
+            hugsContent: option.hugsContent
+        ) {
+            content(option)
+        }
+        .frame(maxWidth: option.maxIslandWidth)
+
+        return Group {
+            if option.hugsContent {
+                // 居中贴合内容，禁止把黑岛拉成整行宽导致「假边距」。
+                island
+                    .fixedSize(horizontal: true, vertical: true)
+                    .frame(maxWidth: .infinity, minHeight: option.minStageHeight)
+            } else {
+                island
+                    .frame(maxWidth: .infinity, minHeight: option.minStageHeight)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func stageTab(_ option: SettingsIslandStageOption) -> some View {
+        let selected = selection == option.id
+        return Button {
+            selection = option.id
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: option.symbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(option.tint)
+                Text(option.title)
+                    .font(SettingsChrome.Font.chip)
+                    .foregroundStyle(selected ? SettingsChrome.onSurface : SettingsChrome.onSurfaceVariant)
+                    .lineLimit(1)
+                Spacer(minLength: 2)
+                Text(option.badge)
+                    .font(SettingsChrome.Font.monoCaption)
+                    .foregroundStyle(selected ? option.tint : SettingsChrome.outline)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 36)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(selected ? SettingsChrome.cardBackground : SettingsChrome.surfaceContainer)
+                    .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 3, y: 1)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+extension SettingsIslandStage {
+    /// 单形态便捷：不展示选择题。
+    init(
+        title: String? = nil,
+        compact: Bool = false,
+        maxIslandWidth: CGFloat? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        let option = SettingsIslandStageOption(
+            id: "default",
+            title: "",
+            badge: "",
+            symbol: "",
+            tint: .clear,
+            maxIslandWidth: maxIslandWidth,
+            hugsContent: false,
+            bottomRadius: compact ? 16 : 26,
+            minStageHeight: compact ? 120 : 148,
+            compactShell: compact
+        )
+        self.title = title
+        self.options = [option]
+        self._selection = .constant(option.id)
+        self.content = { _ in content() }
+    }
+}
+
+/// 设置页「岛预览」外包：灰底舞台 + 假数据岛（单形态，无选择题）。
 struct SettingsIslandPreviewCard: View {
     let widgetID: WidgetID
     var compact: Bool = false
+    var title: String? = nil
 
     var body: some View {
-        SettingsCard {
-            WidgetSamplePreview.island(for: widgetID, compact: compact)
-                .padding(.horizontal, compact ? 14 : 20)
-                .padding(.vertical, compact ? 16 : 22)
-                .frame(maxWidth: .infinity)
+        SettingsIslandStage(title: title, compact: compact) {
+            WidgetSamplePreview.content(for: widgetID, compact: compact)
         }
     }
 }
 
-/// 设置页岛预览壳（上直角、下圆角）。新预览请调 `WidgetSamplePreview.island`，勿单独再包壳。
+/// 设置页岛预览壳（上直角、下圆角）。新预览请调 `WidgetSamplePreview.island` / `SettingsIslandStage`，勿单独再包壳。
 struct WidgetIslandPreviewShell<Content: View>: View {
     var compact: Bool = false
     var bottomRadius: CGFloat? = nil
+    /// `true` 时黑岛随内容固有宽度，不横向拉满。
+    var hugsContent: Bool = false
     @ViewBuilder var content: () -> Content
 
     private var radius: CGFloat {
@@ -29,21 +180,28 @@ struct WidgetIslandPreviewShell<Content: View>: View {
     var body: some View {
         let shape = IslandPanelShape(bottomRadius: radius)
         // 库卡 compact：去掉阴影，滚动时少做一层离屏模糊合成。
-        content()
-            .frame(maxWidth: .infinity)
-            .background(
-                shape
-                    .fill(Color.black.opacity(0.92))
-                    .overlay(
-                        shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
-                    )
-                    .shadow(
-                        color: compact ? .clear : .black.opacity(0.35),
-                        radius: compact ? 0 : 24,
-                        y: compact ? 0 : 12
-                    )
-            )
-            .clipShape(shape)
+        Group {
+            if hugsContent {
+                content()
+                    .fixedSize(horizontal: true, vertical: true)
+            } else {
+                content()
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .background(
+            shape
+                .fill(Color.black.opacity(0.92))
+                .overlay(
+                    shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
+                )
+                .shadow(
+                    color: compact ? .clear : .black.opacity(0.28),
+                    radius: compact ? 0 : 18,
+                    y: compact ? 0 : 8
+                )
+        )
+        .clipShape(shape)
     }
 }
 

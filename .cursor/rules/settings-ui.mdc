@@ -84,7 +84,7 @@ SettingsBentoCard { ... }      // 白底 Bento
 | `SettingsRestoreDefaultsFooter` | 贴底固定栏（滚动区在上、本栏在下，滑动位置不变；灵动岛 / 会议 / 番茄同款） |
 | `SettingsFormRows` / `SettingsGroupedRows` | 卡内堆叠行 |
 | `SettingsPaneSection` | 「标题 + SettingsCard」 |
-| `SettingsIslandPreviewCard` | 详情页岛预览外包（白底 + 假数据） |
+| `SettingsIslandStage` / `SettingsIslandPreviewCard` | 详情页岛预览舞台（灰底 + 假数据；多形态才显示 Tab） |
 
 ```swift
 // ✅ 新设置块

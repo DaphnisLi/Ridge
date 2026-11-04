@@ -57,110 +57,44 @@ struct FocusTimerWidgetConfigSection: View {
         }
     }
 
-    // MARK: - 五态舞台（灰底刘海仿真）
+    // MARK: - 五态舞台（统一 SettingsIslandStage）
 
     private var islandStageCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(SettingsChrome.secondary)
-                    .frame(width: 10, height: 10)
-                Text(L10n.FocusTimer.stageTitle)
-                    .font(SettingsChrome.Font.sectionTitle)
-                    .foregroundStyle(SettingsChrome.onSurface)
-                Spacer(minLength: 0)
-            }
-
-            // 五态 Tab：带右侧角标，对齐稿面。
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5),
-                spacing: 8
-            ) {
-                ForEach(FocusTimerPreviewTab.allCases) { tab in
-                    stageTab(tab)
-                }
-            }
-
-            // 刘海硬件仿真台：浅灰渐变 + 贴顶黑岛。
-            ZStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                SettingsChrome.surfaceContainer.opacity(0.85),
-                                SettingsChrome.surfaceContainerLow
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(SettingsChrome.outlineVariant.opacity(0.6), lineWidth: 1)
-                    )
-
-                VStack(spacing: 0) {
-                    Capsule()
-                        .fill(Color.black.opacity(0.06))
-                        .frame(height: 1)
-                        .padding(.horizontal, 40)
-                        .padding(.top, 6)
-
-                    FocusTimerIslandCardView.previewSample(
-                        phase: previewTab.phase,
-                        compact: previewTab.isCompact
-                    )
-                    .frame(maxWidth: previewTab.isCompact ? 288 : 560)
-                    .background(
-                        IslandPanelShape(bottomRadius: previewTab.isCompact ? 20 : 24)
-                            .fill(Color.black.opacity(0.92))
-                    )
-                    .clipShape(IslandPanelShape(bottomRadius: previewTab.isCompact ? 20 : 24))
-                    .shadow(color: .black.opacity(0.28), radius: 18, y: 8)
-                    .padding(.top, 8)
-                    .padding(.bottom, 18)
-                    .frame(maxWidth: .infinity)
-                    .allowsHitTesting(false)
-                }
-            }
-            .frame(minHeight: previewTab.isCompact ? 120 : 148)
+        SettingsIslandStage(
+            title: L10n.FocusTimer.stageTitle,
+            options: FocusTimerPreviewTab.allCases.map(stageOption),
+            selection: Binding(
+                get: { previewTab.rawValue },
+                set: { previewTab = FocusTimerPreviewTab(rawValue: $0) ?? .standby }
+            )
+        ) { option in
+            let tab = FocusTimerPreviewTab(rawValue: option.id) ?? .standby
+            // 与真岛一致：待命左右 8；展开态走 IslandChrome，黑岛贴合内容宽。
+            FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
+                .padding(
+                    .horizontal,
+                    tab.isCompact ? 8 : IslandChrome.contentHorizontal
+                )
+                .padding(
+                    .vertical,
+                    tab.isCompact ? 6 : IslandChrome.contentBottom
+                )
         }
-        .padding(SettingsChrome.Spacing.cardPadding)
-        .background(
-            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                .fill(SettingsChrome.surfaceContainerLow)
-        )
     }
 
-    private func stageTab(_ tab: FocusTimerPreviewTab) -> some View {
-        let selected = previewTab == tab
-        return Button {
-            previewTab = tab
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: tabIcon(tab))
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(tabTint(tab))
-                Text(tabTitle(tab))
-                    .font(SettingsChrome.Font.chip)
-                    .foregroundStyle(selected ? SettingsChrome.onSurface : SettingsChrome.onSurfaceVariant)
-                    .lineLimit(1)
-                Spacer(minLength: 2)
-                Text(tabBadge(tab))
-                    .font(SettingsChrome.Font.monoCaption)
-                    .foregroundStyle(selected ? tabTint(tab) : SettingsChrome.outline)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, minHeight: 36)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(selected ? SettingsChrome.cardBackground : SettingsChrome.surfaceContainer)
-                    .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 3, y: 1)
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
+    private func stageOption(_ tab: FocusTimerPreviewTab) -> SettingsIslandStageOption {
+        SettingsIslandStageOption(
+            id: tab.rawValue,
+            title: tabTitle(tab),
+            badge: tabBadge(tab),
+            symbol: tabIcon(tab),
+            tint: tabTint(tab),
+            maxIslandWidth: tab.isCompact ? NotchGeometry.focusTimerCompactWidth : nil,
+            hugsContent: !tab.isCompact,
+            bottomRadius: tab.isCompact ? 20 : 24,
+            minStageHeight: tab.isCompact ? 120 : 148,
+            compactShell: tab.isCompact
+        )
     }
 
     private func tabTitle(_ tab: FocusTimerPreviewTab) -> String {
