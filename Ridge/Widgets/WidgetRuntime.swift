@@ -28,6 +28,10 @@ final class WidgetRuntime: ObservableObject {
     /// 当前页是否为瞬时通知（进程结束等），用贴刘海的矮展开高度。
     @Published private(set) var isTransientNoticePage = false
 
+    private enum StorageKey {
+        static let lastBrowsePageID = "widget.runtime.lastBrowsePageID.v1"
+    }
+
     private let registry = WidgetRegistry.shared
     private let settings = WidgetSettings.shared
     private let controlDeck = ControlDeckSettings.shared
@@ -42,6 +46,26 @@ final class WidgetRuntime: ObservableObject {
     private var creatingIDs: Set<WidgetID> = []
 
     private init() {}
+
+    /// 记住用户最近停留的内容/控制台页（不含瞬时通知、空态），下次回岛优先恢复。
+    private func rememberBrowsePage(_ id: WidgetID) {
+        if id == SystemWidgetID.empty || id == SystemWidgetID.islandNotice {
+            return
+        }
+        if registry.manifest(for: id)?.kind == .systemTransient {
+            return
+        }
+        UserDefaults.standard.set(id, forKey: StorageKey.lastBrowsePageID)
+        AppLog.debug("Widget", "已记住上次小组件页", ["id": id])
+    }
+
+    private func rememberedBrowsePageID() -> WidgetID? {
+        UserDefaults.standard.string(forKey: StorageKey.lastBrowsePageID)
+    }
+
+    private func shouldRestoreRememberedPage(reason: String) -> Bool {
+        reason == "start" || reason == "withdraw"
+    }
 
     func start() {
         guard !started else { return }
@@ -137,6 +161,7 @@ final class WidgetRuntime: ObservableObject {
         guard pageIDs.indices.contains(index) else { return }
         let id = pageIDs[index]
         browseOverrideID = id
+        rememberBrowsePage(id)
         pageIndex = index
         AppLog.info("Widget", "滑动切换小组件页", [
             "id": id,
@@ -178,8 +203,10 @@ final class WidgetRuntime: ObservableObject {
         let pageID = ControlDeckSettings.pageID(for: target)
         if controlDeck.enabledPanes.contains(target) {
             browseOverrideID = pageID
+            rememberBrowsePage(pageID)
         } else if let first = controlDeck.enabledPanes.first {
             browseOverrideID = first.pageID
+            rememberBrowsePage(first.pageID)
         } else {
             browseOverrideID = nil
         }
@@ -250,6 +277,7 @@ final class WidgetRuntime: ObservableObject {
         _ = ensureInstance(id)
         if demandTimestamps[id] != nil {
             browseOverrideID = id
+            rememberBrowsePage(id)
             AppLog.info("Widget", "设置聚焦：组件已有内容，切到该页", ["id": id])
         } else {
             browseOverrideID = nil
@@ -272,6 +300,7 @@ final class WidgetRuntime: ObservableObject {
         }
         let already = browseOverrideID == id || activeID == id
         browseOverrideID = id
+        rememberBrowsePage(id)
         recompute(reason: "reveal:\(reason)")
         AppLog.info("Widget", "强制切页", [
             "id": id,
@@ -329,6 +358,18 @@ final class WidgetRuntime: ObservableObject {
         if let browse = browseOverrideID,
            let idx = pageIDs.firstIndex(of: browse) {
             chosenPageIndex = idx
+            rememberBrowsePage(browse)
+        } else if shouldRestoreRememberedPage(reason: reason),
+                  let remembered = rememberedBrowsePageID(),
+                  let idx = pageIDs.firstIndex(of: remembered) {
+            // 冷启动 / 瞬时通知结束后：恢复用户上次停留的页。
+            // 不在普通 request 路径恢复，以免挡住媒体等自动上岛。
+            chosenPageIndex = idx
+            browseOverrideID = remembered
+            AppLog.info("Widget", "已恢复上次小组件页", [
+                "id": remembered,
+                "reason": reason
+            ])
         } else if let top = scheduledCandidates().first,
                   let idx = built.firstIndex(where: { $0.ids.contains(top.id) }) {
             chosenPageIndex = idx

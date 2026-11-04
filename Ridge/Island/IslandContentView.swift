@@ -109,6 +109,7 @@ struct IslandContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.islandPalette, palette)
         .environment(\.islandNotchHeight, viewModel.notchHeight)
+        .environment(\.islandNotchWidth, viewModel.notchWidth)
         .animation(islandSpring, value: viewModel.appearance)
         .animation(islandSpring, value: runtime.contentEpoch)
         .animation(islandSpring, value: settings.bottomCornerRadius)
@@ -212,7 +213,22 @@ private struct IslandBody: View {
     let notchHeight: CGFloat
     @ObservedObject var runtime: WidgetRuntime
     @ObservedObject private var focusTimer = FocusTimerSession.shared
+    @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
     @Environment(\.islandPalette) private var palette
+
+    private var usesNotchWingTip: Bool {
+        runtime.isTransientNoticePage
+            && (noticeCenter.current?.usesNotchWingChrome == true)
+    }
+
+    private var usesShortBelowNotchTip: Bool {
+        runtime.isTransientNoticePage
+            && (noticeCenter.current?.usesShortBelowNotchChrome == true)
+    }
+
+    private var hidesPageDots: Bool {
+        usesNotchWingTip || usesShortBelowNotchTip
+    }
 
     var body: some View {
         Group {
@@ -229,25 +245,17 @@ private struct IslandBody: View {
                     }
 
                     WidgetHostView(runtime: runtime)
-                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                        .padding(.horizontal, contentHorizontalInset)
                 }
-                // 所有展开页同一套顶距（含控制台）；瞬时通知略抬高。
-                .padding(
-                    .top,
-                    runtime.isTransientNoticePage
-                        ? IslandChrome.noticeTopInset(notchHeight: notchHeight)
-                        : IslandChrome.expandedTopInset(notchHeight: notchHeight)
-                )
-                // 终局备注行贴底：底距略收，避免输入框下大块空黑。
-                .padding(
-                    .bottom,
-                    focusTimer.phase == .completed ? 8 : IslandChrome.contentBottom
-                )
+                .padding(.top, contentTopInset)
+                .padding(.bottom, contentBottomInset)
                 // 角点用 overlay，避免 Spacer 把 fixedSize 撑成无限宽。
                 .overlay(alignment: .top) {
-                    IslandPageCornerDots(runtime: runtime)
-                        .padding(.top, max(6, notchHeight * 0.22))
-                        .allowsHitTesting(false)
+                    if !hidesPageDots {
+                        IslandPageCornerDots(runtime: runtime)
+                            .padding(.top, max(6, notchHeight * 0.22))
+                            .allowsHitTesting(false)
+                    }
                 }
             } else if focusTimer.showsCompactStandby {
                 // 左右翼贴胶囊边：用满 compact 宽，内边距略收，避免内容挤在中段。
@@ -274,5 +282,27 @@ private struct IslandBody: View {
             && !runtime.isControlDeckPage
             && !runtime.isShowingEmpty
             && !runtime.activeTitle.isEmpty
+    }
+
+    private var contentHorizontalInset: CGFloat {
+        IslandChrome.contentHorizontal
+    }
+
+    private var contentTopInset: CGFloat {
+        if usesNotchWingTip { return IslandChrome.compactTipTopInset }
+        if usesShortBelowNotchTip {
+            return IslandChrome.shortTipTopInset(notchHeight: notchHeight)
+        }
+        if runtime.isTransientNoticePage {
+            return IslandChrome.noticeTopInset(notchHeight: notchHeight)
+        }
+        return IslandChrome.expandedTopInset(notchHeight: notchHeight)
+    }
+
+    private var contentBottomInset: CGFloat {
+        if usesNotchWingTip { return IslandChrome.compactTipBottom }
+        if usesShortBelowNotchTip { return IslandChrome.shortTipBottom }
+        if focusTimer.phase == .completed { return 8 }
+        return IslandChrome.contentBottom
     }
 }

@@ -1,25 +1,50 @@
 import AppKit
 import SwiftUI
 
-/// 货架模块预览配置。
+/// 货架模块预览配置；「已复制」为下方独立开关 + 预览。
 struct ShelfWidgetConfigSection: View {
+    @ObservedObject private var shelfSettings = ShelfSettings.shared
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            previewChrome(moduleID: "shelf")
+            SettingsIslandPreviewCard(
+                widgetID: ControlDeckSettings.pageIDPrefix + ".shelf"
+            )
+
             SettingsCard {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(L10n.ControlDeck.moduleShelf)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(SettingsChrome.Font.sectionTitle)
+                        .foregroundStyle(SettingsChrome.onSurface)
                     Text(L10n.ControlDeck.moduleShelfSummary)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .font(SettingsChrome.Font.body)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(16)
+                .padding(SettingsChrome.Spacing.cardPadding)
             }
+
+            copiedNoticeSection
         }
         .onAppear {
             AppLog.debug("ControlDeck", "货架配置预览已显示")
+        }
+    }
+
+    private var copiedNoticeSection: some View {
+        SettingsCard {
+            VStack(alignment: .leading, spacing: 12) {
+                SettingsIslandStage(compact: true, maxIslandWidth: 148) {
+                    ClipboardCopiedIslandView(compact: true)
+                }
+
+                SettingsSwitchRow(
+                    title: L10n.Shelf.copiedNoticeToggle,
+                    subtitle: L10n.Shelf.copiedNoticeToggleSubtitle,
+                    isOn: $shelfSettings.showCopiedNotice
+                )
+            }
+            .padding(.top, 12)
         }
     }
 }

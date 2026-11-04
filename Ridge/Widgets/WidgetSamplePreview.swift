@@ -382,24 +382,29 @@ private struct DeckShelfPreviewSample: View {
                 .font(.system(size: compact ? 10 : 11, weight: .semibold))
                 .foregroundStyle(.white)
                 .lineLimit(1)
-
-            Spacer(minLength: 4)
+                .fixedSize(horizontal: true, vertical: false)
 
             clipboardSearchField
+                .frame(minWidth: compact ? 72 : 120, maxWidth: .infinity)
 
-            Image(systemName: "trash")
-                .font(.system(size: compact ? 9 : 10, weight: .medium))
-                .foregroundStyle(.white.opacity(0.45))
-                .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
-                .background(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(Color.white.opacity(0.03))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                        )
-                )
+            previewToolGlyph("eyedropper")
+            previewToolGlyph("text.viewfinder")
         }
+    }
+
+    private func previewToolGlyph(_ symbol: String) -> some View {
+        Image(systemName: symbol)
+            .font(.system(size: compact ? 9 : 10, weight: .semibold))
+            .foregroundStyle(.white.opacity(0.78))
+            .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.white.opacity(0.03))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            )
     }
 
     /// 假数据搜索框（不可编辑），对齐真岛剪贴板顶栏。
@@ -414,9 +419,9 @@ private struct DeckShelfPreviewSample: View {
                 .lineLimit(1)
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, compact ? 7 : 9)
+        .padding(.horizontal, compact ? 7 : 8)
         .padding(.vertical, compact ? 4 : 6)
-        .frame(minWidth: compact ? 72 : 96, maxWidth: compact ? 120 : 180)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.black.opacity(0.35))

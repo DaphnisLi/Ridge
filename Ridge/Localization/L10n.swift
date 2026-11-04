@@ -655,7 +655,96 @@ enum L10n {
             tr("shelf.clipboard.empty", "复制文字、链接、颜色或截图后会出现在这里")
         }
         static var clipboardSearchPlaceholder: String {
-            tr("shelf.clipboard.search_placeholder", "搜索剪贴板记录…")
+            tr("shelf.clipboard.search_placeholder", "搜索")
+        }
+        static var colorPickHelp: String {
+            tr("shelf.clipboard.color_pick_help", "屏幕取色：点选像素，复制为色值")
+        }
+        /// 取色引导无障碍 / 旧文案兜底。
+        static var colorPickFirstTip: String {
+            tr("shelf.clipboard.color_pick_first_tip", "左键取色 · Esc 取消")
+        }
+        static var colorPickTipLeft: String {
+            tr("shelf.clipboard.color_pick_tip_left", "左键取色")
+        }
+        static var colorPickTipEsc: String {
+            tr("shelf.clipboard.color_pick_tip_esc", "Esc 取消")
+        }
+        static var previewStageTitle: String {
+            tr("shelf.preview.stage_title", "岛上预览")
+        }
+        static var previewStageShelf: String {
+            tr("shelf.preview.stage_shelf", "货架")
+        }
+        static var previewStageShelfBadge: String {
+            tr("shelf.preview.stage_shelf_badge", "主面板")
+        }
+        static var previewStageColorPick: String {
+            tr("shelf.preview.stage_color_pick", "取色")
+        }
+        static var previewStageColorPickBadge: String {
+            tr("shelf.preview.stage_color_pick_badge", "引导")
+        }
+        static var previewStageCopied: String {
+            tr("shelf.preview.stage_copied", "已复制")
+        }
+        static var previewStageCopiedBadge: String {
+            tr("shelf.preview.stage_copied_badge", "提示")
+        }
+        static var copiedNoticeToggle: String {
+            tr("shelf.copied_notice.toggle", "复制后提示")
+        }
+        static var copiedNoticeToggleSubtitle: String {
+            tr("shelf.copied_notice.toggle_subtitle", "复制成功时在灵动岛显示「已复制」")
+        }
+        static func colorPickDone(_ hex: String) -> String {
+            String(
+                format: String(
+                    localized: "shelf.clipboard.color_pick_done",
+                    defaultValue: "已复制 %@",
+                    bundle: .main
+                ),
+                locale: .current,
+                hex
+            )
+        }
+        static var colorPickNeedScreenCapture: String {
+            tr(
+                "shelf.clipboard.color_pick_need_screen_capture",
+                "屏幕取色需要「屏幕录制」权限，请在系统设置中允许 Ridge"
+            )
+        }
+        static var ocrHelp: String {
+            tr("shelf.clipboard.ocr_help", "屏幕取词：框选后只识别文字并复制，图案不会进剪贴板")
+        }
+        static func ocrDone(_ preview: String) -> String {
+            String(
+                format: String(
+                    localized: "shelf.clipboard.ocr_done",
+                    defaultValue: "已复制「%@」",
+                    bundle: .main
+                ),
+                locale: .current,
+                preview
+            )
+        }
+        static var ocrDragHint: String {
+            tr("shelf.clipboard.ocr_drag_hint", "拖拽框选文字 · Esc 取消")
+        }
+        static var ocrNeedScreenCapture: String {
+            tr(
+                "shelf.clipboard.ocr_need_screen_capture",
+                "屏幕取词需要「屏幕录制」权限，请在系统设置中允许 Ridge"
+            )
+        }
+        static var ocrEmpty: String {
+            tr("shelf.clipboard.ocr_empty", "选区内未识别到文字")
+        }
+        static var ocrCaptureFailed: String {
+            tr("shelf.clipboard.ocr_capture_failed", "截取选区失败，请重试")
+        }
+        static var ocrFailed: String {
+            tr("shelf.clipboard.ocr_failed", "文字识别失败，请重试")
         }
         static var clipboardSearchClear: String {
             tr("shelf.clipboard.search_clear", "清除搜索")
@@ -679,6 +768,47 @@ enum L10n {
         static var previewClipTimeOlder: String { tr("shelf.preview.clip_time_older", "12 分钟前") }
         static var copied: String { tr("shelf.copied", "已复制") }
         static var justCopied: String { tr("shelf.just_copied", "● 刚刚复制") }
+
+        /// 任意复制上岛短提示。
+        static func copiedNotice(for item: ClipboardHistoryItem) -> String {
+            let preview = clippedPreview(item.preview, limit: 28)
+            switch item.category {
+            case .color:
+                return colorPickDone(item.preview)
+            case .link:
+                return String(
+                    format: String(
+                        localized: "shelf.clipboard.copied_link",
+                        defaultValue: "已复制链接 %@",
+                        bundle: .main
+                    ),
+                    locale: .current,
+                    preview
+                )
+            case .image:
+                return tr("shelf.clipboard.copied_image", "已复制图片")
+            case .screenshot:
+                return tr("shelf.clipboard.copied_screenshot", "已复制截图")
+            case .text, .all:
+                return String(
+                    format: String(
+                        localized: "shelf.clipboard.copied_text",
+                        defaultValue: "已复制「%@」",
+                        bundle: .main
+                    ),
+                    locale: .current,
+                    preview
+                )
+            }
+        }
+
+        private static func clippedPreview(_ raw: String, limit: Int) -> String {
+            let trimmed = raw
+                .replacingOccurrences(of: "\n", with: " ")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.count > limit else { return trimmed }
+            return String(trimmed.prefix(limit)) + "…"
+        }
         static var pasteDirect: String { tr("shelf.paste_direct", "直贴") }
         static var copyAgain: String { tr("shelf.copy_again", "再次复制") }
         static var pin: String { tr("shelf.pin", "置顶") }

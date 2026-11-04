@@ -256,7 +256,7 @@ struct ShelfClipboardDeckView: View {
 
     private var clipboardHeader: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(accentPurple.opacity(0.15))
@@ -273,32 +273,31 @@ struct ShelfClipboardDeckView: View {
                 Text(L10n.Shelf.clipboardTitle)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
-
-                Spacer(minLength: 8)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
 
                 clipboardSearchField
+                    .frame(minWidth: 96, maxWidth: .infinity)
+                    // 防止 AppKit TextField 热区溢出盖住右侧工具按钮。
+                    .clipped()
 
-                if !clipboard.items.isEmpty {
-                    Button {
-                        clipboard.clear()
-                        clipboardSearch = ""
-                    } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.45))
-                            .frame(width: 28, height: 28)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Color.white.opacity(0.03))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                                    )
-                            )
+                HStack(spacing: 6) {
+                    clipboardToolButton(
+                        symbol: "eyedropper",
+                        help: L10n.Shelf.colorPickHelp
+                    ) {
+                        ShelfCaptureTools.shared.beginColorPick()
                     }
-                    .buttonStyle(.plain)
-                    .help(L10n.Shelf.clearClipboard)
+
+                    clipboardToolButton(
+                        symbol: "text.viewfinder",
+                        help: L10n.Shelf.ocrHelp
+                    ) {
+                        ShelfCaptureTools.shared.beginOCR()
+                    }
                 }
+                .layoutPriority(2)
+                .zIndex(1)
             }
 
             Rectangle()
@@ -307,8 +306,42 @@ struct ShelfClipboardDeckView: View {
         }
     }
 
+    private func clipboardToolButton(
+        symbol: String,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        // 用整块 ZStack + onTapGesture：正方形任意点可命中，不依赖图标字形热区。
+        ZStack {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.white.opacity(0.03))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                )
+            Image(systemName: symbol)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.78))
+                .allowsHitTesting(false)
+        }
+        .frame(width: 28, height: 28)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            AppLog.info("Shelf", "剪贴板工具按钮点击", ["symbol": symbol])
+            action()
+        }
+        .help(help)
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(help)
+        .accessibilityAction {
+            AppLog.info("Shelf", "剪贴板工具按钮无障碍激活", ["symbol": symbol])
+            action()
+        }
+    }
+
     private var clipboardSearchField: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.40))
@@ -321,7 +354,7 @@ struct ShelfClipboardDeckView: View {
             .textFieldStyle(.plain)
             .font(.system(size: 10))
             .foregroundStyle(.white.opacity(0.88))
-            .frame(minWidth: 96, maxWidth: 180)
+            .frame(maxWidth: .infinity)
             if !clipboardSearch.isEmpty {
                 Button {
                     clipboardSearch = ""
@@ -334,7 +367,7 @@ struct ShelfClipboardDeckView: View {
                 .help(L10n.Shelf.clipboardSearchClear)
             }
         }
-        .padding(.horizontal, 9)
+        .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)

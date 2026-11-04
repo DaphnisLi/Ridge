@@ -88,6 +88,7 @@ final class ClipboardHistoryStore: ObservableObject {
             "category": item.category.rawValue,
             "id": String(item.id.uuidString.prefix(8))
         ])
+        presentCopiedNotice(for: item)
     }
 
     /// 只写 PNG/TIFF 字节。不要附 file URL：Cursor 等会优先吃路径，临时文件读失败就裂成 PNG 图标。
@@ -146,6 +147,7 @@ final class ClipboardHistoryStore: ObservableObject {
 
         // 全表去重：相同内容只保留一条，并提到对应分区顶部。
         if dedupeExisting(matching: captured) {
+            presentCopiedNotice(for: captured)
             return
         }
 
@@ -157,6 +159,31 @@ final class ClipboardHistoryStore: ObservableObject {
             "total": items.count,
             "insertAt": insertAt,
             "changeCount": count
+        ])
+        presentCopiedNotice(for: captured)
+    }
+
+    /// 任意复制成功后上岛短提示；取色引导进行中时不打断。
+    private func presentCopiedNotice(for item: ClipboardHistoryItem) {
+        guard ShelfSettings.shared.showCopiedNotice else {
+            AppLog.debug("Clipboard", "复制提示已关闭，跳过上岛")
+            return
+        }
+        if IslandNoticeCenter.shared.current?.id == IslandNoticePayload.colorPickTipID {
+            AppLog.debug("Clipboard", "取色引导中，跳过复制提示")
+            return
+        }
+        let text = L10n.Shelf.copiedNotice(for: item)
+        IslandNoticeCenter.shared.present(
+            .clipboardCaptureHint(
+                id: "copy.\(item.category.rawValue)",
+                text: text,
+                symbol: item.category.symbol == "paintpalette" ? "eyedropper" : item.category.symbol
+            )
+        )
+        AppLog.info("Clipboard", "已投递复制提示", [
+            "category": item.category.rawValue,
+            "preview": String(item.preview.prefix(32))
         ])
     }
 

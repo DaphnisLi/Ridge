@@ -210,8 +210,9 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
                 let frameInSelf = sub.convert(sub.bounds, to: self)
                 // 零尺寸代表尚未布局完，跳过。
                 guard frameInSelf.width > 1, frameInSelf.height > 1 else { continue }
-                let expanded = frameInSelf.insetBy(dx: -6, dy: -6)
                 if let host = sub as? IslandEditableTextHosting {
+                    // 仅番茄备注等 Host 扩热区；普通搜索框禁止外扩，否则会吃掉右侧按钮点击。
+                    let expanded = frameInSelf.insetBy(dx: -6, dy: -6)
                     if expanded.contains(point) {
                         match = host.editableField
                     } else {
@@ -222,14 +223,14 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
                             nearestHost = (host.editableField, distance)
                         }
                     }
-                } else if (sub is NSTextField || sub is NSTextView), expanded.contains(point) {
+                } else if (sub is NSTextField || sub is NSTextView), frameInSelf.contains(point) {
                     match = sub
                 }
             }
         }
         walk(self)
         if let match { return match }
-        // 终局备注热区偶发与点击差几像素：仅在 24pt 内兜底，避免误抢其它按钮。
+        // 终局备注热区偶发与点击差几像素：仅对 IslandEditableTextHosting 兜底。
         if let nearestHost, nearestHost.distance <= 24 {
             return nearestHost.view
         }

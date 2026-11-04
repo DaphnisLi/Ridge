@@ -11,6 +11,12 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case peripheralLowBattery(BatteryPeripheralNotice)
     /// 外设满电（约 3s 自动收）。
     case peripheralFullCharge(BatteryPeripheralNotice)
+    /// 剪贴板相关提示（复制成功 / 权限 / 失败）。`symbol` 为 SF Symbol。
+    case clipboardCaptureHint(id: String, text: String, symbol: String)
+    /// 取色进行中的操作提示（左键 / Esc）；取完或取消后由业务侧 dismiss。
+    case colorPickTip
+
+    static let colorPickTipID = "shelf.capture.colorPickTip"
 
     var id: String {
         switch self {
@@ -20,6 +26,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return notice.id
         case .peripheralLowBattery(let notice), .peripheralFullCharge(let notice):
             return notice.id
+        case .clipboardCaptureHint(let id, _, _):
+            return "shelf.capture.\(id)"
+        case .colorPickTip:
+            return Self.colorPickTipID
         }
     }
 
@@ -33,6 +43,50 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "battery.low"
         case .peripheralFullCharge:
             return "battery.full"
+        case .clipboardCaptureHint, .colorPickTip:
+            return "shelf.capture"
+        }
+    }
+
+    /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色引导）。
+    var autoDismissNanoseconds: UInt64? {
+        switch self {
+        case .ramPressure, .colorPickTip:
+            return nil
+        case .clipboardCaptureHint:
+            return 500_000_000
+        case .processEnded, .peripheralLowBattery, .peripheralFullCharge:
+            return 3_000_000_000
+        }
+    }
+
+    /// 指针停在岛上时是否延后自动收起。剪贴板短提示强制按时长关掉。
+    var holdsWhileHovering: Bool {
+        switch self {
+        case .clipboardCaptureHint, .colorPickTip:
+            return false
+        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge:
+            return true
+        }
+    }
+
+    /// 取色引导：顶距 0，左右翼贴刘海。
+    var usesNotchWingChrome: Bool {
+        switch self {
+        case .colorPickTip:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// 「已复制」：顶距躲开摄像头，内容落在刘海正下方短条（勿塞进刘海盲区）。
+    var usesShortBelowNotchChrome: Bool {
+        switch self {
+        case .clipboardCaptureHint(let id, _, _):
+            return id.hasPrefix("copy.")
+        default:
+            return false
         }
     }
 }

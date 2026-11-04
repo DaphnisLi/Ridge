@@ -36,6 +36,8 @@ final class IslandController: NSObject {
     private var isShelfDropTargeted = false
     /// 拖文件接近货架时临时抬高层级，便于抢到投放命中。
     private var isShelfDragElevated = false
+    /// 取色 / OCR 进行中：强制整窗穿透，且禁止悬停再展开，避免挡系统放大镜或吞掉 mouseUp。
+    private var isExternalPointerToolActive = false
     /// 整岛暂存拖入会话是否仍有效（接近区或投放命中）。
     var isShelfDragSessionActive: Bool {
         isShelfFileDragPinned || isShelfDropTargeted
@@ -422,6 +424,62 @@ final class IslandController: NSObject {
         ensureIslandInteractionReady(reason: reason)
     }
 
+    /// 进入取色 / OCR：收岛、清按住态、强制穿透，并挡住悬停展开。
+    func beginExternalPointerTool(reason: String) {
+        isExternalPointerToolActive = true
+        isMouseDownInIsland = false
+        isPointerOverIsland = false
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        if viewModel.isExpanded {
+            collapse(reason: reason)
+        }
+        setClickThrough(true, reason: "beginExternalTool:\(reason)")
+        if window.isKeyWindow {
+            window.resignKey()
+        }
+        demoteIslandInteractionIfNeeded(reason: "beginExternalTool:\(reason)")
+        AppLog.info("Overlay", "外部指针工具开始", [
+            "reason": reason,
+            "clickThrough": window.ignoresMouseEvents
+        ])
+    }
+
+    /// 取色 / OCR 结束：清按住钉住。若仍展开（如瞬时通知）只恢复按悬停逻辑穿透，不再强行收岛。
+    func endExternalPointerTool(reason: String) {
+        isExternalPointerToolActive = false
+        isMouseDownInIsland = false
+        NSApp.discardEvents(
+            matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp],
+            before: nil
+        )
+        let mouse = NSEvent.mouseLocation
+        let over: Bool
+        if let geometry {
+            over = pointerIslandHit(
+                mouse: mouse,
+                geometry: geometry,
+                expanded: viewModel.isExpanded
+            ).interactive
+        } else {
+            over = false
+        }
+        if !over {
+            isPointerOverIsland = false
+            setClickThrough(true, reason: "endExternalTool:\(reason)")
+            if window.isKeyWindow, !viewModel.isExpanded {
+                window.resignKey()
+                demoteIslandInteractionIfNeeded(reason: "endExternalTool:\(reason)")
+            }
+        }
+        AppLog.info("Overlay", "外部指针工具结束", [
+            "reason": reason,
+            "overInteractive": over,
+            "expanded": viewModel.isExpanded,
+            "clickThrough": window.ignoresMouseEvents
+        ])
+    }
+
     func collapse(reason: String) {
         guard viewModel.isExpanded else { return }
         if isSettingsLivePreview, reason != "settingsPreviewEnd" {
@@ -495,6 +553,13 @@ final class IslandController: NSObject {
         }
 
         let mouse = NSEvent.mouseLocation
+
+        // 取色 / OCR：整窗强制穿透，且不因悬停展开。
+        if isExternalPointerToolActive {
+            isPointerOverIsland = false
+            setClickThrough(true, reason: "externalPointerTool")
+            return
+        }
 
         // 设置窗与展开岛常在屏幕上方重叠；命中设置窗时必须穿透，否则输入框失焦后点击会被岛吞掉。
         if isSettingsSessionActive,
@@ -932,10 +997,6 @@ final class IslandController: NSObject {
             scrollAccumX = 0
             return false
         }
-        // 控制台页（货架 / 混音台）需要纵向滚动，不拦截任何滚轮。
-        if WidgetRuntime.shared.isControlDeckPage {
-            return false
-        }
         guard let geometry else { return false }
         guard pointerIsOverIsland(
             mouse: NSEvent.mouseLocation,
@@ -962,6 +1023,8 @@ final class IslandController: NSObject {
             dy = event.deltaY
         }
 
+        // 控制台（电量 / 货架 / 混音）需要纵向滚动：纵滑放行给 AlwaysVisibleScrollView；
+        // 仅横滑主导时才翻页。以前整页 return false 导致电量页左右滑失效。
         guard abs(dx) > abs(dy), abs(dx) > 0.05 else {
             if event.phase == .ended || event.phase == .cancelled {
                 scrollAccumX = 0
@@ -973,7 +1036,8 @@ final class IslandController: NSObject {
         AppLog.debug("Overlay", "触控板横滑累加", [
             "dx": dx,
             "accum": scrollAccumX,
-            "phase": event.phase.rawValue
+            "phase": event.phase.rawValue,
+            "controlDeck": WidgetRuntime.shared.isControlDeckPage
         ])
 
         if scrollAccumX <= -10 {

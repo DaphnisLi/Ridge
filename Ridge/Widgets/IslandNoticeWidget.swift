@@ -7,7 +7,7 @@ import SwiftUI
 /// 注意：`refresh` 不得再调 `requestDisplay`，否则会与 `applyPage` 形成重入栈溢出。
 @MainActor
 final class IslandNoticeWidget: IslandWidget {
-    private static let displayNanoseconds: UInt64 = 3_000_000_000
+    private static let defaultDisplayNanoseconds: UInt64 = 3_000_000_000
     private static let hoverPollNanoseconds: UInt64 = 100_000_000
 
     static let manifest = WidgetManifest(
@@ -94,35 +94,56 @@ final class IslandNoticeWidget: IslandWidget {
         ])
 
         // RAM 高压需用户处理（释放 / 忽略），不自动收起。
-        if case .ramPressure = payload {
+        if let nanos = payload.autoDismissNanoseconds {
+            scheduleAutoDismiss(
+                for: payload.id,
+                nanoseconds: nanos,
+                holdWhileHovering: payload.holdsWhileHovering
+            )
+        } else {
             dismissTask?.cancel()
             dismissTask = nil
-            AppLog.debug("IslandNotice", "RAM 高压通知保持展示，直至用户操作")
-        } else {
-            scheduleAutoDismiss(for: payload.id)
+            AppLog.debug("IslandNotice", "通知保持展示，直至用户操作", [
+                "id": payload.id,
+                "source": payload.sourceTag
+            ])
         }
     }
 
-    /// 满 3s 后若仍悬停在岛上则等待离开，再撤回（不含 RAM 高压）。
-    private func scheduleAutoDismiss(for noticeID: String) {
+    /// 到达时长后撤回；可选：悬停时延后（剪贴板短提示不延后）。
+    private func scheduleAutoDismiss(
+        for noticeID: String,
+        nanoseconds: UInt64,
+        holdWhileHovering: Bool
+    ) {
         dismissTask?.cancel()
         dismissTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: Self.displayNanoseconds)
+            try? await Task.sleep(nanoseconds: nanoseconds)
             guard !Task.isCancelled, let self else { return }
             guard self.presenting?.id == noticeID else { return }
 
-            while !Task.isCancelled, IslandController.shared?.isHoveringIsland == true {
-                AppLog.debug("IslandNotice", "指针在岛上，延后自动收起", ["id": noticeID])
-                try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
+            if holdWhileHovering {
+                while !Task.isCancelled, IslandController.shared?.isHoveringIsland == true {
+                    AppLog.debug("IslandNotice", "指针在岛上，延后自动收起", ["id": noticeID])
+                    try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
+                }
+                guard !Task.isCancelled else { return }
+                guard self.presenting?.id == noticeID else { return }
             }
-            guard !Task.isCancelled else { return }
-            guard self.presenting?.id == noticeID else { return }
 
-            self.finishDismiss(noticeID: noticeID, reason: "auto")
+            self.finishDismiss(
+                noticeID: noticeID,
+                reason: "auto",
+                displayedNanoseconds: nanoseconds
+            )
         }
     }
 
-    private func finishDismiss(noticeID: String, reason: String) {
+    private func finishDismiss(
+        noticeID: String,
+        reason: String,
+        displayedNanoseconds: UInt64 = IslandNoticeWidget.defaultDisplayNanoseconds
+    ) {
         if case .processEnded(let notice) = presenting, notice.id == noticeID {
             ProjectReleaseSession.shared.dismissWatchEnded()
         } else {
@@ -132,7 +153,7 @@ final class IslandNoticeWidget: IslandWidget {
         AppLog.info("IslandNotice", "瞬时通知已收起", [
             "id": noticeID,
             "reason": reason,
-            "ms": Int(Self.displayNanoseconds / 1_000_000)
+            "ms": Int(displayedNanoseconds / 1_000_000)
         ])
     }
 
@@ -180,9 +201,37 @@ private struct IslandNoticeCardView: View {
             PeripheralBatteryNoticeCard(notice: notice, style: .low)
         case .peripheralFullCharge(let notice):
             PeripheralBatteryNoticeCard(notice: notice, style: .full)
+        case .clipboardCaptureHint(let id, let text, let symbol):
+            if id.hasPrefix("copy.") {
+                ClipboardCopiedIslandView(detail: text)
+            } else {
+                ClipboardCaptureHintNoticeCard(text: text, symbol: symbol)
+            }
+        case .colorPickTip:
+            ColorPickTipIslandView()
         case .none:
             ProcessEndedNoticeCard(notice: nil)
         }
+    }
+}
+
+private struct ClipboardCaptureHintNoticeCard: View {
+    let text: String
+    var symbol: String = "eyedropper"
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.9))
+            Text(text)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.95))
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 420, alignment: .leading)
     }
 }
 

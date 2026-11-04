@@ -21,6 +21,17 @@ enum IslandChrome {
     static func noticeTopInset(notchHeight: CGFloat) -> CGFloat {
         max(expandedTopInset(notchHeight: notchHeight), (notchHeight * 0.5 + 4) * 2)
     }
+
+    /// 取色左右翼：顶距 0，内容与刘海同高带；左右边距走 `contentHorizontal`。
+    static let compactTipTopInset: CGFloat = 0
+    static let compactTipBottom: CGFloat = 4
+
+    /// 「已复制」等短提示：躲开刘海后紧贴下方，底距收紧；左右仍用 `contentHorizontal`。
+    static func shortTipTopInset(notchHeight: CGFloat) -> CGFloat {
+        expandedTopInset(notchHeight: notchHeight)
+    }
+
+    static let shortTipBottom: CGFloat = 8
 }
 
 /// 展开态面板尺寸由内容测量上报；壳层只负责 clamp，不按 layout 写死宽高。
@@ -70,9 +81,18 @@ private struct IslandNotchHeightKey: EnvironmentKey {
     static let defaultValue: CGFloat = 32
 }
 
+private struct IslandNotchWidthKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 160
+}
+
 extension EnvironmentValues {
     var islandNotchHeight: CGFloat {
         get { self[IslandNotchHeightKey.self] }
         set { self[IslandNotchHeightKey.self] = newValue }
+    }
+
+    var islandNotchWidth: CGFloat {
+        get { self[IslandNotchWidthKey.self] }
+        set { self[IslandNotchWidthKey.self] = newValue }
     }
 }

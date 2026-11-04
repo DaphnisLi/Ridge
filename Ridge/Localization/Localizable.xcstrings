@@ -3505,7 +3505,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "搜索剪贴板记录…"
+            "value": "搜索"
           }
         }
       }
@@ -5937,6 +5937,292 @@
           "stringUnit": {
             "state": "translated",
             "value": "今日已完成 %d 次"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.color_pick_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕取色：点选像素，复制为色值"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕取词：框选后只识别文字并复制，图案不会进剪贴板"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_drag_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖拽框选文字 · Esc 取消"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_need_screen_capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕取词需要「屏幕录制」权限，请在系统设置中允许 Ridge"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选区内未识别到文字"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_capture_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截取选区失败，请重试"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文字识别失败，请重试"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.color_pick_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制 %@"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制「%@」"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.color_pick_need_screen_capture": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕取色需要「屏幕录制」权限，请在系统设置中允许 Ridge"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.color_pick_first_tip": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左键取色 · Esc 取消"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.copied_text": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制「%@」"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.copied_link": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制链接 %@"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.copied_image": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制图片"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.copied_screenshot": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制截图"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.color_pick_tip_left": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左键取色"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.color_pick_tip_esc": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esc 取消"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "岛上预览"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_shelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "货架"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_shelf_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "主面板"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_color_pick": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取色"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_color_pick_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引导"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制"
+          }
+        }
+      }
+    },
+    "shelf.preview.stage_copied_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        }
+      }
+    },
+    "shelf.copied_notice.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制后提示"
+          }
+        }
+      }
+    },
+    "shelf.copied_notice.toggle_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制成功时在灵动岛显示「已复制」"
           }
         }
       }
