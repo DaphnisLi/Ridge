@@ -85,6 +85,9 @@ enum CursorUsageClient {
             planInfo: planInfo,
             membership: auth.membership
         )
+        let accountID = auth.email?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
         let hint: String? = {
             guard let email = auth.email, email.contains("@") else { return auth.email }
             let parts = email.split(separator: "@", maxSplits: 1).map(String.init)
@@ -95,6 +98,7 @@ enum CursorUsageClient {
                 : String(name.prefix(2)) + "***"
             return "\(masked)@\(parts[1])"
         }()
+        let cycleKey = resetAt.map { String(Int($0.timeIntervalSince1970)) } ?? "unknown"
 
         AppLog.warn("AIUsage", "Cursor 用量已刷新", [
             "remaining": Int(max(0, 100 - totalUsed)),
@@ -102,13 +106,16 @@ enum CursorUsageClient {
             "planName": planInfo?.planName ?? "nil",
             "trial": planInfo?.isTrial ?? false,
             "onDemandSpent": onDemand.map { String(format: "%.2f", $0.spentUSD) } ?? "nil",
-            "windows": windows.count
+            "windows": windows.count,
+            "account": hint ?? "nil",
+            "cycle": cycleKey == "unknown" ? "unknown" : String(cycleKey.suffix(6))
         ])
 
         return AIUsageProviderSnapshot(
             id: .cursor,
             planLabel: planLabel,
             accountHint: hint,
+            accountID: accountID,
             windows: windows,
             onDemand: onDemand,
             fetchedAt: Date(),

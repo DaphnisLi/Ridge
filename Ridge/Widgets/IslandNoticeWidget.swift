@@ -81,23 +81,9 @@ final class IslandNoticeWidget: IslandWidget {
             return
         }
 
-        let wasShowing = wantsDisplay
         presenting = payload
-        if wasShowing {
-            // 已在通知页：只换皮 + 重启计时，禁止再走清空收岛。
-            IslandController.shared?.expand(reason: "islandNoticeReplace")
-            AppLog.warn("IslandNotice", "瞬时通知已替换", [
-                "id": payload.id,
-                "source": payload.sourceTag
-            ])
-        } else {
-            show()
-            IslandController.shared?.expand(reason: "islandNotice")
-            AppLog.warn("IslandNotice", "瞬时通知已上岛", [
-                "id": payload.id,
-                "source": payload.sourceTag
-            ])
-        }
+        // 必须先切到通知页再 expand，否则会先闪出货架/控制台等当前页，看起来不像三种额度胶囊。
+        showThenExpand(payload: payload)
 
         // RAM 高压需用户处理（释放 / 忽略），不自动收起。
         if let nanos = payload.autoDismissNanoseconds {
@@ -174,15 +160,24 @@ final class IslandNoticeWidget: IslandWidget {
         ])
     }
 
-    private func show() {
-        if wantsDisplay { return }
-        wantsDisplay = true
-        requestedAt = Date()
-        // 与会议一致：延后 request，避开 Runtime applyPage / ensureInstance 同步栈。
+    /// 先 requestDisplay 切到通知页，再 expand，避免先展开货架/控制台。
+    private func showThenExpand(payload: IslandNoticePayload) {
+        let alreadyShowing = wantsDisplay
+        if !wantsDisplay {
+            wantsDisplay = true
+            requestedAt = Date()
+        }
         Task { @MainActor [weak self] in
             guard let self, self.wantsDisplay else { return }
+            // 与会议一致：延后一拍避开 applyPage 同步重入；但 expand 必须在切页之后。
             self.context.requestDisplay()
-            AppLog.debug("IslandNotice", "已提交 requestDisplay")
+            IslandController.shared?.expand(
+                reason: alreadyShowing ? "islandNoticeReplace" : "islandNotice"
+            )
+            AppLog.warn("IslandNotice", alreadyShowing ? "瞬时通知已替换" : "瞬时通知已上岛", [
+                "id": payload.id,
+                "source": payload.sourceTag
+            ])
         }
     }
 

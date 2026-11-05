@@ -8,10 +8,11 @@ final class AIUsageSettings: ObservableObject {
 
     enum Defaults {
         static let sensingEnabled = true
-        static let abundantThreshold = 60
+        static let abundantThreshold = 70
         static let warningThreshold = 30
         static let criticalThreshold = 10
-        static let refreshMinutes = 10
+        /// 写代码时额度掉得快，10 分钟太钝；默认 2 分钟轮询。
+        static let refreshMinutes = 2
     }
 
     private enum Key {
@@ -19,10 +20,15 @@ final class AIUsageSettings: ObservableObject {
         static let abundant = "aiUsage.abundantThreshold"
         static let warning = "aiUsage.warningThreshold"
         static let critical = "aiUsage.criticalThreshold"
-        static let refresh = "aiUsage.refreshMinutes"
+        static let refresh = "aiUsage.refreshMinutes.v2"
         static let lastAlertStage = "aiUsage.lastAlertStage"
         static let lastAlertProvider = "aiUsage.lastAlertProvider"
+        static let lastAlertAccount = "aiUsage.lastAlertAccount"
+        static let lastAlertCycle = "aiUsage.lastAlertCycle"
     }
+
+    /// init 完成前不回调 Session，避免双向初始化。
+    private var isReady = false
 
     /// 关闭后不上岛、不发阈值提醒（设置页仍可手动同步）。
     @Published var sensingEnabled: Bool {
@@ -39,7 +45,7 @@ final class AIUsageSettings: ObservableObject {
             }
             UserDefaults.standard.set(abundantThreshold, forKey: Key.abundant)
             normalizeHierarchy()
-            clearAlertMemory()
+            notifyThresholdsChanged(reason: "abundant")
         }
     }
 
@@ -53,7 +59,7 @@ final class AIUsageSettings: ObservableObject {
             }
             UserDefaults.standard.set(warningThreshold, forKey: Key.warning)
             normalizeHierarchy()
-            clearAlertMemory()
+            notifyThresholdsChanged(reason: "warning")
         }
     }
 
@@ -67,13 +73,14 @@ final class AIUsageSettings: ObservableObject {
             }
             UserDefaults.standard.set(criticalThreshold, forKey: Key.critical)
             normalizeHierarchy()
-            clearAlertMemory()
+            notifyThresholdsChanged(reason: "critical")
         }
     }
 
+    /// 后台轮询间隔（分钟）；1…30，默认 2。
     @Published var refreshMinutes: Int {
         didSet {
-            let clamped = min(max(refreshMinutes, 5), 60)
+            let clamped = min(max(refreshMinutes, 1), 30)
             if clamped != refreshMinutes {
                 refreshMinutes = clamped
                 return
@@ -89,7 +96,29 @@ final class AIUsageSettings: ObservableObject {
         warningThreshold = defaults.object(forKey: Key.warning) as? Int ?? Defaults.warningThreshold
         criticalThreshold = defaults.object(forKey: Key.critical) as? Int ?? Defaults.criticalThreshold
         refreshMinutes = defaults.object(forKey: Key.refresh) as? Int ?? Defaults.refreshMinutes
+        defaults.removeObject(forKey: "aiUsage.refreshMinutes")
+        defaults.removeObject(forKey: "aiUsage.lastAlertFingerprint.v1")
+        // 旧默认 60 → 新默认 70；用户已改成其它值则保留。
+        let migrated70 = "aiUsage.abundantDefault70.v1"
+        if defaults.object(forKey: migrated70) == nil {
+            if defaults.object(forKey: Key.abundant) as? Int == 60 {
+                abundantThreshold = Defaults.abundantThreshold
+            }
+            defaults.set(true, forKey: migrated70)
+        }
+        // 无账号/周期字段的旧记忆作废，避免换号后误判「同档已提示」。
+        if defaults.object(forKey: Key.lastAlertAccount) == nil {
+            defaults.removeObject(forKey: Key.lastAlertStage)
+            defaults.removeObject(forKey: Key.lastAlertProvider)
+        }
         normalizeHierarchy()
+        isReady = true
+    }
+
+    private func notifyThresholdsChanged(reason: String) {
+        guard isReady else { return }
+        // 去重清理由 Session 防抖后统一做，避免步进器每格都弹。
+        AIUsageSession.shared.thresholdsDidChange(reason: reason)
     }
 
     func restoreDefaults() {
@@ -102,19 +131,28 @@ final class AIUsageSettings: ObservableObject {
         AppLog.info("AIUsage", "已恢复默认设置")
     }
 
-    /// 展示分档：截流 / 警戒 / 充裕（含高于充裕线的健康态，仍显示绿色充裕，勿标「未知」）。
+    /// 与设置页「剩余 xx%」同一套四舍五入。
+    func displayRemainingPercent(_ remaining: Double) -> Int {
+        Int(remaining.rounded())
+    }
+
+    /// 设置页色条：高于充裕线仍显示充裕绿，勿标未知。
     func stage(forRemaining remaining: Double) -> AIUsageStage {
-        if remaining <= Double(criticalThreshold) { return .critical }
-        if remaining <= Double(warningThreshold) { return .warning }
+        let percent = displayRemainingPercent(remaining)
+        if percent <= criticalThreshold { return .critical }
+        if percent <= warningThreshold { return .warning }
         return .abundant
     }
 
-    /// 是否已跌破充裕触发线（≤ 充裕阈值）——仅此时充裕档才上岛提示。
-    func isWithinAbundantTipBand(_ remaining: Double) -> Bool {
-        remaining <= Double(abundantThreshold)
+    /// 瞬时提示分档：未触达充裕线返回 `nil`（不弹）；否则为充裕 / 警戒 / 截流之一。
+    func tipStage(forRemaining remaining: Double) -> AIUsageStage? {
+        let percent = displayRemainingPercent(remaining)
+        if percent <= criticalThreshold { return .critical }
+        if percent <= warningThreshold { return .warning }
+        if percent <= abundantThreshold { return .abundant }
+        return nil
     }
 
-    /// 层级：充裕 > 警戒 > 截流。
     var hierarchyValid: Bool {
         abundantThreshold > warningThreshold && warningThreshold > criticalThreshold
     }
@@ -128,25 +166,41 @@ final class AIUsageSettings: ObservableObject {
         }
     }
 
-    // MARK: - 提醒去重
+    // MARK: - 提醒去重（同账号 + 同计费周期 + 档位）
 
-    func lastAlertedStage() -> (AIUsageProviderID, AIUsageStage)? {
+    /// 仅当持久化记忆与当前作用域一致时返回档位；换号 / 新周期视为无记忆。
+    func lastAlertedStage(for scope: AIUsageAlertScope) -> (AIUsageProviderID, AIUsageStage)? {
         let defaults = UserDefaults.standard
         guard let providerRaw = defaults.string(forKey: Key.lastAlertProvider),
               let provider = AIUsageProviderID(rawValue: providerRaw),
               let stageRaw = defaults.string(forKey: Key.lastAlertStage),
-              let stage = AIUsageStage(rawValue: stageRaw)
+              let stage = AIUsageStage(rawValue: stageRaw),
+              let account = defaults.string(forKey: Key.lastAlertAccount),
+              let cycle = defaults.string(forKey: Key.lastAlertCycle),
+              account == scope.accountID,
+              cycle == scope.cycleKey
         else { return nil }
         return (provider, stage)
     }
 
-    func rememberAlert(provider: AIUsageProviderID, stage: AIUsageStage) {
-        UserDefaults.standard.set(provider.rawValue, forKey: Key.lastAlertProvider)
-        UserDefaults.standard.set(stage.rawValue, forKey: Key.lastAlertStage)
+    func rememberAlert(provider: AIUsageProviderID, stage: AIUsageStage, scope: AIUsageAlertScope) {
+        let defaults = UserDefaults.standard
+        defaults.set(provider.rawValue, forKey: Key.lastAlertProvider)
+        defaults.set(stage.rawValue, forKey: Key.lastAlertStage)
+        defaults.set(scope.accountID, forKey: Key.lastAlertAccount)
+        defaults.set(scope.cycleKey, forKey: Key.lastAlertCycle)
+        AppLog.debug("AIUsage", "已记录额度提示记忆", [
+            "stage": stage.rawValue,
+            "scope": scope.logSummary
+        ])
     }
 
     func clearAlertMemory() {
-        UserDefaults.standard.removeObject(forKey: Key.lastAlertProvider)
-        UserDefaults.standard.removeObject(forKey: Key.lastAlertStage)
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: Key.lastAlertProvider)
+        defaults.removeObject(forKey: Key.lastAlertStage)
+        defaults.removeObject(forKey: Key.lastAlertAccount)
+        defaults.removeObject(forKey: Key.lastAlertCycle)
+        AppLog.debug("AIUsage", "已清空额度提示记忆")
     }
 }

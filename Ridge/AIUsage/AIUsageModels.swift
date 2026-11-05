@@ -94,7 +94,10 @@ struct AIUsageOnDemandSpend: Hashable {
 struct AIUsageProviderSnapshot: Hashable, Identifiable {
     let id: AIUsageProviderID
     var planLabel: String?
+    /// 设置页展示用（脱敏）。
     var accountHint: String?
+    /// 提示去重用稳定账号键（通常为小写邮箱）；勿上屏、勿打完整日志。
+    var accountID: String?
     var windows: [AIUsageWindow]
     var onDemand: AIUsageOnDemandSpend?
     var fetchedAt: Date
@@ -106,6 +109,38 @@ struct AIUsageProviderSnapshot: Hashable, Identifiable {
     var remainingPercent: Double? { primaryWindow?.remainingPercent }
 
     var resetsAt: Date? { primaryWindow?.resetsAt }
+
+    /// 计费周期键：优先用周期结束时间戳；未知则 `unknown`。
+    var cycleKey: String {
+        guard let resetsAt else { return "unknown" }
+        return String(Int(resetsAt.timeIntervalSince1970))
+    }
+
+    /// 账号 + 周期作用域（换号 / 新周期时提示记忆互不串）。
+    var alertScope: AIUsageAlertScope {
+        let id: String = {
+            guard let accountID, !accountID.isEmpty else { return "unknown" }
+            return accountID
+        }()
+        return AIUsageAlertScope(accountID: id, cycleKey: cycleKey)
+    }
+}
+
+/// 额度提示去重作用域：同账号同周期才共用「已提示过」记忆。
+struct AIUsageAlertScope: Hashable {
+    var accountID: String
+    var cycleKey: String
+
+    /// 日志用短前缀，避免完整邮箱。
+    var logSummary: String {
+        let account = accountID == "unknown"
+            ? "unknown"
+            : String(accountID.prefix(3)) + "***"
+        let cycle = cycleKey == "unknown"
+            ? "unknown"
+            : String(cycleKey.suffix(6))
+        return "\(account)/\(cycle)"
+    }
 }
 
 struct AIUsageSnapshot: Hashable {
