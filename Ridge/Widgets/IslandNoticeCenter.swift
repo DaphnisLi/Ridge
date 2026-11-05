@@ -15,6 +15,14 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case clipboardCaptureHint(id: String, text: String, symbol: String)
     /// 取色进行中的操作提示（左键 / Esc）；取完或取消后由业务侧 dismiss。
     case colorPickTip
+    /// AI 额度触达充裕 / 警戒 / 截流任一阈值（约 3s 瞬时胶囊；非常驻页）。
+    case aiUsageAlert(
+        id: String,
+        providerName: String,
+        remainingPercent: Int,
+        stage: AIUsageStage,
+        resetsAt: Date?
+    )
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
 
@@ -30,6 +38,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "shelf.capture.\(id)"
         case .colorPickTip:
             return Self.colorPickTipID
+        case .aiUsageAlert(let id, _, _, _, _):
+            return id
         }
     }
 
@@ -45,6 +55,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "battery.full"
         case .clipboardCaptureHint, .colorPickTip:
             return "shelf.capture"
+        case .aiUsageAlert:
+            return "aiUsage"
         }
     }
 
@@ -54,8 +66,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .ramPressure, .colorPickTip:
             return nil
         case .clipboardCaptureHint:
+            // 「已复制」短提示：0.5s，不因悬停延后。
             return 500_000_000
-        case .processEnded, .peripheralLowBattery, .peripheralFullCharge:
+        case .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert:
+            // 额度等瞬时条约 3s。
             return 3_000_000_000
         }
     }
@@ -65,7 +79,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .clipboardCaptureHint, .colorPickTip:
             return false
-        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge:
+        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert:
             return true
         }
     }
@@ -80,11 +94,13 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 「已复制」：顶距躲开摄像头，内容落在刘海正下方短条（勿塞进刘海盲区）。
+    /// 「已复制」/ AI 额度：顶距躲开刘海，整条落在正下方（不占左右翼；比普通通知顶距更紧）。
     var usesShortBelowNotchChrome: Bool {
         switch self {
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")
+        case .aiUsageAlert:
+            return true
         default:
             return false
         }
@@ -102,8 +118,10 @@ final class IslandNoticeCenter: ObservableObject {
     private init() {}
 
     func present(_ payload: IslandNoticePayload) {
+        // 勿先清空再设：会走 dismiss→收岛，0.5s「已复制」来不及看见。
+        // 同内容再投由业务侧换唯一 id（如 copy.token）保证 @Published 触发。
         current = payload
-        AppLog.info("IslandNotice", "已投递瞬时通知", [
+        AppLog.warn("IslandNotice", "已投递瞬时通知", [
             "id": payload.id,
             "source": payload.sourceTag
         ])

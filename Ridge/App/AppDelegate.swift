@@ -10,6 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppLog.warn("Overlay", "Ridge 启动", [
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         ])
+        // 清掉额度调试常驻开关，避免挡住「已复制」等其它瞬时通知。
+        UserDefaults.standard.removeObject(forKey: "aiUsage.debugStickyWarning")
+        UserDefaults.standard.removeObject(forKey: "aiUsage.debugForceWarning")
+        UserDefaults.standard.removeObject(forKey: "aiUsage.debugStage")
+        IslandNoticeCenter.shared.dismiss(id: "aiUsage.debug.warning")
+
         island.start()
         menuBar.start(island: island)
         // 日历 / Now Playing 随 App 常驻；有内容时再 nudge 对应小组件上岛。
@@ -18,6 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SoundSession.shared.start()
         // 资源监控：系统采样 + 焦点；击键在有输入监控权限时生效。
         ResourceMonitorSession.shared.start()
+        // AI 额度：后台感知；仅触阈时走瞬时通知。
+        AIUsageSession.shared.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

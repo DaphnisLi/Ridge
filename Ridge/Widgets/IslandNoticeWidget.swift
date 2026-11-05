@@ -47,7 +47,8 @@ final class IslandNoticeWidget: IslandWidget {
     }
 
     func makeView() -> AnyView {
-        AnyView(IslandNoticeCardView(payload: presenting))
+        // 直接观察中枢：替换提示时不必再 requestDisplay 才能换皮。
+        AnyView(IslandNoticeCardView())
     }
 
     func onAppear() {
@@ -80,18 +81,23 @@ final class IslandNoticeWidget: IslandWidget {
             return
         }
 
-        // 同一条已在展示：勿再 requestDisplay（防 applyPage→refresh 重入栈溢出）。
-        if presenting?.id == payload.id, wantsDisplay {
-            return
-        }
-
+        let wasShowing = wantsDisplay
         presenting = payload
-        show()
-        IslandController.shared?.expand(reason: "islandNotice")
-        AppLog.info("IslandNotice", "瞬时通知已上岛", [
-            "id": payload.id,
-            "source": payload.sourceTag
-        ])
+        if wasShowing {
+            // 已在通知页：只换皮 + 重启计时，禁止再走清空收岛。
+            IslandController.shared?.expand(reason: "islandNoticeReplace")
+            AppLog.warn("IslandNotice", "瞬时通知已替换", [
+                "id": payload.id,
+                "source": payload.sourceTag
+            ])
+        } else {
+            show()
+            IslandController.shared?.expand(reason: "islandNotice")
+            AppLog.warn("IslandNotice", "瞬时通知已上岛", [
+                "id": payload.id,
+                "source": payload.sourceTag
+            ])
+        }
 
         // RAM 高压需用户处理（释放 / 忽略），不自动收起。
         if let nanos = payload.autoDismissNanoseconds {
@@ -144,13 +150,24 @@ final class IslandNoticeWidget: IslandWidget {
         reason: String,
         displayedNanoseconds: UInt64 = IslandNoticeWidget.defaultDisplayNanoseconds
     ) {
+        // 定时器触发时若已被新提示替换，绝不能 hide/collapse 把新条收掉。
+        guard noticeCenter.current?.id == noticeID || noticeCenter.current == nil else {
+            if presenting?.id == noticeID {
+                presenting = noticeCenter.current
+            }
+            AppLog.warn("IslandNotice", "收起跳过：已被新通知替换", [
+                "old": noticeID,
+                "current": noticeCenter.current?.id ?? ""
+            ])
+            return
+        }
         if case .processEnded(let notice) = presenting, notice.id == noticeID {
             ProjectReleaseSession.shared.dismissWatchEnded()
         } else {
             noticeCenter.dismiss(id: noticeID)
         }
         hide()
-        AppLog.info("IslandNotice", "瞬时通知已收起", [
+        AppLog.warn("IslandNotice", "瞬时通知已收起", [
             "id": noticeID,
             "reason": reason,
             "ms": Int(displayedNanoseconds / 1_000_000)
@@ -189,10 +206,10 @@ final class IslandNoticeWidget: IslandWidget {
 // MARK: - View
 
 private struct IslandNoticeCardView: View {
-    let payload: IslandNoticePayload?
+    @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
 
     var body: some View {
-        switch payload {
+        switch noticeCenter.current {
         case .processEnded(let notice):
             ProcessEndedNoticeCard(notice: notice)
         case .ramPressure(let notice):
@@ -209,6 +226,15 @@ private struct IslandNoticeCardView: View {
             }
         case .colorPickTip:
             ColorPickTipIslandView()
+        case .aiUsageAlert(_, let providerName, let remainingPercent, let stage, let resetsAt):
+            // 根视图禁止再加外圈 padding：壳层 `IslandChrome` + notchWing 已管边距。
+            AIUsageIslandCardView(
+                providerName: providerName,
+                remainingPercent: remainingPercent,
+                stage: stage,
+                resetsAt: resetsAt,
+                errorMessage: nil
+            )
         case .none:
             ProcessEndedNoticeCard(notice: nil)
         }

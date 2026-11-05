@@ -268,25 +268,28 @@ struct ProjectReleaseDeckView: View {
                     ])
                     session.toggleWatch(item: item, projectName: projectName)
                 } label: {
-                    if watching {
-                        HStack(spacing: 2) {
-                            Image(systemName: "eye.fill")
-                                .font(.system(size: 9, weight: .semibold))
-                            Text(L10n.Projects.watchingActionOn)
+                    Group {
+                        if watching {
+                            HStack(spacing: 2) {
+                                Image(systemName: "eye.fill")
+                                    .font(.system(size: 9, weight: .semibold))
+                                Text(L10n.Projects.watchingActionOn)
+                                    .font(.system(size: 10, weight: .medium))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(accentBlue))
+                        } else {
+                            Text(L10n.Projects.watchAction)
                                 .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.88))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.10)))
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(accentBlue))
-                    } else {
-                        Text(L10n.Projects.watchAction)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.88))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.10)))
                     }
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(L10n.Projects.watchHelp)
@@ -304,12 +307,13 @@ struct ProjectReleaseDeckView: View {
                     Text(session.isReleasing(group) ? L10n.Projects.releasing : L10n.Projects.release)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(Color(red: 0.97, green: 0.44, blue: 0.44))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
                                 .fill(Color.red.opacity(0.10))
                         )
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(session.isReleasing(group))
@@ -329,7 +333,7 @@ struct ProjectReleaseDeckView: View {
                         )
                 )
         )
-        .compositingGroup()
+        // 勿 `.compositingGroup()`：浮层 NSPanel 上会把子 Button 打成不可点。
     }
 
     private var treeBranchMark: some View {
@@ -597,7 +601,6 @@ struct ProjectReleaseDeckView: View {
                                         .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
                                 )
                         )
-                        .compositingGroup()
                     }
                 }
                 Spacer(minLength: 0)
@@ -701,7 +704,6 @@ struct ProjectReleaseDeckView: View {
                         .strokeBorder(Color.white.opacity(0.05), lineWidth: 1)
                 )
         )
-        .compositingGroup()
     }
 
     private var containersToggleButton: some View {

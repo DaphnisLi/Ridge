@@ -6226,6 +6226,721 @@
           }
         }
       }
+    },
+    "ai_usage.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 额度"
+          }
+        }
+      }
+    },
+    "ai_usage.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后台监测 Cursor 额度；触达充裕 / 警戒 / 截流阈值时岛上提示约 3 秒"
+          }
+        }
+      }
+    },
+    "ai_usage.sensing.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "感知总开关"
+          }
+        }
+      }
+    },
+    "ai_usage.sensing.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭则不弹。"
+          }
+        }
+      }
+    },
+    "ai_usage.thresholds.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "三阶触发百分比阈值精准配置"
+          }
+        }
+      }
+    },
+    "ai_usage.thresholds.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "触达充裕 / 警戒 / 截流任一设定值时，灵动岛弹出对应形态胶囊约 3 秒（非常驻页）"
+          }
+        }
+      }
+    },
+    "ai_usage.thresholds.valid": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "层级校验通过"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.abundant": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充裕态参考阈值"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警戒态触发阈值"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截流态触发阈值"
+          }
+        }
+      }
+    },
+    "ai_usage.providers.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地 AI 运行环境与模型多维配额"
+          }
+        }
+      }
+    },
+    "ai_usage.sync": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同步"
+          }
+        }
+      }
+    },
+    "ai_usage.provider.cursor": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor"
+          }
+        }
+      }
+    },
+    "ai_usage.provider.claude": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude"
+          }
+        }
+      }
+    },
+    "ai_usage.provider.codex": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codex"
+          }
+        }
+      }
+    },
+    "ai_usage.provider.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未接入"
+          }
+        }
+      }
+    },
+    "ai_usage.stage.abundant": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充裕"
+          }
+        }
+      }
+    },
+    "ai_usage.stage.warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警戒"
+          }
+        }
+      }
+    },
+    "ai_usage.stage.critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "截流"
+          }
+        }
+      }
+    },
+    "ai_usage.stage.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未知"
+          }
+        }
+      }
+    },
+    "ai_usage.remaining": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剩余"
+          }
+        }
+      }
+    },
+    "ai_usage.window.plan_total": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "套餐内金额度"
+          }
+        }
+      }
+    },
+    "ai_usage.window.plan_auto": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto 额度"
+          }
+        }
+      }
+    },
+    "ai_usage.expanded.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor / 月度订阅与弹性按需"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置时间未知"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.soon": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即将重置"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.today_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日 %@ 重置"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.tomorrow_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明日 %@ 重置"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.at_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 重置"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.in_days_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "余 %d 天"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.in_hours_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "余 %dh"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.in_minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "余 %dm"
+          }
+        }
+      }
+    },
+    "ai_usage.notice.warning_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor 额度剩余 %d%%，已进入警戒"
+          }
+        }
+      }
+    },
+    "ai_usage.notice.critical_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor 额度剩余 %d%%，接近截流"
+          }
+        }
+      }
+    },
+    "ai_usage.error.not_signed_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未检测到 Cursor 登录，请先在 Cursor 中登录"
+          }
+        }
+      }
+    },
+    "ai_usage.error.keychain": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法读取 Cursor 钥匙串，请在系统弹窗中允许 Ridge 访问"
+          }
+        }
+      }
+    },
+    "ai_usage.error.decrypt": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法解密 Cursor 登录态，请更新 Cursor 后重试"
+          }
+        }
+      }
+    },
+    "ai_usage.error.unauthorized": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursor 登录已失效，请重新登录 Cursor"
+          }
+        }
+      }
+    },
+    "ai_usage.error.network": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时无法连接 Cursor 用量服务"
+          }
+        }
+      }
+    },
+    "ai_usage.error.generic": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "读取额度失败"
+          }
+        }
+      }
+    },
+    "ai_usage.plan.trial": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试用"
+          }
+        }
+      }
+    },
+    "ai_usage.plan.free": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费"
+          }
+        }
+      }
+    },
+    "ai_usage.banner.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 额度梯级预警感知提醒"
+          }
+        }
+      }
+    },
+    "ai_usage.sensed_channels_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已感知 %d/%d 核心主力通道"
+          }
+        }
+      }
+    },
+    "ai_usage.thresholds.valid_hierarchy": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "层级校验通过: 充裕 > 警戒 > 截流"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.abundant_stage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充裕态触发阈值 (Stage 01)"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.warning_stage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "警戒态触发阈值 (Stage 02)"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.critical_stage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "危机 / 截流阈值 (Stage 03)"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.range_abundant": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合法范围 50% ~ 80%"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.range_warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合法范围 20% ~ 45%"
+          }
+        }
+      }
+    },
+    "ai_usage.threshold.range_critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合法范围 5% ~ 15%"
+          }
+        }
+      }
+    },
+    "ai_usage.stage.critical_intense": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "严重不足！"
+          }
+        }
+      }
+    },
+    "ai_usage.window.plan_total_cycle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "套餐内金额度（订阅周期）"
+          }
+        }
+      }
+    },
+    "ai_usage.cursor.quota_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅套餐额度有重置 · 按需无重置"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按需已花金额（金额，不是额度，无百分比）"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.no_reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按需无重置"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.settled": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已结算金额"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.billing_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无重置时刻 / 随月度账单结算"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.occupancy_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "限额占用 %.1f%%"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.remaining_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剩余可支配 $%.2f"
+          }
+        }
+      }
+    },
+    "ai_usage.ondemand.soft_limit_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "软限制度 $%.2f"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.soon_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "即将"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.verb": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.remain_hm_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "余 %d:%02d"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.tomorrow_short_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明日 %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

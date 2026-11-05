@@ -226,6 +226,8 @@ enum WidgetSamplePreview {
             mediaSample(compact: compact)
         case "builtin.focusTimer":
             focusTimerSample(compact: compact)
+        case "builtin.aiUsage":
+            aiUsageSample(compact: compact)
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
@@ -266,6 +268,14 @@ enum WidgetSamplePreview {
             .padding(.vertical, compact ? 8 : 12)
             .frame(maxWidth: compact ? .infinity : 540)
             .frame(minHeight: compact ? 44 : 72)
+    }
+
+    private static func aiUsageSample(compact: Bool) -> some View {
+        // 预览壳无 IslandChrome：只补左右内边距，与真岛壳层水平边距一致。
+        AIUsageIslandCardView.previewSample(stage: .warning)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .frame(maxWidth: compact ? .infinity : 540)
+            .frame(minHeight: compact ? 38 : 44)
     }
 
     private static func batterySample(compact: Bool) -> some View {

@@ -2,7 +2,8 @@ import CoreGraphics
 import Foundation
 import SwiftUI
 
-/// 灵动岛壳层统一内边距。小组件只排内部内容，勿再加与岛边之间的外圈间距。
+/// 灵动岛壳层统一内边距。小组件 / 通知卡只排内部内容，**禁止**再加与岛边之间的外圈间距。
+/// 下边距过大的常见原因：内容根视图又写了 `.padding(.vertical)` 或照搬 HTML `py-*`，与 `contentBottom` 叠层。
 enum IslandChrome {
     /// 内容区相对面板左右边。
     static let contentHorizontal: CGFloat = 14
@@ -26,12 +27,13 @@ enum IslandChrome {
     static let compactTipTopInset: CGFloat = 0
     static let compactTipBottom: CGFloat = 4
 
-    /// 「已复制」等短提示：躲开刘海后紧贴下方，底距收紧；左右仍用 `contentHorizontal`。
+    /// 「已复制」/ AI 额度等短提示：躲开刘海后落在正下方。
     static func shortTipTopInset(notchHeight: CGFloat) -> CGFloat {
-        expandedTopInset(notchHeight: notchHeight)
+        max(10, notchHeight)
     }
 
-    static let shortTipBottom: CGFloat = 8
+    /// 短提示底距：略大于左右翼 tip（4），仍明显小于展开页默认 contentBottom（14）。
+    static let shortTipBottom: CGFloat = 6
 }
 
 /// 展开态面板尺寸由内容测量上报；壳层只负责 clamp，不按 layout 写死宽高。

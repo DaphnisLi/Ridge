@@ -449,7 +449,9 @@ private struct WidgetPreviewPane: View {
 
     /// 自带 ScrollView + 贴底「恢复默认」栏的配置页，外层不再包一层滚动。
     private var ownsPinnedRestoreFooter: Bool {
-        widgetID == "builtin.meeting" || widgetID == "builtin.focusTimer"
+        widgetID == "builtin.meeting"
+            || widgetID == "builtin.focusTimer"
+            || widgetID == "builtin.aiUsage"
     }
 
     var body: some View {
@@ -480,6 +482,8 @@ private struct WidgetPreviewPane: View {
             MeetingWidgetConfigSection()
         } else if widgetID == "builtin.focusTimer" {
             FocusTimerWidgetConfigSection()
+        } else if widgetID == "builtin.aiUsage" {
+            AIUsageWidgetConfigSection()
         }
     }
 

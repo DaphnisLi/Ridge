@@ -227,7 +227,8 @@ private struct IslandBody: View {
     }
 
     private var hidesPageDots: Bool {
-        usesNotchWingTip || usesShortBelowNotchTip
+        // 瞬时通知不参与翻页点（含 AI 额度等走普通通知顶距的条）。
+        usesNotchWingTip || usesShortBelowNotchTip || runtime.isTransientNoticePage
     }
 
     var body: some View {

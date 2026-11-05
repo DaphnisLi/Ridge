@@ -174,14 +174,16 @@ final class ClipboardHistoryStore: ObservableObject {
             return
         }
         let text = L10n.Shelf.copiedNotice(for: item)
+        // id 带唯一后缀：每次复制都能触发上岛；`copy.` 前缀仍走短条 chrome / 0.5s。
+        let tipID = "copy.\(item.category.rawValue).\(UUID().uuidString)"
         IslandNoticeCenter.shared.present(
             .clipboardCaptureHint(
-                id: "copy.\(item.category.rawValue)",
+                id: tipID,
                 text: text,
                 symbol: item.category.symbol == "paintpalette" ? "eyedropper" : item.category.symbol
             )
         )
-        AppLog.info("Clipboard", "已投递复制提示", [
+        AppLog.warn("Clipboard", "已投递复制提示", [
             "category": item.category.rawValue,
             "preview": String(item.preview.prefix(32))
         ])

@@ -281,6 +281,181 @@ enum L10n {
         }
     }
 
+    // MARK: - AI Usage（额度监测）
+
+    enum AIUsage {
+        static var widgetName: String { tr("ai_usage.widget.name", "AI 额度") }
+        static var widgetSummary: String {
+            tr(
+                "ai_usage.widget.summary",
+                "后台监测 Cursor 额度；触达充裕 / 警戒 / 截流阈值时岛上提示约 3 秒"
+            )
+        }
+        static var bannerTitle: String {
+            tr("ai_usage.banner.title", "AI 额度梯级预警感知提醒")
+        }
+        static var sensingTitle: String { tr("ai_usage.sensing.title", "感知总开关") }
+        static var sensingSubtitle: String {
+            tr(
+                "ai_usage.sensing.subtitle",
+                "开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭则不弹。"
+            )
+        }
+        static func sensedChannels(_ ready: Int, _ total: Int) -> String {
+            String(
+                format: tr("ai_usage.sensed_channels_format", "已感知 %d/%d 核心主力通道"),
+                ready,
+                total
+            )
+        }
+        static var thresholdsTitle: String {
+            tr("ai_usage.thresholds.title", "三阶触发百分比阈值精准配置")
+        }
+        static var thresholdsSubtitle: String {
+            tr(
+                "ai_usage.thresholds.subtitle",
+                "触达充裕 / 警戒 / 截流任一设定值时，灵动岛弹出对应形态胶囊约 3 秒（非常驻页）"
+            )
+        }
+        static var thresholdsValid: String {
+            tr("ai_usage.thresholds.valid", "层级校验通过")
+        }
+        static var thresholdsValidHierarchy: String {
+            tr("ai_usage.thresholds.valid_hierarchy", "层级校验通过: 充裕 > 警戒 > 截流")
+        }
+        static var thresholdAbundant: String {
+            tr("ai_usage.threshold.abundant", "充裕态参考阈值")
+        }
+        static var thresholdWarning: String {
+            tr("ai_usage.threshold.warning", "警戒态触发阈值")
+        }
+        static var thresholdCritical: String {
+            tr("ai_usage.threshold.critical", "截流态触发阈值")
+        }
+        static var thresholdAbundantStage: String {
+            tr("ai_usage.threshold.abundant_stage", "充裕态触发阈值 (Stage 01)")
+        }
+        static var thresholdWarningStage: String {
+            tr("ai_usage.threshold.warning_stage", "警戒态触发阈值 (Stage 02)")
+        }
+        static var thresholdCriticalStage: String {
+            tr("ai_usage.threshold.critical_stage", "危机 / 截流阈值 (Stage 03)")
+        }
+        static var thresholdRangeAbundant: String {
+            tr("ai_usage.threshold.range_abundant", "合法范围 50% ~ 80%")
+        }
+        static var thresholdRangeWarning: String {
+            tr("ai_usage.threshold.range_warning", "合法范围 20% ~ 45%")
+        }
+        static var thresholdRangeCritical: String {
+            tr("ai_usage.threshold.range_critical", "合法范围 5% ~ 15%")
+        }
+        static var providersTitle: String {
+            tr("ai_usage.providers.title", "本地 AI 运行环境与模型多维配额")
+        }
+        static var syncAction: String { tr("ai_usage.sync", "同步") }
+        static var providerCursor: String { tr("ai_usage.provider.cursor", "Cursor") }
+        static var providerClaude: String { tr("ai_usage.provider.claude", "Claude") }
+        static var providerCodex: String { tr("ai_usage.provider.codex", "Codex") }
+        static var providerUnavailable: String {
+            tr("ai_usage.provider.unavailable", "尚未接入")
+        }
+        static var planTrial: String { tr("ai_usage.plan.trial", "试用") }
+        static var planFree: String { tr("ai_usage.plan.free", "免费") }
+        static var stageAbundant: String { tr("ai_usage.stage.abundant", "充裕") }
+        static var stageWarning: String { tr("ai_usage.stage.warning", "警戒") }
+        static var stageCritical: String { tr("ai_usage.stage.critical", "截流") }
+        static var stageCriticalIntense: String {
+            tr("ai_usage.stage.critical_intense", "严重不足！")
+        }
+        static var stageUnknown: String { tr("ai_usage.stage.unknown", "未知") }
+        static var remainingLabel: String { tr("ai_usage.remaining", "剩余") }
+        static var windowPlanTotal: String {
+            tr("ai_usage.window.plan_total", "套餐内金额度")
+        }
+        static var windowPlanTotalCycle: String {
+            tr("ai_usage.window.plan_total_cycle", "套餐内金额度（订阅周期）")
+        }
+        static var windowPlanAuto: String {
+            tr("ai_usage.window.plan_auto", "Auto 额度")
+        }
+        static var expandedSubtitle: String {
+            tr("ai_usage.expanded.subtitle", "Cursor / 月度订阅与弹性按需")
+        }
+        static var cursorQuotaHint: String {
+            tr("ai_usage.cursor.quota_hint", "仅套餐额度有重置 · 按需无重置")
+        }
+        static var onDemandTitle: String {
+            tr("ai_usage.ondemand.title", "按需已花金额（金额，不是额度，无百分比）")
+        }
+        static var onDemandNoReset: String { tr("ai_usage.ondemand.no_reset", "按需无重置") }
+        static var onDemandSettled: String { tr("ai_usage.ondemand.settled", "已结算金额") }
+        static var onDemandBillingNote: String {
+            tr("ai_usage.ondemand.billing_note", "无重置时刻 / 随月度账单结算")
+        }
+        static func onDemandOccupancy(_ percent: Double) -> String {
+            String(format: tr("ai_usage.ondemand.occupancy_format", "限额占用 %.1f%%"), percent)
+        }
+        static func onDemandRemaining(_ usd: Double) -> String {
+            String(format: tr("ai_usage.ondemand.remaining_format", "剩余可支配 $%.2f"), usd)
+        }
+        static func onDemandSoftLimit(_ usd: Double) -> String {
+            String(format: tr("ai_usage.ondemand.soft_limit_format", "软限制度 $%.2f"), usd)
+        }
+        static var resetUnknown: String { tr("ai_usage.reset.unknown", "重置时间未知") }
+        static var resetSoon: String { tr("ai_usage.reset.soon", "即将重置") }
+        static var resetSoonShort: String { tr("ai_usage.reset.soon_short", "即将") }
+        static var resetVerb: String { tr("ai_usage.reset.verb", "重置") }
+        static var resetRemainHMFormat: String {
+            tr("ai_usage.reset.remain_hm_format", "余 %d:%02d")
+        }
+        static func resetToday(_ time: String) -> String {
+            String(format: tr("ai_usage.reset.today_format", "今日 %@ 重置"), time)
+        }
+        static func resetTomorrow(_ time: String) -> String {
+            String(format: tr("ai_usage.reset.tomorrow_format", "明日 %@ 重置"), time)
+        }
+        static func resetTomorrowShort(_ time: String) -> String {
+            String(format: tr("ai_usage.reset.tomorrow_short_format", "明日 %@"), time)
+        }
+        static func resetAt(_ when: String) -> String {
+            String(format: tr("ai_usage.reset.at_format", "%@ 重置"), when)
+        }
+        static func resetInDays(_ days: Int) -> String {
+            String(format: tr("ai_usage.reset.in_days_format", "余 %d 天"), days)
+        }
+        static func resetInHours(_ hours: Int) -> String {
+            String(format: tr("ai_usage.reset.in_hours_format", "余 %dh"), hours)
+        }
+        static func resetInMinutes(_ minutes: Int) -> String {
+            String(format: tr("ai_usage.reset.in_minutes_format", "余 %dm"), minutes)
+        }
+        static func noticeWarning(_ percent: Int) -> String {
+            String(format: tr("ai_usage.notice.warning_format", "Cursor 额度剩余 %d%%，已进入警戒"), percent)
+        }
+        static func noticeCritical(_ percent: Int) -> String {
+            String(format: tr("ai_usage.notice.critical_format", "Cursor 额度剩余 %d%%，接近截流"), percent)
+        }
+        static var errorNotSignedIn: String {
+            tr("ai_usage.error.not_signed_in", "未检测到 Cursor 登录，请先在 Cursor 中登录")
+        }
+        static var errorKeychain: String {
+            tr("ai_usage.error.keychain", "无法读取 Cursor 钥匙串，请在系统弹窗中允许 Ridge 访问")
+        }
+        static var errorDecrypt: String {
+            tr("ai_usage.error.decrypt", "无法解密 Cursor 登录态，请更新 Cursor 后重试")
+        }
+        static var errorUnauthorized: String {
+            tr("ai_usage.error.unauthorized", "Cursor 登录已失效，请重新登录 Cursor")
+        }
+        static var errorNetwork: String {
+            tr("ai_usage.error.network", "暂时无法连接 Cursor 用量服务")
+        }
+        static var errorGeneric: String {
+            tr("ai_usage.error.generic", "读取额度失败")
+        }
+    }
+
     // MARK: - Media（正在播放）
 
     enum Media {

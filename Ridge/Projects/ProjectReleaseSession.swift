@@ -343,34 +343,61 @@ final class ProjectReleaseSession: ObservableObject {
         return (ok, first)
     }
 
-    /// 演示进程由 `app.daphnis.ridge.demo.<tag>` LaunchAgent 托管；按条目标题解析 tag 后 bootout。
+    /// 演示进程由 `app.daphnis.ridge.demo.*` LaunchAgent（常带 RunAtLoad）托管。
+    /// 只杀进程不够：须 bootout 并删掉 plist，否则登录会再拉起，看起来像「释放点了没反应」。
     nonisolated private static func bootoutDemoAgents(for items: [ProjectRuntimeItem]) {
         let uid = getuid()
-        var labels = Set<String>()
-        for item in items where item.kind == .process {
-            if let tag = demoLaunchTag(fromTitle: item.title) {
-                labels.insert("app.daphnis.ridge.demo.\(tag)")
-            }
-        }
+        let labels = demoLaunchLabels(for: items)
         guard !labels.isEmpty else { return }
+        let agentsDir = (NSHomeDirectory() as NSString).appendingPathComponent("Library/LaunchAgents")
         for label in labels.sorted() {
             let target = "gui/\(uid)/\(label)"
             let result = ProjectShell.run("/bin/launchctl", arguments: ["bootout", target], timeout: 3)
-            AppLog.info("Projects", "尝试 bootout 演示 Agent", [
+            let plist = (agentsDir as NSString).appendingPathComponent("\(label).plist")
+            let hadPlist = FileManager.default.fileExists(atPath: plist)
+            if hadPlist {
+                try? FileManager.default.removeItem(atPath: plist)
+            }
+            AppLog.info("Projects", "已处理演示 LaunchAgent", [
                 "label": label,
-                "code": result.exitCode,
+                "bootout": result.exitCode,
+                "hadPlist": hadPlist,
+                "plistGone": !FileManager.default.fileExists(atPath: plist),
                 "stderr": String(result.stderr.prefix(80))
             ])
         }
     }
 
-    /// `ridge-a-http.py` / `focal-b-http.py` → `ridge-a` / `focal-b`
+    /// `daphnis-a-http.py` → `…demo.daphnis-a`；`.ridge-demo-http.py` → 按工程名 `…demo.daphnis-apps` 等。
+    nonisolated private static func demoLaunchLabels(for items: [ProjectRuntimeItem]) -> Set<String> {
+        var labels = Set<String>()
+        let prefix = "app.daphnis.ridge.demo."
+        for item in items where item.kind == .process {
+            let base = (item.title as NSString).lastPathComponent
+            if base == ".ridge-demo-http.py" || base == "ridge-demo-http.py" {
+                // 根目录演示脚本：标签用工程文件夹名（daphnis-apps / Focal / Ridge）。
+                for name in ["daphnis-apps", "Focal", "Ridge", "focal", "ridge"] {
+                    labels.insert(prefix + name)
+                }
+                continue
+            }
+            if let tag = demoLaunchTag(fromTitle: base) {
+                labels.insert(prefix + tag)
+            }
+        }
+        return labels
+    }
+
+    /// `ridge-a-http.py` / `focal-b-http.py` → `ridge-a` / `focal-b`；排除 `.ridge-demo-http.py`。
     nonisolated private static func demoLaunchTag(fromTitle title: String) -> String? {
         let base = (title as NSString).lastPathComponent
         let suffix = "-http.py"
         guard base.hasSuffix(suffix) else { return nil }
         let tag = String(base.dropLast(suffix.count))
         guard !tag.isEmpty else { return nil }
+        if tag == ".ridge-demo" || tag == "ridge-demo" || tag.hasPrefix(".") {
+            return nil
+        }
         return tag
     }
 

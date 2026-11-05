@@ -33,8 +33,24 @@ alwaysApply: true
 - **仅对当前监视进程**发结束通知；已被替换的监视取消等待，**不**上岛提示。
 - 控制台 Watch 区展示谁，岛上结束提示就对应谁。
 
+## 产品边界（易错）
+
+- **阈值 / 告警类提示**（AI 额度、外设低电、进程结束等）= **仅**本通道瞬时条，默认约 3s。
+- **禁止**再注册一个 `kind: .content` 小组件去「常驻展示同一信息」；设置页可配阈值，岛上只在触阈时 `present`。
+- 设置里的多形态预览是**提示长相样张**，不代表该功能会常驻上岛。
+
+## 边距（下边距反复翻车的根因）
+
+壳层 `IslandBody` 已加 `IslandChrome`（含 `contentBottom` / `compactTipBottom`）。通知卡片根视图：
+
+- **禁止**再写外圈 `.padding(.vertical/…)` / `.padding(.horizontal/…)` 去「离岛边」
+- **禁止**把 HTML 稿的 `px-4 py-2` 原样叠到 SwiftUI 根上（稿面 padding ≠ 岛壳边距）
+- 卡片内部控件间距可以用；根视图只排内容，由 chrome / `usesNotchWingChrome` / `usesShortBelowNotchChrome` 定外距
+
 ## 禁止
 
 - sticky / 假数据预览常驻上岛（验收完即删）
 - 通知页当普通内容页左右滑切换
 - 为「再来一种提示」新建第二个 `systemTransient` widget
+- 为瞬时提示再做常驻 content widget（见上「产品边界」）
+- 通知卡根视图外圈 padding（见上「边距」）
