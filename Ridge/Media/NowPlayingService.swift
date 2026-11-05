@@ -41,6 +41,7 @@ final class NowPlayingService: ObservableObject {
     private let controller = MediaController()
     private var progressTimer: Timer?
     private var restartWork: DispatchWorkItem?
+    private var clearSnapshotWork: DispatchWorkItem?
     private var started = false
     /// 外推进度用的基准（MediaRemote 通知之间用 playbackRate 插值）。
     private var baseElapsed: TimeInterval = 0
@@ -48,6 +49,8 @@ final class NowPlayingService: ObservableObject {
     private var playbackRate: Double = 0
     /// bundle id → 宿主图标，避免曲目频繁刷新时重复查 Workspace。
     private var appIconCache: [String: NSImage] = [:]
+    /// 网易云等打开 App 时会先推曲目再短暂清空；延迟清空以免 UI 闪成「暂无」。
+    private static let clearSnapshotGrace: TimeInterval = 2.5
 
     private init() {
         controller.onTrackInfoReceived = { [weak self] info in
@@ -103,6 +106,8 @@ final class NowPlayingService: ObservableObject {
     func stop() {
         restartWork?.cancel()
         restartWork = nil
+        clearSnapshotWork?.cancel()
+        clearSnapshotWork = nil
         stopProgressTimer()
         controller.stopListening()
         isListening = false
@@ -182,22 +187,19 @@ final class NowPlayingService: ObservableObject {
 
     private func apply(_ info: TrackInfo?) {
         guard let payload = info?.payload else {
-            if snapshot != nil {
-                AppLog.info("Media", "Now Playing 已清空")
-            }
-            snapshot = nil
-            playbackRate = 0
-            nudgeWidget()
+            scheduleClearSnapshot(reason: "nilPayload")
             return
         }
 
         let title = (payload.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else {
-            snapshot = nil
-            playbackRate = 0
-            nudgeWidget()
+            scheduleClearSnapshot(reason: "emptyTitle")
             return
         }
+
+        // 有效曲目：取消待清空，立刻刷新。
+        clearSnapshotWork?.cancel()
+        clearSnapshotWork = nil
 
         let duration = (payload.durationMicros ?? 0) / 1_000_000
         let elapsed = payload.currentElapsedTime
@@ -233,7 +235,8 @@ final class NowPlayingService: ObservableObject {
         snapshot = next
 
         if changedTrack || changedPlay {
-            AppLog.info("Media", "Now Playing 更新", [
+            // warn 落盘，便于排查「在播但不显示」。
+            AppLog.warn("Media", "Now Playing 更新", [
                 "title": String(title.prefix(24)),
                 "playing": playing,
                 "bundle": bundleID ?? "?",
@@ -242,6 +245,31 @@ final class NowPlayingService: ObservableObject {
             ])
         }
         nudgeWidget()
+    }
+
+    /// 延迟清空：打开播放器未点播放时，系统常会先推曲目再推空帧。
+    private func scheduleClearSnapshot(reason: String) {
+        guard snapshot != nil else { return }
+        if clearSnapshotWork != nil {
+            AppLog.debug("Media", "Now Playing 清空已在等待", ["reason": reason])
+            return
+        }
+        AppLog.warn("Media", "Now Playing 收到空帧，延迟清空", [
+            "reason": reason,
+            "keepTitle": String((snapshot?.title ?? "").prefix(24)),
+            "grace": Self.clearSnapshotGrace
+        ])
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.clearSnapshotWork = nil
+            guard self.snapshot != nil else { return }
+            AppLog.warn("Media", "Now Playing 已清空（宽限期结束）", ["reason": reason])
+            self.snapshot = nil
+            self.playbackRate = 0
+            self.nudgeWidget()
+        }
+        clearSnapshotWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.clearSnapshotGrace, execute: work)
     }
 
     private func sanitizedArtwork(_ artwork: NSImage?, appIcon: NSImage?) -> NSImage? {

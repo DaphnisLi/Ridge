@@ -16,6 +16,9 @@ final class MediaNowPlayingWidget: IslandWidget {
         defaultGridSize: .twoByOne
     )
 
+    /// 服务层已有清空宽限；此处再留余量，避免空帧穿透后立刻拆页。
+    private static let withdrawDebounceNanoseconds: UInt64 = 2_800_000_000
+
     private let context: WidgetContext
     private let service = NowPlayingService.shared
 
@@ -27,6 +30,9 @@ final class MediaNowPlayingWidget: IslandWidget {
 
     private var observers: Set<AnyCancellable> = []
     private let model = MediaNowPlayingModel()
+    private var withdrawDebounceTask: Task<Void, Never>?
+    /// 本段曲目会话是否已自动展开过（防重建/闪断后反复 expand 导致收不起来）。
+    private var didAutoExpandForSession = false
 
     init(context: WidgetContext) {
         self.context = context
@@ -79,7 +85,8 @@ final class MediaNowPlayingWidget: IslandWidget {
 
         if let snap, shouldShow {
             model.apply(snap)
-        } else {
+        } else if !wantsDisplay {
+            // 仍在争夺时保留上一帧曲目，勿闪成「暂无正在播放的内容」。
             model.applyEmpty()
         }
 
@@ -95,20 +102,87 @@ final class MediaNowPlayingWidget: IslandWidget {
 
     private func updateDemand(shouldShow: Bool, reason: String) {
         if shouldShow {
-            if !wantsDisplay {
+            withdrawDebounceTask?.cancel()
+            withdrawDebounceTask = nil
+
+            let becameVisible = !wantsDisplay
+            let alreadyDemanding = WidgetRuntime.shared.isDemanding(Self.manifest.id)
+            if becameVisible {
                 wantsDisplay = true
                 requestedAt = Date()
-                AppLog.info("Media", "申请展示（正在播放）", ["reason": reason])
-                Task { @MainActor [weak self] in
-                    guard let self, self.wantsDisplay else { return }
-                    self.context.requestDisplay()
-                    AppLog.debug("Media", "已提交 requestDisplay", ["reason": reason])
-                }
+                AppLog.info("Media", "申请展示（正在播放）", [
+                    "reason": reason,
+                    "alreadyDemanding": alreadyDemanding
+                ])
             }
-        } else if wantsDisplay {
-            wantsDisplay = false
-            context.withdrawDisplay()
-            AppLog.info("Media", "撤回展示", ["reason": reason])
+
+            guard becameVisible else { return }
+
+            Task { @MainActor [weak self] in
+                guard let self, self.wantsDisplay else { return }
+                // 切到音乐页但不改「上次浏览」。
+                WidgetRuntime.shared.revealPage(
+                    Self.manifest.id,
+                    reason: "media:\(reason)",
+                    remember: false
+                )
+                // 仅本段会话首次自动展开；拆掉重建 / 空帧误撤回后再进 → 不再 expand。
+                let shouldExpand = !self.didAutoExpandForSession && !alreadyDemanding
+                if shouldExpand {
+                    self.didAutoExpandForSession = true
+                    IslandController.shared?.expand(reason: "mediaNowPlaying")
+                    self.scheduleAutoCollapseIfNeeded()
+                }
+                AppLog.warn("Media", "媒体页已就绪", [
+                    "reason": reason,
+                    "expand": shouldExpand,
+                    "alreadyDemanding": alreadyDemanding,
+                    "title": String((self.service.snapshot?.title ?? "").prefix(24)),
+                    "bundle": self.service.snapshot?.bundleIdentifier ?? "?",
+                    "active": WidgetRuntime.shared.activeID ?? "nil"
+                ])
+            }
+            return
+        }
+
+        guard wantsDisplay else { return }
+        scheduleDebouncedWithdraw(reason: reason)
+    }
+
+    /// 自动展开后若指针不在岛上，稍后收起，避免点播放后一直挂着。
+    private func scheduleAutoCollapseIfNeeded() {
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 2_400_000_000)
+            guard IslandController.shared?.isHoveringIsland != true else { return }
+            IslandController.shared?.collapse(reason: "mediaAutoCollapse")
+            AppLog.warn("Media", "媒体自动展开后已收起", [
+                "hovering": IslandController.shared?.isHoveringIsland ?? false
+            ])
+        }
+    }
+
+    private func scheduleDebouncedWithdraw(reason: String) {
+        withdrawDebounceTask?.cancel()
+        withdrawDebounceTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: Self.withdrawDebounceNanoseconds)
+            } catch {
+                return
+            }
+            guard let self, !Task.isCancelled else { return }
+            guard self.service.snapshot?.hasTrack != true else {
+                AppLog.debug("Media", "撤回已取消：曲目已恢复", ["reason": reason])
+                return
+            }
+            self.wantsDisplay = false
+            self.didAutoExpandForSession = false
+            self.model.applyEmpty()
+            self.context.withdrawDisplay()
+            // 自动展开后曲目没了：指针不在岛上则收起，避免空挂在计时页。
+            if IslandController.shared?.isHoveringIsland != true {
+                IslandController.shared?.collapse(reason: "mediaWithdraw")
+            }
+            AppLog.warn("Media", "已撤回媒体展示（防抖后仍无曲目）", ["reason": reason])
         }
     }
 }

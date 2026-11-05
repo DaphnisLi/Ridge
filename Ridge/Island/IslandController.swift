@@ -367,6 +367,10 @@ final class IslandController: NSObject {
                 applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
                 updateInteractiveFrame(expanded: true)
                 ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
+            } else {
+                // 媒体等已展开时仍刷新可点区（切页后画布变了）。
+                updateInteractiveFrame(expanded: true)
+                ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
             }
             return
         }
@@ -375,10 +379,11 @@ final class IslandController: NSObject {
             "expanded": true,
             "settingsSession": isSettingsSessionActive,
             "settingsPreview": isSettingsLivePreview,
-            "prevKey": Self.describeKeyWindow()
+            "prevKey": Self.describeKeyWindow(),
+            "active": WidgetRuntime.shared.activeID ?? "nil"
         ])
         viewModel.expand()
-        // 番茄页：先写入态对应面板，避免可点区停在刘海 30pt（日志里 expand 后 h=30 导致点不了）。
+        // 仅当前页是番茄时写入番茄画布；媒体展开勿套番茄尺寸。
         applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
         // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
         updateInteractiveFrame(expanded: true)
@@ -510,6 +515,10 @@ final class IslandController: NSObject {
         updateInteractiveFrame(expanded: false)
         stopScrollPagingMonitors()
         scrollAccumX = 0
+        // 媒体自动抢页不写「上次浏览」；收岛后拨回用户手势停留页，下次悬停仍进该页。
+        if reason != "settingsPreviewEnd" {
+            WidgetRuntime.shared.restoreRememberedBrowseAfterCollapse(reason: reason)
+        }
         if window.isKeyWindow {
             window.resignKey()
             AppLog.debug("Island", "收起后 resignKey", ["key": Self.describeKeyWindow()])

@@ -64,7 +64,8 @@ final class WidgetRuntime: ObservableObject {
     }
 
     private func shouldRestoreRememberedPage(reason: String) -> Bool {
-        reason == "start" || reason == "withdraw"
+        // 仅冷启动 / 瞬时通知撤回后恢复。内容型（媒体）撤回不得在岛仍展开时把页拨去计时。
+        reason == "start" || reason == "withdrawTransient"
     }
 
     func start() {
@@ -115,24 +116,53 @@ final class WidgetRuntime: ObservableObject {
         guard let kind = registry.manifest(for: id)?.kind,
               kind == .content || kind == .systemTransient
         else { return }
-        if demandTimestamps[id] == nil {
+        let isNewDemand = demandTimestamps[id] == nil
+        if isNewDemand {
             demandTimestamps[id] = Date()
             AppLog.info("Widget", "申请展示", ["id": id, "kind": kind.rawValue])
         }
-        // 瞬时通知抢到当前页，避免被控制台/其它内容页挡住。
+        // 瞬时通知始终抢页。
+        // 内容型首次争夺才切页；若媒体正在占页，专注计时等重建不得把页抢走。
         if kind == .systemTransient {
             browseOverrideID = id
+            AppLog.info("Widget", "申请展示已切页", [
+                "id": id,
+                "kind": kind.rawValue,
+                "new": isNewDemand
+            ])
+        } else if isNewDemand {
+            let mediaID = "builtin.media"
+            let mediaHoldingPage = demandTimestamps[mediaID] != nil
+                && (browseOverrideID == mediaID || activeID == mediaID)
+            if mediaHoldingPage, id != mediaID {
+                AppLog.info("Widget", "申请展示未切页：媒体正在展示", [
+                    "id": id,
+                    "active": activeID ?? "nil"
+                ])
+            } else {
+                browseOverrideID = id
+                AppLog.info("Widget", "申请展示已切页", [
+                    "id": id,
+                    "kind": kind.rawValue,
+                    "new": isNewDemand
+                ])
+            }
         }
         recompute(reason: "request")
     }
 
     func withdrawDisplay(_ id: WidgetID) {
         guard demandTimestamps.removeValue(forKey: id) != nil else { return }
-        AppLog.info("Widget", "撤回展示", ["id": id])
+        let wasTransient = registry.manifest(for: id)?.kind == .systemTransient
+        AppLog.info("Widget", "撤回展示", [
+            "id": id,
+            "transient": wasTransient
+        ])
         if browseOverrideID == id {
             browseOverrideID = nil
         }
-        recompute(reason: "withdraw")
+        // 瞬时通知撤回才恢复上次浏览页；媒体撤回若仍展开，避免立刻跳到专注计时。
+        recompute(reason: wasTransient ? "withdrawTransient" : "withdrawContent")
     }
 
     func isDemanding(_ id: WidgetID) -> Bool {
@@ -286,9 +316,9 @@ final class WidgetRuntime: ObservableObject {
         recompute(reason: "settingsFocus")
     }
 
-    /// 强制切到指定内容页（番茄终局命名等）。
-    /// 即使用户正停在其它页，也要抢回该页以便输入。
-    func revealPage(_ id: WidgetID, reason: String) {
+    /// 强制切到指定内容页（番茄终局命名、媒体出曲等）。
+    /// - Parameter remember: 是否写入「上次浏览页」。媒体自动抢页应传 `false`，避免覆盖用户手势记忆。
+    func revealPage(_ id: WidgetID, reason: String, remember: Bool = true) {
         guard registry.manifest(for: id)?.kind == .content else { return }
         guard settings.isEnabled(id) else {
             AppLog.warn("Widget", "强制切页跳过：未启用", ["id": id, "reason": reason])
@@ -300,14 +330,30 @@ final class WidgetRuntime: ObservableObject {
         }
         let already = browseOverrideID == id || activeID == id
         browseOverrideID = id
-        rememberBrowsePage(id)
+        if remember {
+            rememberBrowsePage(id)
+        }
         recompute(reason: "reveal:\(reason)")
         AppLog.info("Widget", "强制切页", [
             "id": id,
             "reason": reason,
+            "remember": remember,
             "already": already,
             "index": pageIndex,
             "pages": pageIDs.count
+        ])
+    }
+
+    /// 收岛后把当前页拨回用户上次手势停留的页，供下次悬停展开。
+    func restoreRememberedBrowseAfterCollapse(reason: String) {
+        guard let remembered = rememberedBrowsePageID() else { return }
+        if browseOverrideID == remembered, activeID == remembered { return }
+        browseOverrideID = remembered
+        recompute(reason: "collapseRestore:\(reason)")
+        AppLog.info("Widget", "收起后恢复上次浏览页", [
+            "id": remembered,
+            "reason": reason,
+            "active": activeID ?? "nil"
         ])
     }
 
