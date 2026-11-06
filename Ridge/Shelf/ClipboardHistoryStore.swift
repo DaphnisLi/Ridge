@@ -10,10 +10,12 @@ final class ClipboardHistoryStore: ObservableObject {
     static let shared = ClipboardHistoryStore()
 
     static let maxItems = 60
-    /// 预览缩略图最长边；写回剪贴板始终用原始 pngData。
-    private static let previewMaxEdge: CGFloat = 512
-    /// 单条图片落盘上限（字节），避免内存爆。
-    private static let maxImageBytes = 12 * 1024 * 1024
+    /// 列表/岛上缩略图最长边（界面只显示约 16pt，过大只会卡主线程解码）。
+    private static let previewMaxEdge: CGFloat = 96
+    /// 写回剪贴板用的全图最长边上限。
+    private static let fullMaxEdge: CGFloat = 1600
+    /// 单条图片上限（字节），避免内存爆。
+    private static let maxImageBytes = 4 * 1024 * 1024
 
     @Published private(set) var items: [ClipboardHistoryItem] = []
     @Published private(set) var isMonitoring = false
@@ -21,7 +23,13 @@ final class ClipboardHistoryStore: ObservableObject {
     private var timer: Timer?
     private var lastChangeCount: Int = -1
     private var started = false
-    private init() {}
+    /// 解码后的预览图缓存：滑动列表时禁止反复 `NSImage(data:)` 堵主线程。
+    private let previewImageCache = NSCache<NSString, NSImage>()
+
+    private init() {
+        previewImageCache.countLimit = Self.maxItems
+        previewImageCache.totalCostLimit = 8 * 1024 * 1024
+    }
 
     func start() {
         guard !started else { return }
@@ -29,13 +37,30 @@ final class ClipboardHistoryStore: ObservableObject {
         lastChangeCount = NSPasteboard.general.changeCount
         isMonitoring = true
         let timer = Timer(timeInterval: 0.45, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 self?.poll()
             }
         }
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
         AppLog.info("Clipboard", "剪贴板监听已启动", ["changeCount": lastChangeCount])
+    }
+
+    /// 货架列表用：命中缓存则零解码。
+    func cachedPreviewImage(for item: ClipboardHistoryItem) -> NSImage? {
+        let bytes: ClipboardImageBytes?
+        switch item.payload {
+        case .image(let b), .screenshot(let b): bytes = b
+        default: return nil
+        }
+        guard let bytes else { return nil }
+        let key = item.fingerprint as NSString
+        if let cached = previewImageCache.object(forKey: key) {
+            return cached
+        }
+        guard let image = NSImage(data: bytes.previewPNG) else { return nil }
+        previewImageCache.setObject(image, forKey: key, cost: bytes.previewPNG.count)
+        return image
     }
 
     func stop() {
@@ -110,6 +135,9 @@ final class ClipboardHistoryStore: ObservableObject {
     }
 
     func remove(id: UUID) {
+        if let item = items.first(where: { $0.id == id }) {
+            previewImageCache.removeObject(forKey: item.fingerprint as NSString)
+        }
         items.removeAll { $0.id == id }
         AppLog.debug("Clipboard", "已删除历史条目", ["total": items.count])
     }
@@ -118,6 +146,10 @@ final class ClipboardHistoryStore: ObservableObject {
         let pinned = items.filter(\.isPinned)
         guard items.count > pinned.count else { return }
         let removed = items.count - pinned.count
+        let removedFingerprints = Set(items.filter { !$0.isPinned }.map(\.fingerprint))
+        for fp in removedFingerprints {
+            previewImageCache.removeObject(forKey: fp as NSString)
+        }
         items = pinned
         resort()
         AppLog.info("Clipboard", "剪贴板历史已清空（保留置顶）", [
@@ -154,12 +186,27 @@ final class ClipboardHistoryStore: ObservableObject {
         let insertAt = items.firstIndex(where: { !$0.isPinned }) ?? items.count
         items.insert(captured, at: insertAt)
         trimToMaxItems()
+        let imageBytes = items.reduce(0) { partial, item in
+            switch item.payload {
+            case .image(let b), .screenshot(let b):
+                return partial + b.fullPNG.count + b.previewPNG.count
+            default:
+                return partial
+            }
+        }
         AppLog.info("Clipboard", "已记录剪贴板", [
             "category": captured.category.rawValue,
             "total": items.count,
             "insertAt": insertAt,
-            "changeCount": count
+            "changeCount": count,
+            "imageBytesMB": String(format: "%.1f", Double(imageBytes) / 1_048_576)
         ])
+        if imageBytes > 64 * 1024 * 1024 {
+            AppLog.warn("Clipboard", "剪贴板图片占用偏高", [
+                "imageBytesMB": String(format: "%.1f", Double(imageBytes) / 1_048_576),
+                "total": items.count
+            ])
+        }
         presentCopiedNotice(for: captured)
     }
 
@@ -185,7 +232,7 @@ final class ClipboardHistoryStore: ObservableObject {
         )
         AppLog.warn("Clipboard", "已投递复制提示", [
             "category": item.category.rawValue,
-            "preview": String(item.preview.prefix(32))
+            "previewChars": item.preview.count
         ])
     }
 
@@ -407,9 +454,9 @@ final class ClipboardHistoryStore: ObservableObject {
             return nil
         }
 
-        // 超大图压最长边，仍用 ImageIO。
-        if fullPNG.count > 2 * 1024 * 1024,
-           let smaller = imageIOThumbnailPNG(fullPNG, maxPixel: 2048) {
+        // 全图统一压边，避免货架囤积原图把进程内存顶到 GB 级。
+        if let smaller = imageIOThumbnailPNG(fullPNG, maxPixel: Int(fullMaxEdge)),
+           smaller.count < fullPNG.count {
             fullPNG = smaller
         }
 

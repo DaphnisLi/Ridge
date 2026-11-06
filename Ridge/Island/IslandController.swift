@@ -536,8 +536,9 @@ final class IslandController: NSObject {
 
     private func startHoverPolling() {
         stopHoverPolling()
-        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+        // 已在主 RunLoop：直接回调，禁止每帧 `Task { @MainActor }`（长跑会堆满调度线程）。
+        let timer = Timer(timeInterval: 1.0 / 20.0, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
                 self?.pollPointer()
             }
         }

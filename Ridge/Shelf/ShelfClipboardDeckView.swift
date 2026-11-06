@@ -468,11 +468,11 @@ struct ShelfClipboardDeckView: View {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.22), lineWidth: 1)
                 )
-        case .image(let bytes), .screenshot(let bytes):
-            if let image = NSImage(data: bytes.previewPNG) {
+        case .image, .screenshot:
+            if let image = clipboard.cachedPreviewImage(for: item) {
                 Image(nsImage: image)
                     .resizable()
-                    .interpolation(.high)
+                    .interpolation(.medium)
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 16, height: 16)
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
