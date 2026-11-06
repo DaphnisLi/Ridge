@@ -2,7 +2,7 @@ import Combine
 import CoreAudio
 import Foundation
 
-/// 外设电量会话：合并 IOBluetooth / IOHID / BLE / system_profiler，驱动控制台与告警。
+/// 外设电量会话：合并 IOBluetooth / IOHID / BLE / Continuity / system_profiler，驱动控制台与告警。
 @MainActor
 final class BatterySession: ObservableObject {
     static let shared = BatterySession()
@@ -45,16 +45,29 @@ final class BatterySession: ObservableObject {
     }
 
     func refresh(reason: String) {
+        // Continuity / BLE 回调在 profiler 异步窗口内也必须立刻合并，否则会丢 iPhone 读数。
+        if reason == "bleUpdate" || reason == "continuityBLE" {
+            applyMerged(
+                bluetooth: BatteryBluetoothProbe.connectedDevices(),
+                hid: BatteryHIDProbe.connectedDevices(),
+                profiler: BatterySystemProfilerProbe.connectedDevices(force: false),
+                bleLevels: BatteryCoreBluetoothMonitor.shared.levelsByName,
+                continuity: BatteryCoreBluetoothMonitor.shared.continuityDevices,
+                threshold: settings.lowThresholdPercent,
+                reason: reason
+            )
+            return
+        }
+
         guard !isRefreshing else { return }
         isRefreshing = true
 
-        if reason != "bleUpdate" {
-            BatteryCoreBluetoothMonitor.shared.requestRefresh(reason: reason)
-        }
+        BatteryCoreBluetoothMonitor.shared.requestRefresh(reason: reason)
 
         let bluetooth = BatteryBluetoothProbe.connectedDevices()
         let hid = BatteryHIDProbe.connectedDevices()
         let bleLevels = BatteryCoreBluetoothMonitor.shared.levelsByName
+        let continuity = BatteryCoreBluetoothMonitor.shared.continuityDevices
         let threshold = settings.lowThresholdPercent
         let forceProfiler = reason == "start"
             || reason == "tick"
@@ -69,6 +82,7 @@ final class BatterySession: ObservableObject {
             hid: hid,
             profiler: cachedProfiler,
             bleLevels: bleLevels,
+            continuity: continuity,
             threshold: threshold,
             reason: reason
         )
@@ -91,6 +105,7 @@ final class BatterySession: ObservableObject {
                     hid: BatteryHIDProbe.connectedDevices(),
                     profiler: profiler,
                     bleLevels: BatteryCoreBluetoothMonitor.shared.levelsByName,
+                    continuity: BatteryCoreBluetoothMonitor.shared.continuityDevices,
                     threshold: threshold,
                     reason: reason + "+profiler"
                 )
@@ -103,6 +118,7 @@ final class BatterySession: ObservableObject {
         hid: [BatteryHIDProbe.Snapshot],
         profiler: [BatterySystemProfilerProbe.Snapshot],
         bleLevels: [String: Int],
+        continuity: [BatteryCoreBluetoothMonitor.ContinuitySnapshot],
         threshold: Int,
         reason: String
     ) {
@@ -111,6 +127,7 @@ final class BatterySession: ObservableObject {
             hid: hid,
             profiler: profiler,
             bleLevels: bleLevels,
+            continuity: continuity,
             threshold: threshold
         )
         if mapped != devices {
@@ -120,6 +137,7 @@ final class BatterySession: ObservableObject {
                 "count": mapped.count,
                 "withBattery": mapped.filter(\.hasBatteryReading).count,
                 "withListening": mapped.filter { $0.listeningMode != nil }.count,
+                "continuity": continuity.count,
                 "names": mapped.map(\.name).joined(separator: ",")
             ])
         }
@@ -132,6 +150,7 @@ final class BatterySession: ObservableObject {
         hid: [BatteryHIDProbe.Snapshot],
         profiler: [BatterySystemProfilerProbe.Snapshot],
         bleLevels: [String: Int],
+        continuity: [BatteryCoreBluetoothMonitor.ContinuitySnapshot],
         threshold: Int
     ) -> [BatteryDevice] {
         var byAddress: [String: BatteryDevice] = [:]
@@ -166,6 +185,13 @@ final class BatterySession: ObservableObject {
                         hasSplitBuds: mergedLeft != nil || mergedRight != nil
                     )
             }
+            // Continuity 手机/平板/手表优先保留明确 kind，避免被 .other 覆盖。
+            if let existingKind = existing?.kind,
+               mergedKind == .other,
+               existingKind == .phone || existingKind == .tablet || existingKind == .watch
+            {
+                mergedKind = existingKind
+            }
             let low = mergedPercent.map { !charging && $0 <= threshold } ?? false
             let device = BatteryDevice(
                 id: existing?.id ?? id,
@@ -180,7 +206,7 @@ final class BatterySession: ObservableObject {
                 listeningMode: mergedListening,
                 subtitle: subtitle(
                     percent: mergedPercent,
-                    charging: charging,
+                    charging: charging || (existing?.isCharging ?? false),
                     low: low,
                     listeningMode: mergedListening
                 )
@@ -246,7 +272,35 @@ final class BatterySession: ObservableObject {
             }
         }
 
-        // 4) BLE Battery Service 按名回填
+        // 4) Continuity BLE：近场 iPhone / iPad / Watch（经典蓝牙常显示未连接）。
+        for snap in continuity {
+            let nameKey = normalizeName(snap.name)
+            if let existingID = byName[nameKey] {
+                upsert(
+                    id: existingID,
+                    name: snap.name,
+                    kind: snap.kind,
+                    percent: snap.percent,
+                    charging: snap.isCharging,
+                    left: nil,
+                    right: nil,
+                    casePct: nil
+                )
+            } else {
+                upsert(
+                    id: snap.id,
+                    name: snap.name,
+                    kind: snap.kind,
+                    percent: snap.percent,
+                    charging: snap.isCharging,
+                    left: nil,
+                    right: nil,
+                    casePct: nil
+                )
+            }
+        }
+
+        // 5) BLE Battery Service 按名回填
         for (nameKey, percent) in bleLevels {
             if let id = byName[nameKey], var device = byAddress[id] {
                 if device.percent == nil {

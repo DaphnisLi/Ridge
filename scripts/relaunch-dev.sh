@@ -80,6 +80,15 @@ if [[ -d "${BUILT_APP}/Contents/Frameworks" ]]; then
   done < <(find "${BUILT_APP}/Contents/Frameworks" -type f -print0 2>/dev/null)
 fi
 
+# actool 偶发打出残缺 AppIcon.icns（缺大尺寸），Dock / Finder 仍显示旧占位图。
+# 用 design/AppIcon.icns（iconutil 全尺寸）覆盖后再签。
+FULL_ICNS="${ROOT}/design/AppIcon.icns"
+if [[ -f "${FULL_ICNS}" ]]; then
+  echo "==> Injecting full AppIcon.icns ($(wc -c < "${FULL_ICNS}" | tr -d ' ') bytes)"
+  mkdir -p "${BUILT_APP}/Contents/Resources"
+  cp "${FULL_ICNS}" "${BUILT_APP}/Contents/Resources/AppIcon.icns"
+fi
+
 # Automatic 签名会把 calendars 等 entitlement 剥掉，导致授权弹窗无反应；构建后用完整 entitlements 再签一次。
 echo "==> Re-signing with full entitlements"
 if ! grep -q 'personal-information.calendars' "${ENTITLEMENTS}"; then
@@ -147,6 +156,12 @@ pkill -9 -f "MediaRemoteAdapter_MediaRemoteAdapter.bundle/.*/run.pl" 2>/dev/null
 echo "==> Installing to ${INSTALL_APP}"
 mkdir -p "$(dirname "${INSTALL_APP}")"
 ditto "${BUILT_APP}" "${INSTALL_APP}"
+
+# 刷掉系统图标缓存，否则 Dock / Finder 仍可能显示旧 App Icon。
+touch "${INSTALL_APP}" "${INSTALL_APP}/Contents/Info.plist" || true
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "${INSTALL_APP}" >/dev/null 2>&1 || true
+rm -rf "${HOME}/Library/Caches/com.apple.iconservices.store" "${HOME}/Library/Caches/com.apple.iconservices" 2>/dev/null || true
+killall Dock >/dev/null 2>&1 || true
 
 echo "==> Opening ${INSTALL_APP}"
 open "${INSTALL_APP}"

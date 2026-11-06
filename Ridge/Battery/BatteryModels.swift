@@ -7,6 +7,9 @@ enum BatteryDeviceKind: String, Equatable, Hashable, Codable {
     case headphones
     case headset
     case gamepad
+    case phone
+    case tablet
+    case watch
     case other
 
     var systemSymbol: String {
@@ -17,6 +20,9 @@ enum BatteryDeviceKind: String, Equatable, Hashable, Codable {
         case .headphones: return "headphones"
         case .headset: return "headset"
         case .gamepad: return "gamecontroller"
+        case .phone: return "iphone"
+        case .tablet: return "ipad"
+        case .watch: return "applewatch"
         case .other: return "battery.100"
         }
     }

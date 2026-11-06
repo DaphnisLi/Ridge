@@ -1207,7 +1207,7 @@ enum L10n {
         static var bluetoothAlwaysUsage: String {
             tr(
                 "NSBluetoothAlwaysUsageDescription",
-                "Ridge 需要蓝牙权限以读取已连接耳机等设备的电量，并在控制台混音台中显示。"
+                "Ridge 需要蓝牙权限以读取附近 iPhone / iPad、已连接耳机与键鼠等设备的电量，并在控制台中显示。"
             )
         }
     }
@@ -1217,7 +1217,10 @@ enum L10n {
     enum Battery {
         static var emptyTitle: String { tr("battery.empty.title", "暂无外设电量") }
         static var emptyHint: String {
-            tr("battery.empty.hint", "连接带电量报告的蓝牙键盘、鼠标或耳机后将显示在此")
+            tr(
+                "battery.empty.hint",
+                "附近的 iPhone / iPad，或已连接的蓝牙键盘、鼠标、耳机将显示在此"
+            )
         }
         static var statusCharging: String { tr("battery.status.charging", "充电中") }
         static var statusCritical: String { tr("battery.status.critical", "电量过低") }

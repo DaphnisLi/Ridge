@@ -40,7 +40,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ridge 需要蓝牙权限以读取已连接耳机等设备的电量，并在控制台混音台中显示。"
+            "value": "Ridge 需要蓝牙权限以读取附近 iPhone / iPad、已连接耳机与键鼠等设备的电量，并在控制台中显示。"
           }
         }
       }

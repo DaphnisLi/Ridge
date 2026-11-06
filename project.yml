@@ -31,7 +31,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.daphnis.Ridge
         PRODUCT_NAME: Ridge
         MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
+        CURRENT_PROJECT_VERSION: "2"
         INFOPLIST_FILE: Ridge/Info.plist
         GENERATE_INFOPLIST_FILE: false
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"

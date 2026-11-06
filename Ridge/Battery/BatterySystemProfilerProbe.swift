@@ -116,6 +116,9 @@ enum BatterySystemProfilerProbe {
 
     private static func classify(name: String, minorType: String, hasSplitBuds: Bool) -> BatteryDeviceKind {
         let minor = minorType.lowercased()
+        if minor.contains("phone") || minor.contains("smartphone") { return .phone }
+        if minor.contains("tablet") || minor.contains("ipad") { return .tablet }
+        if minor.contains("watch") { return .watch }
         if hasSplitBuds || minor.contains("headphone") { return .headphones }
         if minor.contains("headset") { return .headset }
         if minor.contains("keyboard") { return .keyboard }

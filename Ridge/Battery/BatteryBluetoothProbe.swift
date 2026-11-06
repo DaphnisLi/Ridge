@@ -81,6 +81,15 @@ enum BatteryBluetoothProbe {
 
     static func classifyPublic(name: String, hasSplitBuds: Bool) -> BatteryDeviceKind {
         let hay = name.lowercased()
+        if hay.contains("iphone") || hay.contains("手机") {
+            return .phone
+        }
+        if hay.contains("ipad") {
+            return .tablet
+        }
+        if hay.contains("watch") || hay.contains("手表") {
+            return .watch
+        }
         if hasSplitBuds
             || hay.contains("airpods")
             || hay.contains("buds")

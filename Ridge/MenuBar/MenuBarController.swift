@@ -24,13 +24,22 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     func start(island: IslandController) {
         Self.shared = self
         self.island = island
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // squareLength 比 variableLength 更易点；图标裁切后约 22pt，避免「芝麻粒」。
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = item.button {
-            button.image = NSImage(
-                systemSymbolName: "rectangle.topthird.inset.filled",
-                accessibilityDescription: "Ridge"
-            )
-            button.image?.isTemplate = true
+            // 菜单栏专用线稿（MenuBarIcon），与程序坞彩色 AppIcon 分开；template 随系统外观着色。
+            let fromAsset = NSImage(named: "MenuBarIcon")
+            let icon = fromAsset
+                ?? NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: nil)
+            icon?.size = NSSize(width: 22, height: 22)
+            icon?.isTemplate = true
+            button.image = icon
+            button.imagePosition = .imageOnly
+            button.toolTip = "Ridge"
+            AppLog.info("Overlay", "菜单栏图标已设置", [
+                "asset": fromAsset != nil ? "MenuBarIcon" : "sf.symbol.fallback",
+                "pointSize": 22
+            ])
         }
         item.menu = buildMenu()
         statusItem = item
