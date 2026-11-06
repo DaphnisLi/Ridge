@@ -11,6 +11,7 @@
 		016DBE5E423131DB6F2C608E /* AIUsageSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 993E54A3ABD03C4EE34B1A3C /* AIUsageSession.swift */; };
 		06D9881C8149C1F7395BAB29 /* IslandPanelShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */; };
 		07C3537DC59E89A52F22B961 /* SoundProcessMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */; };
+		089B80CDF812C21F5E851F43 /* IslandExpandedPanelPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */; };
 		0A5B9B60AA7D728483C7BB2E /* IslandTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85DB713B5E38759909A00339 /* IslandTheme.swift */; };
 		0CC9D4C674F88D02017216DF /* ResourceMonitorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */; };
 		0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE07D38BD81E9B818E5ADA17 /* CursorSafeStorage.swift */; };
@@ -30,6 +31,7 @@
 		2D0ACB6972E7E69F1F96A9B2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C0C31143233D22C2EF32D30 /* IOKit.framework */; };
 		3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */; };
 		31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */; };
+		33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */; };
 		383E5DAC9149BC38CF6A1B61 /* ShelfCaptureTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */; };
 		3936513DBBA9C04D204678B8 /* ProjectReleaseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */; };
 		396CF5315110559E027779D1 /* ShelfClipboardSearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3692E5FD3DAF12863120F4 /* ShelfClipboardSearchField.swift */; };
@@ -132,6 +134,16 @@
 		FE62A60B69C3177462605788 /* AIUsageSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D424EF6227B7F050BF3D294 /* AIUsageSettingsPane.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FBA93C3DDCE63C66FCFE0BC1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AC7F8B4873B88D544E6DE30D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 458940C74A365AC06EC4A270;
+			remoteInfo = Ridge;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		C3CE91F3A0DBE11C96E8A7CB /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -188,10 +200,12 @@
 		54E6ABB9A1D52944282FBA09 /* AIUsageWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageWidget.swift; sourceTree = "<group>"; };
 		5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetContextImpl.swift; sourceTree = "<group>"; };
 		57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicy.swift; sourceTree = "<group>"; };
 		5894114050B192E21DBC168B /* IslandContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandContentView.swift; sourceTree = "<group>"; };
 		5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
 		5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandNoticeWidget.swift; sourceTree = "<group>"; };
+		60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicyTests.swift; sourceTree = "<group>"; };
 		6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSession.swift; sourceTree = "<group>"; };
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
@@ -238,6 +252,7 @@
 		B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceSystemMetrics.swift; sourceTree = "<group>"; };
 		B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfClipboardDeckView.swift; sourceTree = "<group>"; };
 		B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaNowPlayingWidget.swift; sourceTree = "<group>"; };
+		B7BEF1DC686BCD1E1373EA7C /* RidgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RidgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerTitleBackfillCard.swift; sourceTree = "<group>"; };
 		BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSession.swift; sourceTree = "<group>"; };
 		BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAudioProperty.swift; sourceTree = "<group>"; };
@@ -361,6 +376,7 @@
 				AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */,
 				5894114050B192E21DBC168B /* IslandContentView.swift */,
 				1073E52F82BA9EE649BA7890 /* IslandController.swift */,
+				585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */,
 				41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */,
 				D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */,
 				3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */,
@@ -425,10 +441,19 @@
 			path = Sound;
 			sourceTree = "<group>";
 		};
+		666488D98D3FE080D58450C3 /* RidgeTests */ = {
+			isa = PBXGroup;
+			children = (
+				60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */,
+			);
+			path = RidgeTests;
+			sourceTree = "<group>";
+		};
 		7AA9E0DE363D2BCF020D2CA7 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				07EC22739F9DB8CD07D03E0B /* Ridge.app */,
+				B7BEF1DC686BCD1E1373EA7C /* RidgeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -437,6 +462,7 @@
 			isa = PBXGroup;
 			children = (
 				42ECF1E5ECA14FF6C2D5FEEC /* Ridge */,
+				666488D98D3FE080D58450C3 /* RidgeTests */,
 				C4EFD7B62BC8F11B3944E856 /* Frameworks */,
 				7AA9E0DE363D2BCF020D2CA7 /* Products */,
 			);
@@ -606,6 +632,24 @@
 			productReference = 07EC22739F9DB8CD07D03E0B /* Ridge.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C9225C414294FBFC9DCA8B3B /* RidgeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5BB1939DD2C99FE4891F0781 /* Build configuration list for PBXNativeTarget "RidgeTests" */;
+			buildPhases = (
+				38BFDBEF6E88DD9E0CCAEF17 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C04195E9D5D249F8181BEA53 /* PBXTargetDependency */,
+			);
+			name = RidgeTests;
+			packageProductDependencies = (
+			);
+			productName = RidgeTests;
+			productReference = B7BEF1DC686BCD1E1373EA7C /* RidgeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -616,6 +660,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					458940C74A365AC06EC4A270 = {
+						DevelopmentTeam = 444ULG6V8C;
+						ProvisioningStyle = Automatic;
+					};
+					C9225C414294FBFC9DCA8B3B = {
 						DevelopmentTeam = 444ULG6V8C;
 						ProvisioningStyle = Automatic;
 					};
@@ -639,6 +687,7 @@
 			projectRoot = "";
 			targets = (
 				458940C74A365AC06EC4A270 /* Ridge */,
+				C9225C414294FBFC9DCA8B3B /* RidgeTests */,
 			);
 		};
 /* End PBXProject section */
@@ -703,6 +752,7 @@
 				3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */,
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
+				089B80CDF812C21F5E851F43 /* IslandExpandedPanelPolicy.swift in Sources */,
 				7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */,
 				E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */,
 				F57A8E3B6E53EEEF4BE83B6E /* IslandNoticeWidget.swift in Sources */,
@@ -779,9 +829,65 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		38BFDBEF6E88DD9E0CCAEF17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		C04195E9D5D249F8181BEA53 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 458940C74A365AC06EC4A270 /* Ridge */;
+			targetProxy = FBA93C3DDCE63C66FCFE0BC1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		4117B9E11D9CAAAEBEFFB622 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 444ULG6V8C;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.daphnis.RidgeTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ridge.app/Contents/MacOS/Ridge";
+			};
+			name = Debug;
+		};
+		4FD17BD754F6E03DFF2EF549 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 444ULG6V8C;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.daphnis.RidgeTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Ridge.app/Contents/MacOS/Ridge";
+			};
+			name = Release;
+		};
 		B4F573876CB6740E3B61CDEE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -959,6 +1065,15 @@
 			buildConfigurations = (
 				D0C172408EE786C03E0A2F4E /* Debug */,
 				BC00BF8895A6845C4B005ED2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5BB1939DD2C99FE4891F0781 /* Build configuration list for PBXNativeTarget "RidgeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4117B9E11D9CAAAEBEFFB622 /* Debug */,
+				4FD17BD754F6E03DFF2EF549 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

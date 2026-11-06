@@ -55,3 +55,28 @@ targets:
       properties:
         com.apple.security.get-task-allow: true
         com.apple.security.personal-information.calendars: true
+  RidgeTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: RidgeTests
+    dependencies:
+      - target: Ridge
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.daphnis.RidgeTests
+        GENERATE_INFOPLIST_FILE: true
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        DEVELOPMENT_TEAM: 444ULG6V8C
+        CODE_SIGN_STYLE: Automatic
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Ridge.app/Contents/MacOS/Ridge"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  Ridge:
+    build:
+      targets:
+        Ridge: all
+        RidgeTests: [test]
+    test:
+      targets:
+        - RidgeTests
