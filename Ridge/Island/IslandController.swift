@@ -365,15 +365,17 @@ final class IslandController: NSObject {
     }
 
     func expand(reason: String) {
+        let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
         if viewModel.isExpanded {
             if reason.contains("focusTimer") {
                 applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
-                updateInteractiveFrame(expanded: true)
-                ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
-            } else {
-                // 媒体等已展开时仍刷新可点区（切页后画布变了）。
-                updateInteractiveFrame(expanded: true)
+            } else if shelfDropExpand {
+                applyShelfDropPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
+            }
+            updateInteractiveFrame(expanded: true)
+            // 货架拖入：禁止抢前台，否则 Finder 拖放会被 activate 掐断。
+            if !shelfDropExpand {
                 ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
             }
             return
@@ -389,10 +391,41 @@ final class IslandController: NSObject {
         viewModel.expand()
         // 仅当前页是番茄时写入番茄画布；媒体展开勿套番茄尺寸。
         applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
+        if shelfDropExpand {
+            applyShelfDropPanelSizeIfNeeded(reason: "expand:\(reason)")
+        }
         // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
         updateInteractiveFrame(expanded: true)
-        ensureIslandInteractionReady(reason: "expand:\(reason)")
+        if shelfDropExpand {
+            AppLog.info("Island", "货架拖入展开：跳过抢前台，避免中断文件拖放", [
+                "reason": reason
+            ])
+        } else {
+            ensureIslandInteractionReady(reason: "expand:\(reason)")
+        }
         startScrollPagingMonitors()
+    }
+
+    /// 货架拖文件展开 / 投放：勿 `NSApp.activate`，否则系统会取消跨 App 拖放。
+    private static func isShelfDropExpandReason(_ reason: String) -> Bool {
+        reason.hasPrefix("shelfDrop")
+    }
+
+    /// 拖入暂存态立刻写成控制台画布，避免切掉 IslandBody 后 Preference 停在刘海尺寸。
+    private func applyShelfDropPanelSizeIfNeeded(reason: String) {
+        let size = CGSize(
+            width: NotchGeometry.controlDeckPreferredWidth,
+            height: NotchGeometry.controlDeckMinHeight
+        )
+        viewModel.applyMeasuredPanelSize(size)
+        updateInteractiveFrame(expanded: true)
+        AppLog.info("Island", "货架拖入：已套用控制台面板尺寸", [
+            "reason": reason,
+            "w": Int(size.width),
+            "h": Int(size.height),
+            "panelW": Int(viewModel.panelSize.width),
+            "panelH": Int(viewModel.panelSize.height)
+        ])
     }
 
     /// 当前是番茄页时按 phase 写入内容画布尺寸。
@@ -693,6 +726,13 @@ final class IslandController: NSObject {
             collapseWorkItem = nil
             if !viewModel.isExpanded {
                 expand(reason: approach && !overRetention ? "shelfDropApproach" : "shelfDrop")
+            } else if IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+                panel: viewModel.panelSize,
+                notch: CGSize(width: viewModel.notchWidth, height: viewModel.notchHeight),
+                isExpanded: true
+            ) {
+                // 已展开但仍是刘海尺寸：补套控制台画布（常见于暂存区切掉了 Preference 上报）。
+                applyShelfDropPanelSizeIfNeeded(reason: "shelfHoldResize")
             }
             isPointerOverIsland = overRetention || isShelfDropTargeted || approach
             return
@@ -789,8 +829,15 @@ final class IslandController: NSObject {
     private func setClickThrough(_ enabled: Bool, reason: String) {
         guard window.ignoresMouseEvents != enabled else { return }
         window.ignoresMouseEvents = enabled
-        if !enabled, viewModel.isExpanded {
+        // 货架拖入只关穿透、不抢前台；activate 会打断 Finder 文件拖放。
+        let shelfDropClickThrough = reason.hasPrefix("shelfDrop")
+        if !enabled, viewModel.isExpanded, !shelfDropClickThrough {
             ensureIslandInteractionReady(reason: "clickThroughOff:\(reason)")
+        } else if !enabled, shelfDropClickThrough {
+            AppLog.debug("Overlay", "货架拖入：关闭穿透但不抢前台", [
+                "reason": reason,
+                "expanded": viewModel.isExpanded
+            ])
         }
         let level: (String, [String: Any]) -> Void = { message, fields in
             if WidgetRuntime.shared.isControlDeckPage {
@@ -882,8 +929,8 @@ final class IslandController: NSObject {
 
     private func scheduleCollapse() {
         collapseWorkItem?.cancel()
-        // 刚翻页时高度会变，给指针一点时间落在新面板上，避免误收。
-        let delay: TimeInterval = Date().timeIntervalSince(lastPageSwipeAt) < 0.45 ? 0.36 : 0.22
+        // 刚翻页时高度会变，给指针一点时间落在新面板上，避免误收；整体偏短，收岛更跟手。
+        let delay: TimeInterval = Date().timeIntervalSince(lastPageSwipeAt) < 0.45 ? 0.22 : 0.10
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             // 收起前再确认一次，避免边缘抖动。

@@ -3576,6 +3576,28 @@
         }
       }
     },
+    "shelf.drop_airdrop_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松手后选择附近设备"
+          }
+        }
+      }
+    },
+    "shelf.drop_airdrop_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔空传送"
+          }
+        }
+      }
+    },
     "shelf.drop_hint": {
       "extractionState": "manual",
       "localizations": {

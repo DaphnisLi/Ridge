@@ -23,15 +23,16 @@ struct IslandSettingsPane: View {
     }
 
     private enum SpeedPreset: Double, CaseIterable {
-        case snap = 0.6
-        case standard = 1.0
-        case smooth = 1.6
+        /// 越大越快（response = 基线 / 倍率）。
+        case smooth = 0.8
+        case standard = 1.5
+        case snap = 2.0
 
         var title: String {
             switch self {
-            case .snap: return L10n.Settings.speedSnap
-            case .standard: return L10n.Settings.speedStandard
             case .smooth: return L10n.Settings.speedSmooth
+            case .standard: return L10n.Settings.speedStandard
+            case .snap: return L10n.Settings.speedSnap
             }
         }
     }

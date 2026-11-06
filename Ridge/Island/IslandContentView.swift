@@ -33,9 +33,20 @@ struct IslandContentView: View {
         )
     }
 
+    /// 货架拖入暂存态固定控制台画布（切掉 IslandBody 后无 Preference）。
+    private var shelfDropPanelSize: CGSize {
+        CGSize(
+            width: NotchGeometry.controlDeckPreferredWidth,
+            height: NotchGeometry.controlDeckMinHeight
+        )
+    }
+
     /// 可见面板尺寸：收起用刘海/待命；展开用内容测量结果（viewModel.panelSize）。
     private var bodySize: CGSize {
         if viewModel.isExpanded {
+            if shelfDropEnabled, shelfDropSession.isActive {
+                return shelfDropPanelSize
+            }
             let measured = viewModel.panelSize
             if measured.width > 1, measured.height > 1 {
                 return measured
@@ -72,11 +83,13 @@ struct IslandContentView: View {
 
                 if shelfDropEnabled, viewModel.isExpanded, shelfDropSession.isActive {
                     // 拖入中：整岛切成暂存区 UI，松手 / 离开后恢复。
+                    // 必须自报控制台画布尺寸——切掉 IslandBody 后 Preference 会停在刘海，吸住又立刻收。
                     ShelfDropStagingView(highlighted: true, fillsIsland: true)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
                         .padding(.top, max(28, viewModel.notchHeight + 4))
                         .padding(.bottom, IslandChrome.contentBottom)
-                        .frame(width: bodySize.width, height: bodySize.height)
+                        .frame(width: shelfDropPanelSize.width, height: shelfDropPanelSize.height)
+                        .reportIslandPanelSize()
                         .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 } else {
                     IslandBody(
@@ -98,11 +111,18 @@ struct IslandContentView: View {
             // 货架开启时：整岛接收文件拖入（不限货架小栏）。
             .onDrop(of: [.fileURL], isTargeted: $shelfDropTargeted) { providers in
                 guard shelfDropEnabled else { return false }
-                AppLog.info("Shelf", "整岛接收拖入", [
-                    "providers": providers.count,
-                    "expanded": viewModel.isExpanded,
-                    "page": runtime.activeID ?? "nil"
-                ])
+                // 整岛拖入态由左右舱各自 onDrop 承接；外层只负责磁吸命中与兜底暂存。
+                if shelfDropSession.isActive {
+                    AppLog.debug("Shelf", "整岛兜底暂存（未命中左右舱）", [
+                        "providers": providers.count
+                    ])
+                } else {
+                    AppLog.info("Shelf", "整岛接收拖入", [
+                        "providers": providers.count,
+                        "expanded": viewModel.isExpanded,
+                        "page": runtime.activeID ?? "nil"
+                    ])
+                }
                 return ShelfClipboardDeckView.ingestDrop(providers: providers, into: ShelfStore.shared)
             }
         }

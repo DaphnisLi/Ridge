@@ -29,7 +29,8 @@ final class IslandSettings: ObservableObject {
     static let shared = IslandSettings()
 
     enum Defaults {
-        static let animationSpeed = 1.0
+        /// 越大越快；1.5× 配合更短的弹簧基线，展开/收起更干脆。
+        static let animationSpeed = 1.5
         static let hideInFullscreen = false
         static let hapticIntensity = IslandHapticIntensity.medium
         /// 稿面「默认」档：24 pt。
@@ -59,9 +60,13 @@ final class IslandSettings: ObservableObject {
         static let expandedWidthScaleLegacy = "island.expandedWidthScale"
         /// 一次性：全屏禁用改为默认关。
         static let hideFullscreenDefaultOff = "island.hideFullscreenDefaultOff.v1"
+        /// 一次性：默认动画从 1.0×/0.35s 提到 1.5×/更快基线。
+        static let snappierMotionDefault = "island.snappierMotionDefault.v1"
+        /// 一次性：旧预设「干脆=0.6 / 顺滑=1.6」与倍率含义反了，按档位映射到新预设。
+        static let snappierMotionPresets = "island.snappierMotionPresets.v2"
     }
 
-    /// 动画速度倍率：1.0 = 默认 0.35s；越大越快。范围 0.5…2.0
+    /// 动画速度倍率：越大越快。范围 0.5…2.0；默认 1.5×。
     @Published var animationSpeed: Double {
         didSet { UserDefaults.standard.set(animationSpeed, forKey: Key.animationSpeed) }
     }
@@ -106,11 +111,13 @@ final class IslandSettings: ObservableObject {
         didSet { UserDefaults.standard.set(displayStyle.rawValue, forKey: Key.displayStyle) }
     }
 
+    /// 弹簧 response：默认约 0.16s（1.5×），旧默认约 0.35s。
     var springDuration: Double {
-        0.35 / max(animationSpeed, 0.25)
+        0.24 / max(animationSpeed, 0.25)
     }
 
-    var springDamping: Double { 0.8 }
+    /// 略提高阻尼，少回弹、更快落稳。
+    var springDamping: Double { 0.88 }
 
     func restoreDefaults() {
         animationSpeed = Defaults.animationSpeed
@@ -172,7 +179,40 @@ final class IslandSettings: ObservableObject {
             defaults.set(Defaults.theme.rawValue, forKey: Key.theme)
         }
 
-        animationSpeed = defaults.double(forKey: Key.animationSpeed)
+        var loadedSpeed = defaults.double(forKey: Key.animationSpeed)
+        // 仍停在旧默认 1.0× 的用户一次提到 1.5×；已手动调过的保留。
+        var migratedSpeed = false
+        if defaults.object(forKey: Key.snappierMotionDefault) == nil {
+            if abs(loadedSpeed - 1.0) < 0.05 {
+                loadedSpeed = Defaults.animationSpeed
+                migratedSpeed = true
+            }
+            defaults.set(true, forKey: Key.snappierMotionDefault)
+            defaults.set(loadedSpeed, forKey: Key.animationSpeed)
+        }
+        // 旧 UI：干脆=0.6（实际更慢）、标准=1.0、顺滑=1.6（实际更快）。按档位语义映射。
+        if defaults.object(forKey: Key.snappierMotionPresets) == nil {
+            let previous = loadedSpeed
+            if abs(loadedSpeed - 0.6) < 0.05 {
+                loadedSpeed = 2.0 // 旧「干脆」→ 新干脆
+                migratedSpeed = true
+            } else if abs(loadedSpeed - 1.0) < 0.05 {
+                loadedSpeed = Defaults.animationSpeed
+                migratedSpeed = true
+            } else if abs(loadedSpeed - 1.6) < 0.05 {
+                loadedSpeed = 0.8 // 旧「顺滑」→ 新顺滑
+                migratedSpeed = true
+            }
+            defaults.set(true, forKey: Key.snappierMotionPresets)
+            defaults.set(loadedSpeed, forKey: Key.animationSpeed)
+            if abs(previous - loadedSpeed) > 0.01 {
+                AppLog.info("Settings", "动画速度已按旧预设档位重映射", [
+                    "from": previous,
+                    "to": loadedSpeed
+                ])
+            }
+        }
+        animationSpeed = min(max(loadedSpeed, 0.5), 2.0)
         hideInFullscreen = defaults.bool(forKey: Key.hideInFullscreen)
         let hapticRaw = defaults.integer(forKey: Key.hapticIntensity)
         hapticIntensity = IslandHapticIntensity(rawValue: hapticRaw) ?? Defaults.hapticIntensity
@@ -187,7 +227,12 @@ final class IslandSettings: ObservableObject {
         let styleRaw = defaults.string(forKey: Key.displayStyle) ?? Defaults.displayStyle.rawValue
         displayStyle = IslandDisplayStyle(rawValue: styleRaw) ?? Defaults.displayStyle
 
-        AppLog.debug("Settings", "已加载岛设置", [
+        if migratedSpeed {
+            AppLog.info("Settings", "动画速度已迁移为更干脆的默认", [
+                "speed": animationSpeed
+            ])
+        }
+        AppLog.info("Settings", "已加载岛设置", [
             "speed": animationSpeed,
             "hideFullscreen": hideInFullscreen,
             "haptic": hapticIntensity.rawValue,

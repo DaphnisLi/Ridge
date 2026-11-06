@@ -812,6 +812,12 @@ enum L10n {
         static var dropActiveDetail: String {
             tr("shelf.drop_active_detail", "已识别拖拽对象 · 准备自动就绪")
         }
+        static var dropAirDropHint: String {
+            tr("shelf.drop_airdrop_hint", "隔空传送")
+        }
+        static var dropAirDropDetail: String {
+            tr("shelf.drop_airdrop_detail", "松手后选择附近设备")
+        }
         static var dropMore: String { tr("shelf.drop_more", "继续拖入可追加") }
         static var kindFile: String { tr("shelf.kind.file", "文件") }
         static var kindFolder: String { tr("shelf.kind.folder", "文件夹") }
