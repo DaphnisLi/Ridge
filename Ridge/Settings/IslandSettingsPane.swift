@@ -67,7 +67,8 @@ struct IslandSettingsPane: View {
         .background(SettingsChrome.pageBackground)
         .onAppear {
             guard MenuBarController.shared?.settingsWindow != nil else { return }
-            IslandController.shared?.beginSettingsSession()
+            // 页内已有岛预览；打开设置不再钉住展开真岛。
+            IslandController.shared?.beginSettingsSessionCollapsed()
             AppLog.debug("Settings", "灵动岛设置页已显示")
         }
         .onChange(of: settings.animationSpeed) { _, value in

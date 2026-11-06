@@ -23,12 +23,12 @@ struct WidgetsSettingsPane: View {
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: SettingsChrome.Spacing.pageHorizontal) {
                     deckLibrarySection
                     librarySection
                 }
-                .padding(.horizontal, 28)
-                .padding(.vertical, 28)
+                .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
+                .padding(.vertical, SettingsChrome.Spacing.pageHorizontal)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollIndicators(.hidden)
@@ -54,16 +54,21 @@ struct WidgetsSettingsPane: View {
     }
 
     private var deckLibrarySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.Widgets.deckSectionTitle)
-                .font(.system(size: 15, weight: .semibold))
+        VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
+            librarySectionHeader(
+                symbol: "square.grid.2x2",
+                symbolTint: SettingsChrome.primary,
+                title: L10n.Widgets.deckSectionTitle,
+                badge: "\(L10n.Widgets.deckSectionBadge) (\(liveDeckModules.count))",
+                aside: L10n.Widgets.deckSectionAside
+            )
 
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: 14),
-                    GridItem(.flexible(), spacing: 14)
+                    GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
+                    GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
                 ],
-                spacing: 14
+                spacing: SettingsChrome.Spacing.stack
             ) {
                 ForEach(liveDeckModules) { module in
                     deckCardCell(module)
@@ -75,32 +80,52 @@ struct WidgetsSettingsPane: View {
     @ViewBuilder
     private func deckCardCell(_ module: ControlDeckPlannedModule) -> some View {
         let pageID = ControlDeckSettings.pageIDPrefix + "." + module.id
-        ZStack(alignment: .topTrailing) {
-            NavigationLink(value: pageID) {
-                WidgetLibraryCard(
-                    widgetID: pageID,
-                    title: module.title,
-                    summary: deckSummary(for: module.id),
-                    isEnabled: deckSettings.isModuleEnabled(module.id)
-                )
-            }
-            .buttonStyle(.plain)
-
-            Toggle(
-                "",
-                isOn: Binding(
-                    get: { deckSettings.isModuleEnabled(module.id) },
-                    set: { enabled in
-                        handleDeckEnableChange(id: module.id, enabled: enabled)
-                    }
-                )
-            )
-            .labelsHidden()
-            .toggleStyle(.switch)
-            .controlSize(.small)
-            .padding(10)
-        }
+        WidgetLibraryCard(
+            widgetID: pageID,
+            title: module.title,
+            summary: deckSummary(for: module.id),
+            isEnabled: Binding(
+                get: { deckSettings.isModuleEnabled(module.id) },
+                set: { enabled in
+                    handleDeckEnableChange(id: module.id, enabled: enabled)
+                }
+            ),
+            onOpen: { path.append(pageID) }
+        )
         .background(WidgetCardScreenFrameReader(widgetID: pageID))
+    }
+
+    private func librarySectionHeader(
+        symbol: String,
+        symbolTint: Color,
+        title: String,
+        badge: String,
+        aside: String
+    ) -> some View {
+        HStack(alignment: .center, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(SettingsChrome.Font.iconTile)
+                    .foregroundStyle(symbolTint)
+                Text(title)
+                    .font(SettingsChrome.Font.sectionTitle)
+                    .foregroundStyle(SettingsChrome.onSurface)
+                Text(badge)
+                    .font(SettingsChrome.Font.chip)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(SettingsChrome.surfaceContainer)
+                    )
+            }
+            Spacer(minLength: 8)
+            Text(aside)
+                .font(SettingsChrome.Font.chip)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .multilineTextAlignment(.trailing)
+        }
     }
 
     private func deckSummary(for id: String) -> String {
@@ -142,23 +167,28 @@ struct WidgetsSettingsPane: View {
     // MARK: - 库
 
     private var librarySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.Widgets.contentSectionTitle)
-                .font(.system(size: 15, weight: .semibold))
+        VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
+            librarySectionHeader(
+                symbol: "rectangle.stack",
+                symbolTint: SettingsChrome.primary,
+                title: L10n.Widgets.contentSectionTitle,
+                badge: "\(L10n.Widgets.contentSectionBadge) (\(libraryOrder.count))",
+                aside: L10n.Widgets.contentSectionAside
+            )
 
             if libraryOrder.isEmpty {
                 Text(L10n.Widgets.libraryEmpty)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .font(SettingsChrome.Font.body)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 24)
             } else {
                 LazyVGrid(
                     columns: [
-                        GridItem(.flexible(), spacing: 14),
-                        GridItem(.flexible(), spacing: 14)
+                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
+                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
                     ],
-                    spacing: 14
+                    spacing: SettingsChrome.Spacing.stack
                 ) {
                     ForEach(libraryOrder, id: \.self) { id in
                         if let manifest = registry.manifest(for: id) {
@@ -177,35 +207,20 @@ struct WidgetsSettingsPane: View {
 
     @ViewBuilder
     private func widgetCardCell(id: WidgetID, manifest: WidgetManifest) -> some View {
-        ZStack(alignment: .topTrailing) {
-            NavigationLink(value: id) {
-                WidgetLibraryCard(
-                    widgetID: id,
-                    title: manifest.displayName,
-                    summary: manifest.summary,
-                    isEnabled: settings.isEnabled(id)
-                )
-            }
-            .buttonStyle(.plain)
-            .opacity(draggingID == id ? 0.35 : 1)
-
-            Toggle(
-                "",
-                isOn: Binding(
-                    get: { settings.isEnabled(id) },
-                    set: { enabled in
-                        handleEnableChange(id: id, enabled: enabled)
-                    }
-                )
-            )
-            .labelsHidden()
-            .toggleStyle(.switch)
-            .controlSize(.small)
-            .padding(10)
-        }
-        .background(
-            WidgetCardScreenFrameReader(widgetID: id)
+        WidgetLibraryCard(
+            widgetID: id,
+            title: manifest.displayName,
+            summary: manifest.summary,
+            isEnabled: Binding(
+                get: { settings.isEnabled(id) },
+                set: { enabled in
+                    handleEnableChange(id: id, enabled: enabled)
+                }
+            ),
+            onOpen: { path.append(id) }
         )
+        .opacity(draggingID == id ? 0.35 : 1)
+        .background(WidgetCardScreenFrameReader(widgetID: id))
         .onDrag {
             draggingID = id
             AppLog.debug("Settings", "开始拖拽小组件卡", ["id": id])
@@ -215,10 +230,11 @@ struct WidgetsSettingsPane: View {
                 widgetID: id,
                 title: manifest.displayName,
                 summary: manifest.summary,
-                isEnabled: settings.isEnabled(id)
+                isEnabled: .constant(settings.isEnabled(id)),
+                onOpen: {}
             )
-            .frame(width: 220)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(width: 260)
+            .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
             .shadow(color: .black.opacity(0.2), radius: 14, y: 8)
         }
         .onDrop(
@@ -372,53 +388,115 @@ private struct WidgetLibraryCard: View {
     let widgetID: WidgetID
     let title: String
     let summary: String
-    let isEnabled: Bool
+    @Binding var isEnabled: Bool
+    var onOpen: () -> Void
+
+    /// 全库统一卡面尺寸：岛区贴顶、信息区贴底，中间留白。
+    private enum CardLayout {
+        static let islandStageHeight: CGFloat = 176
+        static let cardHeight: CGFloat = 340
+    }
+
+    private var category: String { L10n.Widgets.categoryBadge(for: widgetID) }
+    private var footerHint: String { L10n.Widgets.cardFooterHint(for: widgetID) }
+    private var footerSymbol: String { L10n.Widgets.cardFooterSymbol(for: widgetID) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ZStack {
-                // 与详情页舞台同色：灰底衬黑岛。
-                SettingsChrome.surfaceContainer
-
-                // 与详情页同一套假数据样张；drawingGroup 栅格化后滚动不再逐层重绘。
+            // 黑岛样张内容不变；固定舞台高度，矮岛也贴顶。
+            Button(action: onOpen) {
                 WidgetSamplePreview.island(for: widgetID, compact: true)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 2)
                     .drawingGroup(opaque: false)
+                    .contentShape(Rectangle())
             }
-            .frame(height: 220)
-            .clipShape(
-                UnevenRoundedRectangle(
-                    topLeadingRadius: 12,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: 12,
-                    style: .continuous
-                )
-            )
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .frame(height: CardLayout.islandStageHeight, alignment: .top)
+            .clipped()
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
+            Spacer(minLength: 8)
 
-                Text(summary)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: 8) {
+                    Button(action: onOpen) {
+                        HStack(spacing: 8) {
+                            Text(title)
+                                .font(SettingsChrome.Font.sectionTitle)
+                                .foregroundStyle(SettingsChrome.onSurface)
+                                .lineLimit(1)
+                            Text(category)
+                                .font(SettingsChrome.Font.chip)
+                                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(
+                                    Capsule(style: .continuous)
+                                        .fill(SettingsChrome.surfaceContainer)
+                                )
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 8)
+
+                    Toggle("", isOn: $isEnabled)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .controlSize(.small)
+                }
+
+                Button(action: onOpen) {
+                    Text(summary)
+                        .font(SettingsChrome.Font.body)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onOpen) {
+                    HStack(alignment: .center, spacing: 8) {
+                        Label {
+                            Text(footerHint)
+                                .font(SettingsChrome.Font.chip)
+                                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                                .lineLimit(1)
+                        } icon: {
+                            Image(systemName: footerSymbol)
+                                .font(SettingsChrome.Font.iconInline)
+                                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        }
+                        .labelStyle(.titleAndIcon)
+
+                        Spacer(minLength: 8)
+
+                        HStack(spacing: 2) {
+                            Text(L10n.Widgets.configureLink)
+                                .font(SettingsChrome.Font.label)
+                            Image(systemName: "arrow.up.right")
+                                .font(SettingsChrome.Font.iconInline)
+                        }
+                        .foregroundStyle(SettingsChrome.primary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .padding(12)
-            .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
-            .background(SettingsChrome.cardBackground)
         }
+        .padding(SettingsChrome.Spacing.cardInner)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: CardLayout.cardHeight, alignment: .top)
         .background(SettingsChrome.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
                 .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
         )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
         .opacity(isEnabled ? 1 : 0.72)
     }
 }

@@ -4170,6 +4170,138 @@
         }
       }
     },
+    "widgets.category.ai_usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API 监测"
+          }
+        }
+      }
+    },
+    "widgets.category.battery": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "蓝牙设备"
+          }
+        }
+      }
+    },
+    "widgets.category.focus_timer": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "效率工具"
+          }
+        }
+      }
+    },
+    "widgets.category.generic": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小组件"
+          }
+        }
+      }
+    },
+    "widgets.category.media": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "流媒体"
+          }
+        }
+      }
+    },
+    "widgets.category.meeting": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "日程提醒"
+          }
+        }
+      }
+    },
+    "widgets.category.projects": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开发监控"
+          }
+        }
+      }
+    },
+    "widgets.category.shelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件暂存"
+          }
+        }
+      }
+    },
+    "widgets.category.volume": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "音频通道"
+          }
+        }
+      }
+    },
+    "widgets.configure_link": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "配置参数与交互"
+          }
+        }
+      }
+    },
+    "widgets.content_section_aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "事件触发时自动展开并驻留"
+          }
+        }
+      }
+    },
+    "widgets.content_section_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "流媒体、日程与监测"
+          }
+        }
+      }
+    },
     "widgets.content_section_title": {
       "extractionState": "manual",
       "localizations": {
@@ -4181,6 +4313,28 @@
         }
       }
     },
+    "widgets.deck_section_aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "可直接在刘海内执行交互操作"
+          }
+        }
+      }
+    },
+    "widgets.deck_section_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高频交互与系统控制"
+          }
+        }
+      }
+    },
     "widgets.deck_section_title": {
       "extractionState": "manual",
       "localizations": {
@@ -4188,6 +4342,105 @@
           "stringUnit": {
             "state": "translated",
             "value": "功能磁贴"
+          }
+        }
+      }
+    },
+    "widgets.footer.ai_usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "阈值预警与密钥本地脱敏存储"
+          }
+        }
+      }
+    },
+    "widgets.footer.battery": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持键盘、触控板及第三方蓝牙手柄"
+          }
+        }
+      }
+    },
+    "widgets.footer.focus_timer": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "联动 macOS 免打扰专注模式"
+          }
+        }
+      }
+    },
+    "widgets.footer.generic": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击进入配置"
+          }
+        }
+      }
+    },
+    "widgets.footer.media": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持 Apple Music、Spotify、网易云"
+          }
+        }
+      }
+    },
+    "widgets.footer.meeting": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同步 macOS 系统日历"
+          }
+        }
+      }
+    },
+    "widgets.footer.projects": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动检测 npm / cargo / swiftc"
+          }
+        }
+      }
+    },
+    "widgets.footer.shelf": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖拽边缘可唤出浮窗"
+          }
+        }
+      }
+    },
+    "widgets.footer.volume": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支持按键触控板快捷微调"
           }
         }
       }

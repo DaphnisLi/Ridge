@@ -228,7 +228,7 @@ final class IslandController: NSObject {
         }
     }
 
-    /// 设置窗打开且在前台：钉住展开（灵动岛设置页用）。
+    /// 设置窗打开且钉住展开真岛（仅显式需要实时预览时调用；默认开设置用 `beginSettingsSessionCollapsed`）。
     func beginSettingsSession() {
         isSettingsSessionActive = true
         settingsPreferLivePreview = true

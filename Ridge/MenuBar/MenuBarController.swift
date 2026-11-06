@@ -291,7 +291,8 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         switch SettingsNavigator.shared.section {
         case .island:
             ResourceMonitorSession.shared.setSettingsVisible(false)
-            IslandController.shared?.beginSettingsSession()
+            // 各设置页均用页内预览，打开时不钉住展开真岛。
+            IslandController.shared?.beginSettingsSessionCollapsed()
         case .widgets:
             ResourceMonitorSession.shared.setSettingsVisible(false)
             IslandController.shared?.beginSettingsSessionCollapsed()

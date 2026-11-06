@@ -119,8 +119,85 @@ enum L10n {
         }
         static var libraryTitle: String { tr("widgets.library.title", "小组件库") }
         static var deckSectionTitle: String { tr("widgets.deck_section_title", "功能磁贴") }
+        static var deckSectionBadge: String {
+            tr("widgets.deck_section_badge", "高频交互与系统控制")
+        }
+        static var deckSectionAside: String {
+            tr("widgets.deck_section_aside", "可直接在刘海内执行交互操作")
+        }
         static var contentSectionTitle: String { tr("widgets.content_section_title", "内容小组件") }
+        static var contentSectionBadge: String {
+            tr("widgets.content_section_badge", "流媒体、日程与监测")
+        }
+        static var contentSectionAside: String {
+            tr("widgets.content_section_aside", "事件触发时自动展开并驻留")
+        }
+        static var configureLink: String {
+            tr("widgets.configure_link", "配置参数与交互")
+        }
         static var libraryEmpty: String { tr("widgets.library.empty", "暂无可用小组件。") }
+
+        /// 库卡分类徽章。
+        static func categoryBadge(for widgetID: WidgetID) -> String {
+            switch widgetID {
+            case "system.controlDeck.shelf":
+                return tr("widgets.category.shelf", "文件暂存")
+            case "system.controlDeck.volume":
+                return tr("widgets.category.volume", "音频通道")
+            case "system.controlDeck.projects":
+                return tr("widgets.category.projects", "开发监控")
+            case "system.controlDeck.battery":
+                return tr("widgets.category.battery", "蓝牙设备")
+            case "builtin.meeting":
+                return tr("widgets.category.meeting", "日程提醒")
+            case "builtin.media":
+                return tr("widgets.category.media", "流媒体")
+            case "builtin.focusTimer":
+                return tr("widgets.category.focus_timer", "效率工具")
+            case "builtin.aiUsage":
+                return tr("widgets.category.ai_usage", "API 监测")
+            default:
+                return tr("widgets.category.generic", "小组件")
+            }
+        }
+
+        /// 库卡底栏辅助说明。
+        static func cardFooterHint(for widgetID: WidgetID) -> String {
+            switch widgetID {
+            case "system.controlDeck.shelf":
+                return tr("widgets.footer.shelf", "拖拽边缘可唤出浮窗")
+            case "system.controlDeck.volume":
+                return tr("widgets.footer.volume", "支持按键触控板快捷微调")
+            case "system.controlDeck.projects":
+                return tr("widgets.footer.projects", "自动检测 npm / cargo / swiftc")
+            case "system.controlDeck.battery":
+                return tr("widgets.footer.battery", "支持键盘、触控板及第三方蓝牙手柄")
+            case "builtin.meeting":
+                return tr("widgets.footer.meeting", "同步 macOS 系统日历")
+            case "builtin.media":
+                return tr("widgets.footer.media", "支持 Apple Music、Spotify、网易云")
+            case "builtin.focusTimer":
+                return tr("widgets.footer.focus_timer", "联动 macOS 免打扰专注模式")
+            case "builtin.aiUsage":
+                return tr("widgets.footer.ai_usage", "阈值预警与密钥本地脱敏存储")
+            default:
+                return tr("widgets.footer.generic", "点击进入配置")
+            }
+        }
+
+        static func cardFooterSymbol(for widgetID: WidgetID) -> String {
+            switch widgetID {
+            case "system.controlDeck.shelf": return "line.3.horizontal"
+            case "system.controlDeck.volume": return "waveform"
+            case "system.controlDeck.projects": return "terminal"
+            case "system.controlDeck.battery": return "battery.100.bolt"
+            case "builtin.meeting": return "calendar"
+            case "builtin.media": return "waveform"
+            case "builtin.focusTimer": return "moon.zzz"
+            case "builtin.aiUsage": return "brain.head.profile"
+            default: return "slider.horizontal.3"
+            }
+        }
         static var notFound: String { tr("widgets.not_found", "找不到该小组件。") }
         static var cannotPreview: String { tr("widgets.cannot_preview", "无法预览") }
         static var pageDotsA11y: String { tr("widgets.page_dots_a11y", "小组件分页") }
