@@ -1636,6 +1636,25 @@ enum L10n {
         static var focusCategoryOther: String {
             tr("resource_monitor.focus_category_other", "其他应用")
         }
+        static var focusCategorySystemIdle: String {
+            tr("resource_monitor.focus_category_system_idle", "系统空闲")
+        }
+        /// `loginwindow`：合盖 / 锁屏 / 登录界面。
+        static var focusNameLoginWindow: String {
+            tr("resource_monitor.focus_name_loginwindow", "锁屏与待机")
+        }
+        static var focusNameScreenSaver: String {
+            tr("resource_monitor.focus_name_screensaver", "屏幕保护程序")
+        }
+        static var focusNameDock: String {
+            tr("resource_monitor.focus_name_dock", "程序坞")
+        }
+        static var focusNameSystemUI: String {
+            tr("resource_monitor.focus_name_system_ui", "系统菜单栏")
+        }
+        static var focusNameSystemProcess: String {
+            tr("resource_monitor.focus_name_system_process", "系统进程")
+        }
         static var focusEmptyRank: String {
             tr("resource_monitor.focus_empty_rank", "今日尚无应用驻留记录")
         }

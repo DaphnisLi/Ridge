@@ -68,6 +68,7 @@
 		797C697356CC11AE2118BDB3 /* AIUsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696174AF0446BACA3704883A /* AIUsageModels.swift */; };
 		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
+		80AB1DE4B230D2BF015DD611 /* ResourceFocusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */; };
 		85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFC96E41744375F5D6F2529 /* SoundSession.swift */; };
 		85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */; };
 		873C084FA01131CEEC158099 /* ResourceMonitorSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */; };
@@ -214,6 +215,7 @@
 		7694C35719C53E4F238252E3 /* IslandSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettings.swift; sourceTree = "<group>"; };
 		77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNavigator.swift; sourceTree = "<group>"; };
 		7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
+		7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusPresentation.swift; sourceTree = "<group>"; };
 		805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettingsPane.swift; sourceTree = "<group>"; };
 		81BB2FAF48572CDD36E2974F /* IslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWidget.swift; sourceTree = "<group>"; };
 		81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAppVolumeRoute.swift; sourceTree = "<group>"; };
@@ -357,6 +359,7 @@
 				F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */,
 				29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */,
 				9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */,
+				7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */,
 				0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */,
 				2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */,
 				320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */,
@@ -789,6 +792,7 @@
 				E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */,
 				685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */,
 				19167EB80BB407F50CC8069A /* ResourceChipInfo.swift in Sources */,
+				80AB1DE4B230D2BF015DD611 /* ResourceFocusPresentation.swift in Sources */,
 				96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */,
 				1B559574B3122F5B1DE00207 /* ResourceKeystrokeMonitor.swift in Sources */,
 				13E3955C0A42DF5B0AF75847 /* ResourceMonitorModels.swift in Sources */,

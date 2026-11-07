@@ -89,6 +89,8 @@ enum ResourceFocusCategory: String, Equatable {
     case browser
     case ide
     case terminal
+    /// 锁屏 / 屏保等系统空闲前台（非用户主动使用的 App）。
+    case systemIdle
     case other
 }
 

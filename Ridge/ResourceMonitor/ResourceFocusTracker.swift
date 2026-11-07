@@ -49,7 +49,14 @@ final class ResourceFocusTracker {
             return
         }
         guard let bid = app.bundleIdentifier, !bid.isEmpty else { return }
-        let name = app.localizedName ?? bid
+        let rawName = app.localizedName ?? bid
+        let name = ResourceFocusPresentation.displayName(bundleID: bid, fallback: rawName)
+        if ResourceFocusPresentation.isSystemIdle(bundleID: bid, name: name), countSwitch {
+            AppLog.info("ResourceMonitor", "前台落在系统空闲进程", [
+                "bundle": bid,
+                "display": name
+            ])
+        }
         if countSwitch {
             ResourceActivityStore.shared.noteAppSwitch(bundleID: bid, name: name)
         } else {

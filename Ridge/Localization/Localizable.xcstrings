@@ -2729,6 +2729,72 @@
         }
       }
     },
+    "resource_monitor.focus_category_system_idle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统空闲"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_name_dock": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "程序坞"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_name_loginwindow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "锁屏与待机"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_name_screensaver": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕保护程序"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_name_system_process": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统进程"
+          }
+        }
+      }
+    },
+    "resource_monitor.focus_name_system_ui": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统菜单栏"
+          }
+        }
+      }
+    },
     "resource_monitor.focus_category_terminal": {
       "extractionState": "manual",
       "localizations": {

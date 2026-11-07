@@ -900,6 +900,7 @@ struct ResourceMonitorSettingsPane: View {
         case .browser: return L10n.ResourceMonitor.focusCategoryBrowser
         case .ide: return L10n.ResourceMonitor.focusCategoryIDE
         case .terminal: return L10n.ResourceMonitor.focusCategoryTerminal
+        case .systemIdle: return L10n.ResourceMonitor.focusCategorySystemIdle
         case .other: return L10n.ResourceMonitor.focusCategoryOther
         }
     }
@@ -909,6 +910,7 @@ struct ResourceMonitorSettingsPane: View {
         case .browser: return "globe"
         case .ide: return "chevron.left.forwardslash.chevron.right"
         case .terminal: return "terminal"
+        case .systemIdle: return "lock.display"
         case .other: return "app"
         }
     }

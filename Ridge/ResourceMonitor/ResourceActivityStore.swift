@@ -124,6 +124,7 @@ final class ResourceActivityStore {
 
     func noteAppSwitch(bundleID: String, name: String) {
         rolloverIfNeeded()
+        let name = ResourceFocusPresentation.displayName(bundleID: bundleID, fallback: name)
         if focusBundleID == bundleID {
             focusName = name
             if focusSince == nil { focusSince = Date() }
@@ -141,6 +142,7 @@ final class ResourceActivityStore {
     /// 不记切换：启动 / 心跳时对齐当前前台。
     func ensureFocus(bundleID: String, name: String) {
         rolloverIfNeeded()
+        let name = ResourceFocusPresentation.displayName(bundleID: bundleID, fallback: name)
         if focusBundleID == bundleID {
             focusName = name
             if focusSince == nil { focusSince = Date() }
@@ -199,10 +201,17 @@ final class ResourceActivityStore {
         return ranked.enumerated().map { index, item in
             let sessions = max(1, item.stats.sessionCount)
             let avg = item.stats.seconds / Double(sessions)
+            let display = ResourceFocusPresentation.displayName(
+                bundleID: item.bundleID,
+                fallback: item.stats.name
+            )
             return ResourceFocusRank(
                 bundleID: item.bundleID,
-                name: item.stats.name,
-                category: Self.category(for: item.bundleID, name: item.stats.name),
+                name: display,
+                category: ResourceFocusPresentation.category(
+                    bundleID: item.bundleID,
+                    name: display
+                ),
                 seconds: item.stats.seconds,
                 sharePercent: (item.stats.seconds / total) * 100,
                 keystrokes: item.stats.keystrokes,
@@ -226,7 +235,14 @@ final class ResourceActivityStore {
     /// 短间隙并入上一段（锁屏/瞬时切换不留白）；仅较长无记录空隙才露底。
     func todayFocusTimeline() -> [ResourceFocusTimelineSegment] {
         rolloverIfNeeded()
-        var list = todayTimelineSegments
+        var list = todayTimelineSegments.map { segment in
+            var copy = segment
+            copy.name = ResourceFocusPresentation.displayName(
+                bundleID: segment.bundleID,
+                fallback: segment.name
+            )
+            return copy
+        }
         if let bid = focusBundleID,
            let start = focusSegmentStart,
            let name = focusName
@@ -237,7 +253,7 @@ final class ResourceActivityStore {
                     ResourceFocusTimelineSegment(
                         id: "live-\(bid)-\(start.timeIntervalSince1970)",
                         bundleID: bid,
-                        name: name,
+                        name: ResourceFocusPresentation.displayName(bundleID: bid, fallback: name),
                         start: start,
                         end: end
                     )
@@ -415,28 +431,6 @@ final class ResourceActivityStore {
         todayFocusSeconds = Dictionary(uniqueKeysWithValues: todayAppStats.map { key, stats in
             (key, (stats.name, stats.seconds))
         })
-    }
-
-    private static func category(for bundleID: String, name: String) -> ResourceFocusCategory {
-        let hay = (bundleID + " " + name).lowercased()
-        if hay.contains("chrome") || hay.contains("safari") || hay.contains("firefox")
-            || hay.contains("arc") || hay.contains("edge") || hay.contains("browser")
-            || hay.contains("qqbrowser") || hay.contains("brave")
-        {
-            return .browser
-        }
-        if hay.contains("code") || hay.contains("xcode") || hay.contains("cursor")
-            || hay.contains("jetbrains") || hay.contains("webstorm") || hay.contains("idea")
-            || hay.contains("sublime") || hay.contains("vim") || hay.contains("neovim")
-        {
-            return .ide
-        }
-        if hay.contains("terminal") || hay.contains("iterm") || hay.contains("warp")
-            || hay.contains("alacritty") || hay.contains("kitty") || hay.contains("shell")
-        {
-            return .terminal
-        }
-        return .other
     }
 
     private func ramBand(_ percent: Double) -> Int {
