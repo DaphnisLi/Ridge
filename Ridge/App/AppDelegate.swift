@@ -10,11 +10,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppLog.warn("Overlay", "Ridge 启动", [
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         ])
-        // 清掉额度调试常驻开关，避免挡住「已复制」等其它瞬时通知。
+        // 清掉额度 / 久坐调试常驻，避免挡住正常瞬时通知。
         UserDefaults.standard.removeObject(forKey: "aiUsage.debugStickyWarning")
         UserDefaults.standard.removeObject(forKey: "aiUsage.debugForceWarning")
         UserDefaults.standard.removeObject(forKey: "aiUsage.debugStage")
+        UserDefaults.standard.removeObject(forKey: "moveReminder.debugSticky")
         IslandNoticeCenter.shared.dismiss(id: "aiUsage.debug.warning")
+        IslandNoticeCenter.shared.dismiss(id: "moveReminder.debug.sticky")
 
         island.start()
         menuBar.start(island: island)
@@ -26,9 +28,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ResourceMonitorSession.shared.start()
         // AI 额度：后台感知；仅触阈时走瞬时通知。
         AIUsageSession.shared.start()
+        // 久坐起身：HID 空闲累计；触阈时走瞬时通知（须用户点稍后 / 今天不再才收）。
+        MoveReminderSession.shared.start()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        MoveReminderSession.shared.stop()
         ResourceMonitorSession.shared.stop()
         SoundSession.shared.stop()
         NowPlayingService.shared.stop()

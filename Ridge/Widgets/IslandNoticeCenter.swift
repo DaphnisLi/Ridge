@@ -23,6 +23,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
         stage: AIUsageStage,
         resetsAt: Date?
     )
+    /// 久坐起身提醒（须点「稍后」/「今天不再」；不自动收）。
+    case moveReminder(MoveReminderSession.Notice)
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
 
@@ -40,6 +42,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return Self.colorPickTipID
         case .aiUsageAlert(let id, _, _, _, _):
             return id
+        case .moveReminder(let notice):
+            return notice.id
         }
     }
 
@@ -57,13 +61,16 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "shelf.capture"
         case .aiUsageAlert:
             return "aiUsage"
+        case .moveReminder:
+            return "moveReminder"
         }
     }
 
-    /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色引导）。
+    /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色引导、久坐起身）。
     var autoDismissNanoseconds: UInt64? {
         switch self {
-        case .ramPressure, .colorPickTip:
+        case .ramPressure, .colorPickTip, .moveReminder:
+            // 久坐起身：一直挂着，直到点「稍后」或「今天不再提醒」。
             return nil
         case .clipboardCaptureHint:
             // 「已复制」短提示：0.5s，不因悬停延后。
@@ -79,7 +86,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .clipboardCaptureHint, .colorPickTip:
             return false
-        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert:
+        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert, .moveReminder:
             return true
         }
     }

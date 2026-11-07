@@ -228,6 +228,8 @@ enum WidgetSamplePreview {
             focusTimerSample(compact: compact)
         case "builtin.aiUsage":
             aiUsageSample(compact: compact)
+        case "builtin.moveReminder":
+            moveReminderSample(compact: compact)
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
@@ -276,6 +278,20 @@ enum WidgetSamplePreview {
             .padding(.horizontal, IslandChrome.contentHorizontal)
             .frame(maxWidth: compact ? .infinity : 540)
             .frame(minHeight: compact ? 38 : 44)
+    }
+
+    private static func moveReminderSample(compact: Bool) -> some View {
+        let settings = MoveReminderSettings.shared
+        let edge: CGFloat = compact ? 14 : 20
+        // 预览壳无 IslandChrome：左右对称边距；分钟数跟设置走。
+        return MoveReminderNoticeCard.previewSample(
+            activeMinutes: settings.activeTriggerMinutes,
+            restMinutes: settings.suggestedRestMinutes
+        )
+        .padding(.horizontal, edge)
+        .padding(.vertical, compact ? 8 : 12)
+        .fixedSize(horizontal: true, vertical: true)
+        .frame(minHeight: compact ? 44 : 52)
     }
 
     private static func batterySample(compact: Bool) -> some View {

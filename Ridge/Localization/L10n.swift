@@ -156,6 +156,8 @@ enum L10n {
                 return tr("widgets.category.focus_timer", "效率工具")
             case "builtin.aiUsage":
                 return tr("widgets.category.ai_usage", "API 监测")
+            case "builtin.moveReminder":
+                return tr("widgets.category.move_reminder", "健康提醒")
             default:
                 return tr("widgets.category.generic", "小组件")
             }
@@ -180,6 +182,8 @@ enum L10n {
                 return tr("widgets.footer.focus_timer", "联动 macOS 免打扰专注模式")
             case "builtin.aiUsage":
                 return tr("widgets.footer.ai_usage", "阈值预警与密钥本地脱敏存储")
+            case "builtin.moveReminder":
+                return tr("widgets.footer.move_reminder", "系统空闲探测 · 无需输入监控权限")
             default:
                 return tr("widgets.footer.generic", "点击进入配置")
             }
@@ -195,6 +199,7 @@ enum L10n {
             case "builtin.media": return "waveform"
             case "builtin.focusTimer": return "moon.zzz"
             case "builtin.aiUsage": return "brain.head.profile"
+            case "builtin.moveReminder": return "figure.stand"
             default: return "slider.horizontal.3"
             }
         }
@@ -355,6 +360,87 @@ enum L10n {
         static var system: String { tr("control_deck.tile.system", "系统") }
         static var systemMetersSoon: String {
             tr("control_deck.tile.system_meters_soon", "CPU / 内存读数即将接入")
+        }
+    }
+
+    // MARK: - Move Reminder（久坐起身）
+
+    enum MoveReminder {
+        static var widgetName: String { tr("move_reminder.widget.name", "久坐起身") }
+        static var widgetSummary: String {
+            tr(
+                "move_reminder.widget.summary",
+                "连续在电脑前达到时长后岛上提醒起身；离开自动清零，无需输入监控权限"
+            )
+        }
+        static var activeTriggerTitle: String {
+            tr("move_reminder.active.title", "连续活跃触发时长")
+        }
+        static var activeTriggerSubtitle: String {
+            tr(
+                "move_reminder.active.subtitle",
+                "检测到键盘、鼠标或触控板持续交互达到该阈值时唤起提醒通知"
+            )
+        }
+        static var leaveResetTitle: String {
+            tr("move_reminder.leave.title", "离开自动判定重置")
+        }
+        static var leaveResetSubtitle: String {
+            tr(
+                "move_reminder.leave.subtitle",
+                "闲置超过此时间判定人已离开，计时清零重来，避免短暂起身后误报"
+            )
+        }
+        static var restTitle: String {
+            tr("move_reminder.rest.title", "建议活动时长")
+        }
+        static var restSubtitle: String {
+            tr(
+                "move_reminder.rest.subtitle",
+                "提示时建议的站立舒展目标：2 微歇、3 舒展、5 短走"
+            )
+        }
+        static var feedbackSection: String {
+            tr("move_reminder.feedback.section", "通知反馈与免打扰")
+        }
+        static var hapticTitle: String {
+            tr("move_reminder.haptic.title", "触控板轻柔触感反馈")
+        }
+        static var hapticSubtitle: String {
+            tr(
+                "move_reminder.haptic.subtitle",
+                "Force Touch 触控板发出单次振动反馈伴随通知"
+            )
+        }
+        static var smartAvoidTitle: String {
+            tr("move_reminder.smart_avoid.title", "智能避让全屏演讲与专注模式")
+        }
+        static var smartAvoidSubtitle: String {
+            tr(
+                "move_reminder.smart_avoid.subtitle",
+                "视频会议、全屏演示或屏幕共享时自动暂停累计"
+            )
+        }
+        static func minutes(_ n: Int) -> String {
+            String(format: tr("move_reminder.minutes_format", "%d 分钟"), n)
+        }
+        static func noticeTitle(_ minutes: Int) -> String {
+            String(format: tr("move_reminder.notice.title_format", "已连续坐 %d 分钟"), minutes)
+        }
+        static var noticeBadge: String {
+            tr("move_reminder.notice.badge", "推荐起立")
+        }
+        static func noticeSubtitle(_ restMinutes: Int) -> String {
+            String(
+                format: tr("move_reminder.notice.subtitle_format", "建议起身活动 %d 分钟"),
+                restMinutes
+            )
+        }
+        static var snoozeTen: String {
+            tr("move_reminder.notice.snooze_ten", "稍后 10 分钟")
+        }
+        static var muteToday: String {
+            tr("move_reminder.notice.mute_today", "今天不再提醒")
         }
     }
 

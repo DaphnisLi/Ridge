@@ -7282,6 +7282,237 @@
           }
         }
       }
+    },
+    "widgets.category.move_reminder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "健康提醒"
+          }
+        }
+      }
+    },
+    "widgets.footer.move_reminder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统空闲探测 · 无需输入监控权限"
+          }
+        }
+      }
+    },
+    "move_reminder.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "久坐起身"
+          }
+        }
+      }
+    },
+    "move_reminder.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续在电脑前达到时长后岛上提醒起身；离开自动清零，无需输入监控权限"
+          }
+        }
+      }
+    },
+    "move_reminder.active.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续活跃触发时长"
+          }
+        }
+      }
+    },
+    "move_reminder.active.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "检测到键盘、鼠标或触控板持续交互达到该阈值时唤起提醒通知"
+          }
+        }
+      }
+    },
+    "move_reminder.leave.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "离开自动判定重置"
+          }
+        }
+      }
+    },
+    "move_reminder.leave.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "闲置超过此时间判定人已离开，计时清零重来，避免短暂起身后误报"
+          }
+        }
+      }
+    },
+    "move_reminder.rest.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议活动时长"
+          }
+        }
+      }
+    },
+    "move_reminder.rest.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示时建议的站立舒展目标：2 微歇、3 舒展、5 短走"
+          }
+        }
+      }
+    },
+    "move_reminder.feedback.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知反馈与免打扰"
+          }
+        }
+      }
+    },
+    "move_reminder.haptic.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "触控板轻柔触感反馈"
+          }
+        }
+      }
+    },
+    "move_reminder.haptic.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Force Touch 触控板发出单次振动反馈伴随通知"
+          }
+        }
+      }
+    },
+    "move_reminder.smart_avoid.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "智能避让全屏演讲与专注模式"
+          }
+        }
+      }
+    },
+    "move_reminder.smart_avoid.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频会议、全屏演示或屏幕共享时自动暂停累计"
+          }
+        }
+      }
+    },
+    "move_reminder.minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 分钟"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.title_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已连续坐 %d 分钟"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐起立"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.subtitle_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "建议起身活动 %d 分钟"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.snooze_ten": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍后 10 分钟"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.mute_today": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天不再提醒"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

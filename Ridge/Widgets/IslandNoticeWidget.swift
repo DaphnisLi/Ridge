@@ -230,6 +230,8 @@ private struct IslandNoticeCardView: View {
                 resetsAt: resetsAt,
                 errorMessage: nil
             )
+        case .moveReminder(let notice):
+            MoveReminderNoticeCard(notice: notice)
         case .none:
             ProcessEndedNoticeCard(notice: nil)
         }

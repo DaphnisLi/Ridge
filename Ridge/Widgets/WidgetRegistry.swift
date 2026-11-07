@@ -64,6 +64,7 @@ final class WidgetRegistry {
         register(TypedWidgetModule<MediaNowPlayingWidget>())
         register(TypedWidgetModule<FocusTimerWidget>())
         register(TypedWidgetModule<AIUsageWidget>())
+        register(TypedWidgetModule<MoveReminderWidget>())
 
         // 用户 / AI 包：校验 manifest 后 register(manifest:factory:)，无需改 Runtime。
     }

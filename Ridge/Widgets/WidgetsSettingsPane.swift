@@ -530,6 +530,7 @@ private struct WidgetPreviewPane: View {
         widgetID == "builtin.meeting"
             || widgetID == "builtin.focusTimer"
             || widgetID == "builtin.aiUsage"
+            || widgetID == "builtin.moveReminder"
     }
 
     var body: some View {
@@ -562,6 +563,8 @@ private struct WidgetPreviewPane: View {
             FocusTimerWidgetConfigSection()
         } else if widgetID == "builtin.aiUsage" {
             AIUsageWidgetConfigSection()
+        } else if widgetID == "builtin.moveReminder" {
+            MoveReminderWidgetConfigSection()
         }
     }
 
