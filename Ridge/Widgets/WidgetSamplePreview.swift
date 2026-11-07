@@ -230,6 +230,8 @@ enum WidgetSamplePreview {
             aiUsageSample(compact: compact)
         case "builtin.moveReminder":
             moveReminderSample(compact: compact)
+        case "builtin.worldClock":
+            worldClockSample(compact: compact)
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
@@ -292,6 +294,13 @@ enum WidgetSamplePreview {
         .padding(.vertical, compact ? 8 : 12)
         .fixedSize(horizontal: true, vertical: true)
         .frame(minHeight: compact ? 44 : 52)
+    }
+
+    private static func worldClockSample(compact: Bool) -> some View {
+        WorldClockIslandView.previewSample()
+            .padding(.horizontal, compact ? 10 : IslandChrome.contentHorizontal)
+            .padding(.vertical, compact ? 8 : 10)
+            .frame(maxWidth: compact ? .infinity : 560)
     }
 
     private static func batterySample(compact: Bool) -> some View {

@@ -29,6 +29,7 @@
 		1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */; };
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
 		2983F53A047FAB854C63FCA7 /* MoveReminderSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8919AB617974C1727F52BE9A /* MoveReminderSession.swift */; };
+		29D4E1400C224BE84938BFCD /* WorldClockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69BAA7793215EAC5EDFC0E /* WorldClockModels.swift */; };
 		2C788BA6744639A237447AD0 /* FocusTimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95222AB63D89FF5FA90D6EA9 /* FocusTimerModels.swift */; };
 		2D0ACB6972E7E69F1F96A9B2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C0C31143233D22C2EF32D30 /* IOKit.framework */; };
 		3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */; };
@@ -48,6 +49,7 @@
 		4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E07CBB405FFB485642B9C0 /* ProjectProcessSupport.swift */; };
 		4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */; };
 		4C580F64F8E8186EF71D9678 /* MoveReminderAvoidProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B971DE7978B73EEA55C59DC /* MoveReminderAvoidProbe.swift */; };
+		4CC44F1C1DB2CC0B1A4A7DC4 /* WorldClockIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */; };
 		4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */; };
 		4E4EF64C76E429208D63F2DE /* NowPlayingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5047AA5E636C0BAB3B1CD1 /* NowPlayingService.swift */; };
 		506AEFE51A96DEF1D6BF3308 /* ProjectSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440C96AEB669FCE08EA4DC22 /* ProjectSettings.swift */; };
@@ -65,12 +67,15 @@
 		685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */; };
 		6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */; };
 		6997AB6FDC5F0AD503C2BB9C /* MoveReminderWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */; };
+		6B766A59FB1C1C8952C3F595 /* WorldClockCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */; };
 		6C3175BFD0949B4AEEE41FD1 /* BatterySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880C963E64D0E720AFA4F20F /* BatterySettings.swift */; };
 		7074AF75F8A041C93D2A2DDE /* MoveReminderNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F1A3168C908920AC348FA9 /* MoveReminderNoticeCard.swift */; };
 		72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
 		7321D80063E0CCA14B7539E6 /* AlwaysVisibleScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79667A99D118163528FB369 /* AlwaysVisibleScrollView.swift */; };
+		75F1EFAF827EADD787812053 /* WorldClockWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F74486A8597A53C7D79CF5F /* WorldClockWidgetConfigSection.swift */; };
 		76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */; };
+		7703E4BBE8120975F8113B74 /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */; };
 		797C697356CC11AE2118BDB3 /* AIUsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696174AF0446BACA3704883A /* AIUsageModels.swift */; };
 		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
@@ -81,11 +86,13 @@
 		89BAB936D8EA48DE26DE3055 /* BatteryWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */; };
 		90D890B66F172EDA7F680261 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */; };
 		9198703E93AAFF286FC6A778 /* SoundModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */; };
+		92971B96B345EAE5D0AB95E1 /* WorldClockSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */; };
 		9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A380AA9950E13AF158422F15 /* IslandState.swift */; };
 		94145ED790F224EC91A1E6BA /* MeetingCountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D669A16E4C8C5DB311E03507 /* MeetingCountdownWidget.swift */; };
 		94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */; };
 		96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */; };
 		97173776F6C7F2BD8E1912DB /* AIUsageIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45B8C898B0311F98C15DF30 /* AIUsageIslandViews.swift */; };
+		984A23B74427D2293DA3A8A8 /* WorldClockSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */; };
 		98C8EA076814CA437DFDD3DC /* SettingsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6887EE1DEDE357B154C52B12 /* SettingsUI.swift */; };
 		991EEB9BF00F942F3D5BE346 /* ShelfSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F3C289C20C8FE9C5C25ED /* ShelfSettings.swift */; };
 		9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1266F73AC4146FF0C01385 /* RidgeApp.swift */; };
@@ -181,6 +188,7 @@
 		1B90FA6C86EB1EF42A7D0C60 /* MoveReminderIdleProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderIdleProbe.swift; sourceTree = "<group>"; };
 		1B971DE7978B73EEA55C59DC /* MoveReminderAvoidProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderAvoidProbe.swift; sourceTree = "<group>"; };
 		1D424EF6227B7F050BF3D294 /* AIUsageSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettingsPane.swift; sourceTree = "<group>"; };
+		1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSettings.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
 		219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBluetoothProbe.swift; sourceTree = "<group>"; };
 		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
@@ -203,10 +211,12 @@
 		44F1A3168C908920AC348FA9 /* MoveReminderNoticeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderNoticeCard.swift; sourceTree = "<group>"; };
 		476E748467E663BFC1133613 /* WidgetSamplePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSamplePreview.swift; sourceTree = "<group>"; };
 		482677D8E4898DBF37E8B22E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4B69BAA7793215EAC5EDFC0E /* WorldClockModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockModels.swift; sourceTree = "<group>"; };
 		4BFC96E41744375F5D6F2529 /* SoundSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSession.swift; sourceTree = "<group>"; };
 		4C0C31143233D22C2EF32D30 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseSession.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockIslandViews.swift; sourceTree = "<group>"; };
 		52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerWidget.swift; sourceTree = "<group>"; };
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
 		54E6ABB9A1D52944282FBA09 /* AIUsageWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageWidget.swift; sourceTree = "<group>"; };
@@ -223,10 +233,13 @@
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
+		713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSession.swift; sourceTree = "<group>"; };
+		71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCatalog.swift; sourceTree = "<group>"; };
 		7694C35719C53E4F238252E3 /* IslandSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettings.swift; sourceTree = "<group>"; };
 		77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsNavigator.swift; sourceTree = "<group>"; };
 		7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
 		7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusPresentation.swift; sourceTree = "<group>"; };
+		7F74486A8597A53C7D79CF5F /* WorldClockWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidgetConfigSection.swift; sourceTree = "<group>"; };
 		805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettingsPane.swift; sourceTree = "<group>"; };
 		81BB2FAF48572CDD36E2974F /* IslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWidget.swift; sourceTree = "<group>"; };
 		81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAppVolumeRoute.swift; sourceTree = "<group>"; };
@@ -277,6 +290,7 @@
 		BED55417055983E937B47576 /* DisplayMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayMonitor.swift; sourceTree = "<group>"; };
 		BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckIslandView.swift; sourceTree = "<group>"; };
 		C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidget.swift; sourceTree = "<group>"; };
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
@@ -351,6 +365,20 @@
 				93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */,
 			);
 			path = Battery;
+			sourceTree = "<group>";
+		};
+		0764ACB0F7069DBCD7A1FF89 /* WorldClock */ = {
+			isa = PBXGroup;
+			children = (
+				71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */,
+				51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */,
+				4B69BAA7793215EAC5EDFC0E /* WorldClockModels.swift */,
+				713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */,
+				1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */,
+				CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */,
+				7F74486A8597A53C7D79CF5F /* WorldClockWidgetConfigSection.swift */,
+			);
+			path = WorldClock;
 			sourceTree = "<group>";
 		};
 		0D3085EE34BCDA5A9630E266 /* Meeting */ = {
@@ -430,6 +458,7 @@
 				B669A13D9D57BA96F3DABB25 /* Shelf */,
 				6475114B0F370C8ABCCC842F /* Sound */,
 				E6385D7185B43005C4D82D75 /* Widgets */,
+				0764ACB0F7069DBCD7A1FF89 /* WorldClock */,
 			);
 			path = Ridge;
 			sourceTree = "<group>";
@@ -866,6 +895,13 @@
 				CE979D3CE7CFAEEC6877C829 /* WidgetSamplePreview.swift in Sources */,
 				9E9C3420E3E847D32E5733ED /* WidgetSettings.swift in Sources */,
 				FBF5908F3A964F8598572BA1 /* WidgetsSettingsPane.swift in Sources */,
+				6B766A59FB1C1C8952C3F595 /* WorldClockCatalog.swift in Sources */,
+				4CC44F1C1DB2CC0B1A4A7DC4 /* WorldClockIslandViews.swift in Sources */,
+				29D4E1400C224BE84938BFCD /* WorldClockModels.swift in Sources */,
+				92971B96B345EAE5D0AB95E1 /* WorldClockSession.swift in Sources */,
+				984A23B74427D2293DA3A8A8 /* WorldClockSettings.swift in Sources */,
+				7703E4BBE8120975F8113B74 /* WorldClockWidget.swift in Sources */,
+				75F1EFAF827EADD787812053 /* WorldClockWidgetConfigSection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

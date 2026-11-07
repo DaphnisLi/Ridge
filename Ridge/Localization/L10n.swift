@@ -158,6 +158,8 @@ enum L10n {
                 return tr("widgets.category.ai_usage", "API 监测")
             case "builtin.moveReminder":
                 return tr("widgets.category.move_reminder", "健康提醒")
+            case "builtin.worldClock":
+                return tr("widgets.category.world_clock", "时区时钟")
             default:
                 return tr("widgets.category.generic", "小组件")
             }
@@ -184,6 +186,8 @@ enum L10n {
                 return tr("widgets.footer.ai_usage", "阈值预警与密钥本地脱敏存储")
             case "builtin.moveReminder":
                 return tr("widgets.footer.move_reminder", "系统空闲探测 · 无需输入监控权限")
+            case "builtin.worldClock":
+                return tr("widgets.footer.world_clock", "固钉城市 · 时差与昼夜动态")
             default:
                 return tr("widgets.footer.generic", "点击进入配置")
             }
@@ -200,6 +204,7 @@ enum L10n {
             case "builtin.focusTimer": return "moon.zzz"
             case "builtin.aiUsage": return "brain.head.profile"
             case "builtin.moveReminder": return "figure.stand"
+            case "builtin.worldClock": return "globe"
             default: return "slider.horizontal.3"
             }
         }
@@ -442,6 +447,86 @@ enum L10n {
         static var muteToday: String {
             tr("move_reminder.notice.mute_today", "今天不再提醒")
         }
+    }
+
+    // MARK: - World Clock（世界时钟）
+
+    enum WorldClock {
+        static var widgetName: String { tr("world_clock.widget.name", "世界时钟") }
+        static var widgetSummary: String {
+            tr(
+                "world_clock.widget.summary",
+                "固钉全球城市时区，岛上展开对照本地时差与昼夜"
+            )
+        }
+        static var searchTitle: String { tr("world_clock.search.title", "搜索并添加时区") }
+        static var searchHint: String {
+            tr("world_clock.search.hint", "精选城市 + 全球 IANA 时区")
+        }
+        static var searchPlaceholder: String {
+            tr(
+                "world_clock.search.placeholder",
+                "输入城市名或时区缩写（如 PST、伦敦、Tokyo…）"
+            )
+        }
+        static var add: String { tr("world_clock.add", "添加") }
+        static var pinnedTitle: String { tr("world_clock.pinned.title", "已固钉城市管理") }
+        static var pinnedSubtitle: String {
+            tr(
+                "world_clock.pinned.subtitle",
+                "拖拽左侧手柄调整顺序，可修改别名；建议固钉 3～4 个"
+            )
+        }
+        static var pinnedEmpty: String {
+            tr("world_clock.pinned.empty", "尚未固钉城市，请在上方搜索添加")
+        }
+        static func slotUsage(_ used: Int, _ max: Int) -> String {
+            String(
+                format: tr("world_clock.pinned.slots_format", "%d / %d 已占用"),
+                used,
+                max
+            )
+        }
+        static var aliasLabel: String { tr("world_clock.alias.label", "别名:") }
+        static var aliasPlaceholder: String {
+            tr("world_clock.alias.placeholder", "填写别名")
+        }
+        static var setPrimary: String { tr("world_clock.set_primary", "设为主城市") }
+        static var remove: String { tr("world_clock.remove", "移除") }
+        static var dragHandleHelp: String {
+            tr("world_clock.drag_handle.help", "拖拽调整顺序")
+        }
+        static func dstActive(_ abbr: String) -> String {
+            String(format: tr("world_clock.dst.active_format", "%@ 生效中"), abbr)
+        }
+        static func noDST(_ abbr: String) -> String {
+            String(format: tr("world_clock.dst.none_format", "无夏令时 (%@)"), abbr)
+        }
+        static var prefsTitle: String { tr("world_clock.prefs.title", "胶囊呈现偏好") }
+        static var timeFormatTitle: String { tr("world_clock.format.title", "时间制式") }
+        static var timeFormatSubtitle: String {
+            tr("world_clock.format.subtitle", "24 小时或 12 小时制附带 AM/PM")
+        }
+        static var format24h: String { tr("world_clock.format.24h", "24h") }
+        static var format12h: String { tr("world_clock.format.12h", "12h") }
+        static var dayNightTitle: String {
+            tr("world_clock.day_night.title", "昼夜图标动态展示")
+        }
+        static var dayNightSubtitle: String {
+            tr("world_clock.day_night.subtitle", "依据当地大致日出日落展示日/月")
+        }
+        static var offsetTitle: String {
+            tr("world_clock.offset.title", "相对本机时差角标")
+        }
+        static var offsetSubtitle: String {
+            tr("world_clock.offset.subtitle", "实时显示「+3h 今天」或「-8h 昨天」")
+        }
+        static var emptyIsland: String {
+            tr("world_clock.island.empty", "添加城市后显示世界时钟")
+        }
+        static var today: String { tr("world_clock.day.today", "今天") }
+        static var yesterday: String { tr("world_clock.day.yesterday", "昨天") }
+        static var tomorrow: String { tr("world_clock.day.tomorrow", "明天") }
     }
 
     // MARK: - AI Usage（额度监测）

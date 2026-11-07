@@ -7513,6 +7513,358 @@
           }
         }
       }
+    },
+    "widgets.category.world_clock": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时区时钟"
+          }
+        }
+      }
+    },
+    "widgets.footer.world_clock": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固钉城市 · 时差与昼夜动态"
+          }
+        }
+      }
+    },
+    "world_clock.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "世界时钟"
+          }
+        }
+      }
+    },
+    "world_clock.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固钉全球城市时区，岛上展开对照本地时差与昼夜"
+          }
+        }
+      }
+    },
+    "world_clock.search.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索并添加时区"
+          }
+        }
+      }
+    },
+    "world_clock.search.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "精选城市 + 全球 IANA 时区"
+          }
+        }
+      }
+    },
+    "world_clock.search.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入城市名或时区缩写（如 PST、伦敦、Tokyo…）"
+          }
+        }
+      }
+    },
+    "world_clock.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加"
+          }
+        }
+      }
+    },
+    "world_clock.pinned.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已固钉城市管理"
+          }
+        }
+      }
+    },
+    "world_clock.pinned.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖拽左侧手柄调整顺序，可修改别名；建议固钉 3～4 个"
+          }
+        }
+      }
+    },
+    "world_clock.dst.active_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 生效中"
+          }
+        }
+      }
+    },
+    "world_clock.dst.none_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无夏令时 (%@)"
+          }
+        }
+      }
+    },
+    "world_clock.pinned.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未固钉城市，请在上方搜索添加"
+          }
+        }
+      }
+    },
+    "world_clock.pinned.slots_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d / %d 已占用"
+          }
+        }
+      }
+    },
+    "world_clock.alias.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "别名:"
+          }
+        }
+      }
+    },
+    "world_clock.alias.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "填写别名"
+          }
+        }
+      }
+    },
+    "world_clock.set_primary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设为主城市"
+          }
+        }
+      }
+    },
+    "world_clock.remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除"
+          }
+        }
+      }
+    },
+    "world_clock.drag_handle.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖拽调整顺序"
+          }
+        }
+      }
+    },
+    "world_clock.prefs.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶囊呈现偏好"
+          }
+        }
+      }
+    },
+    "world_clock.format.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "时间制式"
+          }
+        }
+      }
+    },
+    "world_clock.format.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24 小时或 12 小时制附带 AM/PM"
+          }
+        }
+      }
+    },
+    "world_clock.format.24h": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24h"
+          }
+        }
+      }
+    },
+    "world_clock.format.12h": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12h"
+          }
+        }
+      }
+    },
+    "world_clock.day_night.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "昼夜图标动态展示"
+          }
+        }
+      }
+    },
+    "world_clock.day_night.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "依据当地大致日出日落展示日/月"
+          }
+        }
+      }
+    },
+    "world_clock.offset.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相对本机时差角标"
+          }
+        }
+      }
+    },
+    "world_clock.offset.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实时显示「+3h 今天」或「-8h 昨天」"
+          }
+        }
+      }
+    },
+    "world_clock.island.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加城市后显示世界时钟"
+          }
+        }
+      }
+    },
+    "world_clock.day.today": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天"
+          }
+        }
+      }
+    },
+    "world_clock.day.yesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "昨天"
+          }
+        }
+      }
+    },
+    "world_clock.day.tomorrow": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明天"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

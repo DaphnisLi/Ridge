@@ -25,8 +25,12 @@ enum SettingsChrome {
     static let primary = Color(red: 0.0, green: 0.443, blue: 0.890)
     /// primary-container `#0077ed`
     static let primaryContainer = Color(red: 0.0, green: 0.467, blue: 0.929)
-    /// secondary / success `#34c759`
+    /// secondary / success `#34c759`（开关成功指示、图钉图标）
     static let secondary = Color(red: 0.204, green: 0.780, blue: 0.349)
+    /// secondary-container 浅绿底（夏令时角标等）`#d1f7e2`
+    static let secondaryContainer = Color(red: 0.820, green: 0.969, blue: 0.886)
+    /// on-secondary-container 深绿字 `#006e28`
+    static let onSecondaryContainer = Color(red: 0.0, green: 0.431, blue: 0.157)
     /// error `#ff3b30`
     static let error = Color(red: 1.0, green: 0.231, blue: 0.188)
     /// outline `#d2d2d7`
