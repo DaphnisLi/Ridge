@@ -451,7 +451,8 @@ final class BatterySession: ObservableObject {
                 lowAlertArmed.remove(device.id)
                 settings.clearSnooze(deviceID: device.id)
             }
-            if percent < 100 {
+            // 未满或未在充电：允许下一轮「充到 100%」再提示；纯满电未插电不提示。
+            if percent < 100 || !device.isCharging {
                 fullAlertArmed.remove(device.id)
             }
 
@@ -478,7 +479,9 @@ final class BatterySession: ObservableObject {
                 ])
             }
 
+            // 满电提示：必须「正在充电」且电量到 100%；已满但未充电（如一直躺在 100%）不弹。
             if settings.fullChargeAlertEnabled,
+               device.isCharging,
                percent >= 100,
                !fullAlertArmed.contains(device.id)
             {
@@ -493,7 +496,19 @@ final class BatterySession: ObservableObject {
                     detail: L10n.Battery.fullNoticeDetail
                 )
                 IslandNoticeCenter.shared.present(.peripheralFullCharge(notice))
-                AppLog.info("Battery", "已投递满电通知", ["name": device.name])
+                AppLog.info("Battery", "已投递满电通知", [
+                    "name": device.name,
+                    "percent": percent,
+                    "charging": true
+                ])
+            } else if settings.fullChargeAlertEnabled,
+                      percent >= 100,
+                      !device.isCharging
+            {
+                AppLog.debug("Battery", "满电但未充电，跳过满电通知", [
+                    "name": device.name,
+                    "percent": percent
+                ])
             }
         }
     }
