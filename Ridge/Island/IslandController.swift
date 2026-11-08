@@ -894,19 +894,34 @@ final class IslandController: NSObject {
         geometry: NotchGeometry,
         expanded: Bool
     ) -> IslandPointerHit {
+        // 保展开用「稳定大面板」尺寸，避免 Preference 误缩成刘海后下半截一移就收。
+        let retentionSize = viewModel.retentionPanelSize(
+            notchWidth: geometry.notchWidth,
+            notchHeight: geometry.notchHeight
+        )
         var pageBody = geometry.panelFrameOnScreen(size: viewModel.panelSize)
+        var retentionBody = geometry.panelFrameOnScreen(size: retentionSize)
+        if retentionSize != viewModel.panelSize, expanded {
+            AppLog.warn("Island", "保展开改用稳定面板尺寸", [
+                "panelW": Int(viewModel.panelSize.width),
+                "panelH": Int(viewModel.panelSize.height),
+                "stableW": Int(retentionSize.width),
+                "stableH": Int(retentionSize.height)
+            ])
+        }
         // 刚从控制台翻到矮页：短暂并入大热区，避免指针还在原下半截被当成离开。
         if expanded, let boost = hoverLayoutBoost, Date() < hoverLayoutBoostUntil {
             let width = CGFloat(IslandSettings.shared.expandedWidth)
             let boostFrame = geometry.expandedFrameOnScreen(width: width, layout: boost)
             pageBody = pageBody.union(boostFrame)
+            retentionBody = retentionBody.union(boostFrame)
         } else if hoverLayoutBoost != nil {
             hoverLayoutBoost = nil
         }
 
         let retentionFrame = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: geometry.notchFrame,
-            panelFrame: pageBody,
+            panelFrame: retentionBody,
             expanded: expanded
         )
         let interactiveFrame = expanded

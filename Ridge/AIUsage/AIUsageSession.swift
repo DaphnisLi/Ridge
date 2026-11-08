@@ -2,9 +2,9 @@ import Combine
 import Foundation
 
 /// AI 额度会话：定时刷新 Cursor。
-/// 提示规则：
+/// 提示规则（账号 + 当前周期额度缺一不可）：
 /// - 平时：同账号同周期内，显示剩余**跌破**某条线（充裕 / 警戒 / 截流）时弹对应形态一次；
-/// - 换账号 / 新计费周期：作用域切换，按新身份重新判定（已在触发带则弹）；
+/// - 换账号 / 新计费周期：按新身份重判；**只要当前已在触发带就弹**（换回旧号也再弹，不去重挡）；
 /// - 改阈值：按新线立刻重判，若当前已在某档内则强制再弹该档。
 @MainActor
 final class AIUsageSession: ObservableObject {
@@ -16,6 +16,7 @@ final class AIUsageSession: ObservableObject {
 
     private let settings = AIUsageSettings.shared
     private var timer: Timer?
+    private var accountWatchTimer: Timer?
     private var started = false
     private var settingsObservers: Set<AnyCancellable> = []
     private var thresholdChangeTask: Task<Void, Never>?
@@ -23,6 +24,8 @@ final class AIUsageSession: ObservableObject {
     private var lastSampledPercent: Int?
     /// 上次采样的账号+周期；切换时边沿基准作废。
     private var lastSampledScope: AIUsageAlertScope?
+    /// 本机 Cursor 缓存邮箱（小写）；用于秒级发现换号，不必等用量轮询。
+    private var lastWatchedAccountID: String?
     /// 串行刷新：避免改阈值与定时刷新互相 `isRefreshing` 跳过。
     private var refreshWaiters: [CheckedContinuation<Void, Never>] = []
 
@@ -148,6 +151,8 @@ final class AIUsageSession: ObservableObject {
     private func reevaluateSensing(reason: String) {
         timer?.invalidate()
         timer = nil
+        accountWatchTimer?.invalidate()
+        accountWatchTimer = nil
         guard settings.sensingEnabled else {
             AppLog.info("AIUsage", "感知已关闭", ["reason": reason])
             return
@@ -160,7 +165,48 @@ final class AIUsageSession: ObservableObject {
         }
         RunLoop.main.add(timer, forMode: .common)
         self.timer = timer
+
+        // 换号只改本机 state.vscdb，用量轮询可能要等 2 分钟；15s 嗅探邮箱加速作用域切换。
+        let watch = Timer(timeInterval: 15, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkLocalAccountSwitch()
+            }
+        }
+        RunLoop.main.add(watch, forMode: .common)
+        accountWatchTimer = watch
+        checkLocalAccountSwitch()
+
         AppLog.warn("AIUsage", "已安排定时刷新", ["minutes": minutes, "reason": reason])
+    }
+
+    /// 仅读本地 Cursor 登录邮箱；变了立刻拉用量并按新账号重判提示。
+    private func checkLocalAccountSwitch() {
+        guard settings.sensingEnabled else { return }
+        let email: String?
+        do {
+            email = try CursorUsageClient.readLocalAuth().email?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+        } catch {
+            AppLog.debug("AIUsage", "账号嗅探失败（可忽略）", [
+                "error": String(describing: error)
+            ])
+            return
+        }
+        let next = (email?.isEmpty == false) ? email : nil
+        defer { lastWatchedAccountID = next }
+        guard let previous = lastWatchedAccountID else { return }
+        guard previous != next else { return }
+        let from = String(previous.prefix(3)) + "***"
+        let to = next.map { String($0.prefix(3)) + "***" } ?? "nil"
+        AppLog.warn("AIUsage", "检测到 Cursor 账号切换，立即刷新", [
+            "from": from,
+            "to": to
+        ])
+        // 作废旧账号边沿，避免拿上一号剩余去算穿越。
+        lastSampledPercent = nil
+        lastSampledScope = nil
+        Task { await refresh(reason: "accountSwitch", evaluateTips: true) }
     }
 
     /// - Parameter forceIfInBand: 改阈值后：只要当前显示剩余落在某档，就弹该档（忽略同档锁）。
@@ -200,6 +246,7 @@ final class AIUsageSession: ObservableObject {
                 "warningAt": settings.warningThreshold,
                 "criticalAt": settings.criticalThreshold,
                 "force": forceIfInBand,
+                "scopeChanged": scopeChanged,
                 "scope": scope.logSummary
             ])
             return
@@ -207,23 +254,17 @@ final class AIUsageSession: ObservableObject {
 
         let last = settings.lastAlertedStage(for: scope)
 
-        // 改阈值，或换账号 / 新周期且本作用域尚未记过同档。
+        // 改阈值 / 换账号 / 新周期：账号与额度一起判——只要新作用域当前已在触发带就弹。
+        // 频繁换号时「本作用域曾经提示过同档」不再挡住（否则换回旧号看不到提示）。
         if forceIfInBand || scopeChanged {
-            if !forceIfInBand, last?.1 == tipStage {
-                AppLog.warn("AIUsage", "跳过额度提示：换作用域但同档已提示过", [
-                    "remaining": percent,
-                    "stage": tipStage.rawValue,
-                    "scope": scope.logSummary
-                ])
-                return
-            }
             settings.rememberAlert(provider: .cursor, stage: tipStage, scope: scope)
             presentNotice(percent: percent, stage: tipStage, resetsAt: cursor.resetsAt)
             AppLog.warn("AIUsage", forceIfInBand ? "改阈值强制提示" : "换账号/周期提示", [
                 "stage": tipStage.rawValue,
                 "remaining": percent,
                 "scope": scope.logSummary,
-                "scopeChanged": scopeChanged
+                "scopeChanged": scopeChanged,
+                "prevStage": last?.1.rawValue ?? "nil"
             ])
             return
         }

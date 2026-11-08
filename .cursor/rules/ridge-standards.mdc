@@ -12,6 +12,7 @@ alwaysApply: true
 | 文件 | 功能 |
 |------|------|
 | `ridge-standards.mdc` | 本文件：总则与索引 |
+| `regression-catalog.mdc` | 回归问题目录：`docs/REGRESSION_CATALOG.md`；重复出现优先自动化 |
 | `widget-architecture.mdc` | 小组件扩展契约：如何实现 / 注册新 widget（含 AI 自定义） |
 | `widget-preview.mdc` | 设置预览：统一假数据组件 `WidgetSamplePreview`；上直角下圆角 |
 | `settings-ui.mdc` | 设置页通用 UI：`SettingsChrome` 色板/字号 + `SettingsUI` 卡片与表单 |

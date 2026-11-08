@@ -63,6 +63,9 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
         // 大面板下半截必须在保展开区内。
         let lowerPoint = CGPoint(x: panel.midX, y: panel.minY + 20)
         XCTAssertTrue(frame.contains(lowerPoint))
+        // 下边额外外扩：贴底外侧一点仍应保展开。
+        let belowPanel = CGPoint(x: panel.midX, y: panel.minY - 10)
+        XCTAssertTrue(frame.contains(belowPanel))
         // 仅刘海时，下半截不应命中。
         let notchOnly = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: notch,

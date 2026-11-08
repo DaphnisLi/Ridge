@@ -1,0 +1,21 @@
+---
+description: 维护回归问题目录；重复出现问题优先自动化测试
+alwaysApply: true
+---
+
+# 回归问题目录
+
+权威文档：`docs/REGRESSION_CATALOG.md`（进 Git）。**不要**再写到 `~/.cursor/rules/` 或 User Rules。
+
+## Agent 必须
+
+1. **修 bug / 用户指出缺陷后**：在目录中新增或更新条目（`occurrences`、症状、防护、自动化建议）。
+2. **同一根因再次出现**：`occurrences += 1`；若 `≥ 2`，标 `recurring: true`，并写入文档顶部「重复出现问题」表。
+3. **写 / 扩自动化测试时**：优先覆盖表中 `recurring: true` 项；用例与文档 `id` 对齐（如 `island-hover-retention`）。
+4. **改 Island 悬停 / 边距 / 设置预览时**：先对照目录里对应 recurring 项与既有 `.mdc` 规则，避免已知回归。
+
+## 禁止
+
+- 只口头总结问题、不写入 `REGRESSION_CATALOG.md`
+- 重复出现两次以上仍不标 recurring
+- 为目录另起第二份清单（本仓库只认这一份）

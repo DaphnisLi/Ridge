@@ -39,16 +39,25 @@ enum IslandExpandedPanelPolicy {
     }
 
     /// 展开态保展开矩形：面板框外扩；收起态仅刘海。
+    /// 下边多留一点：纵滑 / 滚到面板下沿时不易误判离开。
     static func retentionFrame(
         notchFrame: CGRect,
         panelFrame: CGRect,
         expanded: Bool,
         notchPad: CGFloat = 4,
-        panelPad: CGFloat = 16
+        panelPad: CGFloat = 16,
+        panelBottomExtra: CGFloat = 20
     ) -> CGRect {
         let notchHit = notchFrame.insetBy(dx: -notchPad, dy: -2)
         guard expanded else { return notchHit }
-        return panelFrame.insetBy(dx: -panelPad, dy: -panelPad).union(notchHit)
+        let padded = panelFrame.insetBy(dx: -panelPad, dy: -panelPad)
+        let withBottom = CGRect(
+            x: padded.origin.x,
+            y: padded.origin.y - panelBottomExtra,
+            width: padded.width,
+            height: padded.height + panelBottomExtra
+        )
+        return withBottom.union(notchHit)
     }
 
     /// 展开且面板已接近刘海尺寸时视为异常（热区会退化成「小岛」）。

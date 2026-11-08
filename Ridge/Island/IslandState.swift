@@ -18,10 +18,27 @@ final class IslandViewModel: ObservableObject {
     @Published var maxExpandedWidth: CGFloat = 2000
     /// 当前可见面板尺寸：收起为刘海/待命宽高；展开由内容测量 + IslandChrome 撑开。
     @Published var panelSize: CGSize = CGSize(width: 160, height: 32)
+    /// 最近一次「正常大面板」尺寸；保展开热区优先用它，避免误缩成刘海后下半截一碰就收岛。
+    private(set) var lastStableExpandedPanelSize: CGSize = .zero
     /// 翻页 / 刚展开时允许面板变矮变窄；其余时间禁止大幅缩小（拖动时 Preference 会误报刘海尺寸）。
     private var allowPanelShrinkUntil = Date.distantPast
 
     var isExpanded: Bool { appearance == .expanded }
+
+    /// 展开态悬停热区用的面板尺寸：禁止退回接近刘海的小框。
+    func retentionPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
+        let notch = CGSize(width: notchWidth, height: notchHeight)
+        if IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+            panel: panelSize,
+            notch: notch,
+            isExpanded: isExpanded
+        ), lastStableExpandedPanelSize.width > notchWidth + 8,
+           lastStableExpandedPanelSize.height > notchHeight + 8
+        {
+            return lastStableExpandedPanelSize
+        }
+        return panelSize
+    }
 
     func toggle() {
         appearance = isExpanded ? .compact : .expanded
@@ -78,9 +95,10 @@ final class IslandViewModel: ObservableObject {
         }
 
         panelSize = next
+        let notch = CGSize(width: notchWidth, height: notchHeight)
         if IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
             panel: next,
-            notch: CGSize(width: notchWidth, height: notchHeight),
+            notch: notch,
             isExpanded: isExpanded
         ) {
             AppLog.warn("Island", "展开态面板尺寸异常接近刘海", [
@@ -89,6 +107,8 @@ final class IslandViewModel: ObservableObject {
                 "notchW": Int(notchWidth),
                 "notchH": Int(notchHeight)
             ])
+        } else if isExpanded {
+            lastStableExpandedPanelSize = next
         }
         AppLog.debug("Island", "面板尺寸由内容更新", [
             "w": next.width,

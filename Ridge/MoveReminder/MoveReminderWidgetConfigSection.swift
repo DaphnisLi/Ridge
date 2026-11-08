@@ -145,9 +145,9 @@ struct MoveReminderWidgetConfigSection: View {
                 }
                 Spacer(minLength: 8)
                 SettingsSegmentedControl(
-                    items: MoveReminderSettings.restOptions.map { minutes in
+                    items: settings.restOptionsForActive.map { minutes in
                         SettingsSegmentedControl.Item(
-                            id: "rest-\(minutes)",
+                            id: "rest-\(settings.activeTriggerMinutes)-\(minutes)",
                             title: L10n.MoveReminder.minutes(minutes),
                             selected: settings.suggestedRestMinutes == minutes
                         ) {
@@ -155,7 +155,8 @@ struct MoveReminderWidgetConfigSection: View {
                         }
                     }
                 )
-                .frame(maxWidth: 260)
+                .frame(maxWidth: 280)
+                .id(settings.activeTriggerMinutes)
             }
             .padding(SettingsChrome.Spacing.cardPadding)
         }

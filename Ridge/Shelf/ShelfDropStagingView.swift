@@ -16,7 +16,6 @@ struct ShelfDropStagingView: View {
     private let accent = Color(red: 0.23, green: 0.51, blue: 0.96)
     private let accentBright = Color(red: 0.039, green: 0.518, blue: 1.0)
     private let airDropAccent = Color(red: 0.20, green: 0.78, blue: 0.90)
-    private let emerald = Color(red: 0.31, green: 0.83, blue: 0.40)
     private let glassHover = Color(red: 0.055, green: 0.106, blue: 0.192)
 
     var body: some View {
@@ -52,8 +51,6 @@ struct ShelfDropStagingView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            ramBadge
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -102,28 +99,6 @@ struct ShelfDropStagingView: View {
             }
             .frame(width: 44, height: 44)
         }
-    }
-
-    private var ramBadge: some View {
-        HStack(spacing: 5) {
-            Circle()
-                .fill(emerald)
-                .frame(width: 5, height: 5)
-            Text(L10n.Shelf.dropRamBadge)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.48))
-        }
-        .padding(.horizontal, 9)
-        .padding(.vertical, 4)
-        .background(
-            Capsule(style: .continuous)
-                .fill(Color.black.opacity(0.30))
-                .overlay(
-                    Capsule(style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.06), lineWidth: 1)
-                )
-        )
-        .padding(.top, 2)
     }
 
     // MARK: - 方案三：整岛拖入 · 左暂存 / 右隔空传送

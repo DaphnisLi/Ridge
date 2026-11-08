@@ -19,6 +19,7 @@ final class MoveReminderSettings: ObservableObject {
     private let defaults = UserDefaults.standard
 
     /// 连续「在电脑前」达到该分钟数后提醒。可选 30 / 60 / 90 / 120。
+    /// 变更时按档位下标映射建议活动时长（轻 / 中 / 重）。
     @Published var activeTriggerMinutes: Int {
         didSet {
             let clamped = Self.clampActive(activeTriggerMinutes)
@@ -26,7 +27,15 @@ final class MoveReminderSettings: ObservableObject {
                 activeTriggerMinutes = clamped
                 return
             }
+            let previous = defaults.object(forKey: Key.activeMinutes) as? Int
             defaults.set(clamped, forKey: Key.activeMinutes)
+            // 仅用户切换活跃档时联动；init 赋值不改建议活动。
+            if let previous {
+                let from = Self.clampActive(previous)
+                if from != clamped {
+                    remapSuggestedRest(fromActive: from, toActive: clamped)
+                }
+            }
         }
     }
 
@@ -42,10 +51,13 @@ final class MoveReminderSettings: ObservableObject {
         }
     }
 
-    /// 建议活动时长（用户自选）。可选 2 / 3 / 5：微歇 / 舒展 / 短走。
+    /// 建议活动时长（用户自选）；选项随 `activeTriggerMinutes` 联动分档。
     @Published var suggestedRestMinutes: Int {
         didSet {
-            let clamped = Self.clampRest(suggestedRestMinutes)
+            let clamped = Self.clampRest(
+                suggestedRestMinutes,
+                forActive: activeTriggerMinutes
+            )
             if clamped != suggestedRestMinutes {
                 suggestedRestMinutes = clamped
                 return
@@ -65,17 +77,20 @@ final class MoveReminderSettings: ObservableObject {
 
     private init() {
         let defaults = UserDefaults.standard
-        activeTriggerMinutes = Self.clampActive(
+        let active = Self.clampActive(
             defaults.object(forKey: Key.activeMinutes) as? Int ?? 30
         )
-        leaveResetMinutes = Self.clampLeave(
+        let leave = Self.clampLeave(
             defaults.object(forKey: Key.leaveMinutes) as? Int ?? 5
         )
-        // 旧版 1/2/3 或联动档若不在新选项内，回落默认 2。
+        // 旧档或与当前活跃档不匹配时，钳到当前档首项。
         let storedRest = defaults.object(forKey: Key.restMinutes) as? Int
             ?? defaults.object(forKey: "moveReminder.restMinutes.v1") as? Int
-            ?? 2
-        suggestedRestMinutes = Self.clampRest(storedRest)
+            ?? Self.restOptions(for: active)[0]
+        let rest = Self.clampRest(storedRest, forActive: active)
+        activeTriggerMinutes = active
+        leaveResetMinutes = leave
+        suggestedRestMinutes = rest
         defaults.removeObject(forKey: "moveReminder.restMinutes.v1")
         if defaults.object(forKey: Key.haptic) == nil {
             hapticEnabled = false
@@ -92,10 +107,25 @@ final class MoveReminderSettings: ObservableObject {
     var activeTriggerSeconds: TimeInterval { TimeInterval(activeTriggerMinutes * 60) }
     var leaveResetSeconds: TimeInterval { TimeInterval(leaveResetMinutes * 60) }
 
+    /// 当前活跃档对应的建议活动三档（轻 / 中 / 重）。
+    var restOptionsForActive: [Int] {
+        Self.restOptions(for: activeTriggerMinutes)
+    }
+
     static let activeOptions = [30, 60, 90, 120]
     static let leaveOptions = [3, 5, 10]
-    /// 2 微歇 · 3 舒展 · 5 短走（默认 2，负担低、易坚持）。
-    static let restOptions = [2, 3, 5]
+
+    /// 连续活跃 → 建议活动三档。
+    /// 30→2/3/4；60→4/6/8；90→7/9/11；120→10/12/15。
+    static func restOptions(for activeMinutes: Int) -> [Int] {
+        switch clampActive(activeMinutes) {
+        case 30: return [2, 3, 4]
+        case 60: return [4, 6, 8]
+        case 90: return [7, 9, 11]
+        case 120: return [10, 12, 15]
+        default: return [2, 3, 4]
+        }
+    }
 
     private static func clampActive(_ v: Int) -> Int {
         activeOptions.contains(v) ? v : 30
@@ -105,21 +135,44 @@ final class MoveReminderSettings: ObservableObject {
         leaveOptions.contains(v) ? v : 5
     }
 
-    private static func clampRest(_ v: Int) -> Int {
-        restOptions.contains(v) ? v : 2
+    private static func clampRest(_ v: Int, forActive active: Int) -> Int {
+        let opts = restOptions(for: active)
+        return opts.contains(v) ? v : opts[0]
+    }
+
+    /// 切换活跃档时保留「轻/中/重」下标，映射到新档分钟数。
+    private func remapSuggestedRest(fromActive: Int, toActive: Int) {
+        let oldOpts = Self.restOptions(for: fromActive)
+        let newOpts = Self.restOptions(for: toActive)
+        let idx = oldOpts.firstIndex(of: suggestedRestMinutes) ?? 0
+        let mapped = newOpts[min(idx, newOpts.count - 1)]
+        guard mapped != suggestedRestMinutes else {
+            AppLog.info("MoveReminder", "活跃档已切换，建议活动仍落在同档分钟", [
+                "active": toActive,
+                "rest": mapped
+            ])
+            return
+        }
+        suggestedRestMinutes = mapped
+        AppLog.info("MoveReminder", "活跃档联动建议活动时长", [
+            "fromActive": fromActive,
+            "toActive": toActive,
+            "tier": idx,
+            "rest": mapped
+        ])
     }
 
     func restoreDefaults() {
         activeTriggerMinutes = 30
         leaveResetMinutes = 5
-        suggestedRestMinutes = 2
+        suggestedRestMinutes = Self.restOptions(for: 30)[0]
         hapticEnabled = false
         smartAvoidEnabled = false
         clearMute()
         clearSnooze()
         AppLog.info("MoveReminder", "已恢复默认设置", [
             "active": 30,
-            "rest": 2,
+            "rest": suggestedRestMinutes,
             "haptic": false,
             "smartAvoid": false
         ])

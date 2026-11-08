@@ -407,7 +407,7 @@ enum L10n {
         static var restSubtitle: String {
             tr(
                 "move_reminder.rest.subtitle",
-                "提示时建议的站立舒展目标：2 微歇、3 舒展、5 短走"
+                "提示时建议的站立舒展目标；三档随上方连续活跃时长联动"
             )
         }
         static var feedbackSection: String {
