@@ -7865,6 +7865,512 @@
           }
         }
       }
+    },
+    "widgets.category.stocks": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行情看板"
+          }
+        }
+      }
+    },
+    "widgets.footer.stocks": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固钉标的 · 分时与涨跌"
+          }
+        }
+      }
+    },
+    "stocks.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "股票行情"
+          }
+        }
+      }
+    },
+    "stocks.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固钉最多三只标的，岛上展示现价、涨跌与当日分时"
+          }
+        }
+      }
+    },
+    "stocks.watchlist.title_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固钉席位（%d / %d）"
+          }
+        }
+      }
+    },
+    "stocks.watchlist.drag_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拖拽左侧手柄排序"
+          }
+        }
+      }
+    },
+    "stocks.search.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "输入代码或名称（如 MSFT、苹果、腾讯）"
+          }
+        }
+      }
+    },
+    "stocks.add_symbol": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加代号"
+          }
+        }
+      }
+    },
+    "stocks.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加"
+          }
+        }
+      }
+    },
+    "stocks.remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移出"
+          }
+        }
+      }
+    },
+    "stocks.searching": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在查询…"
+          }
+        }
+      }
+    },
+    "stocks.search.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到匹配标的"
+          }
+        }
+      }
+    },
+    "stocks.search.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "搜索失败，请稍后重试"
+          }
+        }
+      }
+    },
+    "stocks.watchlist.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未固钉标的，请搜索添加"
+          }
+        }
+      }
+    },
+    "stocks.prefs.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "显示及色彩偏好"
+          }
+        }
+      }
+    },
+    "stocks.color.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涨跌配色逻辑"
+          }
+        }
+      }
+    },
+    "stocks.color.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "适配跨市场交易的视觉习惯"
+          }
+        }
+      }
+    },
+    "stocks.color.international": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "国际惯例（绿涨红跌）"
+          }
+        }
+      }
+    },
+    "stocks.color.cn": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "大中华惯例（红涨绿跌）"
+          }
+        }
+      }
+    },
+    "stocks.format.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "货币符与单位格式"
+          }
+        }
+      }
+    },
+    "stocks.format.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在有限宽度中保留关键数字"
+          }
+        }
+      }
+    },
+    "stocks.format.adaptive": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自适应货币符"
+          }
+        }
+      }
+    },
+    "stocks.format.bare": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纯数值"
+          }
+        }
+      }
+    },
+    "stocks.format.percent": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "涨跌幅优先"
+          }
+        }
+      }
+    },
+    "stocks.sparkline.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当日走势波形"
+          }
+        }
+      }
+    },
+    "stocks.sparkline.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以分时曲线展示当日走势"
+          }
+        }
+      }
+    },
+    "stocks.island.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "添加标的后显示行情"
+          }
+        }
+      }
+    },
+    "stocks.after_hours": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "盘后"
+          }
+        }
+      }
+    },
+    "stocks.fetch.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行情暂时不可用，将自动重试"
+          }
+        }
+      }
+    },
+    "stocks.fetch.partial": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分标的刷新失败"
+          }
+        }
+      }
+    },
+    "stocks.search.results_header": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "匹配结果"
+          }
+        }
+      }
+    },
+    "stocks.quote.updating": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新中…"
+          }
+        }
+      }
+    },
+    "stocks.quote.stale": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次行情"
+          }
+        }
+      }
+    },
+    "stocks.quote.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无行情"
+          }
+        }
+      }
+    },
+    "stocks.sparkline.explainer": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "波形为当日 5 分钟收盘价连线：左侧为开盘后首个有效点，右侧为最新一根 K 线；大号现价取实时报价，可能与终点略有差异。完整波形仅 Yahoo 分时可提供，其它备用源只更新价格。"
+          }
+        }
+      }
+    },
+    "stocks.source.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前数据来源"
+          }
+        }
+      }
+    },
+    "stocks.source.unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂无"
+          }
+        }
+      }
+    },
+    "stocks.source.mixed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "混合"
+          }
+        }
+      }
+    },
+    "stocks.source.cached": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地缓存"
+          }
+        }
+      }
+    },
+    "stocks.source.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连通不佳时会自动切换备用源"
+          }
+        }
+      }
+    },
+    "stocks.source.yahoo_chart": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yahoo 分时"
+          }
+        }
+      }
+    },
+    "stocks.source.yahoo_quote": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yahoo 报价"
+          }
+        }
+      }
+    },
+    "stocks.source.stooq": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stooq"
+          }
+        }
+      }
+    },
+    "stocks.source.sina": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新浪财经"
+          }
+        }
+      }
+    },
+    "stocks.source.eastmoney": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "东方财富"
+          }
+        }
+      }
+    },
+    "stocks.source.summary_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前数据来源：%@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

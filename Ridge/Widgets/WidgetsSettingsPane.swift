@@ -532,6 +532,7 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.aiUsage"
             || widgetID == "builtin.moveReminder"
             || widgetID == "builtin.worldClock"
+            || widgetID == "builtin.stocks"
     }
 
     var body: some View {
@@ -568,6 +569,8 @@ private struct WidgetPreviewPane: View {
             MoveReminderWidgetConfigSection()
         } else if widgetID == "builtin.worldClock" {
             WorldClockWidgetConfigSection()
+        } else if widgetID == "builtin.stocks" {
+            StockWidgetConfigSection()
         }
     }
 

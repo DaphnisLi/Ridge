@@ -11,19 +11,6 @@ struct ShelfWidgetConfigSection: View {
                 widgetID: ControlDeckSettings.pageIDPrefix + ".shelf"
             )
 
-            SettingsCard {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(L10n.ControlDeck.moduleShelf)
-                        .font(SettingsChrome.Font.sectionTitle)
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    Text(L10n.ControlDeck.moduleShelfSummary)
-                        .font(SettingsChrome.Font.body)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(SettingsChrome.Spacing.cardPadding)
-            }
-
             copiedNoticeSection
         }
         .onAppear {

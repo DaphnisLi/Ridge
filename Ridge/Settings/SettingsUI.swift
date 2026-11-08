@@ -200,6 +200,8 @@ struct SettingsSegmentedControl: View {
         let id: String
         let title: String
         let selected: Bool
+        /// 标题前色点（如涨跌惯例绿/红）。
+        var leadingDot: Color? = nil
         /// `false` 时仅作状态展示（如「自定义」指示），不可点。
         var isInteractive: Bool = true
         let action: () -> Void
@@ -208,12 +210,14 @@ struct SettingsSegmentedControl: View {
             id: String,
             title: String,
             selected: Bool,
+            leadingDot: Color? = nil,
             isInteractive: Bool = true,
             action: @escaping () -> Void
         ) {
             self.id = id
             self.title = title
             self.selected = selected
+            self.leadingDot = leadingDot
             self.isInteractive = isInteractive
             self.action = action
         }
@@ -237,18 +241,27 @@ struct SettingsSegmentedControl: View {
     @ViewBuilder
     private func segment(_ item: Item) -> some View {
         let shape = RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
-        let label = Text(item.title)
-            .font(item.selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
-            .foregroundStyle(item.selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.vertical, 6)
-            .background(
-                shape
-                    .fill(item.selected ? Color.white : Color.clear)
-                    .shadow(color: item.selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
-            )
-            // plain Button 默认只点文字；整块长方形都要可点。
-            .contentShape(shape)
+        let label = HStack(spacing: 6) {
+            if let leadingDot = item.leadingDot {
+                Circle()
+                    .fill(leadingDot)
+                    .frame(width: 8, height: 8)
+            }
+            Text(item.title)
+                .font(item.selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
+                .foregroundStyle(item.selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.vertical, 6)
+        .background(
+            shape
+                .fill(item.selected ? Color.white : Color.clear)
+                .shadow(color: item.selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
+        )
+        // plain Button 默认只点文字；整块长方形都要可点。
+        .contentShape(shape)
 
         if item.isInteractive {
             Button(action: item.action) { label }

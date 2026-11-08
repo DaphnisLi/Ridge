@@ -160,6 +160,8 @@ enum L10n {
                 return tr("widgets.category.move_reminder", "健康提醒")
             case "builtin.worldClock":
                 return tr("widgets.category.world_clock", "时区时钟")
+            case "builtin.stocks":
+                return tr("widgets.category.stocks", "行情看板")
             default:
                 return tr("widgets.category.generic", "小组件")
             }
@@ -188,6 +190,8 @@ enum L10n {
                 return tr("widgets.footer.move_reminder", "系统空闲探测 · 无需输入监控权限")
             case "builtin.worldClock":
                 return tr("widgets.footer.world_clock", "固钉城市 · 时差与昼夜动态")
+            case "builtin.stocks":
+                return tr("widgets.footer.stocks", "固钉标的 · 分时与涨跌")
             default:
                 return tr("widgets.footer.generic", "点击进入配置")
             }
@@ -205,6 +209,7 @@ enum L10n {
             case "builtin.aiUsage": return "brain.head.profile"
             case "builtin.moveReminder": return "figure.stand"
             case "builtin.worldClock": return "globe"
+            case "builtin.stocks": return "chart.line.uptrend.xyaxis"
             default: return "slider.horizontal.3"
             }
         }
@@ -527,6 +532,128 @@ enum L10n {
         static var today: String { tr("world_clock.day.today", "今天") }
         static var yesterday: String { tr("world_clock.day.yesterday", "昨天") }
         static var tomorrow: String { tr("world_clock.day.tomorrow", "明天") }
+    }
+
+    // MARK: - Stocks（行情）
+
+    enum Stocks {
+        static var widgetName: String { tr("stocks.widget.name", "股票行情") }
+        static var widgetSummary: String {
+            tr(
+                "stocks.widget.summary",
+                "固钉最多三只标的，岛上展示现价、涨跌与当日分时"
+            )
+        }
+        static func watchlistTitle(_ used: Int, _ max: Int) -> String {
+            String(
+                format: tr("stocks.watchlist.title_format", "固钉席位（%d / %d）"),
+                used,
+                max
+            )
+        }
+        static var dragHint: String {
+            tr("stocks.watchlist.drag_hint", "拖拽左侧手柄排序")
+        }
+        static var searchPlaceholder: String {
+            tr(
+                "stocks.search.placeholder",
+                "输入代码或名称（如 MSFT、苹果、腾讯）"
+            )
+        }
+        static var addSymbol: String { tr("stocks.add_symbol", "添加代号") }
+        static var add: String { tr("stocks.add", "添加") }
+        static var remove: String { tr("stocks.remove", "移出") }
+        static var searching: String { tr("stocks.searching", "正在查询…") }
+        static var searchEmpty: String { tr("stocks.search.empty", "未找到匹配标的") }
+        static var searchFailed: String { tr("stocks.search.failed", "搜索失败，请稍后重试") }
+        static var searchResultsHeader: String {
+            tr("stocks.search.results_header", "匹配结果")
+        }
+        static var watchlistEmpty: String {
+            tr("stocks.watchlist.empty", "尚未固钉标的，请搜索添加")
+        }
+        static var prefsTitle: String { tr("stocks.prefs.title", "显示及色彩偏好") }
+        static var colorTitle: String { tr("stocks.color.title", "涨跌配色逻辑") }
+        static var colorSubtitle: String {
+            tr("stocks.color.subtitle", "适配跨市场交易的视觉习惯")
+        }
+        static var colorInternational: String {
+            tr("stocks.color.international", "国际惯例（绿涨红跌）")
+        }
+        static var colorGreaterChina: String {
+            tr("stocks.color.cn", "大中华惯例（红涨绿跌）")
+        }
+        static var formatTitle: String { tr("stocks.format.title", "货币符与单位格式") }
+        static var formatSubtitle: String {
+            tr("stocks.format.subtitle", "在有限宽度中保留关键数字")
+        }
+        static var formatAdaptive: String {
+            tr("stocks.format.adaptive", "自适应货币符")
+        }
+        static var formatBare: String { tr("stocks.format.bare", "纯数值") }
+        static var formatPercent: String {
+            tr("stocks.format.percent", "涨跌幅优先")
+        }
+        static var sparklineTitle: String {
+            tr("stocks.sparkline.title", "当日走势波形")
+        }
+        static var sparklineSubtitle: String {
+            tr("stocks.sparkline.subtitle", "以分时曲线展示当日走势")
+        }
+        static var emptyIsland: String {
+            tr("stocks.island.empty", "添加标的后显示行情")
+        }
+        static var afterHours: String { tr("stocks.after_hours", "盘后") }
+        static var fetchFailed: String {
+            tr("stocks.fetch.failed", "行情暂时不可用，将自动重试")
+        }
+        static var fetchPartial: String {
+            tr("stocks.fetch.partial", "部分标的刷新失败")
+        }
+        static var quoteUpdating: String { tr("stocks.quote.updating", "更新中…") }
+        static var quoteStale: String { tr("stocks.quote.stale", "上次行情") }
+        static var quoteUnavailable: String {
+            tr("stocks.quote.unavailable", "暂无行情")
+        }
+
+        /// 岛预览下方：分时曲线含义说明。
+        static var sparklineExplainer: String {
+            tr(
+                "stocks.sparkline.explainer",
+                "波形为当日 5 分钟收盘价连线：左侧为开盘后首个有效点，右侧为最新一根 K 线；大号现价取实时报价，可能与终点略有差异。完整波形仅 Yahoo 分时可提供，其它备用源只更新价格。"
+            )
+        }
+
+        static var dataSourceLabel: String { tr("stocks.source.label", "当前数据来源") }
+        static var dataSourceUnknown: String { tr("stocks.source.unknown", "暂无") }
+        static var dataSourceMixed: String { tr("stocks.source.mixed", "混合") }
+        static var dataSourceCached: String { tr("stocks.source.cached", "本地缓存") }
+        static var dataSourceHint: String {
+            tr("stocks.source.hint", "连通不佳时会自动切换备用源")
+        }
+
+        static func providerName(_ provider: StockQuoteProvider) -> String {
+            switch provider {
+            case .yahooChart:
+                return tr("stocks.source.yahoo_chart", "Yahoo 分时")
+            case .yahooQuote:
+                return tr("stocks.source.yahoo_quote", "Yahoo 报价")
+            case .stooq:
+                return tr("stocks.source.stooq", "Stooq")
+            case .sina:
+                return tr("stocks.source.sina", "新浪财经")
+            case .eastmoney:
+                return tr("stocks.source.eastmoney", "东方财富")
+            }
+        }
+
+        static func dataSourceSummary(_ text: String) -> String {
+            String(
+                format: tr("stocks.source.summary_format", "当前数据来源：%@"),
+                locale: .current,
+                text
+            )
+        }
     }
 
     // MARK: - AI Usage（额度监测）
