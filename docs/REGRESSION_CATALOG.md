@@ -86,6 +86,16 @@
 - **防护:** 提示作用域 = 账号 + 计费周期；15s 嗅探本机邮箱加速换号；换作用域且已在触发带则必弹  
 - **自动化建议:** 模拟换 `accountID` 且 remaining 落在警戒带 → 必 present；同账号未跌破线 → 不重复弹
 
+### shelf-color-pick-external-tool-stuck — 取色后岛永久穿透假死
+
+- **recurring:** false（历史 ColorSampler 残留卡鼠标同类；2026-11-09 整 App「卡死」）  
+- **occurrences:** 1  
+- **症状:** 点货架吸管后岛/菜单栏看似卡死；日志停在 `colorPickTip` 已上岛，无取色完成/取消；后台 `projects-last` / AIUsage 仍可能写  
+- **根因倾向:** `beginExternalPointerTool` 后 tip `expand` 调 `ensureIslandInteractionReady` 抢前台，掐死 `NSColorSampler` 会话 → 完成回调永不来 → `isExternalPointerToolActive` 永久 true → 整窗点击穿透  
+- **防护:** 外部指针工具中 expand / ensure 跳过抢前台；先 `sampler.show` 再 present tip；Esc 监听 + 30s 超时强制 `finishColorPick(nil)`；关键路径 warn 落盘  
+- **相关代码:** `ShelfCaptureTools`、`IslandController.beginExternalPointerTool` / `expand` / `ensureIslandInteractionReady`  
+- **自动化建议:** 外部工具态下 expand 不得调用 `IslandInteractionFocus.prepare`；模拟 sampler 无回调超时后 `isExternalPointerToolActive == false`
+
 ---
 
 ## 变更日志
@@ -94,3 +104,4 @@
 |---|---|
 | 2026-11-08 | 初版：收录悬停热区、边距叠层、预览真数据为重复出现；录入复制提示缺失等 |
 | 2026-11-08 | 录入 AI 额度账号作用域提示问题，并修换号嗅探 / 换回再弹 |
+| 2026-11-09 | 录入取色后岛永久穿透假死；修 tip expand 抢前台 + Esc/超时退出 |

@@ -375,7 +375,14 @@ final class IslandController: NSObject {
             }
             updateInteractiveFrame(expanded: true)
             // 货架拖入：禁止抢前台，否则 Finder 拖放会被 activate 掐断。
-            if !shelfDropExpand {
+            // 取色 / OCR：禁止抢前台，否则 NSColorSampler 会话会被掐死，完成回调永不来 → 岛永久穿透假死。
+            if shelfDropExpand {
+                // no-op
+            } else if isExternalPointerToolActive {
+                AppLog.warn("Overlay", "外部指针工具中已展开：跳过抢前台", [
+                    "reason": reason
+                ])
+            } else {
                 ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
             }
             return
@@ -398,6 +405,10 @@ final class IslandController: NSObject {
         updateInteractiveFrame(expanded: true)
         if shelfDropExpand {
             AppLog.info("Island", "货架拖入展开：跳过抢前台，避免中断文件拖放", [
+                "reason": reason
+            ])
+        } else if isExternalPointerToolActive {
+            AppLog.warn("Overlay", "外部指针工具中展开：跳过抢前台", [
                 "reason": reason
             ])
         } else {
@@ -863,6 +874,13 @@ final class IslandController: NSObject {
                 "reason": reason,
                 "appActive": NSApp.isActive,
                 "key": Self.describeKeyWindow()
+            ])
+            return
+        }
+        // 取色引导 tip 会 expand；若此处 activate/makeKey，系统 ColorSampler 会话易僵死。
+        if isExternalPointerToolActive {
+            AppLog.warn("Overlay", "外部指针工具中跳过岛激活", [
+                "reason": reason
             ])
             return
         }
