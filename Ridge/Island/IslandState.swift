@@ -25,16 +25,15 @@ final class IslandViewModel: ObservableObject {
 
     var isExpanded: Bool { appearance == .expanded }
 
-    /// 展开态悬停热区用的面板尺寸：禁止退回接近刘海的小框。
+    /// 展开态悬停热区用的面板尺寸：禁止退回接近刘海 / 瞬时短条的小框。
     func retentionPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
         let notch = CGSize(width: notchWidth, height: notchHeight)
-        if IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+        if IslandExpandedPanelPolicy.shouldPreferStableRetention(
             panel: panelSize,
+            stable: lastStableExpandedPanelSize,
             notch: notch,
             isExpanded: isExpanded
-        ), lastStableExpandedPanelSize.width > notchWidth + 8,
-           lastStableExpandedPanelSize.height > notchHeight + 8
-        {
+        ) {
             return lastStableExpandedPanelSize
         }
         return panelSize
@@ -62,7 +61,8 @@ final class IslandViewModel: ObservableObject {
         ])
     }
 
-    /// 通知替换等：绕过误缩守卫，立刻写入面板尺寸（再交给 Preference 微调）。
+    /// 通知替换等：绕过误缩守卫，立刻写入**可见**面板尺寸（再交给 Preference 微调）。
+    /// 短条尺寸**禁止**写入 `lastStableExpandedPanelSize`，否则大岛保展开热区会退化成 tip 小框。
     func forcePanelSize(_ raw: CGSize, reason: String) {
         allowPanelShrink(for: 1.2, reason: reason)
         let next = IslandPanelSizing.clamp(
@@ -73,18 +73,23 @@ final class IslandViewModel: ObservableObject {
         )
         panelSize = next
         let notch = CGSize(width: notchWidth, height: notchHeight)
-        if isExpanded,
-           !IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
-            panel: next,
-            notch: notch,
-            isExpanded: true
-           ) {
+        let writeStable = isExpanded
+            && !IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+                panel: next,
+                notch: notch,
+                isExpanded: true
+            )
+            && !IslandExpandedPanelPolicy.isTransientShortPanel(next, notch: notch)
+        if writeStable {
             lastStableExpandedPanelSize = next
         }
         AppLog.warn("Island", "强制写入面板尺寸", [
             "reason": reason,
             "w": Int(next.width),
-            "h": Int(next.height)
+            "h": Int(next.height),
+            "writeStable": writeStable,
+            "stableW": Int(lastStableExpandedPanelSize.width),
+            "stableH": Int(lastStableExpandedPanelSize.height)
         ])
     }
 
@@ -133,8 +138,16 @@ final class IslandViewModel: ObservableObject {
                 "notchW": Int(notchWidth),
                 "notchH": Int(notchHeight)
             ])
-        } else if isExpanded {
+        } else if isExpanded,
+                  !IslandExpandedPanelPolicy.isTransientShortPanel(next, notch: notch) {
             lastStableExpandedPanelSize = next
+        } else if isExpanded {
+            AppLog.debug("Island", "短条尺寸不写入 lastStable", [
+                "w": Int(next.width),
+                "h": Int(next.height),
+                "stableW": Int(lastStableExpandedPanelSize.width),
+                "stableH": Int(lastStableExpandedPanelSize.height)
+            ])
         }
         AppLog.debug("Island", "面板尺寸由内容更新", [
             "w": next.width,

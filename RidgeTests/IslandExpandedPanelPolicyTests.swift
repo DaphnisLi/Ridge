@@ -91,4 +91,43 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
             )
         )
     }
+
+    func testTransientShortPanelDoesNotCountAsStableContent() {
+        let notch = CGSize(width: 179, height: 32)
+        // 「已复制」短条约 275×68：相对刘海仍偏矮，属瞬时短条。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isTransientShortPanel(
+                CGSize(width: 275, height: 68),
+                notch: notch
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isTransientShortPanel(
+                CGSize(width: 348, height: 175),
+                notch: notch
+            )
+        )
+    }
+
+    func testPreferStableRetentionWhenShortTipCoversLargePanel() {
+        let notch = CGSize(width: 179, height: 32)
+        let stable = CGSize(width: 660, height: 300)
+        let tip = CGSize(width: 275, height: 68)
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldPreferStableRetention(
+                panel: tip,
+                stable: stable,
+                notch: notch,
+                isExpanded: true
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldPreferStableRetention(
+                panel: stable,
+                stable: stable,
+                notch: notch,
+                isExpanded: true
+            )
+        )
+    }
 }

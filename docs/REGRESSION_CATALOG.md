@@ -17,7 +17,7 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥3 | 展开后热区缩成刘海，鼠标下移/拖一下就收岛 | `island-hover-retention.mdc`；`IslandExpandedPanelPolicy` / `RidgeTests`；手测大岛下半截 |
+| `island-hover-retention` | 岛悬停热区退化 | ≥4 | 展开后热区缩成刘海/短 tip，鼠标下移/拖一下就收岛 | `island-hover-retention.mdc`；短条禁止写 `lastStable`；`RidgeTests`；手测大岛下半截 |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥2 | 内容根再加 padding，与 `IslandChrome` 叠加，下边距过大 | `widget-architecture.mdc` / `island-notice.mdc`：根视图禁止外圈 padding |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥3 | 取色引导后「已复制」投递了但不显示 | present 前 `forcePanelSize` 短条；勿先 dismiss 再 present |
@@ -29,11 +29,11 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 3+（历史反复；2026-11-08 货架/纵滑再次触发）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海小框；下移、拖动、滚动易误收  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；翻页缩小窗口写入刘海尺寸  
-- **防护:** `IslandExpandedPanelPolicy`、`lastStableExpandedPanelSize`、下沿外扩；改 Island 悬停必读规则  
-- **自动化建议:** 展开态 retention 含面板下半截；collapsed-sized panel 时仍用稳定尺寸；拒绝误缩
+- **occurrences:** 4+（历史反复；2026-11-09 短「已复制」/额度 tip 的 `forcePanelSize` 把 `lastStable` 写成 tip 小框）  
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」  
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；**瞬时短条 `forcePanelSize` / Preference 写入 `lastStableExpandedPanelSize`**  
+- **防护:** `IslandExpandedPanelPolicy.isTransientShortPanel` / `shouldPreferStableRetention`；短条禁止写 `lastStable`；改 Island 悬停必读规则  
+- **自动化建议:** tip 尺寸不进 lastStable；短 tip 盖住大岛时 retention 仍用稳定大面板；下半截不收岛
 
 ### island-chrome-double-padding — 岛边距叠两层
 

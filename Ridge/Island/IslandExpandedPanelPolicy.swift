@@ -70,4 +70,38 @@ enum IslandExpandedPanelPolicy {
         guard isExpanded else { return false }
         return panel.width <= notch.width + slop && panel.height <= notch.height + slop
     }
+
+    /// 「已复制」/ AI 额度等瞬时短条：可见面板可以变矮，但绝不能当成稳定大面板写入 `lastStable`。
+    static func isTransientShortPanel(
+        _ panel: CGSize,
+        notch: CGSize,
+        maxHeightAboveNotch: CGFloat = 48,
+        maxWidthAboveNotch: CGFloat = 140
+    ) -> Bool {
+        panel.height <= notch.height + maxHeightAboveNotch
+            || panel.width <= notch.width + maxWidthAboveNotch
+    }
+
+    /// 当前面板相对已记录大面板明显缩水时，保展开仍用大面板（短通知盖住大岛）。
+    static func shouldPreferStableRetention(
+        panel: CGSize,
+        stable: CGSize,
+        notch: CGSize,
+        isExpanded: Bool,
+        heightSlop: CGFloat = 40,
+        widthSlop: CGFloat = 80
+    ) -> Bool {
+        guard isExpanded else { return false }
+        guard stable.width > notch.width + 8, stable.height > notch.height + 8 else {
+            return false
+        }
+        if isCollapsedSizedWhileExpanded(panel: panel, notch: notch, isExpanded: true) {
+            return true
+        }
+        if isTransientShortPanel(panel, notch: notch) {
+            return true
+        }
+        return panel.height + heightSlop < stable.height
+            || panel.width + widthSlop < stable.width
+    }
 }
