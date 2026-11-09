@@ -73,6 +73,8 @@ final class WidgetRuntime: ObservableObject {
         started = true
         registry.registerBuiltins()
         settings.reconcile(with: registry)
+        // 取色 / OCR 不占岛页，实例会被 reap；快捷键由协调器常驻注册。
+        CaptureHotKeyCoordinator.shared.start()
 
         settings.$order
             .combineLatest(settings.$disabledIDs, settings.$pinnedIDs)

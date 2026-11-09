@@ -311,9 +311,9 @@ private final class OCRSelectionView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         guard let startPoint, let currentPoint else {
+            // 未开拖：只铺遮罩；操作说明改由岛上 OCR 引导 tip（与取色一致）。
             NSColor.black.withAlphaComponent(0.45).setFill()
             bounds.fill()
-            drawHint()
             return
         }
 
@@ -355,32 +355,6 @@ private final class OCRSelectionView: NSView {
             height: size.height + 6
         ).fill()
         label.draw(at: labelOrigin, withAttributes: attrs)
-    }
-
-    private func drawHint() {
-        let text = L10n.Shelf.ocrDragHint
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 22, weight: .semibold),
-            .foregroundColor: NSColor.white
-        ]
-        let size = text.size(withAttributes: attrs)
-        let paddingX: CGFloat = 22
-        let paddingY: CGFloat = 14
-        let bgSize = CGSize(
-            width: size.width + paddingX * 2,
-            height: size.height + paddingY * 2
-        )
-        let bgOrigin = CGPoint(
-            x: (bounds.width - bgSize.width) / 2,
-            y: bounds.height * 0.58 - bgSize.height / 2
-        )
-        let bg = CGRect(origin: bgOrigin, size: bgSize)
-        NSColor.black.withAlphaComponent(0.78).setFill()
-        NSBezierPath(roundedRect: bg, xRadius: 14, yRadius: 14).fill()
-        text.draw(
-            at: CGPoint(x: bg.midX - size.width / 2, y: bg.midY - size.height / 2),
-            withAttributes: attrs
-        )
     }
 
     override func mouseDown(with event: NSEvent) {

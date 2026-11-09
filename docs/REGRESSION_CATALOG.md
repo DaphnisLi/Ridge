@@ -19,7 +19,8 @@
 |---|---|---|---|---|
 | `island-hover-retention` | 岛悬停热区退化 | ≥3 | 展开后热区缩成刘海，鼠标下移/拖一下就收岛 | `island-hover-retention.mdc`；`IslandExpandedPanelPolicy` / `RidgeTests`；手测大岛下半截 |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥2 | 内容根再加 padding，与 `IslandChrome` 叠加，下边距过大 | `widget-architecture.mdc` / `island-notice.mdc`：根视图禁止外圈 padding |
-| `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源或并排多卡；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览单卡样张 |
+| `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥3 | 取色引导后「已复制」投递了但不显示 | present 前 `forcePanelSize` 短条；勿先 dismiss 再 present |
 
 ---
 
@@ -49,17 +50,27 @@
 - **occurrences:** 2（股票库卡多卡真价感；此前其它 widget 同类）  
 - **症状:** 无数据/网络失败时预览空或「更新中」；库卡裁切多卡  
 - **根因倾向:** 预览直连 Session / 实时源；样张塞满多枚  
-- **防护:** `WidgetSamplePreview.island` / `SettingsIslandPreviewCard`；假数据单形态够用即可  
-- **自动化建议:** 预览路径不得依赖网络；样张条数断言（如 stocks ≤ 1）
+- **防护:** `WidgetSamplePreview.island` / `SettingsIslandPreviewCard`；假数据固定形态（股票两卡样张）  
+- **自动化建议:** 预览路径不得依赖网络；股票样张条数断言 `== 2`
+
+### library-island-stage-stretch — 库卡黑岛被舞台拉满
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-09：股票库卡直角黑块 + 卡片纵向过长）  
+- **症状:** 库卡预览黑岛呈直角高矩形；股票卡被撑高、价签截断  
+- **根因倾向:** `WidgetLibraryCard` 对岛施 `maxHeight: .infinity` 且无 `fixedSize(vertical:)`，黑底填满固定舞台高；窄内容未 `hugsContent` 时横向也拉满；`drawingGroup` 易糊掉下圆角  
+- **防护:** 库卡岛 `.fixedSize(horizontal: false, vertical: true)` 贴顶；窄 widget（股票等）`hugsContent`；预览股票 `compactChrome`（矮分时、藏日区间）  
+- **自动化建议:** 库卡预览岛固有高 < `islandStageHeight`；股票样张宽约两卡固有宽
 
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
-- **recurring:** false  
-- **occurrences:** 1（用户 2026-11-08 反馈）  
-- **症状:** 复制文字/链接/颜色/截图后，偶发不出现「已复制」岛提示  
-- **根因倾向（待证）:** `showCopiedNotice` 关闭；dismiss/收岛竞态；`IslandNoticeCenter` 短时提示被清掉（代码注释已提示勿先清空再设）  
-- **相关代码:** `ClipboardHistoryStore`、`IslandNoticeCenter`、`ShelfSettings.showCopiedNotice`  
-- **自动化建议:** 开启开关下模拟写入剪贴板历史 → 断言 present「已复制」；连续两次复制均应可见
+- **recurring:** true  
+- **occurrences:** 3（2026-11-08 偶发；2026-11-09 取色两次确认：仅 allowShrink 仍竞态看不见）  
+- **症状:** 复制文字/链接/颜色/截图后，偶发不出现「已复制」岛提示；取色尤甚  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② **宽翼引导→短「已复制」时 Preference 先于 `allowPanelShrink` 上报并被误缩守卫拒绝，面板卡在引导尺寸（fromW≈407→toW≈179），短条顶距把文案顶出可视区**；③ `showCopiedNotice` 关闭  
+- **防护:** `IslandNoticeCenter.present` 对 short tip **先** `prepareShortNoticeLayout`（`forcePanelSize`）再改 `current`；`expand(islandNotice*)` 已展开时也 `allowPanelShrink`；勿先 dismiss 再 present  
+- **相关代码:** `IslandNoticeCenter.present`、`IslandController.prepareShortNoticeLayout`、`IslandViewModel.forcePanelSize`  
+- **自动化建议:** tip→copy 后 `panelSize` 接近短条；日志应有「强制写入面板尺寸」，不应再出现 replace 窗口内的「忽略展开态面板误缩」
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 

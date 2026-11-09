@@ -16,9 +16,11 @@
 		0A17D9259CEC00B07CF40C73 /* MoveReminderWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A720EFA25A6084C5EED7CADE /* MoveReminderWidget.swift */; };
 		0A5B9B60AA7D728483C7BB2E /* IslandTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85DB713B5E38759909A00339 /* IslandTheme.swift */; };
 		0CC9D4C674F88D02017216DF /* ResourceMonitorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */; };
+		0D2E218106F72CDB2BFFDF29 /* ColorPickWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950406D41F5DF51309C3C939 /* ColorPickWidgetConfigSection.swift */; };
 		0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE07D38BD81E9B818E5ADA17 /* CursorSafeStorage.swift */; };
 		0FBB3671C2041665989E9FD0 /* ProjectReleaseDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */; };
 		116B41390F574AB23AF93FAF /* BatterySession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2DAC872E498304E243C7C7 /* BatterySession.swift */; };
+		11EF5958F4F4BADDA2B6521B /* OCRSelectTipIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */; };
 		13E3955C0A42DF5B0AF75847 /* ResourceMonitorModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */; };
 		144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */; };
 		17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */; };
@@ -30,6 +32,7 @@
 		1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */; };
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
 		231E54EE1B0F800754620952 /* StockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F00F4B122F586E980C2B2F /* StockWidget.swift */; };
+		27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45BDD3FD3EEAF28093A962D7 /* HotKeyChord.swift */; };
 		2983F53A047FAB854C63FCA7 /* MoveReminderSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8919AB617974C1727F52BE9A /* MoveReminderSession.swift */; };
 		29D4E1400C224BE84938BFCD /* WorldClockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69BAA7793215EAC5EDFC0E /* WorldClockModels.swift */; };
 		2B8ABD3D0956F772C071FCA9 /* StockYahooClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2EC5167644AA47B11298CB /* StockYahooClient.swift */; };
@@ -46,9 +49,13 @@
 		3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7694C35719C53E4F238252E3 /* IslandSettings.swift */; };
 		3AF7B245C9F5F0D0CA48BCE8 /* MeetingIslandCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C36C15A1A789E41F21DB58B /* MeetingIslandCardView.swift */; };
 		3B885B352D572690D45AEF54 /* StockWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC83119BD730DB321ACA5530 /* StockWidgetConfigSection.swift */; };
+		3C065C2CF6E12D77BCEF8954 /* ColorPickSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B1815ACA35688D69984BD8 /* ColorPickSettings.swift */; };
+		3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */; };
 		3D462E034E453F1F314C7455 /* ColorPickTipIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */; };
 		3ED590A3F12B0419A63D83EF /* BatteryBluetoothProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */; };
 		4305C2221E502101D4F22DE3 /* MediaRemoteAdapter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		436BDBF27E789D5BAF98FC57 /* SettingsHotKeyRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9440A1561EBF0B6F5050F7 /* SettingsHotKeyRecorder.swift */; };
+		46543EB57A64C3055AEE5217 /* GlobalHotKeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98015AF857E81F37003D7B64 /* GlobalHotKeyCenter.swift */; };
 		471A0815FAD97EDE07C14EF9 /* MeetingCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */; };
 		47615FA33DFBDCCD8D5C75DE /* MoveReminderIdleProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B90FA6C86EB1EF42A7D0C60 /* MoveReminderIdleProbe.swift */; };
 		4A5AA554DC8AAEF759AABFC7 /* ProjectShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */; };
@@ -85,6 +92,7 @@
 		797C697356CC11AE2118BDB3 /* AIUsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696174AF0446BACA3704883A /* AIUsageModels.swift */; };
 		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
+		7F846C42B4CA458D1D993C1E /* ColorPickWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */; };
 		80AB1DE4B230D2BF015DD611 /* ResourceFocusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */; };
 		85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFC96E41744375F5D6F2529 /* SoundSession.swift */; };
 		85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */; };
@@ -104,6 +112,7 @@
 		991EEB9BF00F942F3D5BE346 /* ShelfSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F3C289C20C8FE9C5C25ED /* ShelfSettings.swift */; };
 		9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1266F73AC4146FF0C01385 /* RidgeApp.swift */; };
 		9C726E71C4AE6AF7CC2959AC /* ScreenRegionOCRController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8238AE010AEFFF72F8F2351 /* ScreenRegionOCRController.swift */; };
+		9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */; };
 		9CD825B58E7198BE54B0D16F /* StockNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5DC410A52187315FA80E61 /* StockNetwork.swift */; };
 		9E9C3420E3E847D32E5733ED /* WidgetSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */; };
 		A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5894114050B192E21DBC168B /* IslandContentView.swift */; };
@@ -119,6 +128,7 @@
 		B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */; };
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
 		B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */; };
+		BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */; };
 		BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; };
 		C3616D999C1E12C1F7D29C9C /* BatteryListeningModeBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 81FA823E3DD358069BCD1369 /* BatteryListeningModeBridge.m */; };
 		C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */; };
@@ -145,6 +155,7 @@
 		E6FB571B18D96B08343DFEF2 /* ShelfDropStagingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */; };
 		E794CC28B7A3B53CB12FCC4F /* MeetingLinkDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */; };
 		E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888652166B6E000A14995BED /* IslandNoticeCenter.swift */; };
+		E8169D4F5591ECA57D3E0638 /* OCRSelectSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2ED8E8814C24BCB80AA5347 /* OCRSelectSettings.swift */; };
 		E86CFE0FA7133009ACF2445E /* IslandOpaqueFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */; };
 		EB81F75E843FCBC6CA5BB137 /* MoveReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */; };
 		EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */; };
@@ -184,6 +195,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickWidget.swift; sourceTree = "<group>"; };
 		0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusTracker.swift; sourceTree = "<group>"; };
 		07EC22739F9DB8CD07D03E0B /* Ridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		088CFC576E84896E553FC0DD /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
@@ -212,8 +224,10 @@
 		30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDeckView.swift; sourceTree = "<group>"; };
 		320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorModels.swift; sourceTree = "<group>"; };
 		332B0D3038D08730E2B73A38 /* StockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockSettings.swift; sourceTree = "<group>"; };
+		3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureHotKeyCoordinator.swift; sourceTree = "<group>"; };
 		355E2BF28C19689E133FF0A0 /* BatteryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryModels.swift; sourceTree = "<group>"; };
 		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
+		3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectTipIslandView.swift; sourceTree = "<group>"; };
 		3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettings.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
 		4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropStagingView.swift; sourceTree = "<group>"; };
@@ -221,6 +235,7 @@
 		43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfCaptureTools.swift; sourceTree = "<group>"; };
 		440C96AEB669FCE08EA4DC22 /* ProjectSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSettings.swift; sourceTree = "<group>"; };
 		44F1A3168C908920AC348FA9 /* MoveReminderNoticeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderNoticeCard.swift; sourceTree = "<group>"; };
+		45BDD3FD3EEAF28093A962D7 /* HotKeyChord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyChord.swift; sourceTree = "<group>"; };
 		476E748467E663BFC1133613 /* WidgetSamplePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSamplePreview.swift; sourceTree = "<group>"; };
 		482677D8E4898DBF37E8B22E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4B69BAA7793215EAC5EDFC0E /* WorldClockModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockModels.swift; sourceTree = "<group>"; };
@@ -236,6 +251,7 @@
 		57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicy.swift; sourceTree = "<group>"; };
 		5894114050B192E21DBC168B /* IslandContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandContentView.swift; sourceTree = "<group>"; };
+		5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidgetConfigSection.swift; sourceTree = "<group>"; };
 		5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
 		5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandNoticeWidget.swift; sourceTree = "<group>"; };
@@ -243,6 +259,7 @@
 		6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSession.swift; sourceTree = "<group>"; };
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
+		6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidget.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
 		713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSession.swift; sourceTree = "<group>"; };
@@ -272,10 +289,12 @@
 		933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectShell.swift; sourceTree = "<group>"; };
 		934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderWidgetConfigSection.swift; sourceTree = "<group>"; };
 		93EA63BEE5683B482701E421 /* StockIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockIslandViews.swift; sourceTree = "<group>"; };
+		950406D41F5DF51309C3C939 /* ColorPickWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickWidgetConfigSection.swift; sourceTree = "<group>"; };
 		95222AB63D89FF5FA90D6EA9 /* FocusTimerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerModels.swift; sourceTree = "<group>"; };
 		95BFECE714321CB884F2A555 /* SoundDeviceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundDeviceService.swift; sourceTree = "<group>"; };
 		97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingCalendarService.swift; sourceTree = "<group>"; };
+		98015AF857E81F37003D7B64 /* GlobalHotKeyCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyCenter.swift; sourceTree = "<group>"; };
 		993E54A3ABD03C4EE34B1A3C /* AIUsageSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSession.swift; sourceTree = "<group>"; };
 		9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryStore.swift; sourceTree = "<group>"; };
 		99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundProcessMonitor.swift; sourceTree = "<group>"; };
@@ -286,6 +305,7 @@
 		9C3F3C289C20C8FE9C5C25ED /* ShelfSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfSettings.swift; sourceTree = "<group>"; };
 		A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundHostAppResolver.swift; sourceTree = "<group>"; };
 		A1E07CBB405FFB485642B9C0 /* ProjectProcessSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectProcessSupport.swift; sourceTree = "<group>"; };
+		A2ED8E8814C24BCB80AA5347 /* OCRSelectSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectSettings.swift; sourceTree = "<group>"; };
 		A380AA9950E13AF158422F15 /* IslandState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandState.swift; sourceTree = "<group>"; };
 		A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseDeckView.swift; sourceTree = "<group>"; };
 		A720EFA25A6084C5EED7CADE /* MoveReminderWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderWidget.swift; sourceTree = "<group>"; };
@@ -305,11 +325,13 @@
 		BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSettingsPane.swift; sourceTree = "<group>"; };
 		BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLinkDetector.swift; sourceTree = "<group>"; };
 		BED55417055983E937B47576 /* DisplayMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayMonitor.swift; sourceTree = "<group>"; };
+		BF9440A1561EBF0B6F5050F7 /* SettingsHotKeyRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsHotKeyRecorder.swift; sourceTree = "<group>"; };
 		BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckIslandView.swift; sourceTree = "<group>"; };
 		C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidget.swift; sourceTree = "<group>"; };
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
+		D1B1815ACA35688D69984BD8 /* ColorPickSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickSettings.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
 		D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHostView.swift; sourceTree = "<group>"; };
 		D45B8C898B0311F98C15DF30 /* AIUsageIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageIslandViews.swift; sourceTree = "<group>"; };
@@ -463,6 +485,7 @@
 				92748D32CADD3B8C4A7A89B1 /* AIUsage */,
 				CCAAEBC039CA4E7363411A1D /* App */,
 				067FD7939F4B3CC048E6FC92 /* Battery */,
+				548AC9AC4C9851DB30437906 /* Capture */,
 				EFDE474CD3132D7D1ACA9802 /* ControlDeck */,
 				0308FADC0BC583E5A2A4B5A1 /* FocusTimer */,
 				2A565B209C491CD8B02FF35B /* Island */,
@@ -482,6 +505,23 @@
 				0764ACB0F7069DBCD7A1FF89 /* WorldClock */,
 			);
 			path = Ridge;
+			sourceTree = "<group>";
+		};
+		548AC9AC4C9851DB30437906 /* Capture */ = {
+			isa = PBXGroup;
+			children = (
+				3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */,
+				D1B1815ACA35688D69984BD8 /* ColorPickSettings.swift */,
+				01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */,
+				950406D41F5DF51309C3C939 /* ColorPickWidgetConfigSection.swift */,
+				98015AF857E81F37003D7B64 /* GlobalHotKeyCenter.swift */,
+				45BDD3FD3EEAF28093A962D7 /* HotKeyChord.swift */,
+				A2ED8E8814C24BCB80AA5347 /* OCRSelectSettings.swift */,
+				6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */,
+				5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */,
+				BF9440A1561EBF0B6F5050F7 /* SettingsHotKeyRecorder.swift */,
+			);
+			path = Capture;
 			sourceTree = "<group>";
 		};
 		61864BFFC78D89E10A875476 /* Logging */ = {
@@ -604,6 +644,7 @@
 				E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */,
 				9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */,
 				FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */,
+				3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */,
 				D8238AE010AEFFF72F8F2351 /* ScreenRegionOCRController.swift */,
 				43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */,
 				B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */,
@@ -828,9 +869,13 @@
 				6C3175BFD0949B4AEEE41FD1 /* BatterySettings.swift in Sources */,
 				513CAB175428D3C3573A7911 /* BatterySystemProfilerProbe.swift in Sources */,
 				89BAB936D8EA48DE26DE3055 /* BatteryWidgetConfigSection.swift in Sources */,
+				BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */,
 				FC0247F925DDFD25398F70B7 /* ClipboardCopiedIslandView.swift in Sources */,
 				B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */,
+				3C065C2CF6E12D77BCEF8954 /* ColorPickSettings.swift in Sources */,
 				3D462E034E453F1F314C7455 /* ColorPickTipIslandView.swift in Sources */,
+				7F846C42B4CA458D1D993C1E /* ColorPickWidget.swift in Sources */,
+				0D2E218106F72CDB2BFFDF29 /* ColorPickWidgetConfigSection.swift in Sources */,
 				C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */,
 				94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */,
 				5A5FAF628460840B773CAA96 /* ControlDeckSettingsPane.swift in Sources */,
@@ -848,6 +893,8 @@
 				B1E5D50DB91D355DCD3D6DA6 /* FocusTimerTitleBackfillCard.swift in Sources */,
 				6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */,
 				AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */,
+				46543EB57A64C3055AEE5217 /* GlobalHotKeyCenter.swift in Sources */,
+				27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */,
 				3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */,
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
@@ -883,6 +930,10 @@
 				6997AB6FDC5F0AD503C2BB9C /* MoveReminderWidgetConfigSection.swift in Sources */,
 				C81C8B553E9FB563CD83D571 /* NotchGeometry.swift in Sources */,
 				4E4EF64C76E429208D63F2DE /* NowPlayingService.swift in Sources */,
+				E8169D4F5591ECA57D3E0638 /* OCRSelectSettings.swift in Sources */,
+				11EF5958F4F4BADDA2B6521B /* OCRSelectTipIslandView.swift in Sources */,
+				3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */,
+				9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */,
 				76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */,
 				EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */,
 				4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */,
@@ -905,6 +956,7 @@
 				7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */,
 				9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */,
 				9C726E71C4AE6AF7CC2959AC /* ScreenRegionOCRController.swift in Sources */,
+				436BDBF27E789D5BAF98FC57 /* SettingsHotKeyRecorder.swift in Sources */,
 				CF380E47DC26E3B85D023A8F /* SettingsNavigator.swift in Sources */,
 				F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */,
 				98C8EA076814CA437DFDD3DC /* SettingsUI.swift in Sources */,

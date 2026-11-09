@@ -254,12 +254,8 @@ struct ShelfClipboardDeckView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
-    /// 取色 + OCR：两枚 28 + 间距 6。
-    private var clipboardToolsWidth: CGFloat { 28 + 6 + 28 }
-
     private var clipboardHeader: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 搜索与工具分区布局：搜索槽不占工具宽，避免 AppKit 字段热区盖住按钮。
             HStack(spacing: 6) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -282,63 +278,12 @@ struct ShelfClipboardDeckView: View {
 
                 clipboardSearchField
                     .frame(minWidth: 72, maxWidth: .infinity)
-
-                clipboardToolButtons
-                    .fixedSize(horizontal: true, vertical: true)
             }
 
             Rectangle()
                 .fill(Color.white.opacity(0.06))
                 .frame(height: 1)
         }
-    }
-
-    private var clipboardToolButtons: some View {
-        HStack(spacing: 6) {
-            clipboardToolButton(
-                symbol: "eyedropper",
-                help: L10n.Shelf.colorPickHelp
-            ) {
-                ShelfCaptureTools.shared.beginColorPick()
-            }
-
-            clipboardToolButton(
-                symbol: "text.viewfinder",
-                help: L10n.Shelf.ocrHelp
-            ) {
-                ShelfCaptureTools.shared.beginOCR()
-            }
-        }
-        .frame(width: clipboardToolsWidth, alignment: .trailing)
-    }
-
-    private func clipboardToolButton(
-        symbol: String,
-        help: String,
-        action: @escaping () -> Void
-    ) -> some View {
-        // 用 Button 而非 onTapGesture：浮层首击更稳；整块 28×28 可点。
-        Button {
-            AppLog.warn("Shelf", "剪贴板工具按钮点击", ["symbol": symbol])
-            action()
-        } label: {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.03))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-                Image(systemName: symbol)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.78))
-            }
-            .frame(width: 28, height: 28)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(help)
-        .accessibilityLabel(help)
     }
 
     private var clipboardSearchField: some View {

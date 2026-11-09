@@ -15,6 +15,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case clipboardCaptureHint(id: String, text: String, symbol: String)
     /// 取色进行中的操作提示（左键 / Esc）；取完或取消后由业务侧 dismiss。
     case colorPickTip
+    /// OCR 框选进行中的操作提示（正在框选 / Esc）；结束或取消后由业务侧 dismiss。
+    case ocrSelectTip
     /// AI 额度触达充裕 / 警戒 / 截流任一阈值（约 3s 瞬时胶囊；非常驻页）。
     case aiUsageAlert(
         id: String,
@@ -27,6 +29,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case moveReminder(MoveReminderSession.Notice)
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
+    static let ocrSelectTipID = "shelf.capture.ocrSelectTip"
 
     var id: String {
         switch self {
@@ -40,6 +43,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "shelf.capture.\(id)"
         case .colorPickTip:
             return Self.colorPickTipID
+        case .ocrSelectTip:
+            return Self.ocrSelectTipID
         case .aiUsageAlert(let id, _, _, _, _):
             return id
         case .moveReminder(let notice):
@@ -57,7 +62,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "battery.low"
         case .peripheralFullCharge:
             return "battery.full"
-        case .clipboardCaptureHint, .colorPickTip:
+        case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip:
             return "shelf.capture"
         case .aiUsageAlert:
             return "aiUsage"
@@ -66,15 +71,15 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色引导、久坐起身）。
+    /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色/OCR 引导、久坐起身）。
     var autoDismissNanoseconds: UInt64? {
         switch self {
-        case .ramPressure, .colorPickTip, .moveReminder:
+        case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder:
             // 久坐起身：一直挂着，直到点「稍后」或「今天不再提醒」。
             return nil
         case .clipboardCaptureHint:
-            // 「已复制」短提示：0.5s，不因悬停延后。
-            return 500_000_000
+            // 「已复制」短提示：约 2s，取色/OCR 成功后更容易看见。
+            return 2_000_000_000
         case .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert:
             // 额度等瞬时条约 3s。
             return 3_000_000_000
@@ -84,17 +89,17 @@ enum IslandNoticePayload: Identifiable, Hashable {
     /// 指针停在岛上时是否延后自动收起。剪贴板短提示强制按时长关掉。
     var holdsWhileHovering: Bool {
         switch self {
-        case .clipboardCaptureHint, .colorPickTip:
+        case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip:
             return false
         case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert, .moveReminder:
             return true
         }
     }
 
-    /// 取色引导：顶距 0，左右翼贴刘海。
+    /// 取色 / OCR 引导：顶距 0，左右翼贴刘海。
     var usesNotchWingChrome: Bool {
         switch self {
-        case .colorPickTip:
+        case .colorPickTip, .ocrSelectTip:
             return true
         default:
             return false
@@ -127,10 +132,17 @@ final class IslandNoticeCenter: ObservableObject {
     func present(_ payload: IslandNoticePayload) {
         // 勿先清空再设：会走 dismiss→收岛，0.5s「已复制」来不及看见。
         // 同内容再投由业务侧换唯一 id（如 copy.token）保证 @Published 触发。
+        //
+        // 短「已复制」必须在改 current 之前预备尺寸：SwiftUI 会立刻 Preference，
+        // 若仍卡在宽翼引导尺寸会被误缩守卫拒绝，提示整段被顶出可视区。
+        if payload.usesShortBelowNotchChrome {
+            IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(payload.id)")
+        }
         current = payload
         AppLog.warn("IslandNotice", "已投递瞬时通知", [
             "id": payload.id,
-            "source": payload.sourceTag
+            "source": payload.sourceTag,
+            "shortTip": payload.usesShortBelowNotchChrome
         ])
     }
 

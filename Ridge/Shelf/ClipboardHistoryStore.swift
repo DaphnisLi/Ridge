@@ -23,12 +23,23 @@ final class ClipboardHistoryStore: ObservableObject {
     private var timer: Timer?
     private var lastChangeCount: Int = -1
     private var started = false
+    /// 取色 / OCR 关闭「写入历史」时：跳过对应 `changeCount` 的归档（仍写系统剪贴板）。
+    private var suppressedHistoryChangeCounts: Set<Int> = []
     /// 解码后的预览图缓存：滑动列表时禁止反复 `NSImage(data:)` 堵主线程。
     private let previewImageCache = NSCache<NSString, NSImage>()
 
     private init() {
         previewImageCache.countLimit = Self.maxItems
         previewImageCache.totalCostLimit = 8 * 1024 * 1024
+    }
+
+    /// 在已写入系统剪贴板后调用：本笔不进灵动岛历史粘贴板。
+    func suppressHistory(forChangeCount changeCount: Int, reason: String) {
+        suppressedHistoryChangeCounts.insert(changeCount)
+        AppLog.info("Clipboard", "将跳过历史归档", [
+            "reason": reason,
+            "changeCount": changeCount
+        ])
     }
 
     func start() {
@@ -166,6 +177,11 @@ final class ClipboardHistoryStore: ObservableObject {
         guard count != lastChangeCount else { return }
         lastChangeCount = count
 
+        if suppressedHistoryChangeCounts.remove(count) != nil {
+            AppLog.info("Clipboard", "已跳过历史归档（仅系统剪贴板）", ["changeCount": count])
+            return
+        }
+
         if ClipboardPrivacy.isFrontmostPasswordManager() {
             let bid = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "?"
             AppLog.info("Clipboard", "私密过滤：跳过本次复制", ["app": bid])
@@ -210,14 +226,20 @@ final class ClipboardHistoryStore: ObservableObject {
         presentCopiedNotice(for: captured)
     }
 
-    /// 任意复制成功后上岛短提示；取色引导进行中时不打断。
+    /// 任意复制成功后上岛短提示；取色/OCR 引导中或刚投过采集成功提示时不打断。
     private func presentCopiedNotice(for item: ClipboardHistoryItem) {
         guard ShelfSettings.shared.showCopiedNotice else {
             AppLog.debug("Clipboard", "复制提示已关闭，跳过上岛")
             return
         }
-        if IslandNoticeCenter.shared.current?.id == IslandNoticePayload.colorPickTipID {
-            AppLog.debug("Clipboard", "取色引导中，跳过复制提示")
+        if ShelfCaptureTools.shouldSuppressClipboardCopiedNotice {
+            AppLog.debug("Clipboard", "采集成功提示刚投递，跳过轮询重复提示")
+            return
+        }
+        let guidingID = IslandNoticeCenter.shared.current?.id
+        if guidingID == IslandNoticePayload.colorPickTipID
+            || guidingID == IslandNoticePayload.ocrSelectTipID {
+            AppLog.debug("Clipboard", "取色/OCR 引导中，跳过复制提示")
             return
         }
         let text = L10n.Shelf.copiedNotice(for: item)

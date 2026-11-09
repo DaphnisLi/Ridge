@@ -224,7 +224,7 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
                         }
                     }
                 } else if (sub is NSTextField || sub is NSTextView), frameInSelf.contains(point) {
-                    // 剪贴板搜索宿主：热区以宿主为准，避免字段外溢盖住右侧取色/OCR。
+                    // 剪贴板搜索宿主：热区以宿主为准，避免 AppKit 字段热区外溢。
                     if let host = sub.superview as? ShelfClipboardSearchHost {
                         let hostFrame = host.convert(host.bounds, to: self)
                         if hostFrame.contains(point) {

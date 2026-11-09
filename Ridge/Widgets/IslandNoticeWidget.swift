@@ -170,13 +170,15 @@ final class IslandNoticeWidget: IslandWidget {
         Task { @MainActor [weak self] in
             guard let self, self.wantsDisplay else { return }
             // 与会议一致：延后一拍避开 applyPage 同步重入；但 expand 必须在切页之后。
+            // 替换（尤其宽翼引导→短「已复制」）依赖 expand 内 allowPanelShrink，否则尺寸卡死看不见。
             self.context.requestDisplay()
             IslandController.shared?.expand(
                 reason: alreadyShowing ? "islandNoticeReplace" : "islandNotice"
             )
             AppLog.warn("IslandNotice", alreadyShowing ? "瞬时通知已替换" : "瞬时通知已上岛", [
                 "id": payload.id,
-                "source": payload.sourceTag
+                "source": payload.sourceTag,
+                "replaced": alreadyShowing
             ])
         }
     }
@@ -221,6 +223,8 @@ private struct IslandNoticeCardView: View {
             }
         case .colorPickTip:
             ColorPickTipIslandView()
+        case .ocrSelectTip:
+            OCRSelectTipIslandView()
         case .aiUsageAlert(_, let providerName, let remainingPercent, let stage, let resetsAt):
             // 根视图禁止再加外圈 padding：壳层 `IslandChrome` + notchWing 已管边距。
             AIUsageIslandCardView(

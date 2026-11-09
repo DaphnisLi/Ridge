@@ -162,6 +162,10 @@ enum L10n {
                 return tr("widgets.category.world_clock", "时区时钟")
             case "builtin.stocks":
                 return tr("widgets.category.stocks", "行情看板")
+            case "builtin.colorPick":
+                return tr("widgets.category.color_pick", "屏幕取色")
+            case "builtin.ocrSelect":
+                return tr("widgets.category.ocr_select", "框选文字提取")
             default:
                 return tr("widgets.category.generic", "小组件")
             }
@@ -192,6 +196,10 @@ enum L10n {
                 return tr("widgets.footer.world_clock", "固钉城市 · 时差与昼夜动态")
             case "builtin.stocks":
                 return tr("widgets.footer.stocks", "固钉标的 · 分时与涨跌")
+            case "builtin.colorPick":
+                return tr("widgets.footer.color_pick", "快捷键唤醒 · 色值写入剪贴板")
+            case "builtin.ocrSelect":
+                return tr("widgets.footer.ocr_select", "快捷键唤醒 · 框选识别文字")
             default:
                 return tr("widgets.footer.generic", "点击进入配置")
             }
@@ -210,6 +218,8 @@ enum L10n {
             case "builtin.moveReminder": return "figure.stand"
             case "builtin.worldClock": return "globe"
             case "builtin.stocks": return "chart.line.uptrend.xyaxis"
+            case "builtin.colorPick": return "eyedropper"
+            case "builtin.ocrSelect": return "text.viewfinder"
             default: return "slider.horizontal.3"
             }
         }
@@ -1166,6 +1176,56 @@ enum L10n {
         static var addRoot: String { tr("projects.settings.add_root", "添加目录") }
     }
 
+    // MARK: - HotKey / Capture widgets
+
+    enum HotKey {
+        static var recording: String { tr("hotkey.recording", "按下快捷键…") }
+        static var recordingHelp: String { tr("hotkey.recording_help", "再点取消，或按 Esc") }
+        static var recordHelp: String { tr("hotkey.record_help", "点击后按下新的快捷键组合") }
+    }
+
+    enum ColorPick {
+        static var widgetName: String { tr("color_pick.widget_name", "屏幕取色") }
+        static var widgetSummary: String {
+            tr("color_pick.widget_summary", "快捷键唤起系统取色器，色值写入剪贴板")
+        }
+        static var hotKeyTitle: String { tr("color_pick.hotkey_title", "唤醒快捷键") }
+        static var hotKeySubtitle: String {
+            tr("color_pick.hotkey_subtitle", "全局生效；需至少包含 ⌘ / ⌥ / ⌃ / ⇧ 之一")
+        }
+        static var saveToHistoryTitle: String {
+            tr("color_pick.save_to_history_title", "取色后写入历史粘贴板")
+        }
+        static var saveToHistorySubtitle: String {
+            tr(
+                "color_pick.save_to_history_subtitle",
+                "开启后同步到灵动岛剪贴板历史；关闭则仅写入系统剪贴板"
+            )
+        }
+    }
+
+    enum OCRSelect {
+        static var widgetName: String { tr("ocr_select.widget_name", "框选文字提取") }
+        static var widgetSummary: String {
+            tr("ocr_select.widget_summary", "快捷键唤起框选，识别屏幕文字并复制")
+        }
+        static var previewStageTitle: String { tr("ocr_select.preview_stage_title", "框选") }
+        static var previewStageBadge: String { tr("ocr_select.preview_stage_badge", "引导") }
+        static var hotKeyTitle: String { tr("ocr_select.hotkey_title", "唤醒快捷键") }
+        static var hotKeySubtitle: String {
+            tr("ocr_select.hotkey_subtitle", "全局生效；需至少包含 ⌘ / ⌥ / ⌃ / ⇧ 之一")
+        }
+        static var saveToHistoryTitle: String {
+            tr("ocr_select.save_to_history_title", "提取后写入历史粘贴板")
+        }
+        static var saveToHistorySubtitle: String {
+            tr(
+                "ocr_select.save_to_history_subtitle",
+                "开启后同步到灵动岛剪贴板历史；关闭则仅写入系统剪贴板"
+            )
+        }
+    }
+
     // MARK: - Shelf + Clipboard（控制台）
 
     enum Shelf {
@@ -1286,6 +1346,14 @@ enum L10n {
         }
         static var ocrDragHint: String {
             tr("shelf.clipboard.ocr_drag_hint", "拖拽框选文字 · Esc 取消")
+        }
+        /// OCR 框选岛引导左侧文案。
+        static var ocrSelectTipLeft: String {
+            tr("shelf.clipboard.ocr_select_tip_left", "正在框选文字…")
+        }
+        /// OCR 框选岛引导无障碍。
+        static var ocrSelectTipA11y: String {
+            tr("shelf.clipboard.ocr_select_tip_a11y", "正在框选文字，按 Esc 取消")
         }
         static var ocrNeedScreenCapture: String {
             tr(

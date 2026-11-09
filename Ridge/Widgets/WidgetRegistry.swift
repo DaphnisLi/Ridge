@@ -67,6 +67,8 @@ final class WidgetRegistry {
         register(TypedWidgetModule<MoveReminderWidget>())
         register(TypedWidgetModule<WorldClockWidget>())
         register(TypedWidgetModule<StockWidget>())
+        register(TypedWidgetModule<ColorPickWidget>())
+        register(TypedWidgetModule<OCRSelectWidget>())
 
         // 用户 / AI 包：校验 manifest 后 register(manifest:factory:)，无需改 Runtime。
     }

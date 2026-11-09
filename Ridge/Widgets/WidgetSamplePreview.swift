@@ -212,8 +212,26 @@ enum WidgetSamplePreview {
     /// 统一预览组件：壳 + 假数据内容。
     @ViewBuilder
     static func island(for id: WidgetID, compact: Bool) -> some View {
-        WidgetIslandPreviewShell(compact: compact) {
+        WidgetIslandPreviewShell(
+            compact: compact,
+            hugsContent: hugsIslandContent(for: id)
+        ) {
             content(for: id, compact: compact)
+        }
+    }
+
+    /// 窄内容（股票两卡 / 瞬时引导等）贴合固有宽，避免黑岛被库卡舞台横向拉满。
+    private static func hugsIslandContent(for id: WidgetID) -> Bool {
+        switch id {
+        case "builtin.stocks",
+             "builtin.colorPick",
+             "builtin.ocrSelect",
+             "builtin.aiUsage",
+             "builtin.moveReminder",
+             "builtin.focusTimer":
+            return true
+        default:
+            return false
         }
     }
 
@@ -234,6 +252,10 @@ enum WidgetSamplePreview {
             worldClockSample(compact: compact)
         case "builtin.stocks":
             stocksSample(compact: compact)
+        case "builtin.colorPick":
+            colorPickSample(compact: compact)
+        case "builtin.ocrSelect":
+            ocrSelectSample(compact: compact)
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
@@ -305,11 +327,22 @@ enum WidgetSamplePreview {
             .frame(maxWidth: compact ? .infinity : 560)
     }
 
+    private static func colorPickSample(compact: Bool) -> some View {
+        ColorPickTipIslandView(compact: true, previewNotchWidth: compact ? 120 : 140)
+            .frame(minHeight: compact ? 30 : 34)
+    }
+
+    private static func ocrSelectSample(compact: Bool) -> some View {
+        OCRSelectTipIslandView(compact: true, previewNotchWidth: compact ? 120 : 140)
+            .frame(minHeight: compact ? 30 : 34)
+    }
+
     private static func stocksSample(compact: Bool) -> some View {
-        StockIslandView.previewSample()
-            .padding(.horizontal, compact ? 10 : IslandChrome.contentHorizontal)
+        // 两卡紧凑样张：单卡约 128（价签不截断）；纵向贴合内容，勿拉高。
+        StockIslandView.previewSample(compact: true)
+            .padding(.horizontal, compact ? 8 : IslandChrome.contentHorizontal)
             .padding(.vertical, compact ? 8 : 10)
-            .frame(maxWidth: compact ? .infinity : 220)
+            .fixedSize(horizontal: true, vertical: true)
     }
 
     private static func batterySample(compact: Bool) -> some View {
@@ -430,25 +463,7 @@ private struct DeckShelfPreviewSample: View {
 
             clipboardSearchField
                 .frame(minWidth: compact ? 72 : 120, maxWidth: .infinity)
-
-            previewToolGlyph("eyedropper")
-            previewToolGlyph("text.viewfinder")
         }
-    }
-
-    private func previewToolGlyph(_ symbol: String) -> some View {
-        Image(systemName: symbol)
-            .font(.system(size: compact ? 9 : 10, weight: .semibold))
-            .foregroundStyle(.white.opacity(0.78))
-            .frame(width: compact ? 22 : 26, height: compact ? 22 : 26)
-            .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.white.opacity(0.03))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
     }
 
     /// 假数据搜索框（不可编辑），对齐真岛剪贴板顶栏。

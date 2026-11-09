@@ -6469,6 +6469,28 @@
         }
       }
     },
+    "shelf.clipboard.ocr_select_tip_left": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在框选文字…"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_select_tip_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在框选文字，按 Esc 取消"
+          }
+        }
+      }
+    },
     "shelf.preview.stage_title": {
       "extractionState": "manual",
       "localizations": {
@@ -8368,6 +8390,237 @@
           "stringUnit": {
             "state": "translated",
             "value": "当前数据来源：%@"
+          }
+        }
+      }
+    },
+    "hotkey.recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按下快捷键…"
+          }
+        }
+      }
+    },
+    "hotkey.recording_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再点取消，或按 Esc"
+          }
+        }
+      }
+    },
+    "hotkey.record_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击后按下新的快捷键组合"
+          }
+        }
+      }
+    },
+    "color_pick.widget_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕取色"
+          }
+        }
+      }
+    },
+    "color_pick.widget_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键唤起系统取色器，色值写入剪贴板"
+          }
+        }
+      }
+    },
+    "color_pick.hotkey_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "唤醒快捷键"
+          }
+        }
+      }
+    },
+    "color_pick.hotkey_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全局生效；需至少包含 ⌘ / ⌥ / ⌃ / ⇧ 之一"
+          }
+        }
+      }
+    },
+    "color_pick.save_to_history_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取色后写入历史粘贴板"
+          }
+        }
+      }
+    },
+    "color_pick.save_to_history_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启后同步到灵动岛剪贴板历史；关闭则仅写入系统剪贴板"
+          }
+        }
+      }
+    },
+    "ocr_select.widget_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "框选文字提取"
+          }
+        }
+      }
+    },
+    "ocr_select.widget_summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键唤起框选，识别屏幕文字并复制"
+          }
+        }
+      }
+    },
+    "ocr_select.preview_stage_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "框选"
+          }
+        }
+      }
+    },
+    "ocr_select.preview_stage_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "引导"
+          }
+        }
+      }
+    },
+    "ocr_select.hotkey_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "唤醒快捷键"
+          }
+        }
+      }
+    },
+    "ocr_select.hotkey_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全局生效；需至少包含 ⌘ / ⌥ / ⌃ / ⇧ 之一"
+          }
+        }
+      }
+    },
+    "ocr_select.save_to_history_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提取后写入历史粘贴板"
+          }
+        }
+      }
+    },
+    "ocr_select.save_to_history_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启后同步到灵动岛剪贴板历史；关闭则仅写入系统剪贴板"
+          }
+        }
+      }
+    },
+    "widgets.category.color_pick": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕取色"
+          }
+        }
+      }
+    },
+    "widgets.category.ocr_select": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "框选文字提取"
+          }
+        }
+      }
+    },
+    "widgets.footer.color_pick": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键唤醒 · 色值写入剪贴板"
+          }
+        }
+      }
+    },
+    "widgets.footer.ocr_select": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键唤醒 · 框选识别文字"
           }
         }
       }

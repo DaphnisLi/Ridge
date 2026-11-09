@@ -62,6 +62,32 @@ final class IslandViewModel: ObservableObject {
         ])
     }
 
+    /// 通知替换等：绕过误缩守卫，立刻写入面板尺寸（再交给 Preference 微调）。
+    func forcePanelSize(_ raw: CGSize, reason: String) {
+        allowPanelShrink(for: 1.2, reason: reason)
+        let next = IslandPanelSizing.clamp(
+            raw,
+            notchWidth: notchWidth,
+            notchHeight: notchHeight,
+            maxWidth: maxExpandedWidth
+        )
+        panelSize = next
+        let notch = CGSize(width: notchWidth, height: notchHeight)
+        if isExpanded,
+           !IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+            panel: next,
+            notch: notch,
+            isExpanded: true
+           ) {
+            lastStableExpandedPanelSize = next
+        }
+        AppLog.warn("Island", "强制写入面板尺寸", [
+            "reason": reason,
+            "w": Int(next.width),
+            "h": Int(next.height)
+        ])
+    }
+
     /// 内容 Preference 上报后写入；变化过小则忽略，避免布局抖动。
     func applyMeasuredPanelSize(_ raw: CGSize) {
         let next = IslandPanelSizing.clamp(

@@ -38,6 +38,8 @@ final class IslandController: NSObject {
     private var isShelfDropTargeted = false
     /// 拖文件接近货架时临时抬高层级，便于抢到投放命中。
     private var isShelfDragElevated = false
+    /// OCR 全屏遮罩为 screenSaver 级；引导 tip 须抬到其上方才看得见，且保持穿透。
+    private var isOCRCaptureElevated = false
     /// 取色 / OCR 进行中：强制整窗穿透，且禁止悬停再展开，避免挡系统放大镜或吞掉 mouseUp。
     private var isExternalPointerToolActive = false
     /// 整岛暂存拖入会话是否仍有效（接近区或投放命中）。
@@ -368,6 +370,11 @@ final class IslandController: NSObject {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
         if viewModel.isExpanded {
+            // 取色/OCR 宽翼引导 →「已复制」短条：必须允许缩宽，否则卡在引导尺寸，短提示顶距把内容顶出可视区。
+            if reason.contains("islandNotice") {
+                viewModel.allowPanelShrink(for: 0.8, reason: "expandAlready:\(reason)")
+                AppLog.warn("Island", "通知替换：已允许面板缩小", ["reason": reason])
+            }
             if reason.contains("focusTimer") {
                 applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             } else if shelfDropExpand {
@@ -376,10 +383,15 @@ final class IslandController: NSObject {
             updateInteractiveFrame(expanded: true)
             // 货架拖入：禁止抢前台，否则 Finder 拖放会被 activate 掐断。
             // 取色 / OCR：禁止抢前台，否则 NSColorSampler 会话会被掐死，完成回调永不来 → 岛永久穿透假死。
+            // 瞬时通知（含取色后「已复制」替换）：也不抢前台——activate 易与残留 ColorSampler 抢焦点，整屏点不动。
             if shelfDropExpand {
                 // no-op
             } else if isExternalPointerToolActive {
                 AppLog.warn("Overlay", "外部指针工具中已展开：跳过抢前台", [
+                    "reason": reason
+                ])
+            } else if reason.contains("islandNotice") {
+                AppLog.warn("Overlay", "瞬时通知展开：跳过抢前台", [
                     "reason": reason
                 ])
             } else {
@@ -409,6 +421,10 @@ final class IslandController: NSObject {
             ])
         } else if isExternalPointerToolActive {
             AppLog.warn("Overlay", "外部指针工具中展开：跳过抢前台", [
+                "reason": reason
+            ])
+        } else if reason.contains("islandNotice") {
+            AppLog.warn("Overlay", "瞬时通知展开：跳过抢前台", [
                 "reason": reason
             ])
         } else {
@@ -493,9 +509,32 @@ final class IslandController: NSObject {
             window.resignKey()
         }
         demoteIslandInteractionIfNeeded(reason: "beginExternalTool:\(reason)")
-        AppLog.info("Overlay", "外部指针工具开始", [
+        // OCR 遮罩盖住 status 级岛窗；抬到 screenSaver 之上才能看见引导 tip。
+        setOCRCaptureWindowElevation(reason.contains("OCR") || reason.contains("ocr"))
+        AppLog.warn("Overlay", "外部指针工具开始", [
             "reason": reason,
-            "clickThrough": window.ignoresMouseEvents
+            "clickThrough": window.ignoresMouseEvents,
+            "ocrElevated": isOCRCaptureElevated
+        ])
+    }
+
+    /// 宽翼引导 →「已复制」短条：在 `IslandNoticeCenter.present` 改内容之前调用，避免 Preference 先拒缩。
+    func prepareShortNoticeLayout(reason: String) {
+        let notchH = viewModel.notchHeight
+        let notchW = viewModel.notchWidth
+        let height = IslandChrome.shortTipTopInset(notchHeight: notchH)
+            + 30
+            + IslandChrome.shortTipBottom
+        // 略宽于刘海，短条不至于贴成「没展开」。
+        let width = max(notchW + 96, 260)
+        viewModel.forcePanelSize(CGSize(width: width, height: height), reason: reason)
+        if viewModel.isExpanded {
+            updateInteractiveFrame(expanded: true)
+        }
+        AppLog.warn("Island", "短通知布局已预备", [
+            "reason": reason,
+            "w": Int(width),
+            "h": Int(height)
         ])
     }
 
@@ -503,6 +542,7 @@ final class IslandController: NSObject {
     func endExternalPointerTool(reason: String) {
         isExternalPointerToolActive = false
         isMouseDownInIsland = false
+        setOCRCaptureWindowElevation(false)
         NSApp.discardEvents(
             matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp],
             before: nil
@@ -526,7 +566,7 @@ final class IslandController: NSObject {
                 demoteIslandInteractionIfNeeded(reason: "endExternalTool:\(reason)")
             }
         }
-        AppLog.info("Overlay", "外部指针工具结束", [
+        AppLog.warn("Overlay", "外部指针工具结束", [
             "reason": reason,
             "overInteractive": over,
             "expanded": viewModel.isExpanded,
@@ -830,9 +870,31 @@ final class IslandController: NSObject {
             window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.popUpMenuWindow)) + 1)
             window.orderFrontRegardless()
             AppLog.debug("Island", "货架拖入：抬高窗口层级")
+        } else if isOCRCaptureElevated {
+            // OCR 仍在：保持高于遮罩，勿掉回 resting。
+            window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.screenSaverWindow)) + 1)
+            AppLog.debug("Island", "货架拖入结束：仍保持 OCR 抬高层级")
         } else {
             window.level = islandRestingLevel
             AppLog.debug("Island", "货架拖入：恢复窗口层级")
+        }
+    }
+
+    private func setOCRCaptureWindowElevation(_ elevated: Bool) {
+        guard isOCRCaptureElevated != elevated else { return }
+        isOCRCaptureElevated = elevated
+        if elevated {
+            window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.screenSaverWindow)) + 1)
+            window.orderFrontRegardless()
+            AppLog.warn("Island", "OCR 框选：岛窗抬到遮罩之上", [
+                "level": window.level.rawValue
+            ])
+        } else if isShelfDragElevated {
+            window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.popUpMenuWindow)) + 1)
+            AppLog.debug("Island", "OCR 结束：仍保持货架拖入层级")
+        } else {
+            window.level = islandRestingLevel
+            AppLog.warn("Island", "OCR 框选：岛窗恢复 resting 层级")
         }
     }
 

@@ -405,11 +405,12 @@ private struct WidgetLibraryCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // 黑岛样张内容不变；固定舞台高度，矮岛也贴顶。
             Button(action: onOpen) {
+                // 黑岛按内容固有高，贴顶落在固定灰舞台上；勿拉满舞台高，否则下圆角被拉成直角、卡片被纵向撑开。
                 WidgetSamplePreview.island(for: widgetID, compact: true)
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .padding(.horizontal, 4)
                     .padding(.top, 2)
-                    .drawingGroup(opaque: false)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -533,6 +534,8 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.moveReminder"
             || widgetID == "builtin.worldClock"
             || widgetID == "builtin.stocks"
+            || widgetID == "builtin.colorPick"
+            || widgetID == "builtin.ocrSelect"
     }
 
     var body: some View {
@@ -571,6 +574,10 @@ private struct WidgetPreviewPane: View {
             WorldClockWidgetConfigSection()
         } else if widgetID == "builtin.stocks" {
             StockWidgetConfigSection()
+        } else if widgetID == "builtin.colorPick" {
+            ColorPickWidgetConfigSection()
+        } else if widgetID == "builtin.ocrSelect" {
+            OCRSelectWidgetConfigSection()
         }
     }
 

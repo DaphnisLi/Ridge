@@ -33,14 +33,17 @@ struct StockIslandView: View {
         session.snapshots
     }
 
-    static func previewSample() -> some View {
+    static func previewSample(compact: Bool = true) -> some View {
+        // 预览两卡：单卡约 128，够显示 `$232.85`；比真机 168 窄，避免库卡黑岛过宽。
         StockIslandStaticView(
             snapshots: previewSnapshots(),
-            settings: StockSettings.shared
+            settings: StockSettings.shared,
+            cardMinWidth: compact ? 128 : 148,
+            compactChrome: compact
         )
     }
 
-    /// 设置预览只用一张假数据样张，避免库卡里挤出多卡假象。
+    /// 设置 / 库卡预览：两枚假数据样张（涨跌各一），不接实时源。
     static func previewSnapshots() -> [StockQuoteSnapshot] {
         [
             StockQuoteSnapshot(
@@ -61,6 +64,24 @@ struct StockIslandView: View {
                 isStale: false,
                 provider: .yahooChart
             ),
+            StockQuoteSnapshot(
+                symbol: "NVDA",
+                name: "英伟达",
+                exchange: "NASDAQ",
+                currency: "USD",
+                price: 128.40,
+                change: -2.15,
+                changePercent: -1.65,
+                dayLow: 127.8,
+                dayHigh: 131.2,
+                postPrice: 128.05,
+                postChangePercent: -0.27,
+                sparkline: [132, 131.5, 130.8, 131.2, 129.6, 130.1, 128.9, 129.2, 128.40],
+                marketState: "POST",
+                updatedAt: Date(),
+                isStale: false,
+                provider: .yahooChart
+            ),
         ]
     }
 }
@@ -68,15 +89,25 @@ struct StockIslandView: View {
 struct StockIslandStaticView: View {
     let snapshots: [StockQuoteSnapshot]
     @ObservedObject var settings: StockSettings
+    /// 单卡最小宽；岛上真机默认 168，设置预览宜更窄。
+    var cardMinWidth: CGFloat = 168
+    /// 库卡 / 设置预览：缩小分时与内边距，避免卡片显得过长。
+    var compactChrome: Bool = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        let count = max(snapshots.count, 1)
+        let gap: CGFloat = compactChrome ? 6 : 8
+        HStack(alignment: .top, spacing: gap) {
             ForEach(snapshots) { snap in
-                StockIslandCard(snap: snap, settings: settings)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                StockIslandCard(
+                    snap: snap,
+                    settings: settings,
+                    compactChrome: compactChrome
+                )
+                .frame(width: cardMinWidth, alignment: .leading)
             }
         }
-        .frame(minWidth: CGFloat(max(snapshots.count, 1)) * 168)
+        .frame(width: CGFloat(count) * cardMinWidth + CGFloat(max(count - 1, 0)) * gap)
         .fixedSize(horizontal: true, vertical: true)
     }
 }
@@ -84,6 +115,7 @@ struct StockIslandStaticView: View {
 private struct StockIslandCard: View {
     let snap: StockQuoteSnapshot
     @ObservedObject var settings: StockSettings
+    var compactChrome: Bool = false
 
     private var positiveTone: Bool {
         StockSession.isPositiveTone(isUp: snap.isUp, convention: settings.colorConvention)
@@ -102,30 +134,37 @@ private struct StockIslandCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let priceSize: CGFloat = compactChrome ? 15 : 18
+        let sparkH: CGFloat = compactChrome ? 22 : 36
+        let pad: CGFloat = compactChrome ? 8 : 10
+        VStack(alignment: .leading, spacing: compactChrome ? 3 : 4) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     // 代码与名称分行：代码始终完整可见，不被长名称挤掉。
                     Text(snap.symbol)
-                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .font(.system(size: compactChrome ? 12 : 13, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     Text(displayName(for: snap))
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: compactChrome ? 9 : 10, weight: .medium))
                         .foregroundStyle(Color.white.opacity(0.45))
                         .lineLimit(1)
                     if settings.priceFormat == .percentPriority {
                         Text(StockSession.formatPercent(snap.changePercent))
-                            .font(.system(size: 18, weight: .semibold, design: .monospaced))
+                            .font(.system(size: priceSize, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     } else {
                         Text(StockSession.formatPrice(
                             snap.price,
                             currency: snap.currency,
                             format: settings.priceFormat
                         ))
-                        .font(.system(size: 18, weight: .semibold, design: .monospaced))
+                        .font(.system(size: priceSize, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                     }
                 }
                 Spacer(minLength: 4)
@@ -134,7 +173,7 @@ private struct StockIslandCard: View {
                         Image(systemName: snap.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
                             .font(.system(size: 8, weight: .bold))
                         Text(StockSession.formatPercent(snap.changePercent))
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .font(.system(size: compactChrome ? 10 : 11, weight: .semibold, design: .monospaced))
                     }
                     .foregroundStyle(tone)
                     .padding(.horizontal, 6)
@@ -149,29 +188,32 @@ private struct StockIslandCard: View {
 
             if settings.showSparkline {
                 StockSparklineView(points: snap.sparkline, positiveTone: positiveTone)
-                    .frame(height: 36)
-                    .padding(.vertical, 2)
+                    .frame(height: sparkH)
+                    .padding(.vertical, compactChrome ? 0 : 2)
             }
 
-            HStack(spacing: 6) {
-                if let post = snap.postPrice, let postPct = snap.postChangePercent {
-                    Text(
-                        "\(L10n.Stocks.afterHours) \(StockSession.formatPrice(post, currency: snap.currency, format: .adaptiveCurrency)) (\(StockSession.formatPercent(postPct)))"
-                    )
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .foregroundStyle(Color.white.opacity(0.55))
-                    .lineLimit(1)
+            if !compactChrome {
+                HStack(spacing: 6) {
+                    if let post = snap.postPrice, let postPct = snap.postChangePercent {
+                        Text(
+                            "\(L10n.Stocks.afterHours) \(StockSession.formatPrice(post, currency: snap.currency, format: .adaptiveCurrency)) (\(StockSession.formatPercent(postPct)))"
+                        )
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(Color.white.opacity(0.55))
+                        .lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                    dayRangeBar
                 }
-                Spacer(minLength: 0)
-                dayRangeBar
             }
         }
-        .padding(10)
+        .padding(pad)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: compactChrome ? 12 : 14, style: .continuous)
                 .fill(Color.white.opacity(0.06))
         )
         .opacity(snap.isStale ? 0.72 : 1)
+        .fixedSize(horizontal: false, vertical: true)
         .accessibilityLabel(
             "\(snap.symbol)，\(displayName(for: snap))，\(snap.price)，\(StockSession.formatPercent(snap.changePercent))"
         )

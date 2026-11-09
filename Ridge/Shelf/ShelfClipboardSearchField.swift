@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// 剪贴板搜索：AppKit 字段热区严格钳在宿主 bounds 内。
-/// SwiftUI `TextField` 在浮层 NSPanel 上常把可点区域扩到右侧，盖住取色 / OCR。
+/// SwiftUI `TextField` 在浮层 NSPanel 上常把可点区域扩到宿主外。
 struct ShelfClipboardSearchField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
