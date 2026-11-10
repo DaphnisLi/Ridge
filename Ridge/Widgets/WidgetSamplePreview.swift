@@ -195,7 +195,8 @@ struct WidgetIslandPreviewShell<Content: View>: View {
         }
         .background(
             shape
-                .fill(Color.black.opacity(0.92))
+                // 与真岛不透明漆黑一致；半透明黑在库卡白底上会发灰（短 tip 尤甚）。
+                .fill(Color.black)
                 .overlay(
                     shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
                 )
@@ -334,16 +335,17 @@ enum WidgetSamplePreview {
     }
 
     private static func colorPickSample(compact: Bool) -> some View {
+        // 与久坐 tip 同款：黑岛贴合内容，舞台只补左右/底。
         ColorPickTipIslandView(compact: true)
             .padding(.horizontal, IslandChrome.contentHorizontal)
-            .padding(.bottom, IslandChrome.shortTipBottom)
+            .padding(.bottom, IslandChrome.compactTipBottom)
             .frame(minHeight: compact ? 30 : 34)
     }
 
     private static func ocrSelectSample(compact: Bool) -> some View {
         OCRSelectTipIslandView(compact: true)
             .padding(.horizontal, IslandChrome.contentHorizontal)
-            .padding(.bottom, IslandChrome.shortTipBottom)
+            .padding(.bottom, IslandChrome.compactTipBottom)
             .frame(minHeight: compact ? 30 : 34)
     }
 

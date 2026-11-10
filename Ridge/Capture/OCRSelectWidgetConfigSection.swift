@@ -43,7 +43,7 @@ struct OCRSelectWidgetConfigSection: View {
                     badge: L10n.OCRSelect.previewStageBadge,
                     symbol: "text.viewfinder",
                     tint: SettingsChrome.primary,
-                    maxIslandWidth: 480,
+                    maxIslandWidth: 360,
                     hugsContent: true,
                     bottomRadius: 18,
                     outlineStyle: .panel,
@@ -53,10 +53,11 @@ struct OCRSelectWidgetConfigSection: View {
             ],
             selection: .constant("guide")
         ) { _ in
-            // 预览壳无 IslandChrome：仅舞台补左右/底，与真岛 shortTip 令牌一致。
+            // 与久坐 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
             OCRSelectTipIslandView(compact: true)
                 .padding(.horizontal, IslandChrome.contentHorizontal)
-                .padding(.bottom, IslandChrome.shortTipBottom)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: 34)
         }
     }
 

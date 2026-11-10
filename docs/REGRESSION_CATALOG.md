@@ -20,7 +20,7 @@
 | `island-hover-retention` | 岛悬停热区退化 | ≥5 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛 | `island-hover-retention.mdc`；`scrollHold`；`RidgeTests`（含 RegressionCatalogTests） |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
-| `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥3 | 取色引导后「已复制」投递了但不显示 | present 前 `forcePanelSize` 短条；勿先 dismiss 再 present |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥4 | 取色/框选后「已复制」投递了但不显示 | present 前 `forcePanelSize`；翼→短须放行缩宽；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
 
@@ -67,12 +67,12 @@
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
 - **recurring:** true  
-- **occurrences:** 3（2026-11-08 偶发；2026-11-09 取色两次确认：仅 allowShrink 仍竞态看不见）  
-- **症状:** 复制文字/链接/颜色/截图后，偶发不出现「已复制」岛提示；取色尤甚  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② **宽翼引导→短「已复制」时 Preference 先于 `allowPanelShrink` 上报并被误缩守卫拒绝，面板卡在引导尺寸（fromW≈407→toW≈179），短条顶距把文案顶出可视区**；③ `showCopiedNotice` 关闭  
-- **防护:** `IslandNoticeCenter.present` 对 short tip **先** `prepareShortNoticeLayout`（`forcePanelSize`）再改 `current`；`expand(islandNotice*)` 已展开时也 `allowPanelShrink`；勿先 dismiss 再 present  
-- **相关代码:** `IslandNoticeCenter.present`、`IslandController.prepareShortNoticeLayout`、`IslandViewModel.forcePanelSize`  
-- **自动化建议:** tip→copy 后 `panelSize` 接近短条；日志应有「强制写入面板尺寸」，不应再出现 replace 窗口内的「忽略展开态面板误缩」
+- **occurrences:** 4（2026-11-08 偶发；2026-11-09 取色两次；**2026-11-10 取色/框选改翼 tip 后再现**）  
+- **症状:** 复制文字/链接/颜色/截图后，偶发不出现「已复制」岛提示；取色 / 框选成功后尤甚  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② **宽翼引导→短「已复制」时 Preference 缩宽被误缩守卫整单拒绝，面板卡在翼高，短条顶距把文案顶出可视区**；③ `showCopiedNotice` 关闭；④ 仅靠 `allowPanelShrink` 窗口仍会竞态  
+- **防护:** `present` 对 short tip **先** `prepareShortNoticeLayout`；`shouldApplyMeasuredSize` 对翼→短（缩宽但高度不减）放行；`expand(islandNotice*)` 已展开时也 `allowPanelShrink`；勿先 dismiss 再 present  
+- **相关代码:** `IslandExpandedPanelPolicy.isWingToShortTipResize`、`IslandChrome.preparedShortTipPanelSize`、`IslandNoticeCenter.present`  
+- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`、`IslandExpandedPanelPolicyTests.testAllowsWingTipToShortCopiedResizeWithoutAllowShrink`
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -222,3 +222,5 @@
 | 2026-11-10 | 录入 meeting-tip-preemption；会议 tip 不被其它瞬时条盖住 |
 | 2026-11-10 | 录入 live-invite-removed；电量/媒体去掉「打开」邀请 tip |
 | 2026-11-10 | AI 额度 tip 改会议同款翼布局；重置文案三档（d/h/m） |
+| 2026-11-10 | 取色 / 框选引导改久坐同款翼 tip；`usesNotchWingChrome`；「已复制」仍 shortTip |
+| 2026-11-10 | shelf-copied-notice-miss +1：翼→短放行缩宽 + `test_shelfCopiedNoticeMiss_*` |

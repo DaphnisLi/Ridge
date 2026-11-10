@@ -29,13 +29,38 @@ enum IslandChrome {
     static let compactTipTopInset: CGFloat = 0
     static let compactTipBottom: CGFloat = 4
 
-    /// 矮胶囊短提示（已复制 / 取色 / OCR）：躲开刘海后落在正下方。会议 / AI 额度走翼 tip。
+    /// 矮胶囊短提示（「已复制」等）：躲开刘海后落在正下方。取色 / 框选 / 会议 / 久坐走翼 tip。
     static func shortTipTopInset(notchHeight: CGFloat) -> CGFloat {
         max(10, notchHeight)
     }
 
     /// 短提示底距：仍明显小于展开页默认 contentBottom（14）。
     static let shortTipBottom: CGFloat = 6
+
+    /// 「已复制」等内容区估算高度（不含 chrome 顶/底）；与 `prepareShortNoticeLayout` 一致。
+    static let shortTipContentHeight: CGFloat = 30
+
+    /// 翼 tip 单侧翼宽（与 `prepareMeetingWingNoticeLayout` 一致）。
+    static let preparedWingWidth: CGFloat = 98
+
+    /// 短 tip 上岛前强制面板尺寸（`shelf-copied-notice-miss`：须先于换皮写入）。
+    static func preparedShortTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
+        let height = shortTipTopInset(notchHeight: notchHeight)
+            + shortTipContentHeight
+            + shortTipBottom
+        let width = max(notchWidth + 96, 260)
+        return CGSize(width: width, height: height)
+    }
+
+    /// 翼 tip 上岛前强制面板尺寸。
+    static func preparedWingTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
+        let notchW = max(notchWidth, 110)
+        let height = compactTipTopInset
+            + max(notchHeight, 32)
+            + compactTipBottom
+        let width = preparedWingWidth * 2 + notchW + horizontalInsetTotal
+        return CGSize(width: width, height: height)
+    }
 
     /// 壳层表面类型：决定顶/底/左右 inset；`IslandBody` 与测试共用。
     /// 外形裁切另见 `IslandOutlineStyle`（提示胶囊 / 常驻上直角）。

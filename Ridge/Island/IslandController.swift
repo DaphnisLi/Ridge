@@ -531,34 +531,29 @@ final class IslandController: NSObject {
 
     /// 短提示上岛前预备尺寸：在 `IslandNoticeCenter.present` 改内容之前调用，避免 Preference 先拒缩。
     func prepareShortNoticeLayout(reason: String) {
-        let notchH = viewModel.notchHeight
-        let notchW = viewModel.notchWidth
-        let height = IslandChrome.shortTipTopInset(notchHeight: notchH)
-            + 30
-            + IslandChrome.shortTipBottom
-        // 略宽于刘海，短条不至于贴成「没展开」。
-        let width = max(notchW + 96, 260)
-        viewModel.forcePanelSize(CGSize(width: width, height: height), reason: reason)
+        let size = IslandChrome.preparedShortTipPanelSize(
+            notchWidth: viewModel.notchWidth,
+            notchHeight: viewModel.notchHeight
+        )
+        viewModel.forcePanelSize(size, reason: reason)
         if viewModel.isExpanded {
             updateInteractiveFrame(expanded: true)
         }
         AppLog.warn("Island", "短通知布局已预备", [
             "reason": reason,
-            "w": Int(width),
-            "h": Int(height)
+            "w": Int(size.width),
+            "h": Int(size.height)
         ])
     }
 
     /// 会议翼 tip 上岛前强制宽面板：否则可点区停在刘海/短条，右翼「进入」点穿到下层。
     func prepareMeetingWingNoticeLayout(reason: String) {
-        let notchH = viewModel.notchHeight
         let notchW = max(viewModel.notchWidth, 110)
-        let wing: CGFloat = 98
-        let height = IslandChrome.compactTipTopInset
-            + max(notchH, 32)
-            + IslandChrome.compactTipBottom
-        let width = wing * 2 + notchW + IslandChrome.horizontalInsetTotal
-        viewModel.forcePanelSize(CGSize(width: width, height: height), reason: reason)
+        let size = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: viewModel.notchWidth,
+            notchHeight: viewModel.notchHeight
+        )
+        viewModel.forcePanelSize(size, reason: reason)
         if viewModel.isExpanded {
             updateInteractiveFrame(expanded: true)
         } else {
@@ -567,8 +562,8 @@ final class IslandController: NSObject {
         }
         AppLog.warn("Island", "会议翼通知布局已预备", [
             "reason": reason,
-            "w": Int(width),
-            "h": Int(height),
+            "w": Int(size.width),
+            "h": Int(size.height),
             "notchW": Int(notchW)
         ])
     }

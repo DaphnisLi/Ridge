@@ -109,24 +109,22 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 会议 / AI 额度 / 久坐：顶距 0，左右翼贴刘海；外形上直角、下圆角。
+    /// 会议 / AI 额度 / 久坐 / 取色 / 框选：顶距 0，左右翼贴刘海；外形上直角、下圆角。
     var usesNotchWingChrome: Bool {
         switch self {
-        case .meetingLead, .aiUsageAlert, .moveReminder:
+        case .meetingLead, .aiUsageAlert, .moveReminder, .colorPickTip, .ocrSelectTip:
             return true
         default:
             return false
         }
     }
 
-    /// 矮胶囊短条顶距（取色 / OCR / 已复制）。
+    /// 矮胶囊短条顶距（「已复制」等）。
     /// 较高提示卡（RAM / 进程结束 / 实况邀请等）走普通通知顶距，岛壳仍为胶囊。
     var usesShortBelowNotchChrome: Bool {
         switch self {
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")
-        case .colorPickTip, .ocrSelectTip:
-            return true
         default:
             return false
         }

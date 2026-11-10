@@ -45,6 +45,52 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
+    // MARK: - shelf-copied-notice-miss
+
+    /// 取色 / 框选翼引导 →「已复制」短条：缩宽必须可应用，否则卡在翼高看不见提示。
+    func test_shelfCopiedNoticeMiss_wingGuideToCopiedAllowsWidthShrink() {
+        let notchW: CGFloat = 160
+        let notchH: CGFloat = 32
+        let wing = IslandChrome.preparedWingTipPanelSize(notchWidth: notchW, notchHeight: notchH)
+        let short = IslandChrome.preparedShortTipPanelSize(notchWidth: notchW, notchHeight: notchH)
+
+        XCTAssertTrue(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
+        XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
+        let copied = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.color.test",
+            text: "已复制",
+            symbol: "eyedropper"
+        )
+        XCTAssertTrue(copied.usesShortBelowNotchChrome)
+        XCTAssertFalse(copied.usesNotchWingChrome)
+
+        // 短条须明显高于翼条，才能容纳 shortTip 顶距；否则文案被顶出。
+        XCTAssertGreaterThan(
+            short.height,
+            IslandChrome.shortTipTopInset(notchHeight: notchH),
+            "短条高度须大于顶距，文案才有可视区"
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldApplyMeasuredSize(
+                current: wing,
+                measured: short,
+                isExpanded: true,
+                allowShrink: false
+            ),
+            "翼→已复制：无 allowShrink 窗口也须放行（shelf-copied-notice-miss）"
+        )
+    }
+
+    func test_shelfCopiedNoticeMiss_preparedShortTipTallerThanWingChrome() {
+        // 预备尺寸契约：present(copy) 先 force 到 short，再换皮。
+        let short = IslandChrome.preparedShortTipPanelSize(notchWidth: 160, notchHeight: 32)
+        let wing = IslandChrome.preparedWingTipPanelSize(notchWidth: 160, notchHeight: 32)
+        XCTAssertGreaterThanOrEqual(short.height, wing.height)
+        XCTAssertLessThan(short.width, wing.width)
+        XCTAssertEqual(IslandChrome.shortTipContentHeight, 30)
+        XCTAssertEqual(IslandChrome.preparedWingWidth, 98)
+    }
+
     func test_islandHoverRetention_contentScrollHoldsExpandWithinGrace() {
         let now = Date()
         XCTAssertTrue(
@@ -111,7 +157,7 @@ final class RegressionCatalogTests: XCTestCase {
     }
 
     func test_islandChrome_meetingUsesNotchWing_othersShortCapsule() {
-        // 会议 / AI 额度：左右翼贴刘海；取色/OCR：矮胶囊短条。
+        // 会议 / AI / 久坐 / 取色 / 框选：左右翼贴刘海；「已复制」仍为矮胶囊短条。
         let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
         let aiUsage = IslandNoticePayload.aiUsageAlert(
             id: "aiUsage.test",
@@ -123,16 +169,23 @@ final class RegressionCatalogTests: XCTestCase {
         let move = IslandNoticePayload.moveReminder(
             .init(id: "move.test", activeMinutes: 30, restMinutes: 2)
         )
+        let copied = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.test",
+            text: "已复制",
+            symbol: "doc.on.doc"
+        )
         XCTAssertTrue(meeting.usesNotchWingChrome)
         XCTAssertFalse(meeting.usesShortBelowNotchChrome)
         XCTAssertTrue(aiUsage.usesNotchWingChrome)
         XCTAssertFalse(aiUsage.usesShortBelowNotchChrome)
         XCTAssertTrue(move.usesNotchWingChrome)
         XCTAssertFalse(move.usesShortBelowNotchChrome)
-        XCTAssertFalse(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
-        XCTAssertTrue(IslandNoticePayload.colorPickTip.usesShortBelowNotchChrome)
-        XCTAssertFalse(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
-        XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesShortBelowNotchChrome)
+        XCTAssertTrue(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
+        XCTAssertFalse(IslandNoticePayload.colorPickTip.usesShortBelowNotchChrome)
+        XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
+        XCTAssertFalse(IslandNoticePayload.ocrSelectTip.usesShortBelowNotchChrome)
+        XCTAssertFalse(copied.usesNotchWingChrome)
+        XCTAssertTrue(copied.usesShortBelowNotchChrome)
     }
 
     /// AI 额度右翼重置文案三档。

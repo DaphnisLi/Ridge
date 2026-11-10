@@ -359,6 +359,7 @@ final class ShelfCaptureTools {
 
     /// 取色 / OCR 成功后的「已复制」短提示；须在 `endExternalPointerTool` 之后调用。
     /// 若引导 tip 仍在，直接替换（不先 dismiss 收岛）。
+    /// 翼引导→短条依赖 `prepareShortNoticeLayout` + 误缩守卫翼→短放行（shelf-copied-notice-miss）。
     private static func presentCopiedSuccess(detail: String, category: String, symbol: String) {
         guard ShelfSettings.shared.showCopiedNotice else {
             IslandNoticeCenter.shared.dismiss(id: IslandNoticePayload.colorPickTipID)
@@ -366,6 +367,7 @@ final class ShelfCaptureTools {
             AppLog.debug("ShelfCapture", "复制提示已关闭，跳过上岛", ["category": category])
             return
         }
+        let previous = IslandNoticeCenter.shared.current
         suppressClipboardCopiedNoticeUntil = Date().addingTimeInterval(1.2)
         let tipID = "copy.\(category).\(UUID().uuidString)"
         IslandNoticeCenter.shared.present(
@@ -373,7 +375,10 @@ final class ShelfCaptureTools {
         )
         AppLog.warn("ShelfCapture", "已投递复制成功提示", [
             "category": category,
-            "detail": String(detail.prefix(48))
+            "detail": String(detail.prefix(48)),
+            "replacedWing": previous?.usesNotchWingChrome == true,
+            "prev": previous?.id ?? "",
+            "tip": tipID
         ])
     }
 

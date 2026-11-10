@@ -36,9 +36,27 @@ enum IslandExpandedPanelPolicy {
         let shrinkW = current.width - measured.width
         let shrinkH = current.height - measured.height
         if shrinkW > shrinkThreshold || shrinkH > shrinkThreshold {
+            // shelf-copied-notice-miss：宽翼引导→「已复制」短条必缩宽，高度常持平或增高。
+            // 若因缩宽整单拒绝，面板卡在翼高，短条顶距把文案顶出可视区。
+            if isWingToShortTipResize(current: current, measured: measured, shrinkH: shrinkH, shrinkThreshold: shrinkThreshold) {
+                return true
+            }
             return false
         }
         return true
+    }
+
+    /// 宽翼 tip → 矮短条：允许明显缩宽（高度未大幅变矮）。
+    static func isWingToShortTipResize(
+        current: CGSize,
+        measured: CGSize,
+        shrinkH: CGFloat,
+        shrinkThreshold: CGFloat = accidentalShrinkThreshold
+    ) -> Bool {
+        // 高度仍在变矮（缩回刘海）→ 不走此放行。
+        guard shrinkH <= shrinkThreshold else { return false }
+        // 新尺寸不比当前更矮（允许略浮点误差）→ 视为 tip 替换而非误缩。
+        return measured.height + 1 >= current.height
     }
 
     /// 展开态保展开矩形：面板框外扩；收起态仅刘海。

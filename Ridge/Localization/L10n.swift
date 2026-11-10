@@ -1389,11 +1389,11 @@ enum L10n {
         }
         /// OCR 框选岛引导左侧文案。
         static var ocrSelectTipLeft: String {
-            tr("shelf.clipboard.ocr_select_tip_left", "正在框选文字…")
+            tr("shelf.clipboard.ocr_select_tip_left", "左键框选文字")
         }
         /// OCR 框选岛引导无障碍。
         static var ocrSelectTipA11y: String {
-            tr("shelf.clipboard.ocr_select_tip_a11y", "正在框选文字，按 Esc 取消")
+            tr("shelf.clipboard.ocr_select_tip_a11y", "左键框选文字，按 Esc 取消")
         }
         static var ocrNeedScreenCapture: String {
             tr(

@@ -28,6 +28,43 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
         )
     }
 
+    /// shelf-copied-notice-miss：翼 tip→「已复制」即使不在 allowShrink 窗口也须放行缩宽。
+    func testAllowsWingTipToShortCopiedResizeWithoutAllowShrink() {
+        let notchW: CGFloat = 160
+        let notchH: CGFloat = 32
+        let wing = IslandChrome.preparedWingTipPanelSize(notchWidth: notchW, notchHeight: notchH)
+        let short = IslandChrome.preparedShortTipPanelSize(notchWidth: notchW, notchHeight: notchH)
+        XCTAssertGreaterThan(wing.width, short.width, "翼 tip 应明显宽于短条")
+        XCTAssertGreaterThanOrEqual(short.height, wing.height, "短条高度至少盖住短 tip 顶距")
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldApplyMeasuredSize(
+                current: wing,
+                measured: short,
+                isExpanded: true,
+                allowShrink: false
+            ),
+            "宽翼→短「已复制」不得因缩宽被误缩守卫拒绝"
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isWingToShortTipResize(
+                current: wing,
+                measured: short,
+                shrinkH: wing.height - short.height
+            )
+        )
+    }
+
+    func testStillRejectsLargePanelShrinkToNotchWithoutAllowShrink() {
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldApplyMeasuredSize(
+                current: CGSize(width: 660, height: 300),
+                measured: CGSize(width: 180, height: 32),
+                isExpanded: true,
+                allowShrink: false
+            )
+        )
+    }
+
     func testAllowsGrowthWhileExpanded() {
         let current = CGSize(width: 388, height: 80)
         let taller = CGSize(width: 388, height: 278)

@@ -6816,7 +6816,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在框选文字…"
+            "value": "左键框选文字"
           }
         }
       }
@@ -6827,7 +6827,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在框选文字，按 Esc 取消"
+            "value": "左键框选文字，按 Esc 取消"
           }
         }
       }
