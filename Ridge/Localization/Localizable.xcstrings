@@ -6970,7 +6970,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭则不弹。"
+            "value": "小组件库开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭库卡则不弹。"
           }
         }
       }
@@ -7246,6 +7246,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 重置"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.after_days_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置 %dd 后"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.after_hours_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置 %dh 后"
+          }
+        }
+      }
+    },
+    "ai_usage.reset.in_minutes_leading_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%dm 重置"
           }
         }
       }

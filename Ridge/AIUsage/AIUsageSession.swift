@@ -30,12 +30,15 @@ final class AIUsageSession: ObservableObject {
     private var refreshWaiters: [CheckedContinuation<Void, Never>] = []
 
     private init() {
-        // 仅感知开关 / 刷新间隔影响定时器；阈值变更不走这里（否则拖滑条狂刷 timer）。
-        settings.$sensingEnabled
+        // 库卡开关 / 刷新间隔影响定时器；阈值变更不走这里（否则拖滑条狂刷 timer）。
+        WidgetSettings.shared.$disabledIDs
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                self?.reevaluateSensing(reason: "sensing")
+                self?.reevaluateSensing(reason: "libraryToggle")
+                if self?.isSensingEnabled == true {
+                    Task { await self?.refresh(reason: "libraryEnabled", evaluateTips: true) }
+                }
             }
             .store(in: &settingsObservers)
         settings.$refreshMinutes
@@ -47,10 +50,15 @@ final class AIUsageSession: ObservableObject {
             .store(in: &settingsObservers)
     }
 
+    /// 与久坐一致：总开关 = 小组件库 `builtin.aiUsage`。
+    private var isSensingEnabled: Bool {
+        WidgetSettings.shared.isEnabled(AIUsageWidget.manifest.id)
+    }
+
     func start() {
         guard !started else { return }
         started = true
-        AppLog.warn("AIUsage", "会话启动", ["sensing": settings.sensingEnabled])
+        AppLog.warn("AIUsage", "会话启动", ["sensing": isSensingEnabled])
         reevaluateSensing(reason: "start")
         Task { await refresh(reason: "start", evaluateTips: true) }
     }
@@ -153,8 +161,8 @@ final class AIUsageSession: ObservableObject {
         timer = nil
         accountWatchTimer?.invalidate()
         accountWatchTimer = nil
-        guard settings.sensingEnabled else {
-            AppLog.info("AIUsage", "感知已关闭", ["reason": reason])
+        guard isSensingEnabled else {
+            AppLog.info("AIUsage", "感知已关闭（库卡关闭）", ["reason": reason])
             return
         }
         let minutes = max(settings.refreshMinutes, 1)
@@ -181,7 +189,7 @@ final class AIUsageSession: ObservableObject {
 
     /// 仅读本地 Cursor 登录邮箱；变了立刻拉用量并按新账号重判提示。
     private func checkLocalAccountSwitch() {
-        guard settings.sensingEnabled else { return }
+        guard isSensingEnabled else { return }
         let email: String?
         do {
             email = try CursorUsageClient.readLocalAuth().email?
@@ -211,8 +219,8 @@ final class AIUsageSession: ObservableObject {
 
     /// - Parameter forceIfInBand: 改阈值后：只要当前显示剩余落在某档，就弹该档（忽略同档锁）。
     private func maybePresentThresholdNotice(forceIfInBand: Bool) {
-        guard settings.sensingEnabled else {
-            AppLog.warn("AIUsage", "跳过额度提示：感知已关闭")
+        guard isSensingEnabled else {
+            AppLog.warn("AIUsage", "跳过额度提示：库卡已关闭")
             return
         }
         guard let cursor = snapshot?.cursor,

@@ -221,3 +221,4 @@
 | 2026-11-10 | 录入 meeting-tip-advance-next；多场会议 tip 可接力 |
 | 2026-11-10 | 录入 meeting-tip-preemption；会议 tip 不被其它瞬时条盖住 |
 | 2026-11-10 | 录入 live-invite-removed；电量/媒体去掉「打开」邀请 tip |
+| 2026-11-10 | AI 额度 tip 改会议同款翼布局；重置文案三档（d/h/m） |

@@ -29,7 +29,7 @@ enum IslandChrome {
     static let compactTipTopInset: CGFloat = 0
     static let compactTipBottom: CGFloat = 4
 
-    /// 矮胶囊短提示（已复制 / AI 额度 / 取色 / OCR / 会议）：躲开刘海后落在正下方。
+    /// 矮胶囊短提示（已复制 / 取色 / OCR）：躲开刘海后落在正下方。会议 / AI 额度走翼 tip。
     static func shortTipTopInset(notchHeight: CGFloat) -> CGFloat {
         max(10, notchHeight)
     }

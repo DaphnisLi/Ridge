@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 设置页对齐设计稿：感知顶栏 + 三阶阈值卡 + Cursor 双槽 Bento。
+/// 设置页：岛预览三态 + 三阶阈值卡 + Cursor 双槽 Bento。
 struct AIUsageWidgetConfigSection: View {
     @ObservedObject private var settings = AIUsageSettings.shared
     @ObservedObject private var session = AIUsageSession.shared
@@ -11,7 +11,6 @@ struct AIUsageWidgetConfigSection: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
                     islandStage
-                    sensingBanner
                     thresholdsBento
                     cursorProviderCard
                 }
@@ -50,10 +49,11 @@ struct AIUsageWidgetConfigSection: View {
             )
         ) { option in
             let stage = AIUsageStage(rawValue: option.id) ?? .abundant
-            // 仅设置预览：黑岛内上下留白加高；真岛短提示仍无 chrome，勿给卡片根加 padding。
-            AIUsageIslandCardView.previewSample(stage: stage)
+            // 与会议 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
+            AIUsageIslandCardView.previewSample(stage: stage, compact: true)
                 .padding(.horizontal, IslandChrome.contentHorizontal)
-                .padding(.vertical, 12)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: 34)
                 .id("\(stage.rawValue)-\(settings.abundantThreshold)-\(settings.warningThreshold)-\(settings.criticalThreshold)")
         }
     }
@@ -65,85 +65,12 @@ struct AIUsageWidgetConfigSection: View {
             badge: badge,
             symbol: "circle.fill",
             tint: stage.settingsAccent,
-            maxIslandWidth: stage.capsuleSize.width + 28,
+            maxIslandWidth: 320,
             hugsContent: true,
-            bottomRadius: 22,
+            bottomRadius: 18,
             outlineStyle: .panel,
-            minStageHeight: 96,
+            minStageHeight: 88,
             compactShell: true
-        )
-    }
-
-    // MARK: - 感知顶栏（稿面 Banner）
-
-    private var sensingBanner: some View {
-        SettingsBentoCard {
-            HStack(alignment: .center, spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(SettingsChrome.primary.opacity(0.10))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .strokeBorder(SettingsChrome.primary.opacity(0.15), lineWidth: 1)
-                        )
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(SettingsChrome.primary)
-                }
-                .frame(width: 48, height: 48)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(L10n.AIUsage.bannerTitle)
-                            .font(SettingsChrome.Font.sectionTitle)
-                            .foregroundStyle(SettingsChrome.onSurface)
-                        sensedBadge
-                    }
-                    Text(L10n.AIUsage.sensingSubtitle)
-                        .font(SettingsChrome.Font.caption)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                HStack(spacing: 10) {
-                    Text(L10n.AIUsage.sensingTitle)
-                        .font(SettingsChrome.Font.label)
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    Toggle("", isOn: $settings.sensingEnabled)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(SettingsChrome.cardBackground)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .strokeBorder(SettingsChrome.outlineVariant.opacity(0.35), lineWidth: 1)
-                        )
-                )
-            }
-        }
-    }
-
-    private var sensedBadge: some View {
-        let count = session.snapshot?.sensedChannelCount ?? 0
-        return HStack(spacing: 6) {
-            Circle()
-                .fill(SettingsChrome.secondary)
-                .frame(width: 6, height: 6)
-            Text(L10n.AIUsage.sensedChannels(count, 1))
-                .font(SettingsChrome.Font.monoCaption)
-                .foregroundStyle(SettingsChrome.secondary)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(
-            Capsule()
-                .fill(SettingsChrome.secondary.opacity(0.10))
-                .overlay(Capsule().strokeBorder(SettingsChrome.secondary.opacity(0.20), lineWidth: 1))
         )
     }
 
@@ -151,33 +78,11 @@ struct AIUsageWidgetConfigSection: View {
 
     private var thresholdsBento: some View {
         SettingsBentoCard {
-            HStack {
-                SettingsBentoCardTitle(
-                    symbol: "slider.horizontal.3",
-                    tint: SettingsChrome.primary,
-                    title: L10n.AIUsage.thresholdsTitle
-                )
-                Spacer()
-                if settings.hierarchyValid {
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 12))
-                        Text(L10n.AIUsage.thresholdsValidHierarchy)
-                            .font(SettingsChrome.Font.monoCaption)
-                    }
-                    .foregroundStyle(SettingsChrome.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(
-                        Capsule()
-                            .fill(SettingsChrome.secondary.opacity(0.10))
-                    )
-                }
-            }
-            Text(L10n.AIUsage.thresholdsSubtitle)
-                .font(SettingsChrome.Font.caption)
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                .fixedSize(horizontal: false, vertical: true)
+            SettingsBentoCardTitle(
+                symbol: "slider.horizontal.3",
+                tint: SettingsChrome.primary,
+                title: L10n.AIUsage.thresholdsTitle
+            )
 
             HStack(alignment: .top, spacing: 10) {
                 thresholdPill(

@@ -111,14 +111,49 @@ final class RegressionCatalogTests: XCTestCase {
     }
 
     func test_islandChrome_meetingUsesNotchWing_othersShortCapsule() {
-        // 会议：左右翼贴刘海；取色/OCR：矮胶囊短条。
+        // 会议 / AI 额度：左右翼贴刘海；取色/OCR：矮胶囊短条。
         let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
+        let aiUsage = IslandNoticePayload.aiUsageAlert(
+            id: "aiUsage.test",
+            providerName: "Cursor",
+            remainingPercent: 40,
+            stage: .warning,
+            resetsAt: Date().addingTimeInterval(9 * 3600)
+        )
         XCTAssertTrue(meeting.usesNotchWingChrome)
         XCTAssertFalse(meeting.usesShortBelowNotchChrome)
+        XCTAssertTrue(aiUsage.usesNotchWingChrome)
+        XCTAssertFalse(aiUsage.usesShortBelowNotchChrome)
         XCTAssertFalse(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
         XCTAssertTrue(IslandNoticePayload.colorPickTip.usesShortBelowNotchChrome)
         XCTAssertFalse(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
         XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesShortBelowNotchChrome)
+    }
+
+    /// AI 额度右翼重置文案三档。
+    func test_aiUsageResetCountdown_tiersMatchSpec() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        XCTAssertEqual(
+            AIUsageIslandCardView.resetCountdownText(now.addingTimeInterval(14 * 86_400), now: now),
+            "重置 14d 后"
+        )
+        XCTAssertEqual(
+            AIUsageIslandCardView.resetCountdownText(now.addingTimeInterval(9 * 3600), now: now),
+            "重置 9h 后"
+        )
+        XCTAssertEqual(
+            AIUsageIslandCardView.resetCountdownText(now.addingTimeInterval(47 * 60), now: now),
+            "47m 重置"
+        )
+        // 边界：恰 24h → 小时档；恰 1h → 分钟档。
+        XCTAssertEqual(
+            AIUsageIslandCardView.resetCountdownText(now.addingTimeInterval(24 * 3600), now: now),
+            "重置 24h 后"
+        )
+        XCTAssertEqual(
+            AIUsageIslandCardView.resetCountdownText(now.addingTimeInterval(3600), now: now),
+            "60m 重置"
+        )
     }
 
     func test_meetingLead_keepsExpandedWithoutHover() {

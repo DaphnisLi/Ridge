@@ -15,7 +15,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         UserDefaults.standard.removeObject(forKey: "aiUsage.debugForceWarning")
         UserDefaults.standard.removeObject(forKey: "aiUsage.debugStage")
         UserDefaults.standard.removeObject(forKey: "moveReminder.debugSticky")
-        IslandNoticeCenter.shared.dismiss(id: "aiUsage.debug.warning")
+        for stage in ["abundant", "warning", "critical"] {
+            IslandNoticeCenter.shared.dismiss(id: "aiUsage.debug.\(stage)")
+        }
         IslandNoticeCenter.shared.dismiss(id: "moveReminder.debug.sticky")
 
         island.start()

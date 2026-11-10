@@ -697,11 +697,10 @@ enum L10n {
         static var bannerTitle: String {
             tr("ai_usage.banner.title", "AI 额度梯级预警感知提醒")
         }
-        static var sensingTitle: String { tr("ai_usage.sensing.title", "感知总开关") }
         static var sensingSubtitle: String {
             tr(
                 "ai_usage.sensing.subtitle",
-                "开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭则不弹。"
+                "小组件库开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭库卡则不弹。"
             )
         }
         static func sensedChannels(_ ready: Int, _ total: Int) -> String {
@@ -823,6 +822,18 @@ enum L10n {
         }
         static func resetAt(_ when: String) -> String {
             String(format: tr("ai_usage.reset.at_format", "%@ 重置"), when)
+        }
+        /// 24 小时外：`重置 14d 后`
+        static func resetAfterDays(_ days: Int) -> String {
+            String(format: tr("ai_usage.reset.after_days_format", "重置 %dd 后"), days)
+        }
+        /// 24 小时内：`重置 9h 后`
+        static func resetAfterHours(_ hours: Int) -> String {
+            String(format: tr("ai_usage.reset.after_hours_format", "重置 %dh 后"), hours)
+        }
+        /// 1 小时内：`47m 重置`
+        static func resetInMinutesLeading(_ minutes: Int) -> String {
+            String(format: tr("ai_usage.reset.in_minutes_leading_format", "%dm 重置"), minutes)
         }
         static func resetInDays(_ days: Int) -> String {
             String(format: tr("ai_usage.reset.in_days_format", "余 %d 天"), days)

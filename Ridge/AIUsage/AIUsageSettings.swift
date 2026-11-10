@@ -1,13 +1,12 @@
 import Combine
 import Foundation
 
-/// AI 额度监测设置：感知总开关 + 三阶阈值。
+/// AI 额度监测设置：三阶阈值（总开关走小组件库 `builtin.aiUsage`）。
 @MainActor
 final class AIUsageSettings: ObservableObject {
     static let shared = AIUsageSettings()
 
     enum Defaults {
-        static let sensingEnabled = true
         static let abundantThreshold = 70
         static let warningThreshold = 30
         static let criticalThreshold = 10
@@ -16,7 +15,6 @@ final class AIUsageSettings: ObservableObject {
     }
 
     private enum Key {
-        static let sensing = "aiUsage.sensingEnabled"
         static let abundant = "aiUsage.abundantThreshold"
         static let warning = "aiUsage.warningThreshold"
         static let critical = "aiUsage.criticalThreshold"
@@ -29,11 +27,6 @@ final class AIUsageSettings: ObservableObject {
 
     /// init 完成前不回调 Session，避免双向初始化。
     private var isReady = false
-
-    /// 关闭后不上岛、不发阈值提醒（设置页仍可手动同步）。
-    @Published var sensingEnabled: Bool {
-        didSet { UserDefaults.standard.set(sensingEnabled, forKey: Key.sensing) }
-    }
 
     /// 充裕态触发阈值：剩余 ≤ 该值且高于警戒线时弹充裕形态。
     @Published var abundantThreshold: Int {
@@ -91,13 +84,14 @@ final class AIUsageSettings: ObservableObject {
 
     private init() {
         let defaults = UserDefaults.standard
-        sensingEnabled = defaults.object(forKey: Key.sensing) as? Bool ?? Defaults.sensingEnabled
         abundantThreshold = defaults.object(forKey: Key.abundant) as? Int ?? Defaults.abundantThreshold
         warningThreshold = defaults.object(forKey: Key.warning) as? Int ?? Defaults.warningThreshold
         criticalThreshold = defaults.object(forKey: Key.critical) as? Int ?? Defaults.criticalThreshold
         refreshMinutes = defaults.object(forKey: Key.refresh) as? Int ?? Defaults.refreshMinutes
         defaults.removeObject(forKey: "aiUsage.refreshMinutes")
         defaults.removeObject(forKey: "aiUsage.lastAlertFingerprint.v1")
+        // 旧「感知总开关」已并入库卡开关，清掉遗留键。
+        defaults.removeObject(forKey: "aiUsage.sensingEnabled")
         // 旧默认 60 → 新默认 70；用户已改成其它值则保留。
         let migrated70 = "aiUsage.abundantDefault70.v1"
         if defaults.object(forKey: migrated70) == nil {
@@ -122,7 +116,6 @@ final class AIUsageSettings: ObservableObject {
     }
 
     func restoreDefaults() {
-        sensingEnabled = Defaults.sensingEnabled
         abundantThreshold = Defaults.abundantThreshold
         warningThreshold = Defaults.warningThreshold
         criticalThreshold = Defaults.criticalThreshold

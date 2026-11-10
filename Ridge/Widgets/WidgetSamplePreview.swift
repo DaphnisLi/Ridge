@@ -84,13 +84,13 @@ struct SettingsIslandStage<Content: View>: View {
 
         return Group {
             if option.hugsContent {
-                // 居中贴合内容，禁止把黑岛拉成整行宽导致「假边距」。
+                // 贴顶贴合内容：矮 tip 若垂直居中会在舞台里上下空一大截，看起来边距乱。
                 island
                     .fixedSize(horizontal: true, vertical: true)
-                    .frame(maxWidth: .infinity, minHeight: option.minStageHeight)
+                    .frame(maxWidth: .infinity, minHeight: option.minStageHeight, alignment: .top)
             } else {
                 island
-                    .frame(maxWidth: .infinity, minHeight: option.minStageHeight)
+                    .frame(maxWidth: .infinity, minHeight: option.minStageHeight, alignment: .top)
             }
         }
         .allowsHitTesting(false)
@@ -306,11 +306,11 @@ enum WidgetSamplePreview {
     }
 
     private static func aiUsageSample(compact: Bool) -> some View {
-        // 预览壳无 IslandChrome：只补左右内边距，与真岛壳层水平边距一致。
-        AIUsageIslandCardView.previewSample(stage: .warning)
+        // 与会议 tip 同款翼布局；预览壳无真 IslandChrome，只补左右/底。
+        AIUsageIslandCardView.previewSample(stage: .warning, compact: true)
             .padding(.horizontal, IslandChrome.contentHorizontal)
-            .frame(maxWidth: compact ? .infinity : 540)
-            .frame(minHeight: compact ? 38 : 44)
+            .padding(.bottom, IslandChrome.compactTipBottom)
+            .frame(minHeight: compact ? 30 : 34)
     }
 
     private static func moveReminderSample(compact: Bool) -> some View {

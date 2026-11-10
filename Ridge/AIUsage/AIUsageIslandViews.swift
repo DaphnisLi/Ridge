@@ -1,26 +1,49 @@
 import SwiftUI
 
-/// 岛上 AI 额度瞬时胶囊（新稿单行）：双环点 + 名 + 彩色% + 重置时间 + 剩余徽章。
-/// 总宽随左右文案自适应；中间空隙固定。根视图禁止外圈 padding。
+/// 岛上 AI 额度瞬时 tip：布局对齐会议（左右翼贴刘海）。
+/// 左：双环点 + 名 + 彩色%；右：重置倒计时（>24h / ≤24h / ≤1h 三档）。
+/// 壳层 `usesNotchWingChrome`；根视图禁止外圈 padding。
 struct AIUsageIslandCardView: View {
-    /// 左右文案区之间的固定空隙（右侧变长时整岛变宽，中间不变）。
-    static let middleGap: CGFloat = 48
-
     let providerName: String
     let remainingPercent: Int?
     let stage: AIUsageStage
     let resetsAt: Date?
     let errorMessage: String?
+    var compact: Bool = false
+    var previewNotchWidth: CGFloat = 110
+
+    @Environment(\.islandNotchWidth) private var envNotchWidth
+    @Environment(\.islandNotchHeight) private var envNotchHeight
+
+    private var notchWidth: CGFloat {
+        compact ? previewNotchWidth : max(envNotchWidth, 110)
+    }
+
+    private var barHeight: CGFloat {
+        if compact { return 30 }
+        return max(envNotchHeight, 32)
+    }
+
+    /// 左右翼等宽，与会议 tip 同口径。
+    private var wingWidth: CGFloat { compact ? 90 : 98 }
+
+    private var leftMaxWidth: CGFloat {
+        let iconSlot: CGFloat = compact ? 22 : 24
+        return wingWidth - iconSlot + notchWidth * 0.48
+    }
+
+    private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
 
     var body: some View {
         HStack(spacing: 0) {
             leftCluster
-            Color.clear
-                .frame(width: Self.middleGap)
+                .frame(width: wingWidth + notchWidth * 0.48, alignment: .leading)
+            Spacer(minLength: 0)
             rightCluster
+                .fixedSize(horizontal: true, vertical: false)
         }
-        // 总宽 = 左 + 固定中缝 + 右；勿写死整岛宽度。
-        .fixedSize(horizontal: true, vertical: true)
+        .frame(width: totalWidth, height: barHeight)
+        .clipped()
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }
@@ -28,30 +51,33 @@ struct AIUsageIslandCardView: View {
     // MARK: - Left
 
     private var leftCluster: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             statusRing
+                .layoutPriority(1)
             Text(providerName)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white)
+                .font(.system(size: compact ? 10.5 : 11, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.92))
                 .lineLimit(1)
             Text(percentText)
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .font(.system(size: compact ? 10.5 : 11, weight: .semibold, design: .monospaced))
                 .foregroundStyle(stage.accent)
                 .lineLimit(1)
+                .layoutPriority(1)
         }
+        .frame(maxWidth: leftMaxWidth, alignment: .leading)
     }
 
     private var statusRing: some View {
         ZStack {
             Circle()
                 .strokeBorder(stage.accent, lineWidth: 2)
-                .frame(width: 14, height: 14)
+                .frame(width: compact ? 12 : 14, height: compact ? 12 : 14)
             Circle()
                 .fill(stage.accent)
-                .frame(width: 6, height: 6)
+                .frame(width: compact ? 5 : 6, height: compact ? 5 : 6)
                 .modifier(AIUsagePingModifier(enabled: stage == .critical))
         }
-        .frame(width: 14, height: 14)
+        .frame(width: compact ? 12 : 14, height: compact ? 12 : 14)
     }
 
     private var percentText: String {
@@ -63,27 +89,29 @@ struct AIUsageIslandCardView: View {
 
     // MARK: - Right
 
+    /// 重置文案胶囊：色点 +「重置 … / …m 重置」，底色跟档位走。
     private var rightCluster: some View {
-        let parts = Self.resetParts(resetsAt)
-        return HStack(spacing: 8) {
-            Text(parts.schedule)
-                .font(.system(size: 12, weight: .regular))
-                .foregroundStyle(Color(red: 0.612, green: 0.639, blue: 0.686))
+        HStack(spacing: 5) {
+            Circle()
+                .fill(stage.accent)
+                .frame(width: compact ? 4.5 : 5, height: compact ? 4.5 : 5)
+                .modifier(AIUsagePingModifier(enabled: stage == .critical))
+            Text(Self.resetCountdownText(resetsAt))
+                .font(.system(size: compact ? 10 : 10.5, weight: .semibold, design: .monospaced))
+                .foregroundStyle(resetForeground)
                 .lineLimit(1)
-            Text(parts.remain)
-                .font(.system(size: 12, weight: .semibold, design: .monospaced))
-                .foregroundStyle(remainForeground)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(remainBackground)
-                )
-                .lineLimit(1)
+                .monospacedDigit()
         }
+        .padding(.horizontal, compact ? 7 : 8)
+        .padding(.vertical, compact ? 2.5 : 3)
+        .background(
+            Capsule(style: .continuous)
+                .fill(resetBackground)
+        )
+        .layoutPriority(1)
     }
 
-    private var remainForeground: Color {
+    private var resetForeground: Color {
         switch stage {
         case .abundant, .unknown:
             return Color.white.opacity(0.90)
@@ -92,96 +120,58 @@ struct AIUsageIslandCardView: View {
         }
     }
 
-    private var remainBackground: Color {
+    private var resetBackground: Color {
         switch stage {
         case .abundant, .unknown:
             return Color.white.opacity(0.10)
         case .warning:
-            return stage.accent.opacity(0.10)
+            return stage.accent.opacity(0.14)
         case .critical:
-            return stage.accent.opacity(0.15)
+            return stage.accent.opacity(0.18)
         }
     }
 
     private var accessibilityText: String {
-        let parts = Self.resetParts(resetsAt)
+        let reset = Self.resetCountdownText(resetsAt)
         if let errorMessage, remainingPercent == nil {
-            return "\(providerName)，\(errorMessage)，\(parts.schedule) \(parts.remain)"
+            return "\(providerName)，\(errorMessage)，\(reset)"
         }
-        return "\(providerName) \(percentText)，\(parts.schedule) \(parts.remain)"
+        return "\(providerName) \(percentText)，\(reset)"
     }
 
     // MARK: - Formatters
 
-    struct ResetParts: Hashable {
-        var schedule: String
-        var remain: String
-    }
-
-    /// 设置页等仍可能要一行摘要。
+    /// 设置页等一行摘要（与岛上右翼同文案）。
     static func notchResetBadge(_ date: Date?) -> String {
-        let parts = resetParts(date)
-        return "\(parts.schedule) · \(parts.remain)"
+        resetCountdownText(date)
     }
 
-    /// 排期邻近档：决定「余」用天，还是小时/分钟。
-    private enum ResetProximity {
-        /// 月日 + 时间；余只显示天。
-        case calendarDate
-        /// 明日 / 今天；余：>60 分钟只显示小时，否则只显示分钟。
-        case near
-    }
-
-    static func resetParts(_ date: Date?) -> ResetParts {
-        guard let date else {
-            return ResetParts(schedule: L10n.AIUsage.resetUnknown, remain: L10n.AIUsage.resetSoonShort)
+    /// 重置倒计时三档：
+    /// - 24 小时外：`重置 14d 后`
+    /// - 24 小时内（且 >1h）：`重置 9h 后`
+    /// - 1 小时内：`47m 重置`
+    static func resetCountdownText(_ date: Date?, now: Date = Date()) -> String {
+        guard let date else { return L10n.AIUsage.resetUnknown }
+        let remain = date.timeIntervalSince(now)
+        if remain <= 0 { return L10n.AIUsage.resetSoon }
+        let seconds = Int(remain.rounded(.down))
+        if seconds > 24 * 3600 {
+            let days = max(seconds / 86_400, 1)
+            return L10n.AIUsage.resetAfterDays(days)
         }
-        let remain = date.timeIntervalSinceNow
-        let (schedule, proximity) = scheduleText(date)
-        return ResetParts(schedule: schedule, remain: remainText(remain, proximity: proximity))
+        if seconds > 3600 {
+            let hours = max(seconds / 3600, 1)
+            return L10n.AIUsage.resetAfterHours(hours)
+        }
+        let minutes = max(seconds / 60, 1)
+        return L10n.AIUsage.resetInMinutesLeading(minutes)
     }
 
-    private static func scheduleText(_ date: Date) -> (String, ResetProximity) {
-        let clock = DateFormatter()
-        clock.locale = Locale(identifier: "zh_CN")
-        // 今天：只展示几点 +「重置」。
-        if Calendar.current.isDateInToday(date) {
-            clock.dateFormat = "HH:mm"
-            return ("\(clock.string(from: date)) \(L10n.AIUsage.resetVerb)", .near)
-        }
-        // 明日：展示「明日 HH:mm 重置」。
-        if Calendar.current.isDateInTomorrow(date) {
-            clock.dateFormat = "HH:mm"
-            return (L10n.AIUsage.resetTomorrow(clock.string(from: date)), .near)
-        }
-        // 更远：月日 + 时间。
-        clock.dateFormat = "M月d日 HH:mm"
-        return ("\(clock.string(from: date)) \(L10n.AIUsage.resetVerb)", .calendarDate)
-    }
-
-    private static func remainText(_ remain: TimeInterval, proximity: ResetProximity) -> String {
-        if remain <= 0 { return L10n.AIUsage.resetSoonShort }
-        let totalSeconds = Int(remain)
-        switch proximity {
-        case .calendarDate:
-            // 只展示天（至少 1 天；不足整天仍按整天向下取整，最少 1）。
-            let days = max(totalSeconds / 86_400, 1)
-            return L10n.AIUsage.resetInDays(days)
-        case .near:
-            // > 60 分钟 → 只显示小时；≤ 60 分钟 → 只显示分钟。
-            if totalSeconds > 60 * 60 {
-                let hours = max(totalSeconds / 3600, 1)
-                return L10n.AIUsage.resetInHours(hours)
-            }
-            let minutes = max(totalSeconds / 60, 1)
-            return L10n.AIUsage.resetInMinutes(minutes)
-        }
-    }
-
-    /// 设置预览样张：百分比默认取用户当前档位阈值（非写死 60/30/10）；真提示一律用探针实时剩余。
+    /// 设置预览样张：百分比默认取用户当前档位阈值；三档对应重置三档文案。
     static func previewSample(
         stage: AIUsageStage = .abundant,
-        remainingPercent: Int? = nil
+        remainingPercent: Int? = nil,
+        compact: Bool = true
     ) -> AIUsageIslandCardView {
         let settings = AIUsageSettings.shared
         let remaining: Int
@@ -189,13 +179,13 @@ struct AIUsageIslandCardView: View {
         switch stage {
         case .abundant:
             remaining = remainingPercent ?? settings.abundantThreshold
-            resetOffset = 15 * 86_400
+            resetOffset = 14 * 86_400
         case .warning:
             remaining = remainingPercent ?? settings.warningThreshold
-            resetOffset = 10 * 3600
+            resetOffset = 9 * 3600
         case .critical:
             remaining = remainingPercent ?? settings.criticalThreshold
-            resetOffset = 48 * 60
+            resetOffset = 47 * 60
         case .unknown:
             remaining = remainingPercent ?? 0
             resetOffset = 3600
@@ -205,7 +195,8 @@ struct AIUsageIslandCardView: View {
             remainingPercent: remaining,
             stage: stage,
             resetsAt: Date().addingTimeInterval(resetOffset),
-            errorMessage: nil
+            errorMessage: nil,
+            compact: compact
         )
     }
 }
