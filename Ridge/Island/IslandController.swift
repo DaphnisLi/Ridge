@@ -32,6 +32,8 @@ final class IslandController: NSObject {
     private var isMouseDownInIsland = false
     /// 左键按住且从岛上开始：拖动期间钉住展开（含 ScrollView / 滑条，不依赖翻页手势）。
     private var pointerDragHoldingExpand = false
+    /// 控制台列表最近一次纵滑时间；宽限内钉住展开（滚轮无左键）。
+    private var lastContentScrollAt: Date = .distantPast
     /// 系统拖文件进入岛 / 悬停在货架投放区：钉住展开，避免展开收起来回闪。
     private var isShelfFileDragPinned = false
     /// SwiftUI 货架 `.onDrop(isTargeted:)` 命中中。
@@ -73,8 +75,8 @@ final class IslandController: NSObject {
         }
         displayMonitor.start()
 
-        fullscreenMonitor.onChange = { [weak self] fullscreen in
-            self?.applyFullscreen(fullscreen)
+        fullscreenMonitor.onChange = { [weak self] fullscreen, systemOverlay in
+            self?.applyFullscreen(fullscreen || systemOverlay)
         }
         fullscreenMonitor.start()
 
@@ -245,12 +247,31 @@ final class IslandController: NSObject {
         isSettingsLivePreview = false
         collapseWorkItem?.cancel()
         collapseWorkItem = nil
+        // OCR / 货架拖入会把岛抬到 screenSaver/popUpMenu，盖住设置红灯且未穿透时整窗假死。
+        resetTransientWindowElevation(reason: "settingsOpen")
+        setClickThrough(true, reason: "settingsOpen")
         if viewModel.isExpanded {
             viewModel.collapse()
             applyWindowFrame(animated: true)
             updateInteractiveFrame()
         }
-        AppLog.info("Island", "设置会话：保持收起", ["expanded": false])
+        AppLog.warn("Island", "设置会话：保持收起", [
+            "expanded": false,
+            "clickThrough": window.ignoresMouseEvents
+        ])
+    }
+
+    /// 恢复 resting 层级（设置打开 / 关窗时调用）。
+    private func resetTransientWindowElevation(reason: String) {
+        guard isShelfDragElevated || isOCRCaptureElevated else { return }
+        isShelfDragElevated = false
+        isOCRCaptureElevated = false
+        isShelfFileDragPinned = false
+        window.level = islandRestingLevel
+        AppLog.warn("Island", "恢复岛窗 resting 层级", [
+            "reason": reason,
+            "level": window.level.rawValue
+        ])
     }
 
     /// 设置窗仍打开，但焦点离开（切到其它 App / 其它窗）：恢复岛的正常悬停逻辑。
@@ -352,10 +373,11 @@ final class IslandController: NSObject {
         isSettingsLivePreview = false
         if forceCollapseOnEnd {
             isSettingsSessionActive = false
+            resetTransientWindowElevation(reason: "settingsClose")
         }
         collapseWorkItem?.cancel()
         collapseWorkItem = nil
-        AppLog.info("Island", "设置页实时预览结束", [
+        AppLog.warn("Island", "设置页实时预览结束", [
             "wasPreview": wasPreview,
             "pointerOver": isPointerOverIsland,
             "forceCollapse": forceCollapseOnEnd,
@@ -662,10 +684,9 @@ final class IslandController: NSObject {
             return
         }
 
-        // 设置窗与展开岛常在屏幕上方重叠；命中设置窗时必须穿透，否则输入框失焦后点击会被岛吞掉。
-        if isSettingsSessionActive,
-           let settingsWindow = MenuBarController.shared?.settingsWindow,
-           settingsWindow.frame.contains(mouse) {
+        // 设置窗与展开岛常在屏幕上方重叠；命中设置窗时必须穿透，否则关闭按钮/输入会被岛吞掉。
+        // 用 isSettingsPresented（非仅 session）：开窗同步标记、关窗先清标记，避免竞态假死。
+        if MenuBarController.shared?.isPointerOverPresentedSettings(mouse) == true {
             setClickThrough(true, reason: "pointerOverSettings")
             let leftIsland = isPointerOverIsland || viewModel.isExpanded
             isPointerOverIsland = false
@@ -718,6 +739,9 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "按住拖动：已松开")
         }
         let dragHold = isMouseDownInIsland || pointerDragHoldingExpand
+        let scrollHold = IslandExpandedPanelPolicy.shouldHoldExpandForRecentScroll(
+            lastScrollAt: lastContentScrollAt
+        )
 
         // 仅在「接近 / 在岛上 / 投放区命中」且拖文件进行中时钉住；驶出即解除。
         let wantShelfHold = shelfEnabled
@@ -789,13 +813,13 @@ final class IslandController: NSObject {
             return
         }
 
-        // 按住拖动中：保持展开标记，避免指针短暂越出热区就 scheduleCollapse。
-        if dragHold {
+        // 按住拖动 / 列表纵滑宽限内：保持展开，避免滚一半指针微移就收岛。
+        if dragHold || scrollHold {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             isPointerOverIsland = true
             if !viewModel.isExpanded {
-                expand(reason: "dragHold")
+                expand(reason: dragHold ? "dragHold" : "scrollHold")
             }
             return
         }
@@ -819,6 +843,21 @@ final class IslandController: NSObject {
             ])
             scheduleCollapse()
         }
+    }
+
+    /// 控制台 `AlwaysVisibleScrollView` / 纵滑滚轮：刷新保展开宽限。
+    func noteContentScrollActivity(reason: String) {
+        lastContentScrollAt = Date()
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        if viewModel.isExpanded {
+            isPointerOverIsland = true
+        }
+        AppLog.debug("Island", "内容滚动：保展开", [
+            "reason": reason,
+            "expanded": viewModel.isExpanded,
+            "graceMs": Int(IslandExpandedPanelPolicy.contentScrollHoldGrace * 1000)
+        ])
     }
 
     /// 货架 SwiftUI drop 命中变化：命中期间同样钉住展开。
@@ -864,6 +903,11 @@ final class IslandController: NSObject {
 
     private func setShelfDragWindowElevation(_ elevated: Bool) {
         guard isShelfDragElevated != elevated else { return }
+        // 设置展示中禁止抬层，否则盖住设置红灯。
+        if elevated, MenuBarController.shared?.isSettingsPresented == true {
+            AppLog.warn("Island", "设置展示中跳过货架抬层")
+            return
+        }
         isShelfDragElevated = elevated
         if elevated {
             // 抬到弹出菜单级，仍低于系统拖影；提高相对其它浮层的投放命中机会。
@@ -882,6 +926,10 @@ final class IslandController: NSObject {
 
     private func setOCRCaptureWindowElevation(_ elevated: Bool) {
         guard isOCRCaptureElevated != elevated else { return }
+        if elevated, MenuBarController.shared?.isSettingsPresented == true {
+            AppLog.warn("Island", "设置展示中跳过 OCR 抬层")
+            return
+        }
         isOCRCaptureElevated = elevated
         if elevated {
             window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.screenSaverWindow)) + 1)
@@ -1064,6 +1112,16 @@ final class IslandController: NSObject {
                 ])
                 return
             }
+            if IslandExpandedPanelPolicy.shouldHoldExpandForRecentScroll(
+                lastScrollAt: self.lastContentScrollAt
+            ) {
+                self.isPointerOverIsland = true
+                AppLog.warn("Island", "收起前复查：内容滚动宽限内，取消收起", [
+                    "panelW": Int(self.viewModel.panelSize.width),
+                    "panelH": Int(self.viewModel.panelSize.height)
+                ])
+                return
+            }
             AppLog.warn("Island", "收起前复查：已离开保展开区", [
                 "interactive": hit.interactive,
                 "panelW": Int(self.viewModel.panelSize.width),
@@ -1079,10 +1137,7 @@ final class IslandController: NSObject {
     }
 
     private func isPointerOverSettingsWindow(_ mouse: NSPoint) -> Bool {
-        guard isSettingsSessionActive,
-              let settingsWindow = MenuBarController.shared?.settingsWindow
-        else { return false }
-        return settingsWindow.frame.contains(mouse)
+        MenuBarController.shared?.isPointerOverPresentedSettings(mouse) == true
     }
 
     private static func expandedLayout(for runtime: WidgetRuntime) -> NotchGeometry.ExpandedLayout {
@@ -1233,6 +1288,9 @@ final class IslandController: NSObject {
         // 控制台（电量 / 货架 / 混音）需要纵向滚动：纵滑放行给 AlwaysVisibleScrollView；
         // 仅横滑主导时才翻页。以前整页 return false 导致电量页左右滑失效。
         guard abs(dx) > abs(dy), abs(dx) > 0.05 else {
+            if abs(dy) > 0.05 {
+                noteContentScrollActivity(reason: "verticalWheel")
+            }
             if event.phase == .ended || event.phase == .cancelled {
                 scrollAccumX = 0
             }

@@ -8,6 +8,16 @@ struct SoundMixerDeckView: View {
     private let accent = Color(red: 0.678, green: 0.776, blue: 1.0) // #adc6ff
     private let accentGreen = Color(red: 0.325, green: 0.882, blue: 0.435) // #53e16f
     private let blueMid = Color(red: 0.510, green: 0.659, blue: 1.0) // #82a8ff
+    /// 滚动视口实心底：避免半透明行在 clipped 边缘闪岛黑。
+    private let scrollViewportFill = Color(nsColor: NSColor(calibratedWhite: 0.05, alpha: 1))
+
+    private var displayOutputs: [SoundOutputDevice] {
+        SoundMixerDebugMock.enabled ? SoundMixerDebugMock.devices : sound.outputDevices
+    }
+
+    private var displayApps: [SoundAppRow] {
+        SoundMixerDebugMock.enabled ? SoundMixerDebugMock.apps : sound.apps
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -24,9 +34,10 @@ struct SoundMixerDeckView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear {
             sound.start()
-            AppLog.info("Sound", "混音台页已显示", [
-                "outputs": sound.outputDevices.count,
-                "apps": sound.apps.count
+            AppLog.warn("Sound", "混音台页已显示", [
+                "outputs": displayOutputs.count,
+                "apps": displayApps.count,
+                "mock": SoundMixerDebugMock.enabled
             ])
         }
         .accessibilityElement(children: .contain)
@@ -71,112 +82,144 @@ struct SoundMixerDeckView: View {
                 .frame(height: 10)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.Sound.currentOutputDevice)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.40))
-                    .textCase(.uppercase)
-                    .tracking(0.8)
-                    .padding(.top, 14)
+            Text(L10n.Sound.currentOutputDevice)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.40))
+                .textCase(.uppercase)
+                .tracking(0.8)
+                .padding(.top, 14)
+                .padding(.bottom, 6)
 
-                let outputs = sound.outputDevices
-                let selected = outputs.first(where: \.isDefault)
-                let others = Array(outputs.filter { !$0.isDefault })
-
-                if let selected {
-                    selectedDeviceCard(selected)
-                } else if outputs.isEmpty {
-                    Text(L10n.Sound.noOutputDevices)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.white.opacity(0.45))
-                        .padding(.top, 4)
-                }
-
-                ForEach(others) { device in
-                    HStack(spacing: 8) {
-                        Image(systemName: deviceSymbol(for: device))
-                            .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.55))
-                            .frame(width: 16)
-                        Text(device.name)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.white.opacity(0.70))
-                            .lineLimit(1)
-                        Spacer(minLength: 0)
-                        if let battery = device.batteryPercent {
-                            batteryBadge(percent: battery, emphasized: false)
-                        } else if device.transport == kAudioDeviceTransportTypeBuiltIn {
-                            Text(L10n.Sound.builtInHint)
-                                .font(.system(size: 10).monospaced())
-                                .foregroundStyle(.white.opacity(0.40))
+            if displayOutputs.isEmpty {
+                Text(L10n.Sound.noOutputDevices)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.45))
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+            } else {
+                // 选中 / 未选中同一列表一起滑，仅样式不同。
+                AlwaysVisibleScrollView(viewportFill: scrollViewportFill) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(orderedOutputs) { device in
+                            if device.isDefault {
+                                selectedDeviceCard(device)
+                            } else {
+                                otherDeviceRow(device)
+                            }
                         }
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        AppLog.info("Sound", "点击切换输出设备", [
-                            "name": device.name,
-                            "uid": device.uid
-                        ])
-                        sound.selectOutput(uid: device.uid)
-                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
-
-            Spacer(minLength: 0)
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(panelBackground)
     }
 
-    private func selectedDeviceCard(_ device: SoundOutputDevice) -> some View {
+    /// 当前输出置顶，其余保持原序，整表可滚。
+    private var orderedOutputs: [SoundOutputDevice] {
+        let outputs = displayOutputs
+        let selected = outputs.filter(\.isDefault)
+        let others = outputs.filter { !$0.isDefault }
+        return selected + others
+    }
+
+    private func otherDeviceRow(_ device: SoundOutputDevice) -> some View {
         HStack(spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(accentGreen.opacity(0.15))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(accentGreen.opacity(0.25), lineWidth: 1)
-                    )
-                Image(systemName: deviceSymbol(for: device))
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(accentGreen)
-            }
-            .frame(width: 28, height: 28)
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(device.name)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Text(L10n.Sound.activeOutput)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .lineLimit(1)
-            }
-
+            Image(systemName: deviceSymbol(for: device))
+                .font(.system(size: 13))
+                .foregroundStyle(.white.opacity(0.55))
+                .frame(width: 16)
+            Text(device.name)
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.70))
+                .lineLimit(1)
             Spacer(minLength: 0)
-
-            HStack(spacing: 6) {
-                if let battery = device.batteryPercent {
-                    batteryBadge(percent: battery, emphasized: true)
-                }
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(accentGreen)
+            if let battery = device.batteryPercent {
+                batteryBadge(percent: battery, emphasized: false)
+            } else if device.transport == kAudioDeviceTransportTypeBuiltIn {
+                Text(L10n.Sound.builtInHint)
+                    .font(.system(size: 10).monospaced())
+                    .foregroundStyle(.white.opacity(0.40))
             }
         }
-        .padding(8)
-        .background(
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectOutputDevice(device)
+        }
+    }
+
+    private func selectedDeviceCard(_ device: SoundOutputDevice) -> some View {
+        // ZStack 铺满宽度画底，避免滚动时 `.background` 与对勾分层裁切。
+        ZStack {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.white.opacity(0.09))
+                .fill(Color(nsColor: NSColor(calibratedWhite: 0.14, alpha: 1)))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
                 )
-        )
+
+            HStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(accentGreen.opacity(0.15))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(accentGreen.opacity(0.25), lineWidth: 1)
+                        )
+                    Image(systemName: deviceSymbol(for: device))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(accentGreen)
+                }
+                .frame(width: 28, height: 28)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(device.name)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    Text(L10n.Sound.activeOutput)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.white.opacity(0.45))
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: 6) {
+                    if let battery = device.batteryPercent {
+                        batteryBadge(percent: battery, emphasized: true)
+                    }
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(accentGreen)
+                }
+            }
+            .padding(8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectOutputDevice(device)
+        }
+    }
+
+    private func selectOutputDevice(_ device: SoundOutputDevice) {
+        guard !SoundMixerDebugMock.enabled else {
+            AppLog.debug("Sound", "调试假数据：忽略切换输出", ["uid": device.uid])
+            return
+        }
+        guard !device.isDefault else { return }
+        AppLog.info("Sound", "点击切换输出设备", [
+            "name": device.name,
+            "uid": device.uid
+        ])
+        sound.selectOutput(uid: device.uid)
     }
 
     private func batteryBadge(percent: Int, emphasized: Bool) -> some View {
@@ -214,7 +257,7 @@ struct SoundMixerDeckView: View {
                         .foregroundStyle(.white.opacity(0.75))
                 }
                 Spacer(minLength: 0)
-                Text(L10n.Sound.activeSources(sound.apps.count))
+                Text(L10n.Sound.activeSources(displayApps.count))
                     .font(.system(size: 10, weight: .medium).monospaced())
                     .foregroundStyle(accentGreen)
                     .padding(.horizontal, 7)
@@ -232,20 +275,21 @@ struct SoundMixerDeckView: View {
             }
 
             Group {
-                if sound.apps.isEmpty {
+                if displayApps.isEmpty {
                     Text(L10n.Sound.noActiveApps)
                         .font(.system(size: 11))
                         .foregroundStyle(.white.opacity(0.40))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(.top, 12)
                 } else {
-                    ScrollView(.vertical, showsIndicators: false) {
+                    AlwaysVisibleScrollView(viewportFill: scrollViewportFill) {
                         VStack(spacing: 10) {
-                            ForEach(sound.apps.prefix(8)) { app in
+                            ForEach(displayApps.prefix(8)) { app in
                                 appRow(app)
                             }
                         }
                         .padding(.top, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
@@ -295,6 +339,7 @@ struct SoundMixerDeckView: View {
                 value: Binding(
                     get: { displayVolume },
                     set: { next in
+                        guard !SoundMixerDebugMock.enabled else { return }
                         AppLog.info("Sound", "App 音量拖动", [
                             "key": app.key,
                             "volume": String(format: "%.2f", next)
@@ -325,6 +370,7 @@ struct SoundMixerDeckView: View {
                         .fill(app.isMuted ? Color.red.opacity(0.20) : Color.white.opacity(0.06))
                 )
                 .onTapGesture {
+                    guard !SoundMixerDebugMock.enabled else { return }
                     AppLog.info("Sound", "点击 App 静音切换", [
                         "key": app.key,
                         "wasMuted": app.isMuted,

@@ -418,12 +418,12 @@ private struct DeckShelfPreviewSample: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: compact ? 6 : 10) {
+            // 左栏对齐真岛空货架：投放提示，不用假文件条目。
             DeckPreviewPanel {
                 VStack(alignment: .leading, spacing: compact ? 5 : 7) {
                     header(symbol: "shippingbox.fill", tint: accentBlue, title: L10n.Shelf.shelfTitle)
-                    shelfRow(badge: "PDF", tint: .red, name: L10n.Shelf.previewFilePDF, meta: "2.4 MB · \(L10n.Shelf.kindDocument)")
-                    shelfRow(badge: "DIR", tint: .cyan, name: L10n.Shelf.previewFileFolder, meta: L10n.Shelf.kindFolder)
-                    shelfRow(badge: "PNG", tint: .blue, name: L10n.Shelf.previewFilePNG, meta: "860 KB · \(L10n.Shelf.kindImage)")
+                    ShelfDropStagingView(highlighted: false, fillsContainer: true)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
 
@@ -511,38 +511,6 @@ private struct DeckShelfPreviewSample: View {
                 .lineLimit(1)
             Spacer(minLength: 0)
         }
-    }
-
-    private func shelfRow(badge: String, tint: Color, name: String, meta: String) -> some View {
-        HStack(spacing: 6) {
-            Text(badge)
-                .font(.system(size: 8, weight: .bold, design: .rounded))
-                .foregroundStyle(tint.opacity(0.95))
-                .frame(width: compact ? 26 : 30, height: compact ? 22 : 26)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(tint.opacity(0.16))
-                )
-            VStack(alignment: .leading, spacing: 1) {
-                Text(name)
-                    .font(.system(size: compact ? 10 : 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.92))
-                    .lineLimit(1)
-                if !compact {
-                    Text(meta)
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.38))
-                        .lineLimit(1)
-                }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, compact ? 4 : 5)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.white.opacity(0.04))
-        )
     }
 
     private func clipRow(symbol: String, tint: Color, text: String, time: String) -> some View {

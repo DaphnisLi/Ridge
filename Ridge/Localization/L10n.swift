@@ -114,28 +114,41 @@ enum L10n {
         static var libraryIntro: String {
             tr(
                 "widgets.library.intro",
-                "打开开关后可在灵动岛展示。功能磁贴与内容型小组件共用此库；拖到另一张卡片可交换内容型顺序。点击卡片进入预览与设置。"
+                "按提示、实况、面板分类。打开开关后可在灵动岛展示；同分类内可拖卡片交换顺序。点击卡片进入预览与设置。"
             )
         }
         static var libraryTitle: String { tr("widgets.library.title", "小组件库") }
-        static var deckSectionTitle: String { tr("widgets.deck_section_title", "功能磁贴") }
-        static var deckSectionBadge: String {
-            tr("widgets.deck_section_badge", "高频交互与系统控制")
-        }
-        static var deckSectionAside: String {
-            tr("widgets.deck_section_aside", "可直接在刘海内执行交互操作")
-        }
-        static var contentSectionTitle: String { tr("widgets.content_section_title", "内容小组件") }
-        static var contentSectionBadge: String {
-            tr("widgets.content_section_badge", "流媒体、日程与监测")
-        }
-        static var contentSectionAside: String {
-            tr("widgets.content_section_aside", "事件触发时自动展开并驻留")
-        }
         static var configureLink: String {
             tr("widgets.configure_link", "配置参数与交互")
         }
         static var libraryEmpty: String { tr("widgets.library.empty", "暂无可用小组件。") }
+
+        static func familySectionTitle(_ family: WidgetLibraryFamily) -> String {
+            switch family {
+            case .tip: return tr("widgets.family.tip.title", "提示")
+            case .live: return tr("widgets.family.live.title", "实况")
+            case .panel: return tr("widgets.family.panel.title", "面板")
+            }
+        }
+
+        static func familySectionBadge(_ family: WidgetLibraryFamily) -> String {
+            switch family {
+            case .tip: return tr("widgets.family.tip.badge", "触阈瞬时")
+            case .live: return tr("widgets.family.live.badge", "状态可点进")
+            case .panel: return tr("widgets.family.panel.badge", "常驻操作")
+            }
+        }
+
+        static func familySectionAside(_ family: WidgetLibraryFamily) -> String {
+            switch family {
+            case .tip:
+                return tr("widgets.family.tip.aside", "事件触发时短暂上岛")
+            case .live:
+                return tr("widgets.family.live.aside", "有状态时提示，点进面板")
+            case .panel:
+                return tr("widgets.family.panel.aside", "展开后驻留操作，不靠提示冒出")
+            }
+        }
 
         /// 库卡分类徽章。
         static func categoryBadge(for widgetID: WidgetID) -> String {

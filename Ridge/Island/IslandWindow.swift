@@ -48,11 +48,18 @@ final class IslandWindow: NSPanel {
            !ignoresMouseEvents,
            interactiveFrameInWindow.contains(event.locationInWindow),
            !isKeyWindow {
-            makeKeyAndOrderFront(nil)
-            AppLog.info("Overlay", "mouseDown 前补 makeKey", [
-                "key": isKeyWindow,
-                "appActive": NSApp.isActive
-            ])
+            // 设置窗展示中且指针在设置上：绝不能抢 key，否则红灯点不动像卡死。
+            if MenuBarController.shared?.isPointerOverPresentedSettings() == true {
+                AppLog.warn("Overlay", "设置窗上跳过岛 makeKey", [
+                    "appActive": NSApp.isActive
+                ])
+            } else {
+                makeKeyAndOrderFront(nil)
+                AppLog.info("Overlay", "mouseDown 前补 makeKey", [
+                    "key": isKeyWindow,
+                    "appActive": NSApp.isActive
+                ])
+            }
         }
         super.sendEvent(event)
     }

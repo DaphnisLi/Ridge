@@ -1,8 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// 浮层 NSPanel 上系统 ScrollView 经常滚不动。
-/// 内容用 offset 平移；滚轮 / 触控板走本地监视。不绘制可视滚动条，内容铺满宽度。
+/// 控制台岛内列表的统一纵向滚动（货架 / 电量 / 项目 / 混音台共用）。
+/// 浮层 NSPanel 上系统 `ScrollView` 经常滚不动；此处用 offset 平移 + 滚轮本地监视。
+/// 无可视滚动条；指针落在哪一栏就滚哪一栏。
 struct AlwaysVisibleScrollView<Content: View>: View {
     /// 视口实心底。半透明行在 `.clipped()` 边缘会透出岛黑底，滚动时首尾行会闪色；必须用不透明色垫住。
     var viewportFill: Color? = Color(nsColor: NSColor(calibratedWhite: 0.10, alpha: 1))
@@ -30,6 +31,8 @@ struct AlwaysVisibleScrollView<Content: View>: View {
                             )
                         }
                     )
+                    // 先合成再裁切：避免半透明行底与前景（如对勾）滚动时分层，右侧背景「消失」。
+                    .compositingGroup()
                     .offset(y: -model.offset)
                     .frame(width: viewport.width, height: viewport.height, alignment: .topLeading)
                     .clipped()
@@ -138,6 +141,8 @@ final class WheelScrollMonitor {
             }
             if let hit {
                 hit.applyWheel(deltaY: dy)
+                // 纵滑无左键：通知岛刷新保展开宽限，避免滚一半误收。
+                IslandController.shared?.noteContentScrollActivity(reason: "listWheel")
                 return nil
             }
             return event

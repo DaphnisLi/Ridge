@@ -53,6 +53,7 @@
 		3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */; };
 		3D462E034E453F1F314C7455 /* ColorPickTipIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */; };
 		3ED590A3F12B0419A63D83EF /* BatteryBluetoothProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */; };
+		40ABDD7A5CE9807D8C686150 /* RegressionCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */; };
 		4305C2221E502101D4F22DE3 /* MediaRemoteAdapter in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		436BDBF27E789D5BAF98FC57 /* SettingsHotKeyRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9440A1561EBF0B6F5050F7 /* SettingsHotKeyRecorder.swift */; };
 		46543EB57A64C3055AEE5217 /* GlobalHotKeyCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98015AF857E81F37003D7B64 /* GlobalHotKeyCenter.swift */; };
@@ -82,6 +83,7 @@
 		6997AB6FDC5F0AD503C2BB9C /* MoveReminderWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */; };
 		6B766A59FB1C1C8952C3F595 /* WorldClockCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */; };
 		6C3175BFD0949B4AEEE41FD1 /* BatterySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880C963E64D0E720AFA4F20F /* BatterySettings.swift */; };
+		6D8B89D35EB9E798166FE141 /* WidgetLibraryFamily.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */; };
 		7074AF75F8A041C93D2A2DDE /* MoveReminderNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F1A3168C908920AC348FA9 /* MoveReminderNoticeCard.swift */; };
 		72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */; };
 		7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */; };
@@ -105,6 +107,7 @@
 		9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A380AA9950E13AF158422F15 /* IslandState.swift */; };
 		94145ED790F224EC91A1E6BA /* MeetingCountdownWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D669A16E4C8C5DB311E03507 /* MeetingCountdownWidget.swift */; };
 		94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */; };
+		96C209E991B87FE221A35663 /* SoundMixerDebugMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C4DBEF20D01E4C7C73A0E7B /* SoundMixerDebugMock.swift */; };
 		96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */; };
 		97173776F6C7F2BD8E1912DB /* AIUsageIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45B8C898B0311F98C15DF30 /* AIUsageIslandViews.swift */; };
 		984A23B74427D2293DA3A8A8 /* WorldClockSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */; };
@@ -217,6 +220,7 @@
 		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
 		29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceChipInfo.swift; sourceTree = "<group>"; };
+		2C4DBEF20D01E4C7C73A0E7B /* SoundMixerDebugMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDebugMock.swift; sourceTree = "<group>"; };
 		2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySystemProfilerProbe.swift; sourceTree = "<group>"; };
 		2D5047AA5E636C0BAB3B1CD1 /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
 		2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFlyAnimator.swift; sourceTree = "<group>"; };
@@ -261,6 +265,7 @@
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
 		6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidget.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
+		6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLibraryFamily.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
 		713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSession.swift; sourceTree = "<group>"; };
 		71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCatalog.swift; sourceTree = "<group>"; };
@@ -353,6 +358,7 @@
 		E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettings.swift; sourceTree = "<group>"; };
 		E76D4C9AC130438848E5DD30 /* AIUsageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettings.swift; sourceTree = "<group>"; };
 		E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettingsPane.swift; sourceTree = "<group>"; };
+		EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegressionCatalogTests.swift; sourceTree = "<group>"; };
 		F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettingsPane.swift; sourceTree = "<group>"; };
 		F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAppAggregator.swift; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
@@ -540,6 +546,7 @@
 				25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */,
 				95BFECE714321CB884F2A555 /* SoundDeviceService.swift */,
 				A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */,
+				2C4DBEF20D01E4C7C73A0E7B /* SoundMixerDebugMock.swift */,
 				30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */,
 				CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */,
 				99F29A4F233C5FD3EB502B7E /* SoundProcessMonitor.swift */,
@@ -553,6 +560,7 @@
 			isa = PBXGroup;
 			children = (
 				60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */,
+				EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */,
 			);
 			path = RidgeTests;
 			sourceTree = "<group>";
@@ -713,6 +721,7 @@
 				2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */,
 				D46C8B0291D49B709283472D /* WidgetGrid.swift */,
 				D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */,
+				6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */,
 				088CFC576E84896E553FC0DD /* WidgetRegistry.swift */,
 				11948404DA855E5880642096 /* WidgetRuntime.swift */,
 				476E748467E663BFC1133613 /* WidgetSamplePreview.swift */,
@@ -971,6 +980,7 @@
 				1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */,
 				D3131253CE98D17A73798553 /* SoundDeviceService.swift in Sources */,
 				E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */,
+				96C209E991B87FE221A35663 /* SoundMixerDebugMock.swift in Sources */,
 				144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */,
 				9198703E93AAFF286FC6A778 /* SoundModels.swift in Sources */,
 				07C3537DC59E89A52F22B961 /* SoundProcessMonitor.swift in Sources */,
@@ -990,6 +1000,7 @@
 				CC8899C4D4192755214DF267 /* WidgetFlyAnimator.swift in Sources */,
 				F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */,
 				AB381B4B47D62E0AD24F5D92 /* WidgetHostView.swift in Sources */,
+				6D8B89D35EB9E798166FE141 /* WidgetLibraryFamily.swift in Sources */,
 				F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */,
 				F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */,
 				CE979D3CE7CFAEEC6877C829 /* WidgetSamplePreview.swift in Sources */,
@@ -1010,6 +1021,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */,
+				40ABDD7A5CE9807D8C686150 /* RegressionCatalogTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -13,7 +13,8 @@ alwaysApply: false
 1. **展开态保展开热区 = 当前可见大面板（可外扩）∪ 刘海**，禁止只用 `notchFrame`。
 2. **展开态 `panelSize` 禁止被 Preference 瞬间缩回接近刘海**（拖动、滚动、临时 layout 会误报）。仅翻页 / 刚 expand / 明确布局重置窗口内允许缩小。
 3. **左键在岛上按下后的拖动**：松开前不得 `scheduleCollapse` / `collapse(hoverEnd)`（含 ScrollView、滑条，不限翻页 pan）。
-4. 策略逻辑只进 `IslandExpandedPanelPolicy`；悬停收起路径必须走 `pointerIslandHit` + 上述策略，**禁止**再抄一套按刘海判断离开。
+4. **控制台列表纵滑**（触控板/滚轮，常无左键）：`noteContentScrollActivity` 后宽限内不得 `collapse(hoverEnd)`——滚一半误收属本类回归。
+5. 策略逻辑只进 `IslandExpandedPanelPolicy`；悬停收起路径必须走 `pointerIslandHit` + 上述策略，**禁止**再抄一套按刘海判断离开。
 
 权威代码：
 
@@ -26,9 +27,9 @@ alwaysApply: false
 ## 改 Island 悬停 / panelSize / Preference 时
 
 1. 先读本规则与 `IslandExpandedPanelPolicy` 注释  
-2. 改完跑：`xcodebuild test -scheme Ridge -destination 'platform=macOS'`（或至少编过 `RidgeTests`）  
-3. 手测：展开控制台大岛 → 在面板下半截横向/纵向拖 → **不得收岛**  
-4. 日志若出现 `忽略展开态面板误缩` 属防护生效；若频繁误伤翻页，只放宽 `allowPanelShrink` 窗口，**禁止**删掉缩小护栏  
+2. 改完**必须**跑：`xcodebuild test -project Ridge.xcodeproj -scheme Ridge -destination 'platform=macOS' -only-testing:RidgeTests`  
+3. 手测：展开控制台大岛 → 下半截拖 / 列表纵滑一半 → **不得收岛**  
+4. 日志若出现 `忽略展开态面板误缩` 或 `内容滚动宽限内，取消收起` 属防护生效；若频繁误伤翻页，只放宽 `allowPanelShrink` 窗口，**禁止**删掉缩小护栏 / 滚动保展开  
 
 ## 禁止
 

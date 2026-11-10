@@ -46,7 +46,11 @@ final class BatterySession: ObservableObject {
 
     func refresh(reason: String) {
         // Continuity / BLE 回调在 profiler 异步窗口内也必须立刻合并，否则会丢 iPhone 读数。
-        if reason == "bleUpdate" || reason == "continuityBLE" {
+        // 勿再 requestRefresh，避免扫描回调里套扫描刷日志。
+        if reason == "bleUpdate"
+            || reason == "continuityBLE"
+            || reason == "continuityDiscovered"
+        {
             applyMerged(
                 bluetooth: BatteryBluetoothProbe.connectedDevices(),
                 hid: BatteryHIDProbe.connectedDevices(),

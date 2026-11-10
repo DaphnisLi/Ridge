@@ -7,12 +7,15 @@ import Foundation
 /// 1. 展开态保展开热区必须跟**当前可见大面板**走，禁止退回刘海小框。
 /// 2. 展开态内容 Preference 可以变大，但**禁止**在非翻页窗口内大幅缩小（拖动/滚动会误报矮框）。
 /// 3. 左键在岛上按下后的拖动，松开前不得因热区抖动收岛。
+/// 4. 控制台列表纵滑（无左键按下）后短时内不得 `collapse(hoverEnd)`——滚到一半指针微移会误判离开。
 ///
 /// 改 `IslandController` 悬停 / `IslandViewModel.panelSize` / Preference 上报前必读
 /// `.cursor/rules/island-hover-retention.mdc`，并跑 `RidgeTests`。
 enum IslandExpandedPanelPolicy {
     /// 相对当前尺寸，单边缩小超过此值视为「误缩」（常见是缩回刘海）。
     static let accidentalShrinkThreshold: CGFloat = 28
+    /// 内容区纵滑结束后仍保展开的宽限（秒）。
+    static let contentScrollHoldGrace: TimeInterval = 0.55
 
     /// 展开态是否应采纳本次内容测量。
     /// - Parameters:
@@ -103,5 +106,15 @@ enum IslandExpandedPanelPolicy {
         }
         return panel.height + heightSlop < stable.height
             || panel.width + widthSlop < stable.width
+    }
+
+    /// 列表纵滑后宽限内应钉住展开（触控板/鼠标滚轮无左键，不能靠 dragHold）。
+    static func shouldHoldExpandForRecentScroll(
+        lastScrollAt: Date?,
+        now: Date = Date(),
+        grace: TimeInterval = contentScrollHoldGrace
+    ) -> Bool {
+        guard let lastScrollAt else { return false }
+        return now.timeIntervalSince(lastScrollAt) < grace
     }
 }

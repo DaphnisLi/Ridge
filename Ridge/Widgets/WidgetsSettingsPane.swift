@@ -11,11 +11,12 @@ struct WidgetsSettingsPane: View {
     @State private var path = NavigationPath()
     @State private var draggingID: WidgetID?
 
-    private var libraryOrder: [WidgetID] {
+    /// 内容型库顺序（可拖排序），不含控制台磁贴。
+    private var contentLibraryOrder: [WidgetID] {
         settings.order.filter { registry.manifest(for: $0)?.showsInLibrary == true }
     }
 
-    /// 已落地的控制台功能磁贴（进小组件库，样式同卡片）。
+    /// 已落地的控制台功能磁贴。
     private var liveDeckModules: [ControlDeckPlannedModule] {
         deckSettings.plannedModules.filter(\.isLive)
     }
@@ -24,8 +25,9 @@ struct WidgetsSettingsPane: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: SettingsChrome.Spacing.pageHorizontal) {
-                    deckLibrarySection
-                    librarySection
+                    ForEach(WidgetLibraryFamily.displayOrder) { family in
+                        familySection(family)
+                    }
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
                 .padding(.vertical, SettingsChrome.Spacing.pageHorizontal)
@@ -44,8 +46,9 @@ struct WidgetsSettingsPane: View {
             IslandController.shared?.beginSettingsSessionCollapsed()
             consumePendingPreviewIfNeeded()
             AppLog.debug("Settings", "小组件库页已显示", [
-                "widgets": libraryOrder.count,
-                "deck": liveDeckModules.count
+                "tip": entries(in: .tip).count,
+                "live": entries(in: .live).count,
+                "panel": entries(in: .panel).count
             ])
         }
         .onChange(of: navigator.openToken) { _, _ in
@@ -53,27 +56,86 @@ struct WidgetsSettingsPane: View {
         }
     }
 
-    private var deckLibrarySection: some View {
-        VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
+    // MARK: - 三段：提示 → 实况 → 面板
+
+    private func familySection(_ family: WidgetLibraryFamily) -> some View {
+        let items = entries(in: family)
+        return VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
             librarySectionHeader(
-                symbol: "square.grid.2x2",
+                symbol: familyHeaderSymbol(family),
                 symbolTint: SettingsChrome.primary,
-                title: L10n.Widgets.deckSectionTitle,
-                badge: "\(L10n.Widgets.deckSectionBadge) (\(liveDeckModules.count))",
-                aside: L10n.Widgets.deckSectionAside
+                title: L10n.Widgets.familySectionTitle(family),
+                badge: "\(L10n.Widgets.familySectionBadge(family)) (\(items.count))",
+                aside: L10n.Widgets.familySectionAside(family)
             )
 
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
-                    GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
-                ],
-                spacing: SettingsChrome.Spacing.stack
-            ) {
-                ForEach(liveDeckModules) { module in
-                    deckCardCell(module)
+            if items.isEmpty {
+                Text(L10n.Widgets.libraryEmpty)
+                    .font(SettingsChrome.Font.body)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 16)
+            } else {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
+                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
+                    ],
+                    spacing: SettingsChrome.Spacing.stack
+                ) {
+                    ForEach(items) { entry in
+                        switch entry {
+                        case .deck(let module):
+                            deckCardCell(module)
+                        case .content(let id):
+                            if let manifest = registry.manifest(for: id) {
+                                widgetCardCell(id: id, manifest: manifest, family: family)
+                                    .transition(.scale(scale: 0.96).combined(with: .opacity))
+                            }
+                        }
+                    }
                 }
+                .animation(
+                    .spring(response: 0.32, dampingFraction: 0.86),
+                    value: items.map(\.id)
+                )
             }
+        }
+    }
+
+    private enum LibraryEntry: Identifiable, Hashable {
+        case deck(ControlDeckPlannedModule)
+        case content(WidgetID)
+
+        var id: WidgetID {
+            switch self {
+            case .deck(let module):
+                return ControlDeckSettings.pageIDPrefix + "." + module.id
+            case .content(let widgetID):
+                return widgetID
+            }
+        }
+    }
+
+    /// 段内条目：控制台磁贴按规划顺序；内容型按用户库序。
+    private func entries(in family: WidgetLibraryFamily) -> [LibraryEntry] {
+        var list: [LibraryEntry] = []
+        for module in liveDeckModules {
+            guard WidgetLibraryFamily.family(forDeckModuleID: module.id) == family else { continue }
+            list.append(.deck(module))
+        }
+        for id in contentLibraryOrder {
+            guard WidgetLibraryFamily.family(for: id) == family else { continue }
+            list.append(.content(id))
+        }
+        return list
+    }
+
+    private func familyHeaderSymbol(_ family: WidgetLibraryFamily) -> String {
+        switch family {
+        case .tip: return "bell.fill"
+        case .live: return "dot.radiowaves.left.and.right"
+        case .panel: return "rectangle.bottomthird.inset.filled"
         }
     }
 
@@ -164,49 +226,12 @@ struct WidgetsSettingsPane: View {
         AppLog.info("Settings", "已跳转小组件预览", ["id": id])
     }
 
-    // MARK: - 库
-
-    private var librarySection: some View {
-        VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
-            librarySectionHeader(
-                symbol: "rectangle.stack",
-                symbolTint: SettingsChrome.primary,
-                title: L10n.Widgets.contentSectionTitle,
-                badge: "\(L10n.Widgets.contentSectionBadge) (\(libraryOrder.count))",
-                aside: L10n.Widgets.contentSectionAside
-            )
-
-            if libraryOrder.isEmpty {
-                Text(L10n.Widgets.libraryEmpty)
-                    .font(SettingsChrome.Font.body)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 24)
-            } else {
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
-                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
-                    ],
-                    spacing: SettingsChrome.Spacing.stack
-                ) {
-                    ForEach(libraryOrder, id: \.self) { id in
-                        if let manifest = registry.manifest(for: id) {
-                            widgetCardCell(id: id, manifest: manifest)
-                                .transition(.scale(scale: 0.96).combined(with: .opacity))
-                        }
-                    }
-                }
-                .animation(
-                    .spring(response: 0.32, dampingFraction: 0.86),
-                    value: libraryOrder
-                )
-            }
-        }
-    }
-
     @ViewBuilder
-    private func widgetCardCell(id: WidgetID, manifest: WidgetManifest) -> some View {
+    private func widgetCardCell(
+        id: WidgetID,
+        manifest: WidgetManifest,
+        family: WidgetLibraryFamily
+    ) -> some View {
         WidgetLibraryCard(
             widgetID: id,
             title: manifest.displayName,
@@ -223,7 +248,10 @@ struct WidgetsSettingsPane: View {
         .background(WidgetCardScreenFrameReader(widgetID: id))
         .onDrag {
             draggingID = id
-            AppLog.debug("Settings", "开始拖拽小组件卡", ["id": id])
+            AppLog.debug("Settings", "开始拖拽小组件卡", [
+                "id": id,
+                "family": family.rawValue
+            ])
             return NSItemProvider(object: id as NSString)
         } preview: {
             WidgetLibraryCard(
@@ -241,6 +269,7 @@ struct WidgetsSettingsPane: View {
             of: [.text, .plainText, .utf8PlainText],
             delegate: WidgetCardReorderDropDelegate(
                 targetID: id,
+                family: family,
                 draggingID: $draggingID,
                 settings: settings
             )
@@ -264,9 +293,10 @@ struct WidgetsSettingsPane: View {
     }
 }
 
-/// 松手落在目标卡上时交换库顺序。
+/// 松手落在目标卡上时交换库顺序（仅同家族内容型之间）。
 private struct WidgetCardReorderDropDelegate: DropDelegate {
     let targetID: WidgetID
+    let family: WidgetLibraryFamily
     @Binding var draggingID: WidgetID?
     let settings: WidgetSettings
 
@@ -280,6 +310,16 @@ private struct WidgetCardReorderDropDelegate: DropDelegate {
         let finishedID = draggingID
         draggingID = nil
         guard let finishedID, finishedID != targetID else { return false }
+        guard WidgetLibraryFamily.family(for: finishedID) == family,
+              WidgetLibraryFamily.family(for: targetID) == family
+        else {
+            AppLog.debug("Settings", "拖拽跨分类忽略", [
+                "id": finishedID,
+                "with": targetID,
+                "family": family.rawValue
+            ])
+            return false
+        }
         withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
             _ = settings.move(draggedID: finishedID, onto: targetID)
         }
@@ -287,7 +327,8 @@ private struct WidgetCardReorderDropDelegate: DropDelegate {
             IslandController.shared?.presentWidgetReordered(finishedID)
             AppLog.info("Settings", "拖拽交换完成", [
                 "id": finishedID,
-                "with": targetID
+                "with": targetID,
+                "family": family.rawValue
             ])
         }
         return true

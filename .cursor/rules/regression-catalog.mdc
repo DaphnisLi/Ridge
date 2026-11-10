@@ -11,11 +11,18 @@ alwaysApply: true
 
 1. **修 bug / 用户指出缺陷后**：在目录中新增或更新条目（`occurrences`、症状、防护、自动化建议）。
 2. **同一根因再次出现**：`occurrences += 1`；若 `≥ 2`，标 `recurring: true`，并写入文档顶部「重复出现问题」表。
-3. **写 / 扩自动化测试时**：优先覆盖表中 `recurring: true` 项；用例与文档 `id` 对齐（如 `island-hover-retention`）。
-4. **改 Island 悬停 / 边距 / 设置预览时**：先对照目录里对应 recurring 项与既有 `.mdc` 规则，避免已知回归。
+3. **`occurrences ≥ 2`（recurring）**：必须有自动化测试（能单测的进 `RidgeTests`，用例名对齐 catalog `id`）。尚无测试则**先补测试再合入修复**。
+4. **改完相关代码后必须跑测试**（不可只 relaunch）：
+   ```bash
+   xcodebuild test -project Ridge.xcodeproj -scheme Ridge -destination 'platform=macOS' -only-testing:RidgeTests
+   ```
+   覆盖：Island 悬停 / panelSize / 控制台滚动 / 设置预览 / chrome 边距，以及任何触及 recurring 项的改动。
+5. **写 / 扩自动化测试时**：优先覆盖表中 `recurring: true` 项；见 `RidgeTests/RegressionCatalogTests.swift` 与 `IslandExpandedPanelPolicyTests.swift`。
+6. **改 Island 悬停 / 边距 / 设置预览时**：先对照目录里对应 recurring 项与既有 `.mdc` 规则，避免已知回归。
 
 ## 禁止
 
 - 只口头总结问题、不写入 `REGRESSION_CATALOG.md`
-- 重复出现两次以上仍不标 recurring
+- 重复出现两次以上仍不标 recurring、仍不补自动化
+- 改完 Island / 控制台滚动 / 悬停相关代码不跑 `RidgeTests` 就交差
 - 为目录另起第二份清单（本仓库只认这一份）

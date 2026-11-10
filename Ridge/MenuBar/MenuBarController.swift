@@ -13,12 +13,21 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     private var appActiveObserver: NSObjectProtocol?
     private var appResignObserver: NSObjectProtocol?
     private var prewarmWorkItem: DispatchWorkItem?
+    /// 从打开到 orderOut 全程为 true；勿仅靠 `isVisible`（关窗竞态时岛会误吞关闭按钮）。
+    private(set) var isSettingsPresented = false
 
-    /// 当前设置窗（可见时）。
+    /// 当前设置窗（展示中）。
     var settingsWindow: NSWindow? {
-        let window = settingsWindowController?.window
-        guard let window, window.isVisible else { return nil }
-        return window
+        guard isSettingsPresented else { return nil }
+        return settingsWindowController?.window
+    }
+
+    /// 屏幕坐标是否落在展示中的设置窗上（含标题栏红灯）。
+    func isPointerOverPresentedSettings(_ mouse: NSPoint = NSEvent.mouseLocation) -> Bool {
+        guard isSettingsPresented,
+              let window = settingsWindowController?.window
+        else { return false }
+        return window.frame.contains(mouse)
     }
 
     func start(island: IslandController) {
@@ -147,9 +156,12 @@ final class MenuBarController: NSObject, NSWindowDelegate {
 
     @objc private func openSettings() {
         let openedAt = Date()
-        AppLog.info("Settings", "打开设置窗")
+        AppLog.warn("Settings", "打开设置窗")
+        // 先于 orderFront 标记展示 + 开会话，避免岛窗盖住标题栏时尚未穿透。
+        isSettingsPresented = true
         // 设置打开期间进入 regular，才能被 ⌘Tab 切回来；关闭后再变回 accessory。
         promoteForSettingsWindow()
+        IslandController.shared?.beginSettingsSessionCollapsed()
 
         let window = ensureSettingsWindow()
         let screen = Self.activeScreen()
@@ -166,7 +178,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
             self.syncIslandPreviewForCurrentSection()
             let visible = screen?.visibleFrame ?? .zero
             let frame = window.frame
-            AppLog.info("Settings", "设置窗已前置", [
+            AppLog.warn("Settings", "设置窗已前置", [
                 "ms": Int(Date().timeIntervalSince(openedAt) * 1000),
                 "section": SettingsNavigator.shared.section.rawValue,
                 "frameW": Int(frame.width),
@@ -179,11 +191,14 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     /// 隐藏关闭：保留 hosting，下次打开不再冷启动 SwiftUI。
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         guard sender === settingsWindowController?.window else { return true }
+        AppLog.warn("Settings", "收到关闭请求")
+        // 先摘展示标记并 orderOut：否则清会话后岛仍盖在红灯上，点关闭像卡死。
+        isSettingsPresented = false
+        sender.orderOut(nil)
         WidgetFlyAnimator.shared.cancel()
         ResourceMonitorSession.shared.setSettingsVisible(false)
         IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
-        sender.orderOut(nil)
-        AppLog.info("Settings", "设置窗已隐藏（保留实例）")
+        AppLog.warn("Settings", "设置窗已隐藏（保留实例）")
         demoteAfterSettingsClosed()
         return false
     }
@@ -192,9 +207,10 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         guard let closing = notification.object as? NSWindow,
               closing === settingsWindowController?.window
         else { return }
+        isSettingsPresented = false
         WidgetFlyAnimator.shared.cancel()
         IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
-        AppLog.info("Settings", "设置窗关闭，结束灵动岛实时预览")
+        AppLog.warn("Settings", "设置窗关闭，结束灵动岛实时预览")
         demoteAfterSettingsClosed()
     }
 
@@ -236,10 +252,10 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     private func demoteAfterSettingsClosed() {
         // 下一轮 runloop 再降级，避免关窗动画期间抢焦点异常。
         DispatchQueue.main.async {
-            guard self.settingsWindowController?.window?.isVisible != true else { return }
+            guard !self.isSettingsPresented else { return }
             IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
             NSApp.setActivationPolicy(.accessory)
-            AppLog.info("Settings", "设置窗已关，activationPolicy → accessory")
+            AppLog.warn("Settings", "设置窗已关，activationPolicy → accessory")
         }
     }
 

@@ -4412,6 +4412,105 @@
         }
       }
     },
+    "widgets.family.live.aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有状态时提示，点进面板"
+          }
+        }
+      }
+    },
+    "widgets.family.live.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态可点进"
+          }
+        }
+      }
+    },
+    "widgets.family.live.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "实况"
+          }
+        }
+      }
+    },
+    "widgets.family.panel.aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开后驻留操作，不靠提示冒出"
+          }
+        }
+      }
+    },
+    "widgets.family.panel.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "常驻操作"
+          }
+        }
+      }
+    },
+    "widgets.family.panel.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "面板"
+          }
+        }
+      }
+    },
+    "widgets.family.tip.aside": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "事件触发时短暂上岛"
+          }
+        }
+      }
+    },
+    "widgets.family.tip.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "触阈瞬时"
+          }
+        }
+      }
+    },
+    "widgets.family.tip.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        }
+      }
+    },
     "widgets.footer.ai_usage": {
       "extractionState": "manual",
       "localizations": {
@@ -4572,7 +4671,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "打开开关后可在灵动岛展示。功能磁贴与内容型小组件共用此库；拖到另一张卡片可交换内容型顺序。点击卡片进入预览与设置。"
+            "value": "按提示、实况、面板分类。打开开关后可在灵动岛展示；同分类内可拖卡片交换顺序。点击卡片进入预览与设置。"
           }
         }
       }

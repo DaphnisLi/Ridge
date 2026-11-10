@@ -17,7 +17,7 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥4 | 展开后热区缩成刘海/短 tip，鼠标下移/拖一下就收岛 | `island-hover-retention.mdc`；短条禁止写 `lastStable`；`RidgeTests`；手测大岛下半截 |
+| `island-hover-retention` | 岛悬停热区退化 | ≥5 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛 | `island-hover-retention.mdc`；`scrollHold`；`RidgeTests`（含 RegressionCatalogTests） |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥2 | 内容根再加 padding，与 `IslandChrome` 叠加，下边距过大 | `widget-architecture.mdc` / `island-notice.mdc`：根视图禁止外圈 padding |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥3 | 取色引导后「已复制」投递了但不显示 | present 前 `forcePanelSize` 短条；勿先 dismiss 再 present |
@@ -29,11 +29,11 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 4+（历史反复；2026-11-09 短「已复制」/额度 tip 的 `forcePanelSize` 把 `lastStable` 写成 tip 小框）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；**瞬时短条 `forcePanelSize` / Preference 写入 `lastStableExpandedPanelSize`**  
-- **防护:** `IslandExpandedPanelPolicy.isTransientShortPanel` / `shouldPreferStableRetention`；短条禁止写 `lastStable`；改 Island 悬停必读规则  
-- **自动化建议:** tip 尺寸不进 lastStable；短 tip 盖住大岛时 retention 仍用稳定大面板；下半截不收岛
+- **occurrences:** 5+（历史反复；2026-11-09 tip 污染 lastStable；**2026-11-10 混音台列表纵滑一半收岛**）  
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；**控制台列表滚一半误收**  
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；**纵滑无左键，不能靠 dragHold**  
+- **防护:** `isTransientShortPanel` / `shouldPreferStableRetention`；`noteContentScrollActivity` + `shouldHoldExpandForRecentScroll`；短条禁止写 `lastStable`  
+- **自动化:** `IslandExpandedPanelPolicyTests` + `RegressionCatalogTests.test_islandHoverRetention_*`（含 scroll hold）
 
 ### island-chrome-double-padding — 岛边距叠两层
 
@@ -107,6 +107,26 @@
 - **相关代码:** `ShelfCaptureTools`、`IslandController.beginExternalPointerTool` / `expand` / `ensureIslandInteractionReady`  
 - **自动化建议:** 外部工具态下 expand 不得调用 `IslandInteractionFocus.prepare`；模拟 sampler 无回调超时后 `isExternalPointerToolActive == false`
 
+### battery-continuity-iphone-missing — Continuity 手机不上电量列表
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10：附近 iPhone 广播可见但加密超时后整卡消失）  
+- **症状:** 控制中心能看手机电量，Ridge 电量页没有 iPhone  
+- **根因倾向:** ① 只在读到 Battery Service 后才建卡，连接/加密失败则无条目；② 广播刷新 `lastSeen` 误当重试冷却，加密失败后不再重连；③ Continuity 路径 info 日志不落盘，难排查  
+- **防护:** 发现即 upsert（percent 可 nil）；`continuityLastAttemptAt` 与 lastSeen 解耦；关键路径 `AppLog.warn`；蓝牙 denied 时明确 warn  
+- **相关代码:** `BatteryCoreBluetoothMonitor`  
+- **自动化建议:** 模拟 didDiscover + didFailToConnect 后 `continuityDevices` 仍含该 UUID；冷却后应再次 connect
+
+### settings-close-blocked-by-island — 设置窗关不掉 / 假死
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10）  
+- **症状:** 设置有时点红灯关不了，整窗像卡死；岛盖在标题栏上  
+- **根因倾向:** 岛窗 level 高于设置；穿透依赖 `isSettingsSessionActive`，开窗异步开会话 / 关窗先清会话再 orderOut → 红灯点击被岛吞；OCR/货架抬到 screenSaver/popUpMenu 时更重  
+- **防护:** `isSettingsPresented` 先于 orderFront、关窗先清标记并 orderOut；命中设置用 presented 而非 session；开/关设置强制 resting + click-through；设置展示中禁止抬层  
+- **相关代码:** `MenuBarController`、`IslandController.pollPointer`、`IslandWindow.sendEvent`  
+- **自动化建议:** 设置 presented 且鼠标在设置 frame 内时 `ignoresMouseEvents == true`；windowShouldClose 后 `isSettingsPresented == false`
+
 ---
 
 ## 变更日志
@@ -116,3 +136,6 @@
 | 2026-11-08 | 初版：收录悬停热区、边距叠层、预览真数据为重复出现；录入复制提示缺失等 |
 | 2026-11-08 | 录入 AI 额度账号作用域提示问题，并修换号嗅探 / 换回再弹 |
 | 2026-11-09 | 录入取色后岛永久穿透假死；修 tip expand 抢前台 + Esc/超时退出 |
+| 2026-11-10 | 录入 Continuity iPhone 不上列表；发现即上屏 + 重试冷却解耦 |
+| 2026-11-10 | 录入设置窗关不掉；presented 标记 + 关窗先 orderOut + 禁抬层 |
+| 2026-11-10 | hover-retention +1（列表纵滑误收）；`scrollHold` + `RegressionCatalogTests`；recurring 改完必跑测 |

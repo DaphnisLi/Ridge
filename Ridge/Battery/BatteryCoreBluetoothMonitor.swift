@@ -13,7 +13,8 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         var id: String
         var name: String
         var kind: BatteryDeviceKind
-        var percent: Int
+        /// 尚未读到 Battery Service 时为 nil（仍展示「附近」卡片）。
+        var percent: Int?
         var isCharging: Bool
         var lastSeen: Date
     }
@@ -29,6 +30,8 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
     private var continuityPending: Set<UUID> = []
     private var continuityByUUID: [UUID: ContinuitySnapshot] = [:]
     private var previousContinuityPercent: [String: Int] = [:]
+    private var continuityFailCount: [UUID: Int] = [:]
+    private var continuityLastAttemptAt: [UUID: Date] = [:]
     private var started = false
     private var isScanningContinuity = false
     private var scanStopWork: DispatchWorkItem?
@@ -41,9 +44,13 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
 
     /// Continuity 扫描最短间隔，避免刷屏占射频。
     private let continuityScanMinInterval: TimeInterval = 20
-    private let continuityScanDuration: TimeInterval = 10
+    private let continuityScanDuration: TimeInterval = 12
     /// 超过此时长未见广播则从列表摘掉。
     private let continuityStaleAfter: TimeInterval = 180
+    /// 读数成功后多久内不重连。
+    private let continuityFreshReadWindow: TimeInterval = 90
+    /// 加密失败后最短重试间隔。
+    private let continuityRetryCooldown: TimeInterval = 25
 
     private override init() {
         super.init()
@@ -58,7 +65,9 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         central = CBCentralManager(delegate: self, queue: nil, options: [
             CBCentralManagerOptionShowPowerAlertKey: false
         ])
-        AppLog.info("Battery", "CoreBluetooth 电量监视已启动")
+        AppLog.warn("Battery", "CoreBluetooth 电量监视已启动", [
+            "auth": Self.authorizationLabel()
+        ])
     }
 
     func stop() {
@@ -79,18 +88,33 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         continuityPending.removeAll()
         continuityByUUID.removeAll()
         previousContinuityPercent.removeAll()
+        continuityFailCount.removeAll()
+        continuityLastAttemptAt.removeAll()
         levelsByName = [:]
         continuityDevices = []
         central = nil
-        AppLog.info("Battery", "CoreBluetooth 电量监视已停止")
+        AppLog.warn("Battery", "CoreBluetooth 电量监视已停止")
     }
 
     func requestRefresh(reason: String) {
         pruneStaleContinuity()
-        guard let central, central.state == .poweredOn else {
-            AppLog.debug("Battery", "BLE 电量刷新跳过：未就绪", [
+        guard let central else {
+            AppLog.warn("Battery", "BLE 电量刷新跳过：无 CBCentral", ["reason": reason])
+            return
+        }
+        let auth = Self.authorizationLabel()
+        guard central.state == .poweredOn else {
+            AppLog.warn("Battery", "BLE 电量刷新跳过：未就绪", [
                 "reason": reason,
-                "state": central?.state.rawValue ?? -1
+                "state": central.state.rawValue,
+                "auth": auth
+            ])
+            return
+        }
+        if Self.isBluetoothDenied {
+            AppLog.warn("Battery", "蓝牙权限未授权，无法扫描 Continuity / BLE 电量", [
+                "reason": reason,
+                "auth": auth
             ])
             return
         }
@@ -110,7 +134,8 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         }
         AppLog.debug("Battery", "BLE 已连接外设", [
             "reason": reason,
-            "count": uniq.count
+            "count": uniq.count,
+            "names": uniq.compactMap(\.name).joined(separator: "|")
         ])
         guard !uniq.isEmpty else { return }
 
@@ -143,9 +168,10 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         }
         lastContinuityScanAt = Date()
         isScanningContinuity = true
-        AppLog.info("Battery", "开始 Continuity BLE 扫描", [
+        AppLog.warn("Battery", "开始 Continuity BLE 扫描", [
             "reason": reason,
-            "duration": Int(continuityScanDuration)
+            "duration": Int(continuityScanDuration),
+            "known": continuityDevices.count
         ])
         central.scanForPeripherals(
             withServices: nil,
@@ -163,9 +189,10 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         guard isScanningContinuity else { return }
         isScanningContinuity = false
         central?.stopScan()
-        AppLog.debug("Battery", "Continuity BLE 扫描结束", [
+        AppLog.warn("Battery", "Continuity BLE 扫描结束", [
             "devices": continuityDevices.count,
-            "pending": continuityPending.count
+            "pending": continuityPending.count,
+            "names": continuityDevices.map(\.name).joined(separator: "|")
         ])
     }
 
@@ -193,13 +220,62 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         return type == 0x10 || type == 0x0C
     }
 
-    private func shouldConnectContinuity(named name: String) -> Bool {
-        let key = Self.normalizeName(name)
-        if let snap = continuityDevices.first(where: { Self.normalizeName($0.name) == key }) {
-            // 90s 内已有读数则本轮不重连，减轻射频占用。
-            return Date().timeIntervalSince(snap.lastSeen) > 90
+    private func resolvedPeripheralName(
+        _ peripheral: CBPeripheral,
+        advertisementData: [String: Any]
+    ) -> String? {
+        if let name = peripheral.name?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !name.isEmpty {
+            return name
         }
+        if let local = advertisementData[CBAdvertisementDataLocalNameKey] as? String {
+            let trimmed = local.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty { return trimmed }
+        }
+        return nil
+    }
+
+    private func shouldConnectContinuity(uuid: UUID, named name: String) -> Bool {
+        if continuityPending.contains(uuid) { return false }
+        if let snap = continuityByUUID[uuid], let percent = snap.percent, percent > 0 {
+            // 90s 内已有读数则本轮不重连，减轻射频占用。
+            if Date().timeIntervalSince(snap.lastSeen) < continuityFreshReadWindow {
+                return false
+            }
+        }
+        // 上次尝试（含加密失败）后冷却；与 lastSeen 解耦——广播会刷新 lastSeen。
+        if let last = continuityLastAttemptAt[uuid],
+           Date().timeIntervalSince(last) < continuityRetryCooldown {
+            return false
+        }
+        _ = name
         return true
+    }
+
+    /// 发现即上屏：即使随后加密失败，电量页也能看到手机。
+    private func upsertDiscoveredContinuity(
+        uuid: UUID,
+        name: String,
+        kind: BatteryDeviceKind
+    ) {
+        let existing = continuityByUUID[uuid]
+        let snap = ContinuitySnapshot(
+            id: "continuity.\(uuid.uuidString)",
+            name: name,
+            kind: kind,
+            percent: existing?.percent,
+            isCharging: existing?.isCharging ?? false,
+            lastSeen: Date()
+        )
+        continuityByUUID[uuid] = snap
+        // 仅成员/名/电量变化时合并上屏；纯 lastSeen 刷新勿打满主线程（设置页易卡）。
+        let changed = existing == nil
+            || existing?.name != name
+            || existing?.percent != snap.percent
+            || existing?.kind != kind
+        guard changed else { return }
+        publishContinuity()
+        BatterySession.shared.refresh(reason: "continuityDiscovered")
     }
 
     private func pruneStaleContinuity() {
@@ -207,9 +283,10 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
         let before = continuityByUUID.count
         continuityByUUID = continuityByUUID.filter { $0.value.lastSeen >= cutoff }
         if continuityByUUID.count != before {
+            let removed = before - continuityByUUID.count
             publishContinuity()
-            AppLog.info("Battery", "已摘除过期 Continuity 设备", [
-                "removed": before - continuityByUUID.count,
+            AppLog.warn("Battery", "已摘除过期 Continuity 设备", [
+                "removed": removed,
                 "remain": continuityByUUID.count
             ])
         }
@@ -241,12 +318,34 @@ final class BatteryCoreBluetoothMonitor: NSObject, ObservableObject {
     private static func normalizeName(_ raw: String) -> String {
         raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
+
+    private static var isBluetoothDenied: Bool {
+        switch CBManager.authorization {
+        case .denied, .restricted:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private static func authorizationLabel() -> String {
+        switch CBManager.authorization {
+        case .notDetermined: return "notDetermined"
+        case .restricted: return "restricted"
+        case .denied: return "denied"
+        case .allowedAlways: return "allowedAlways"
+        @unknown default: return "unknown"
+        }
+    }
 }
 
 extension BatteryCoreBluetoothMonitor: CBCentralManagerDelegate {
     nonisolated func centralManagerDidUpdateState(_ central: CBCentralManager) {
         Task { @MainActor in
-            AppLog.debug("Battery", "CBCentral 状态", ["state": central.state.rawValue])
+            AppLog.warn("Battery", "CBCentral 状态", [
+                "state": central.state.rawValue,
+                "auth": Self.authorizationLabel()
+            ])
             if central.state == .poweredOn {
                 self.requestRefresh(reason: "poweredOn")
             }
@@ -260,23 +359,29 @@ extension BatteryCoreBluetoothMonitor: CBCentralManagerDelegate {
         rssi RSSI: NSNumber
     ) {
         Task { @MainActor in
-            guard let name = peripheral.name?
-                .trimmingCharacters(in: .whitespacesAndNewlines),
-                !name.isEmpty,
-                self.isContinuityAppleCandidate(name)
+            guard let name = self.resolvedPeripheralName(peripheral, advertisementData: advertisementData),
+                  self.isContinuityAppleCandidate(name)
             else { return }
             guard let mfg = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
                   self.isContinuityAdvertisement(mfg)
             else { return }
-            guard self.shouldConnectContinuity(named: name) else { return }
-            guard self.continuityPending.insert(peripheral.identifier).inserted else { return }
 
-            self.held[peripheral.identifier] = peripheral
+            let uuid = peripheral.identifier
+            let kind = self.continuityKind(for: name)
+            // 先上屏，再尝试读电量。
+            self.upsertDiscoveredContinuity(uuid: uuid, name: name, kind: kind)
+
+            guard self.shouldConnectContinuity(uuid: uuid, named: name) else { return }
+            guard self.continuityPending.insert(uuid).inserted else { return }
+
+            self.continuityLastAttemptAt[uuid] = Date()
+            self.held[uuid] = peripheral
             peripheral.delegate = self
-            AppLog.info("Battery", "发现 Continuity 设备，准备读取电量", [
+            AppLog.warn("Battery", "发现 Continuity 设备，准备读取电量", [
                 "name": name,
                 "rssi": RSSI.intValue,
-                "type": mfg.count > 2 ? Int(mfg[2]) : -1
+                "type": mfg.count > 2 ? Int(mfg[2]) : -1,
+                "fails": self.continuityFailCount[uuid] ?? 0
             ])
             central.connect(peripheral, options: nil)
         }
@@ -285,7 +390,7 @@ extension BatteryCoreBluetoothMonitor: CBCentralManagerDelegate {
     nonisolated func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         Task { @MainActor in
             let isContinuity = self.continuityPending.contains(peripheral.identifier)
-            AppLog.debug("Battery", "BLE 已连接", [
+            AppLog.warn("Battery", "BLE 已连接", [
                 "name": peripheral.name ?? "",
                 "continuity": isContinuity
             ])
@@ -299,12 +404,24 @@ extension BatteryCoreBluetoothMonitor: CBCentralManagerDelegate {
         error: Error?
     ) {
         Task { @MainActor in
+            let continuity = self.continuityPending.contains(peripheral.identifier)
+            let fails = (self.continuityFailCount[peripheral.identifier] ?? 0) + 1
+            if continuity {
+                self.continuityFailCount[peripheral.identifier] = fails
+                // 刷新 lastSeen，避免 180s 过期把「附近」卡片摘掉。
+                if var snap = self.continuityByUUID[peripheral.identifier] {
+                    snap.lastSeen = Date()
+                    self.continuityByUUID[peripheral.identifier] = snap
+                    self.publishContinuity()
+                }
+            }
             AppLog.warn("Battery", "BLE 连接失败", [
-                "name": peripheral.name ?? "",
+                "name": peripheral.name ?? self.continuityByUUID[peripheral.identifier]?.name ?? "",
                 "error": error?.localizedDescription ?? "",
-                "continuity": self.continuityPending.contains(peripheral.identifier)
+                "continuity": continuity,
+                "fails": fails
             ])
-            if self.continuityPending.contains(peripheral.identifier) {
+            if continuity {
                 self.finishContinuity(peripheral.identifier, disconnect: false)
             } else {
                 self.finishConnected(peripheral.identifier)
@@ -318,9 +435,10 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
         Task { @MainActor in
             let continuity = self.continuityPending.contains(peripheral.identifier)
             if let error {
-                AppLog.debug("Battery", "BLE 发现服务失败", [
+                AppLog.warn("Battery", "BLE 发现服务失败", [
                     "name": peripheral.name ?? "",
-                    "error": error.localizedDescription
+                    "error": error.localizedDescription,
+                    "continuity": continuity
                 ])
                 if continuity {
                     self.finishContinuity(peripheral.identifier, disconnect: true)
@@ -330,6 +448,11 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
                 return
             }
             guard let service = peripheral.services?.first(where: { $0.uuid == self.batteryService }) else {
+                AppLog.warn("Battery", "BLE 无 Battery Service", [
+                    "name": peripheral.name ?? "",
+                    "continuity": continuity,
+                    "services": (peripheral.services ?? []).map(\.uuid.uuidString).joined(separator: ",")
+                ])
                 if continuity {
                     self.finishContinuity(peripheral.identifier, disconnect: true)
                 } else {
@@ -349,7 +472,7 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
         Task { @MainActor in
             let continuity = self.continuityPending.contains(peripheral.identifier)
             if let error {
-                AppLog.debug("Battery", "BLE 发现特征失败", [
+                AppLog.warn("Battery", "BLE 发现特征失败", [
                     "name": peripheral.name ?? "",
                     "error": error.localizedDescription
                 ])
@@ -388,7 +511,7 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
                 }
             }
             if let error {
-                AppLog.debug("Battery", "BLE 读电量失败", [
+                AppLog.warn("Battery", "BLE 读电量失败", [
                     "name": peripheral.name ?? "",
                     "error": error.localizedDescription
                 ])
@@ -399,7 +522,9 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
             else { return }
             let percent = Int(byte)
             guard percent > 0, percent <= 100 else { return }
-            let name = (peripheral.name ?? "")
+            let name = (peripheral.name
+                ?? self.continuityByUUID[peripheral.identifier]?.name
+                ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { return }
             let key = Self.normalizeName(name)
@@ -410,6 +535,7 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
                 let prior = self.previousContinuityPercent[key]
                 let charging = (prior.map { percent > $0 } ?? false)
                 self.previousContinuityPercent[key] = percent
+                self.continuityFailCount[peripheral.identifier] = 0
                 let snap = ContinuitySnapshot(
                     id: "continuity.\(peripheral.identifier.uuidString)",
                     name: name,
@@ -420,14 +546,14 @@ extension BatteryCoreBluetoothMonitor: CBPeripheralDelegate {
                 )
                 self.continuityByUUID[peripheral.identifier] = snap
                 self.publishContinuity()
-                AppLog.info("Battery", "Continuity 电量已更新", [
+                AppLog.warn("Battery", "Continuity 电量已更新", [
                     "name": name,
                     "percent": percent,
                     "charging": charging,
                     "kind": snap.kind.rawValue
                 ])
             } else if previous != percent {
-                AppLog.info("Battery", "BLE 电量已更新", [
+                AppLog.warn("Battery", "BLE 电量已更新", [
                     "name": name,
                     "percent": percent
                 ])
