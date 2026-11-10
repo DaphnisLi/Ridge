@@ -1,55 +1,20 @@
 import SwiftUI
 
-/// 取色引导：左「左键取色」、右「Esc 取消」贴岛左右外缘；中间留刘海宽。
-/// 左右外边距只由壳层 `IslandChrome.contentHorizontal` 提供，此处不再加翼宽假边距、也不往中缝挤文案。
+/// 取色引导：刘海正下方胶囊短条（图标 +「左键取色」+ Esc 取消）。
+/// 根视图禁止外圈 padding；壳层走 `usesShortBelowNotchChrome`。
 struct ColorPickTipIslandView: View {
     /// 预览用色点；实况取色引导可用强调蓝。
     var accent: Color = Color(red: 0.0, green: 0.44, blue: 0.92)
     var compact: Bool = false
-    /// 设置预览无真实刘海时的中缝宽度。
-    var previewNotchWidth: CGFloat = 160
 
-    @Environment(\.islandNotchWidth) private var envNotchWidth
-    @Environment(\.islandNotchHeight) private var envNotchHeight
-
-    private var notchWidth: CGFloat {
-        compact ? previewNotchWidth : max(envNotchWidth, 120)
-    }
-
-    private var barHeight: CGFloat {
-        if compact { return 30 }
-        return max(envNotchHeight, 28)
-    }
-
-    /// 左右翼最小宽：够放下文案，文案 leading / trailing 贴外缘。
-    private var wingMinWidth: CGFloat { compact ? 88 : 100 }
-    /// 相对外缘再往中缝挪一点点。
-    private var nudgeInward: CGFloat { 16 }
-
+    private var barHeight: CGFloat { compact ? 24 : 28 }
     private var iconSize: CGFloat { compact ? 12 : 13 }
     private var labelFont: Font {
-        .system(size: compact ? 11 : 12, weight: .semibold)
+        .system(size: compact ? 11 : 13, weight: .medium)
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            leftCluster
-                .padding(.leading, nudgeInward)
-                .frame(minWidth: wingMinWidth, maxWidth: .infinity, alignment: .leading)
-            Color.clear
-                .frame(width: notchWidth)
-                .accessibilityHidden(true)
-            escCapsule
-                .padding(.trailing, nudgeInward)
-                .frame(minWidth: wingMinWidth, maxWidth: .infinity, alignment: .trailing)
-        }
-        .frame(width: notchWidth + wingMinWidth * 2, height: barHeight)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(L10n.Shelf.colorPickFirstTip)
-    }
-
-    private var leftCluster: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: compact ? 6 : 8) {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "eyedropper")
                     .font(.system(size: iconSize, weight: .semibold))
@@ -70,7 +35,14 @@ struct ColorPickTipIslandView: View {
                 .font(labelFont)
                 .foregroundStyle(.white.opacity(0.95))
                 .lineLimit(1)
+
+            escCapsule
         }
+        // 左右/底外边距只由壳层 `IslandChrome`（shortBelowNotch）提供；根上禁止再叠。
+        .frame(height: barHeight)
+        .fixedSize(horizontal: true, vertical: true)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(L10n.Shelf.colorPickFirstTip)
     }
 
     private var escCapsule: some View {
@@ -84,9 +56,9 @@ struct ColorPickTipIslandView: View {
                 .lineLimit(1)
         }
         .padding(.horizontal, compact ? 7 : 8)
-        .padding(.vertical, compact ? 3 : 3.5)
+        .padding(.vertical, compact ? 2.5 : 3)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            Capsule()
                 .fill(Color.white.opacity(0.22))
         )
     }

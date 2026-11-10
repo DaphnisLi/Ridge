@@ -1404,7 +1404,29 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Join"
+            "value": "进入"
+          }
+        }
+      }
+    },
+    "meeting.join_enter": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进入"
+          }
+        }
+      }
+    },
+    "meeting.join_enter_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "立即进入"
           }
         }
       }
@@ -1647,6 +1669,105 @@
           "stringUnit": {
             "state": "translated",
             "value": "周度产研协同同步会"
+          }
+        }
+      }
+    },
+    "meeting.preview.sample_title_relaxed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "周度产研协同"
+          }
+        }
+      }
+    },
+    "meeting.preview.sample_title_warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "产研评审会"
+          }
+        }
+      }
+    },
+    "meeting.preview.sample_title_critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全员同步大会"
+          }
+        }
+      }
+    },
+    "meeting.urgency.relaxed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充裕状态"
+          }
+        }
+      }
+    },
+    "meeting.urgency.warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "临近提醒"
+          }
+        }
+      }
+    },
+    "meeting.urgency.critical": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紧急冲刺"
+          }
+        }
+      }
+    },
+    "meeting.urgency.relaxed_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "> 5 MIN"
+          }
+        }
+      }
+    },
+    "meeting.urgency.warning_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 ~ 5 MIN"
+          }
+        }
+      }
+    },
+    "meeting.urgency.critical_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "< 2 MIN"
           }
         }
       }

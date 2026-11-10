@@ -27,21 +27,16 @@ final class MeetingCountdownWidget: IslandWidget {
 
     private var tick: Timer?
     private var observers: Set<AnyCancellable> = []
-    private var model = MeetingCountdownModel()
     /// 用户已点击入会的会议 id；该场会不再上岛，直到换下一场。
     private var dismissedAfterJoinID: String?
     /// 已进入提醒窗口的会议 id：持续展示到入会或日程结束。
     private var latchedMeetingID: String?
-    private let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "zh_CN")
-        f.dateFormat = "HH:mm"
-        return f
-    }()
 
     init(context: WidgetContext) {
         self.context = context
         calendar.start()
+        MeetingLeadSession.shared.onJoin = { [weak self] in self?.joinMeeting() }
+        MeetingLeadSession.shared.onRequestAuth = { [weak self] in self?.requestCalendarAccess() }
         // dropFirst：避免订阅时同步回调；初始状态靠下方同步 reevaluate。
         calendar.$nextMeeting
             .dropFirst()
@@ -57,19 +52,13 @@ final class MeetingCountdownWidget: IslandWidget {
             }
             .store(in: &observers)
         startTicking()
-        // 同步评估：只置 wantsDisplay，供 ensureInstance 在 make 返回后写入 demand，避免同轮 recompute 被 reap 掉。
-        // requestDisplay 仍延后，避免 init 未完成时重入创建。
+        // 提示类：只写 MeetingLeadSession → IslandNotice，不 requestDisplay 占分页。
         reevaluate(reason: "init")
     }
 
     func makeView() -> AnyView {
-        AnyView(
-            MeetingCountdownLiveView(
-                model: model,
-                onJoin: { [weak self] in self?.joinMeeting() },
-                onRequestAuth: { [weak self] in self?.requestCalendarAccess() }
-            )
-        )
+        // 设置预览仍用假数据卡；真机岛上走瞬时通知，不占内容页。
+        AnyView(Color.clear.frame(width: 1, height: 1))
     }
 
     func onAppear() {
@@ -107,19 +96,18 @@ final class MeetingCountdownWidget: IslandWidget {
 
     private func reevaluate(reason: String) {
         let now = Date()
-        // 进入提醒窗口后常驻展示，直到用户点「进入会议」；日程结束则清场。
+        // 进入提醒窗口后以瞬时提示挂着，直到用户点「进入」；日程结束则清场。不占内容分页。
         guard calendar.authStatus == .authorized,
               let meeting = calendar.nextMeeting
         else {
             latchedMeetingID = nil
-            updateDemand(shouldShow: false, reason: reason)
-            model.applyEmpty(auth: calendar.authStatus)
+            clearLead(reason: reason)
             if reason != "tick" {
                 context.log("会议展示状态", fields: [
                     "reason": reason,
                     "empty": true,
                     "auth": "\(calendar.authStatus)",
-                    "onIsland": false
+                    "tip": false
                 ])
             }
             return
@@ -139,13 +127,12 @@ final class MeetingCountdownWidget: IslandWidget {
             if latchedMeetingID == meeting.id {
                 latchedMeetingID = nil
             }
-            updateDemand(shouldShow: false, reason: reason)
-            model.applyEmpty(auth: .authorized)
+            clearLead(reason: reason)
             if reason != "tick" {
                 context.log("会议展示状态", fields: [
                     "reason": reason,
                     "ended": true,
-                    "onIsland": false
+                    "tip": false
                 ])
             }
             return
@@ -159,16 +146,15 @@ final class MeetingCountdownWidget: IslandWidget {
 
         let joinedAway = dismissedAfterJoinID == meeting.id
         let shouldShow = !joinedAway && (latchedMeetingID == meeting.id)
-        updateDemand(shouldShow: shouldShow, reason: reason)
 
         guard shouldShow else {
-            model.applyEmpty(auth: .authorized)
+            clearLead(reason: reason)
             if reason != "tick" {
                 context.log("会议展示状态", fields: [
                     "reason": reason,
                     "enteredLead": enteredLead,
                     "joinedAway": joinedAway,
-                    "onIsland": false,
+                    "tip": false,
                     "secToStart": Int(secondsToStart)
                 ])
             }
@@ -176,21 +162,15 @@ final class MeetingCountdownWidget: IslandWidget {
         }
 
         let showJoin = meeting.join != nil
-        let statusText: String
-        if secondsToStart > 0 {
-            let minutes = max(1, Int(ceil(secondsToStart / 60)))
-            statusText = L10n.Meeting.previewMinutesAhead(minutes)
-        } else {
-            statusText = L10n.Meeting.inProgress
-        }
-        let range = "\(timeFormatter.string(from: meeting.startDate)) - \(timeFormatter.string(from: meeting.endDate))"
-
-        model.apply(
+        let urgency = MeetingLeadUrgency.resolve(secondsToStart: secondsToStart)
+        publishLead(
+            meetingID: meeting.id,
             title: meeting.title,
-            platformBadge: meeting.join?.displayName,
-            statusText: statusText,
-            timeRangeText: range,
-            showJoin: showJoin
+            startDate: meeting.startDate,
+            endDate: meeting.endDate,
+            secondsToStart: secondsToStart,
+            showJoin: showJoin,
+            reason: reason
         )
 
         if reason != "tick" {
@@ -198,30 +178,40 @@ final class MeetingCountdownWidget: IslandWidget {
                 "reason": reason,
                 "latched": true,
                 "showJoin": showJoin,
-                "onIsland": true,
+                "tip": true,
+                "urgency": urgency.rawValue,
                 "secToStart": Int(secondsToStart)
             ])
         }
     }
 
-    private func updateDemand(shouldShow: Bool, reason: String) {
-        if shouldShow {
-            if !wantsDisplay {
-                wantsDisplay = true
-                requestedAt = Date()
-                AppLog.info("Meeting", "申请展示（会前窗口）", ["reason": reason])
-                // 延后到 Runtime 已登记本实例后再 request，避免 init 重入；wantsDisplay 已同步置位防 reap。
-                Task { @MainActor [weak self] in
-                    guard let self, self.wantsDisplay else { return }
-                    self.context.requestDisplay()
-                    AppLog.debug("Meeting", "已提交 requestDisplay", ["reason": reason])
-                }
-            }
-        } else if wantsDisplay {
-            wantsDisplay = false
-            context.withdrawDisplay()
-            AppLog.info("Meeting", "撤回展示", ["reason": reason])
-        }
+    private func publishLead(
+        meetingID: String,
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        secondsToStart: TimeInterval,
+        showJoin: Bool,
+        reason: String
+    ) {
+        wantsDisplay = false
+        MeetingLeadSession.shared.publish(
+            .init(
+                meetingID: meetingID,
+                title: title,
+                startDate: startDate,
+                endDate: endDate,
+                secondsToStart: secondsToStart,
+                showJoin: showJoin,
+                showAuth: false
+            ),
+            reason: reason
+        )
+    }
+
+    private func clearLead(reason: String) {
+        wantsDisplay = false
+        MeetingLeadSession.shared.publish(nil, reason: reason)
     }
 
     private func requestCalendarAccess() {
@@ -259,80 +249,13 @@ final class MeetingCountdownWidget: IslandWidget {
             "meeting": String(meeting.id.prefix(8))
         ])
 
-        // 点了入会即撤岛：提醒窗口起一直展示，到此结束。
+        // 点了入会即撤提示。
         guard opened else { return }
         dismissedAfterJoinID = meeting.id
         latchedMeetingID = nil
-        updateDemand(shouldShow: false, reason: "joined")
-        AppLog.info("Meeting", "入会成功，已撤回岛展示", [
+        clearLead(reason: "joined")
+        AppLog.info("Meeting", "入会成功，已撤回会前提示", [
             "meeting": String(meeting.id.prefix(8))
         ])
-    }
-
-}
-
-// MARK: - View model
-
-@MainActor
-final class MeetingCountdownModel: ObservableObject {
-    @Published var title: String = L10n.Meeting.widgetName
-    @Published var platformBadge: String?
-    @Published var statusText: String = L10n.Meeting.noUpcoming
-    @Published var timeRangeText: String?
-    @Published var showJoin = false
-    @Published var needsAuth = false
-
-    func applyEmpty(auth: MeetingAuthStatus) {
-        platformBadge = nil
-        timeRangeText = nil
-        showJoin = false
-        switch auth {
-        case .authorized:
-            needsAuth = false
-            title = L10n.Meeting.widgetName
-            statusText = L10n.Meeting.noUpcoming
-        case .notDetermined:
-            needsAuth = true
-            title = L10n.Meeting.countdownTitle
-            statusText = L10n.Meeting.calendarNeedAuth
-        case .denied, .restricted:
-            needsAuth = true
-            title = L10n.Meeting.countdownTitle
-            statusText = L10n.Meeting.calendarDeniedShort
-        }
-    }
-
-    func apply(
-        title: String,
-        platformBadge: String?,
-        statusText: String,
-        timeRangeText: String?,
-        showJoin: Bool
-    ) {
-        needsAuth = false
-        self.title = title
-        self.platformBadge = platformBadge
-        self.statusText = statusText
-        self.timeRangeText = timeRangeText
-        self.showJoin = showJoin
-    }
-}
-
-private struct MeetingCountdownLiveView: View {
-    @ObservedObject var model: MeetingCountdownModel
-    let onJoin: () -> Void
-    let onRequestAuth: () -> Void
-
-    var body: some View {
-        MeetingIslandCardView(
-            title: model.title,
-            platformBadge: model.platformBadge,
-            statusText: model.statusText,
-            timeRangeText: model.timeRangeText,
-            showJoin: model.showJoin,
-            showAuth: model.needsAuth,
-            onJoin: onJoin,
-            onRequestAuth: onRequestAuth
-        )
     }
 }

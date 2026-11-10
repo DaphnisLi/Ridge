@@ -15,6 +15,8 @@ struct SettingsIslandStageOption: Identifiable, Hashable {
     /// `true`：黑岛贴合内容宽（展开态）；`false`：拉到 `maxIslandWidth` / 舞台宽（待命等）。
     var hugsContent: Bool = false
     var bottomRadius: CGFloat = 26
+    /// 岛预览外形：上直角下圆角（与真岛一致）。
+    var outlineStyle: IslandOutlineStyle = .panel
     var minStageHeight: CGFloat = 148
     /// 传给 `WidgetIslandPreviewShell`：紧凑样张去掉重阴影。
     var compactShell: Bool = false
@@ -73,6 +75,7 @@ struct SettingsIslandStage<Content: View>: View {
         let island = WidgetIslandPreviewShell(
             compact: option.compactShell,
             bottomRadius: option.bottomRadius,
+            outlineStyle: option.outlineStyle,
             hugsContent: option.hugsContent
         ) {
             content(option)
@@ -165,10 +168,11 @@ struct SettingsIslandPreviewCard: View {
     }
 }
 
-/// 设置页岛预览壳（上直角、下圆角）。新预览请调 `WidgetSamplePreview.island` / `SettingsIslandStage`，勿单独再包壳。
+/// 设置页岛预览壳：上直角、下圆角。新预览请调 `WidgetSamplePreview.island` / `SettingsIslandStage`。
 struct WidgetIslandPreviewShell<Content: View>: View {
     var compact: Bool = false
     var bottomRadius: CGFloat? = nil
+    var outlineStyle: IslandOutlineStyle = .panel
     /// `true` 时黑岛随内容固有宽度，不横向拉满。
     var hugsContent: Bool = false
     @ViewBuilder var content: () -> Content
@@ -178,7 +182,7 @@ struct WidgetIslandPreviewShell<Content: View>: View {
     }
 
     var body: some View {
-        let shape = IslandPanelShape(bottomRadius: radius)
+        let shape = IslandOutlineShape(style: outlineStyle, bottomRadius: radius)
         // 库卡 compact：去掉阴影，滚动时少做一层离屏模糊合成。
         Group {
             if hugsContent {
@@ -214,11 +218,15 @@ enum WidgetSamplePreview {
     static func island(for id: WidgetID, compact: Bool) -> some View {
         WidgetIslandPreviewShell(
             compact: compact,
+            outlineStyle: outlineStyle(for: id),
             hugsContent: hugsIslandContent(for: id)
         ) {
             content(for: id, compact: compact)
         }
     }
+
+    /// 库卡 / 详情预览：一律上直角下圆角（与真岛一致）。
+    private static func outlineStyle(for _: WidgetID) -> IslandOutlineStyle { .panel }
 
     /// 窄内容（股票两卡 / 瞬时引导等）贴合固有宽，避免黑岛被库卡舞台横向拉满。
     private static func hugsIslandContent(for id: WidgetID) -> Bool {
@@ -228,7 +236,8 @@ enum WidgetSamplePreview {
              "builtin.ocrSelect",
              "builtin.aiUsage",
              "builtin.moveReminder",
-             "builtin.focusTimer":
+             "builtin.focusTimer",
+             "builtin.meeting":
             return true
         default:
             return false
@@ -274,12 +283,10 @@ enum WidgetSamplePreview {
     }
 
     private static func meetingSample(compact: Bool) -> some View {
-        let lead = max(MeetingSettings.shared.leadMinutes, 1)
-        return MeetingIslandCardView.previewSample(leadMinutes: lead)
-            .padding(.horizontal, compact ? 10 : 12)
-            .padding(.vertical, compact ? 10 : 14)
-            .frame(maxWidth: compact ? .infinity : 540)
-            .frame(minHeight: compact ? 88 : nil)
+        MeetingIslandCardView.previewSample(urgency: .relaxed, compact: true)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.compactTipBottom)
+            .frame(minHeight: compact ? 30 : 34)
     }
 
     private static func mediaSample(compact: Bool) -> some View {
@@ -328,12 +335,16 @@ enum WidgetSamplePreview {
     }
 
     private static func colorPickSample(compact: Bool) -> some View {
-        ColorPickTipIslandView(compact: true, previewNotchWidth: compact ? 120 : 140)
+        ColorPickTipIslandView(compact: true)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.shortTipBottom)
             .frame(minHeight: compact ? 30 : 34)
     }
 
     private static func ocrSelectSample(compact: Bool) -> some View {
-        OCRSelectTipIslandView(compact: true, previewNotchWidth: compact ? 120 : 140)
+        OCRSelectTipIslandView(compact: true)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.shortTipBottom)
             .frame(minHeight: compact ? 30 : 34)
     }
 

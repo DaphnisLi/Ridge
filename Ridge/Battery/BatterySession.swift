@@ -15,6 +15,7 @@ final class BatterySession: ObservableObject {
     private var lowAlertArmed: Set<String> = []
     private var fullAlertArmed: Set<String> = []
     private var isRefreshing = false
+    private var noticeObserver: AnyCancellable?
 
     private init() {}
 
@@ -31,6 +32,13 @@ final class BatterySession: ObservableObject {
             }
         }
         RunLoop.main.add(timer!, forMode: .common)
+        noticeObserver = IslandNoticeCenter.shared.$current
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] payload in
+                guard payload == nil else { return }
+                self?.refreshLiveInvite(reason: "noticeCleared")
+            }
         refresh(reason: "start")
         AppLog.info("Battery", "电量会话已启动")
     }
@@ -38,8 +46,11 @@ final class BatterySession: ObservableObject {
     func stop() {
         timer?.invalidate()
         timer = nil
+        noticeObserver?.cancel()
+        noticeObserver = nil
         started = false
         devices = []
+        IslandNoticeCenter.shared.dismiss(id: LiveIslandGate.inviteNoticeID(for: LiveIslandGate.batteryID))
         BatteryCoreBluetoothMonitor.shared.stop()
         AppLog.info("Battery", "电量会话已停止")
     }
@@ -146,6 +157,49 @@ final class BatterySession: ObservableObject {
             ])
         }
         evaluateAlerts(mapped)
+        refreshLiveInvite(reason: reason)
+    }
+
+    /// 实况未点进时投递「外设电量」邀请提示；已点进或无设备则撤邀请。
+    func refreshLiveInvite(reason: String) {
+        let batteryID = LiveIslandGate.batteryID
+        // 勿在 ControlDeckSettings 尚处 static init 时同步回访 shared（会 dispatch_once 重入崩）。
+        guard ControlDeckSettings.shared.isModuleEnabled("battery") else {
+            IslandNoticeCenter.shared.dismiss(id: LiveIslandGate.inviteNoticeID(for: batteryID))
+            return
+        }
+        if LiveIslandGate.shared.isOpened(batteryID) {
+            IslandNoticeCenter.shared.dismiss(id: LiveIslandGate.inviteNoticeID(for: batteryID))
+            return
+        }
+        guard !devices.isEmpty else {
+            IslandNoticeCenter.shared.dismiss(id: LiveIslandGate.inviteNoticeID(for: batteryID))
+            return
+        }
+
+        let count = devices.count
+        let invite = LiveIslandInvite(
+            widgetID: batteryID,
+            title: L10n.Battery.liveInviteTitle,
+            subtitle: L10n.Battery.liveInviteSubtitle(count),
+            symbol: "battery.100.bolt"
+        )
+        if case .liveInvite(let existing) = IslandNoticeCenter.shared.current, existing == invite {
+            return
+        }
+        if let current = IslandNoticeCenter.shared.current, current.id != invite.noticeID {
+            // 低电/满电等瞬时条优先；结束后再由下次 refresh 补邀请。
+            AppLog.debug("Battery", "实况邀请暂缓：其它通知占用", [
+                "reason": reason,
+                "current": current.id
+            ])
+            return
+        }
+        IslandNoticeCenter.shared.present(.liveInvite(invite))
+        AppLog.info("Battery", "已投递实况邀请提示", [
+            "reason": reason,
+            "devices": count
+        ])
     }
 
     /// 合并多路数据。已连接但无电量（如部分 Sony 耳机）仍展示。

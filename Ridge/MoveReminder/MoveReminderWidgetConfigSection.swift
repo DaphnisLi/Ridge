@@ -41,35 +41,35 @@ struct MoveReminderWidgetConfigSection: View {
         }
     }
 
-    // MARK: - 岛样张（随设置变；左右边距对称）
+    // MARK: - 岛样张（上直角下圆角，与真岛一致）
 
     private var islandPreviewStage: some View {
-        MoveReminderNoticeCard.previewSample(
-            activeMinutes: settings.activeTriggerMinutes,
-            restMinutes: settings.suggestedRestMinutes
-        )
-        .padding(.horizontal, islandEdgeInset)
-        .padding(.vertical, 12)
-        .background(
-            IslandPanelShape(bottomRadius: 24)
-                .fill(Color(red: 0.118, green: 0.078, blue: 0.071))
-                .overlay(
-                    IslandPanelShape(bottomRadius: 24)
-                        .stroke(amber.opacity(0.30), lineWidth: 1)
+        SettingsIslandStage(
+            options: [
+                SettingsIslandStageOption(
+                    id: "move",
+                    title: L10n.MoveReminder.widgetName,
+                    badge: "\(settings.activeTriggerMinutes)m",
+                    symbol: "figure.stand",
+                    tint: amber,
+                    maxIslandWidth: 420,
+                    hugsContent: true,
+                    bottomRadius: 22,
+                    outlineStyle: .panel,
+                    minStageHeight: 120,
+                    compactShell: true
                 )
-                .shadow(color: amber.opacity(0.18), radius: 22, y: 10)
-                .shadow(color: .black.opacity(0.45), radius: 14, y: 8)
-        )
-        .clipShape(IslandPanelShape(bottomRadius: 24))
-        .fixedSize(horizontal: true, vertical: true)
-        .frame(maxWidth: .infinity, minHeight: 132)
-        .padding(.horizontal, 28)
-        .padding(.vertical, 28)
-        .background(
-            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                .fill(SettingsChrome.surfaceContainer)
-        )
-        .allowsHitTesting(false)
+            ],
+            selection: .constant("move")
+        ) { _ in
+            MoveReminderNoticeCard.previewSample(
+                activeMinutes: settings.activeTriggerMinutes,
+                restMinutes: settings.suggestedRestMinutes
+            )
+            .padding(.horizontal, islandEdgeInset)
+            .padding(.vertical, 12)
+            .id("\(settings.activeTriggerMinutes)-\(settings.suggestedRestMinutes)")
+        }
     }
 
     // MARK: - Cards

@@ -1,59 +1,31 @@
 import SwiftUI
 
-/// OCR 框选引导：左「正在框选文字…」、右「Esc 取消」贴岛左右外缘；中间留刘海宽。
-/// 与取色引导同壳（`usesNotchWingChrome`）；根视图不加外圈 padding。
+/// OCR 框选引导：刘海正下方胶囊短条（框选图标 +「正在框选…」+ Esc 取消）。
+/// 与取色同壳（`usesShortBelowNotchChrome`）；根视图不加外圈 padding。
 struct OCRSelectTipIslandView: View {
     var accent: Color = Color(red: 0.0, green: 0.44, blue: 0.92)
     var compact: Bool = false
-    var previewNotchWidth: CGFloat = 160
 
-    @Environment(\.islandNotchWidth) private var envNotchWidth
-    @Environment(\.islandNotchHeight) private var envNotchHeight
-
-    private var notchWidth: CGFloat {
-        compact ? previewNotchWidth : max(envNotchWidth, 120)
-    }
-
-    private var barHeight: CGFloat {
-        if compact { return 30 }
-        return max(envNotchHeight, 28)
-    }
-
-    /// 左侧文案更长，翼宽略大于取色。
-    private var leftWingMinWidth: CGFloat { compact ? 128 : 148 }
-    private var rightWingMinWidth: CGFloat { compact ? 88 : 100 }
-    private var nudgeInward: CGFloat { 16 }
-
+    private var barHeight: CGFloat { compact ? 24 : 28 }
     private var iconSize: CGFloat { compact ? 14 : 15 }
     private var labelFont: Font {
-        .system(size: compact ? 11 : 12, weight: .semibold)
+        .system(size: compact ? 11 : 13, weight: .medium)
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            leftCluster
-                .padding(.leading, nudgeInward)
-                .frame(minWidth: leftWingMinWidth, maxWidth: .infinity, alignment: .leading)
-            Color.clear
-                .frame(width: notchWidth)
-                .accessibilityHidden(true)
-            escCapsule
-                .padding(.trailing, nudgeInward)
-                .frame(minWidth: rightWingMinWidth, maxWidth: .infinity, alignment: .trailing)
-        }
-        .frame(width: notchWidth + leftWingMinWidth + rightWingMinWidth, height: barHeight)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(L10n.Shelf.ocrSelectTipA11y)
-    }
-
-    private var leftCluster: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: compact ? 6 : 8) {
             SelectionCornersGlyph(size: iconSize, color: accent)
             Text(L10n.Shelf.ocrSelectTipLeft)
                 .font(labelFont)
                 .foregroundStyle(.white.opacity(0.95))
                 .lineLimit(1)
+            escCapsule
         }
+        // 左右/底外边距只由壳层 `IslandChrome`（shortBelowNotch）提供；根上禁止再叠。
+        .frame(height: barHeight)
+        .fixedSize(horizontal: true, vertical: true)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(L10n.Shelf.ocrSelectTipA11y)
     }
 
     private var escCapsule: some View {
@@ -67,9 +39,9 @@ struct OCRSelectTipIslandView: View {
                 .lineLimit(1)
         }
         .padding(.horizontal, compact ? 7 : 8)
-        .padding(.vertical, compact ? 3 : 3.5)
+        .padding(.vertical, compact ? 2.5 : 3)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            Capsule()
                 .fill(Color.white.opacity(0.22))
         )
     }

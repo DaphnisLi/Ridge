@@ -11,6 +11,7 @@ struct MeetingWidgetConfigSection: View {
     @State private var customLink: String = ""
     @State private var customError: String?
     @State private var isRequestingAuth = false
+    @State private var previewUrgency: MeetingLeadUrgency = .relaxed
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
@@ -71,10 +72,38 @@ struct MeetingWidgetConfigSection: View {
         focusedField = nil
     }
 
-    // MARK: - 岛预览
+    // MARK: - 岛预览（绿 / 琥珀 / 红三态）
 
     private var islandPreviewCard: some View {
-        SettingsIslandPreviewCard(widgetID: "builtin.meeting")
+        SettingsIslandStage(
+            options: MeetingLeadUrgency.allCases.map { urgency in
+                SettingsIslandStageOption(
+                    id: urgency.rawValue,
+                    title: urgency.stageTitle,
+                    badge: urgency.stageBadge,
+                    symbol: "circle.fill",
+                    tint: urgency.settingsTint,
+                    maxIslandWidth: 320,
+                    hugsContent: true,
+                    bottomRadius: 18,
+                    outlineStyle: .panel,
+                    minStageHeight: 88,
+                    compactShell: true
+                )
+            },
+            selection: Binding(
+                get: { previewUrgency.rawValue },
+                set: { previewUrgency = MeetingLeadUrgency(rawValue: $0) ?? .relaxed }
+            )
+        ) { option in
+            let urgency = MeetingLeadUrgency(rawValue: option.id) ?? .relaxed
+            // 预览壳无 IslandChrome：舞台补左右/底，与真岛 notchWing 令牌一致。
+            MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: 34)
+                .id(urgency.rawValue)
+        }
     }
 
     // MARK: - 日历授权（仅未授权时置顶展示）

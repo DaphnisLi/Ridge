@@ -4,8 +4,10 @@ import SwiftUI
 
 /// 灵动岛壳层统一内边距。小组件 / 通知卡只排内部内容，**禁止**再加与岛边之间的外圈间距。
 /// 下边距过大的常见原因：内容根视图又写了 `.padding(.vertical)` 或照搬 HTML `py-*`，与 `contentBottom` 叠层。
+///
+/// 左右 / 底边是**固定令牌**；改数值须同步 `RidgeTests`（`island-chrome-double-padding`）。
 enum IslandChrome {
-    /// 内容区相对面板左右边。
+    /// 内容区相对面板左右边（展开页 / tip / 短提示统一）。
     static let contentHorizontal: CGFloat = 14
     /// 内容区相对面板底边；与左右边距一致。
     static let contentBottom: CGFloat = contentHorizontal
@@ -23,17 +25,66 @@ enum IslandChrome {
         max(expandedTopInset(notchHeight: notchHeight), (notchHeight * 0.5 + 4) * 2)
     }
 
-    /// 取色左右翼：顶距 0，内容与刘海同高带；左右边距走 `contentHorizontal`。
+    /// 遗留左右翼 tip 令牌（已无业务使用；测试仍锁定数值防回退）。
     static let compactTipTopInset: CGFloat = 0
     static let compactTipBottom: CGFloat = 4
 
-    /// 「已复制」/ AI 额度等短提示：躲开刘海后落在正下方。
+    /// 矮胶囊短提示（已复制 / AI 额度 / 取色 / OCR / 会议）：躲开刘海后落在正下方。
     static func shortTipTopInset(notchHeight: CGFloat) -> CGFloat {
         max(10, notchHeight)
     }
 
-    /// 短提示底距：略大于左右翼 tip（4），仍明显小于展开页默认 contentBottom（14）。
+    /// 短提示底距：仍明显小于展开页默认 contentBottom（14）。
     static let shortTipBottom: CGFloat = 6
+
+    /// 壳层表面类型：决定顶/底/左右 inset；`IslandBody` 与测试共用。
+    /// 外形裁切另见 `IslandOutlineStyle`（提示胶囊 / 常驻上直角）。
+    enum Surface: String, CaseIterable {
+        /// 展开内容页（控制台 / 面板类 widget）。
+        case expanded
+        /// 遗留左右翼 tip inset（业务已改胶囊，勿再选用）。
+        case notchWingTip
+        /// 刘海正下方矮胶囊（`usesShortBelowNotchChrome`）。
+        case shortBelowNotchTip
+        /// 其它瞬时通知（普通通知顶距 + 默认底距；外形仍为胶囊）。
+        case notice
+    }
+
+    struct Insets: Equatable {
+        var top: CGFloat
+        var bottom: CGFloat
+        var horizontal: CGFloat
+    }
+
+    /// 唯一边距解析入口；禁止在 View 里再抄一套 magic。
+    static func insets(for surface: Surface, notchHeight: CGFloat) -> Insets {
+        switch surface {
+        case .notchWingTip:
+            return Insets(
+                top: compactTipTopInset,
+                bottom: compactTipBottom,
+                horizontal: contentHorizontal
+            )
+        case .shortBelowNotchTip:
+            return Insets(
+                top: shortTipTopInset(notchHeight: notchHeight),
+                bottom: shortTipBottom,
+                horizontal: contentHorizontal
+            )
+        case .notice:
+            return Insets(
+                top: noticeTopInset(notchHeight: notchHeight),
+                bottom: contentBottom,
+                horizontal: contentHorizontal
+            )
+        case .expanded:
+            return Insets(
+                top: expandedTopInset(notchHeight: notchHeight),
+                bottom: contentBottom,
+                horizontal: contentHorizontal
+            )
+        }
+    }
 }
 
 /// 展开态面板尺寸由内容测量上报；壳层只负责 clamp，不按 layout 写死宽高。

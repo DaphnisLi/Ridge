@@ -171,20 +171,32 @@ final class ControlDeckSettings: ObservableObject {
         if isEnabled != enabled {
             defaults.set(isEnabled, forKey: Key.enabled)
         }
-        if modules["shelf"] == true {
-            ClipboardHistoryStore.shared.start()
-        }
-        if modules["projects"] == true {
-            ProjectReleaseSession.shared.start()
-        }
-        if modules["battery"] == true {
-            BatterySession.shared.start()
-        }
+        let startShelf = modules["shelf"] == true
+        let startProjects = modules["projects"] == true
+        let startBattery = modules["battery"] == true
         AppLog.debug("ControlDeck", "已加载控制台设置", [
             "enabled": isEnabled,
             "modules": modules.filter(\.value).map(\.key).sorted().joined(separator: ","),
             "pane": activePane.rawValue
         ])
+        // 勿在 init 同步 start：BatterySession.refreshLiveInvite 会再取 ControlDeckSettings.shared，
+        // 触发 dispatch_once 重入 → 启动即 SIGTRAP。
+        Task { @MainActor in
+            if startShelf {
+                ClipboardHistoryStore.shared.start()
+            }
+            if startProjects {
+                ProjectReleaseSession.shared.start()
+            }
+            if startBattery {
+                BatterySession.shared.start()
+            }
+            AppLog.debug("ControlDeck", "启动后已拉起模块会话", [
+                "shelf": startShelf,
+                "projects": startProjects,
+                "battery": startBattery
+            ])
+        }
     }
 
     func isModuleEnabled(_ id: String) -> Bool {
@@ -213,7 +225,9 @@ final class ControlDeckSettings: ObservableObject {
         if id == "battery" {
             if enabled {
                 BatterySession.shared.start()
+                BatterySession.shared.refreshLiveInvite(reason: "moduleEnabled")
             } else {
+                LiveIslandGate.shared.close(LiveIslandGate.batteryID, reason: "moduleDisabled")
                 BatterySession.shared.stop()
             }
         }
@@ -224,8 +238,14 @@ final class ControlDeckSettings: ObservableObject {
         setEnabled(anyOn)
 
         if enabled, let pane = Pane(rawValue: id) {
-            activePane = pane
-            WidgetRuntime.shared.focusControlDeck(pane: pane)
+            // 实况（电量）：开启后先发邀请提示，点进才上岛；面板类仍直接切页。
+            if WidgetLibraryFamily.family(for: pane.pageID) == .live {
+                WidgetRuntime.shared.recompute(reason: "controlDeckLiveInvite")
+                AppLog.info("ControlDeck", "实况模块已开，等待点进提示", ["pane": pane.rawValue])
+            } else {
+                activePane = pane
+                WidgetRuntime.shared.focusControlDeck(pane: pane)
+            }
         } else if !anyOn {
             WidgetRuntime.shared.recompute(reason: "controlDeckOff")
         } else {

@@ -89,6 +89,10 @@ if [[ -f "${FULL_ICNS}" ]]; then
   cp "${FULL_ICNS}" "${BUILT_APP}/Contents/Resources/AppIcon.icns"
 fi
 
+# 清掉未纳入签名的残留，否则 codesign --verify 报 sealed resource invalid，Launch Services 可能 open 失败。
+rm -f "${BUILT_APP}/Contents/MacOS/${APP_NAME}.cstemp"
+rm -rf "${BUILT_APP}/Contents/Resources/AppIcon.iconset"
+
 # Automatic 签名会把 calendars 等 entitlement 剥掉，导致授权弹窗无反应；构建后用完整 entitlements 再签一次。
 echo "==> Re-signing with full entitlements"
 if ! grep -q 'personal-information.calendars' "${ENTITLEMENTS}"; then
@@ -156,6 +160,9 @@ pkill -9 -f "MediaRemoteAdapter_MediaRemoteAdapter.bundle/.*/run.pl" 2>/dev/null
 echo "==> Installing to ${INSTALL_APP}"
 mkdir -p "$(dirname "${INSTALL_APP}")"
 ditto "${BUILT_APP}" "${INSTALL_APP}"
+# ditto 会合并保留旧残留；清掉未签名文件，避免 Launch Services / codesign verify 异常。
+rm -f "${INSTALL_APP}/Contents/MacOS/${APP_NAME}.cstemp"
+rm -rf "${INSTALL_APP}/Contents/Resources/AppIcon.iconset"
 
 # 刷掉系统图标缓存，否则 Dock / Finder 仍可能显示旧 App Icon。
 touch "${INSTALL_APP}" "${INSTALL_APP}/Contents/Info.plist" || true
@@ -166,7 +173,8 @@ killall Dock >/dev/null 2>&1 || true
 echo "==> Opening ${INSTALL_APP}"
 open "${INSTALL_APP}"
 
-sleep 0.4
+# 启动即崩时 0.4s 内仍可能短暂可见；多等一会再验收。
+sleep 1.5
 # pipefail 下 pgrep 无进程会非 0，不能直接进 $()。
 COUNT="$(pgrep -x "${APP_NAME}" 2>/dev/null | wc -l | tr -d ' ' || true)"
 COUNT="${COUNT:-0}"
@@ -174,7 +182,8 @@ PATHS="$(ps -axo pid=,command= | grep "/${APP_NAME}.app/" | grep -v grep || true
 echo "==> Running processes (${COUNT}):"
 echo "${PATHS:-"(none)"}"
 if [[ "${COUNT}" != "1" ]]; then
-  echo "warn: expected exactly one ${APP_NAME} process" >&2
+  echo "error: expected exactly one live ${APP_NAME} process (got ${COUNT}); check Console / DiagnosticReports" >&2
+  exit 1
 fi
 echo "Done. Installed at ${INSTALL_APP}"
 

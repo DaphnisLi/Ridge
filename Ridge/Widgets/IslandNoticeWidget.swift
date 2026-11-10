@@ -170,7 +170,7 @@ final class IslandNoticeWidget: IslandWidget {
         Task { @MainActor [weak self] in
             guard let self, self.wantsDisplay else { return }
             // 与会议一致：延后一拍避开 applyPage 同步重入；但 expand 必须在切页之后。
-            // 替换（尤其宽翼引导→短「已复制」）依赖 expand 内 allowPanelShrink，否则尺寸卡死看不见。
+            // 替换（尤其上一短条→「已复制」）依赖 expand 内 allowPanelShrink，否则尺寸卡死看不见。
             self.context.requestDisplay()
             IslandController.shared?.expand(
                 reason: alreadyShowing ? "islandNoticeReplace" : "islandNotice"
@@ -191,11 +191,16 @@ final class IslandNoticeWidget: IslandWidget {
         // 通知是程序主动 expand 的；指针不在岛上时悬停轮询不会 scheduleCollapse
         //（over 与 isPointerOverIsland 同为 false），必须显式收岛，否则会闪一下空态/其它页。
         let hovering = IslandController.shared?.isHoveringIsland == true
-        if !hovering {
+        // 通知结束后若岛上已无面板/已点进实况，即使仍悬停也收起，避免空岛挂着。
+        let keepExpanded = hovering && WidgetRuntime.shared.allowsHoverExpand
+        if !keepExpanded {
             IslandController.shared?.collapse(reason: "islandNoticeEnd")
-            AppLog.info("IslandNotice", "通知结束且未悬停，已收起灵动岛")
+            AppLog.info("IslandNotice", "通知结束已收起灵动岛", [
+                "hovering": hovering,
+                "allowHover": WidgetRuntime.shared.allowsHoverExpand
+            ])
         } else {
-            AppLog.debug("IslandNotice", "通知结束但指针仍在岛上，保持展开")
+            AppLog.debug("IslandNotice", "通知结束但面板仍在且悬停，保持展开")
         }
     }
 }
@@ -236,9 +241,84 @@ private struct IslandNoticeCardView: View {
             )
         case .moveReminder(let notice):
             MoveReminderNoticeCard(notice: notice)
+        case .meetingLead:
+            MeetingLeadNoticeCard()
+        case .liveInvite(let invite):
+            LiveInviteNoticeCard(invite: invite)
         case .none:
             ProcessEndedNoticeCard(notice: nil)
         }
+    }
+}
+
+/// 会前提示卡：矮胶囊；入会后由会话撤提示。
+private struct MeetingLeadNoticeCard: View {
+    @ObservedObject private var lead = MeetingLeadSession.shared
+
+    var body: some View {
+        if let snap = lead.snapshot {
+            MeetingIslandCardView(
+                title: snap.title,
+                secondsToStart: snap.secondsToStart,
+                showJoin: snap.showJoin,
+                showAuth: snap.showAuth,
+                onJoin: { MeetingLeadSession.shared.joinFromNotice() },
+                onRequestAuth: { MeetingLeadSession.shared.requestAuthFromNotice() }
+            )
+        } else {
+            Color.clear.frame(width: 1, height: 1)
+        }
+    }
+}
+
+/// 实况邀请：点「打开」后常驻上岛。
+private struct LiveInviteNoticeCard: View {
+    let invite: LiveIslandInvite
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.10))
+                Image(systemName: invite.symbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+            }
+            .frame(width: 30, height: 30)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(invite.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(invite.subtitle)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.45))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                AppLog.info("IslandNotice", "实况邀请：点进面板", ["id": invite.widgetID])
+                LiveIslandGate.shared.open(invite.widgetID, reason: "noticeTap")
+            } label: {
+                Text(L10n.Widgets.liveInviteOpen)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.white))
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(minWidth: 320)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            LiveIslandGate.shared.open(invite.widgetID, reason: "noticeCardTap")
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(invite.title)，\(invite.subtitle)")
+        .accessibilityHint(L10n.Widgets.liveInviteOpen)
     }
 }
 
@@ -299,7 +379,7 @@ private struct PeripheralBatteryNoticeCard: View {
         .accessibilityLabel("\(notice.deviceName)，\(badge)")
     }
 
-    /// 满电：左发光图标（右下角闪电图标）+ 文案 + 右发光「100% 已充满」。
+    /// 满电：左发光图标（右下角闪电图标）+ 文案 + 右发光「100% 已充满」；点卡可进电量实况。
     private var fullBody: some View {
         HStack(alignment: .center, spacing: 12) {
             fullDeviceIcon
@@ -321,6 +401,8 @@ private struct PeripheralBatteryNoticeCard: View {
                 .fixedSize()
                 .layoutPriority(2)
         }
+        .contentShape(Rectangle())
+        .onTapGesture { openBatteryLive(reason: "fullNoticeTap") }
     }
 
     private var fullDeviceIcon: some View {
@@ -376,7 +458,7 @@ private struct PeripheralBatteryNoticeCard: View {
         .shadow(color: accentGreen.opacity(0.35), radius: 12, x: 0, y: 0)
     }
 
-    /// 低电：左发光图标（右上角闪烁感叹号）+ 文案 + 右发光红胶囊（循环电量格 + 百分比）。
+    /// 低电：左发光图标（右上角闪烁感叹号）+ 文案 + 右发光红胶囊（循环电量格 + 百分比）；点卡可进电量实况。
     private var lowBody: some View {
         HStack(alignment: .center, spacing: 10) {
             lowDeviceIcon
@@ -398,6 +480,15 @@ private struct PeripheralBatteryNoticeCard: View {
                 .fixedSize()
                 .layoutPriority(2)
         }
+        .contentShape(Rectangle())
+        .onTapGesture { openBatteryLive(reason: "lowNoticeTap") }
+    }
+
+    private func openBatteryLive(reason: String) {
+        guard ControlDeckSettings.shared.isModuleEnabled("battery") else { return }
+        AppLog.info("IslandNotice", "电量提示点进实况", ["reason": reason, "device": notice.deviceID])
+        IslandNoticeCenter.shared.dismiss(id: notice.id)
+        LiveIslandGate.shared.open(LiveIslandGate.batteryID, reason: reason)
     }
 
     private var lowDeviceIcon: some View {

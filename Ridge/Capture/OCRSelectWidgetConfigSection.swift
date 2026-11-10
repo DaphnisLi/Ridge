@@ -46,15 +46,17 @@ struct OCRSelectWidgetConfigSection: View {
                     maxIslandWidth: 480,
                     hugsContent: true,
                     bottomRadius: 18,
+                    outlineStyle: .panel,
                     minStageHeight: 88,
                     compactShell: true
                 )
             ],
             selection: .constant("guide")
         ) { _ in
-            OCRSelectTipIslandView(compact: true, previewNotchWidth: 140)
-                .environment(\.islandNotchWidth, 140)
-                .environment(\.islandNotchHeight, 30)
+            // 预览壳无 IslandChrome：仅舞台补左右/底，与真岛 shortTip 令牌一致。
+            OCRSelectTipIslandView(compact: true)
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.shortTipBottom)
         }
     }
 

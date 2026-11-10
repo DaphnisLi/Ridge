@@ -67,8 +67,8 @@ struct AIUsageWidgetConfigSection: View {
             tint: stage.settingsAccent,
             maxIslandWidth: stage.capsuleSize.width + 28,
             hugsContent: true,
-            // 预览黑岛加高后下圆角取半高，接近胶囊；真岛 / 库卡不动。
             bottomRadius: 22,
+            outlineStyle: .panel,
             minStageHeight: 96,
             compactShell: true
         )

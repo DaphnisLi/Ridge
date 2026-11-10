@@ -40,4 +40,28 @@ enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
     static func family(forDeckModuleID id: String) -> WidgetLibraryFamily? {
         family(for: "system.controlDeck.\(id)")
     }
+
+    /// 开启后可直接占岛分页（仅面板类）。
+    var placesContentDirectlyOnIsland: Bool {
+        self == .panel
+    }
+
+    /// 该 id 当前是否允许作为内容页上岛。
+    @MainActor
+    static func allowsIslandContentPage(_ widgetID: WidgetID) -> Bool {
+        switch family(for: widgetID) {
+        case .tip:
+            return false
+        case .live:
+            return LiveIslandGate.shared.isOpened(widgetID)
+        case .panel, .none:
+            return true
+        }
+    }
+
+    /// 控制台模块启用后是否立刻进分页（实况须点提示后才进）。
+    @MainActor
+    static func controlDeckPaneAppearsWhenEnabled(_ pane: ControlDeckSettings.Pane) -> Bool {
+        allowsIslandContentPage(pane.pageID)
+    }
 }

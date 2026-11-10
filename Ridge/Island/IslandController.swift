@@ -392,7 +392,7 @@ final class IslandController: NSObject {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
         if viewModel.isExpanded {
-            // 取色/OCR 宽翼引导 →「已复制」短条：必须允许缩宽，否则卡在引导尺寸，短提示顶距把内容顶出可视区。
+            // 短提示替换（取色/OCR →「已复制」等）：必须允许缩宽，否则卡在上一尺寸，短条顶距把内容顶出可视区。
             if reason.contains("islandNotice") {
                 viewModel.allowPanelShrink(for: 0.8, reason: "expandAlready:\(reason)")
                 AppLog.warn("Island", "通知替换：已允许面板缩小", ["reason": reason])
@@ -403,21 +403,15 @@ final class IslandController: NSObject {
                 applyShelfDropPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             }
             updateInteractiveFrame(expanded: true)
-            // 货架拖入：禁止抢前台，否则 Finder 拖放会被 activate 掐断。
-            // 取色 / OCR：禁止抢前台，否则 NSColorSampler 会话会被掐死，完成回调永不来 → 岛永久穿透假死。
-            // 瞬时通知（含取色后「已复制」替换）：也不抢前台——activate 易与残留 ColorSampler 抢焦点，整屏点不动。
-            if shelfDropExpand {
-                // no-op
-            } else if isExternalPointerToolActive {
-                AppLog.warn("Overlay", "外部指针工具中已展开：跳过抢前台", [
-                    "reason": reason
-                ])
-            } else if reason.contains("islandNotice") {
-                AppLog.warn("Overlay", "瞬时通知展开：跳过抢前台", [
-                    "reason": reason
-                ])
-            } else {
+            // 展开不抢前台（见 IslandFocusPolicy）；文本框点击时再 prepare。
+            if IslandFocusPolicy.shouldActivateAppOnExpand {
                 ensureIslandInteractionReady(reason: "expandAlready:\(reason)")
+            } else {
+                AppLog.debug("Overlay", "已展开：跳过抢前台", [
+                    "reason": reason,
+                    "shelfDrop": shelfDropExpand,
+                    "externalTool": isExternalPointerToolActive
+                ])
             }
             return
         }
@@ -437,20 +431,14 @@ final class IslandController: NSObject {
         }
         // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
         updateInteractiveFrame(expanded: true)
-        if shelfDropExpand {
-            AppLog.info("Island", "货架拖入展开：跳过抢前台，避免中断文件拖放", [
-                "reason": reason
-            ])
-        } else if isExternalPointerToolActive {
-            AppLog.warn("Overlay", "外部指针工具中展开：跳过抢前台", [
-                "reason": reason
-            ])
-        } else if reason.contains("islandNotice") {
-            AppLog.warn("Overlay", "瞬时通知展开：跳过抢前台", [
-                "reason": reason
-            ])
-        } else {
+        if IslandFocusPolicy.shouldActivateAppOnExpand {
             ensureIslandInteractionReady(reason: "expand:\(reason)")
+        } else {
+            AppLog.debug("Overlay", "展开：跳过抢前台", [
+                "reason": reason,
+                "shelfDrop": shelfDropExpand,
+                "externalTool": isExternalPointerToolActive
+            ])
         }
         startScrollPagingMonitors()
     }
@@ -512,7 +500,8 @@ final class IslandController: NSObject {
     func applyFocusTimerCompletedLayout(reason: String) {
         applyFocusTimerPanelSizeIfNeeded(phase: .completed, reason: reason)
         updateInteractiveFrame(expanded: true)
-        ensureIslandInteractionReady(reason: reason)
+        // 终局备注点输入框时再 prepare；此处 activate 会抢走正在用的其它 App。
+        AppLog.debug("Overlay", "番茄终局布局：不抢前台", ["reason": reason])
     }
 
     /// 进入取色 / OCR：收岛、清按住态、强制穿透，并挡住悬停展开。
@@ -540,7 +529,7 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 宽翼引导 →「已复制」短条：在 `IslandNoticeCenter.present` 改内容之前调用，避免 Preference 先拒缩。
+    /// 短提示上岛前预备尺寸：在 `IslandNoticeCenter.present` 改内容之前调用，避免 Preference 先拒缩。
     func prepareShortNoticeLayout(reason: String) {
         let notchH = viewModel.notchHeight
         let notchW = viewModel.notchWidth
@@ -607,6 +596,17 @@ final class IslandController: NSObject {
         // 仅投放区仍命中时挡收起；指针已离开则允许 hoverEnd 收起。
         if isShelfDropTargeted, reason == "hoverEnd" {
             AppLog.debug("Island", "货架投放区命中中，忽略收起", ["targeted": true])
+            return
+        }
+        // 会议 / 久坐等常驻提示：移开指针不得收岛（须入会 / 点掉 / 状态结束）。
+        if reason == "hoverEnd",
+           let notice = IslandNoticeCenter.shared.current,
+           notice.keepsExpandedWithoutHover
+        {
+            AppLog.debug("Island", "常驻提示中，忽略悬停收起", [
+                "notice": notice.id,
+                "source": notice.sourceTag
+            ])
             return
         }
         // 指针离开：正在编辑则先卸焦再收；避免「点输入框瞬间误判离开」时直接 dismiss 终局。
@@ -830,7 +830,26 @@ final class IslandController: NSObject {
         if overRetention {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
-            expand(reason: "hover")
+            // 无面板/已点进实况上岛时，禁止仅靠移入展开（瞬时提示可程序 expand，悬停仅保展开）。
+            if viewModel.isExpanded {
+                return
+            }
+            if WidgetRuntime.shared.allowsHoverExpand {
+                expand(reason: "hover")
+            } else {
+                AppLog.debug("Island", "无面板上岛，忽略悬停展开", [
+                    "page": WidgetRuntime.shared.activeID ?? "nil",
+                    "pages": WidgetRuntime.shared.pageIDs.count,
+                    "notice": IslandNoticeCenter.shared.current?.id ?? ""
+                ])
+            }
+        } else if let notice = IslandNoticeCenter.shared.current,
+                  notice.keepsExpandedWithoutHover,
+                  viewModel.isExpanded
+        {
+            // 会议等常驻提示：离开热区也不安排收起，岛保持展开。
+            collapseWorkItem?.cancel()
+            collapseWorkItem = nil
         } else {
             AppLog.warn("Island", "指针离开保展开区，安排收起", [
                 "interactive": overInteractive,
@@ -950,14 +969,18 @@ final class IslandController: NSObject {
     private func setClickThrough(_ enabled: Bool, reason: String) {
         guard window.ignoresMouseEvents != enabled else { return }
         window.ignoresMouseEvents = enabled
-        // 货架拖入只关穿透、不抢前台；activate 会打断 Finder 文件拖放。
-        let shelfDropClickThrough = reason.hasPrefix("shelfDrop")
-        if !enabled, viewModel.isExpanded, !shelfDropClickThrough {
+        // 关穿透：只收鼠标，禁止 activate（会议 tip 贴顶时指针常扫过，一悬停就抢前台）。
+        // 开穿透：立刻 resignKey + 降 accessory，否则常驻展开会把键盘粘在 Ridge 上。
+        if enabled, IslandFocusPolicy.shouldResignKeyWhenEnablingClickThrough {
+            releaseIslandKeyboardFocusIfNeeded(reason: "clickThroughOn:\(reason)")
+        } else if !enabled, IslandFocusPolicy.shouldActivateAppWhenDisablingClickThrough {
             ensureIslandInteractionReady(reason: "clickThroughOff:\(reason)")
-        } else if !enabled, shelfDropClickThrough {
-            AppLog.debug("Overlay", "货架拖入：关闭穿透但不抢前台", [
+        } else if !enabled {
+            AppLog.debug("Overlay", "关闭穿透但不抢前台", [
                 "reason": reason,
-                "expanded": viewModel.isExpanded
+                "expanded": viewModel.isExpanded,
+                "key": window.isKeyWindow,
+                "appActive": NSApp.isActive
             ])
         }
         let level: (String, [String: Any]) -> Void = { message, fields in
@@ -976,8 +999,7 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 对齐「开设置就能点」的条件：临时升到 regular + activate + makeKey。
-    /// 纯 accessory 下 `NSApp.activate` 常常不生效（日志里 activated=true 但 appActive 仍 false）。
+    /// 文本输入等少数路径才升 regular + activate；悬停 / 普通点击禁止走这里。
     private func ensureIslandInteractionReady(reason: String) {
         if isSettingsSessionActive {
             AppLog.debug("Overlay", "设置会话中跳过岛激活", [
@@ -987,7 +1009,6 @@ final class IslandController: NSObject {
             ])
             return
         }
-        // 取色引导 tip 会 expand；若此处 activate/makeKey，系统 ColorSampler 会话易僵死。
         if isExternalPointerToolActive {
             AppLog.warn("Overlay", "外部指针工具中跳过岛激活", [
                 "reason": reason
@@ -997,13 +1018,32 @@ final class IslandController: NSObject {
         IslandInteractionFocus.prepare(window: window, reason: "islandReady:\(reason)")
     }
 
+    /// 指针离开可点区 / 收起：交还 key，避免其它 App 点不进输入框。
+    private func releaseIslandKeyboardFocusIfNeeded(reason: String) {
+        if isSettingsSessionActive { return }
+        if MenuBarController.shared?.settingsWindow != nil { return }
+        if IslandInteractionFocus.isEditing(in: window) {
+            _ = window.makeFirstResponder(nil)
+            AppLog.warn("Overlay", "穿透前结束岛内编辑", ["reason": reason])
+        }
+        if window.isKeyWindow {
+            window.resignKey()
+            AppLog.info("Overlay", "已 resignKey 交还键盘", [
+                "reason": reason,
+                "key": Self.describeKeyWindow(),
+                "appActive": NSApp.isActive
+            ])
+        }
+        demoteIslandInteractionIfNeeded(reason: reason)
+    }
+
     /// 收起后若设置窗未开，降回 accessory，避免常驻 Dock。
     private func demoteIslandInteractionIfNeeded(reason: String) {
         if isSettingsSessionActive { return }
         if MenuBarController.shared?.settingsWindow != nil { return }
         guard NSApp.activationPolicy() == .regular else { return }
         NSApp.setActivationPolicy(.accessory)
-        AppLog.info("Overlay", "岛收起后降回 accessory", [
+        AppLog.info("Overlay", "降回 accessory", [
             "reason": reason,
             "appActive": NSApp.isActive
         ])
@@ -1076,6 +1116,13 @@ final class IslandController: NSObject {
         let delay: TimeInterval = Date().timeIntervalSince(lastPageSwipeAt) < 0.45 ? 0.22 : 0.10
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
+            // 会议等常驻提示：宽限到期也不收。
+            if let notice = IslandNoticeCenter.shared.current,
+               notice.keepsExpandedWithoutHover
+            {
+                AppLog.debug("Island", "收起前复查：常驻提示，取消收起", ["notice": notice.id])
+                return
+            }
             // 收起前再确认一次，避免边缘抖动。
             guard let geometry else {
                 self.collapse(reason: "hoverEnd")

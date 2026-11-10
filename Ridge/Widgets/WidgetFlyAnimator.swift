@@ -109,7 +109,8 @@ private struct WidgetFlyPreviewView: View {
     let bottomRadius: CGFloat
 
     var body: some View {
-        let shape = IslandPanelShape(bottomRadius: max(8, bottomRadius * 0.6))
+        let radius = max(8, bottomRadius * 0.6)
+        let shape = IslandOutlineShape(style: .panel, bottomRadius: radius)
         Group {
             if let view = WidgetPreviewFactory.makeView(for: widgetID) {
                 view

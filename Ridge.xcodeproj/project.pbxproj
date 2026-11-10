@@ -44,6 +44,7 @@
 		33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */; };
 		3777FAB8F28FB13D3C4C7875 /* StockSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA67CE1C61B9353C800FECA4 /* StockSession.swift */; };
 		383E5DAC9149BC38CF6A1B61 /* ShelfCaptureTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */; };
+		38E07147B859BA2648E95197 /* IslandFocusPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */; };
 		3936513DBBA9C04D204678B8 /* ProjectReleaseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */; };
 		396CF5315110559E027779D1 /* ShelfClipboardSearchField.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3692E5FD3DAF12863120F4 /* ShelfClipboardSearchField.swift */; };
 		3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7694C35719C53E4F238252E3 /* IslandSettings.swift */; };
@@ -92,8 +93,10 @@
 		76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */; };
 		7703E4BBE8120975F8113B74 /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */; };
 		797C697356CC11AE2118BDB3 /* AIUsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696174AF0446BACA3704883A /* AIUsageModels.swift */; };
+		7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526499772CB67C8D450F310C /* LiveIslandGate.swift */; };
 		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
+		7ED3B71BADBC51AE48AAFEB5 /* MeetingLeadSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1CE8183C9AB3757E2A5B69 /* MeetingLeadSession.swift */; };
 		7F846C42B4CA458D1D993C1E /* ColorPickWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */; };
 		80AB1DE4B230D2BF015DD611 /* ResourceFocusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */; };
 		85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFC96E41744375F5D6F2529 /* SoundSession.swift */; };
@@ -202,6 +205,7 @@
 		0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusTracker.swift; sourceTree = "<group>"; };
 		07EC22739F9DB8CD07D03E0B /* Ridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		088CFC576E84896E553FC0DD /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
+		0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFocusPolicy.swift; sourceTree = "<group>"; };
 		0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCatalog.swift; sourceTree = "<group>"; };
 		1073E52F82BA9EE649BA7890 /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
 		11948404DA855E5880642096 /* WidgetRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRuntime.swift; sourceTree = "<group>"; };
@@ -248,6 +252,7 @@
 		4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseSession.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockIslandViews.swift; sourceTree = "<group>"; };
+		526499772CB67C8D450F310C /* LiveIslandGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveIslandGate.swift; sourceTree = "<group>"; };
 		52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerWidget.swift; sourceTree = "<group>"; };
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
 		54E6ABB9A1D52944282FBA09 /* AIUsageWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageWidget.swift; sourceTree = "<group>"; };
@@ -256,6 +261,7 @@
 		585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicy.swift; sourceTree = "<group>"; };
 		5894114050B192E21DBC168B /* IslandContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandContentView.swift; sourceTree = "<group>"; };
 		5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidgetConfigSection.swift; sourceTree = "<group>"; };
+		5C1CE8183C9AB3757E2A5B69 /* MeetingLeadSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLeadSession.swift; sourceTree = "<group>"; };
 		5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
 		5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandNoticeWidget.swift; sourceTree = "<group>"; };
@@ -435,6 +441,7 @@
 				97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */,
 				D669A16E4C8C5DB311E03507 /* MeetingCountdownWidget.swift */,
 				9C36C15A1A789E41F21DB58B /* MeetingIslandCardView.swift */,
+				5C1CE8183C9AB3757E2A5B69 /* MeetingLeadSession.swift */,
 				BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */,
 				6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */,
 				805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */,
@@ -470,6 +477,7 @@
 				5894114050B192E21DBC168B /* IslandContentView.swift */,
 				1073E52F82BA9EE649BA7890 /* IslandController.swift */,
 				585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */,
+				0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */,
 				41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */,
 				D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */,
 				3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */,
@@ -717,6 +725,7 @@
 				888652166B6E000A14995BED /* IslandNoticeCenter.swift */,
 				60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */,
 				81BB2FAF48572CDD36E2974F /* IslandWidget.swift */,
+				526499772CB67C8D450F310C /* LiveIslandGate.swift */,
 				5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */,
 				2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */,
 				D46C8B0291D49B709283472D /* WidgetGrid.swift */,
@@ -908,6 +917,7 @@
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
 				089B80CDF812C21F5E851F43 /* IslandExpandedPanelPolicy.swift in Sources */,
+				38E07147B859BA2648E95197 /* IslandFocusPolicy.swift in Sources */,
 				7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */,
 				E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */,
 				F57A8E3B6E53EEEF4BE83B6E /* IslandNoticeWidget.swift in Sources */,
@@ -920,12 +930,14 @@
 				AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */,
 				DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */,
 				6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */,
+				7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */,
 				17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */,
 				72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */,
 				5F8170AFD69C5D0FB0C3FEDF /* MediaSettingsPane.swift in Sources */,
 				471A0815FAD97EDE07C14EF9 /* MeetingCalendarService.swift in Sources */,
 				94145ED790F224EC91A1E6BA /* MeetingCountdownWidget.swift in Sources */,
 				3AF7B245C9F5F0D0CA48BCE8 /* MeetingIslandCardView.swift in Sources */,
+				7ED3B71BADBC51AE48AAFEB5 /* MeetingLeadSession.swift in Sources */,
 				E794CC28B7A3B53CB12FCC4F /* MeetingLinkDetector.swift in Sources */,
 				A889A198A328AD2670E8BA7D /* MeetingSettings.swift in Sources */,
 				B20B99352F2BB4E10A110518 /* MeetingSettingsPane.swift in Sources */,

@@ -14,7 +14,7 @@ alwaysApply: true
 | `SettingsIslandStage` | `Ridge/Widgets/WidgetSamplePreview.swift` | **统一舞台**：灰底仿真台 + 黑岛；多形态 Tab（仅 `options.count > 1` 时显示） |
 | `SettingsIslandPreviewCard` | 同文件 | 详情页单形态便捷封装（内部走 `SettingsIslandStage`） |
 | `WidgetSamplePreview.island(for:compact:)` | 同文件 | 库卡内嵌黑岛；背景用 `surfaceContainer` 灰底，勿再铺白卡 |
-| `WidgetIslandPreviewShell` | 同文件 | 壳：上直角、下圆角（`IslandPanelShape`）；一般不单独再包一层 |
+| `WidgetIslandPreviewShell` | 同文件 | 壳：上直角、下圆角（`IslandPanelShape`） |
 | 各 widget 的 `previewSample` / `sampleDevices` | 业务文件 | 假数据内容；由 `WidgetSamplePreview.content` 组装 |
 
 ```swift

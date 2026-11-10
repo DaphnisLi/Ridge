@@ -18,9 +18,10 @@
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
 | `island-hover-retention` | 岛悬停热区退化 | ≥5 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛 | `island-hover-retention.mdc`；`scrollHold`；`RidgeTests`（含 RegressionCatalogTests） |
-| `island-chrome-double-padding` | 岛边距叠两层 | ≥2 | 内容根再加 padding，与 `IslandChrome` 叠加，下边距过大 | `widget-architecture.mdc` / `island-notice.mdc`：根视图禁止外圈 padding |
+| `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥3 | 取色引导后「已复制」投递了但不显示 | present 前 `forcePanelSize` 短条；勿先 dismiss 再 present |
+| `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 
 ---
 
@@ -38,11 +39,11 @@
 ### island-chrome-double-padding — 岛边距叠两层
 
 - **recurring:** true  
-- **occurrences:** 2+（通知卡 / 多 widget 反复翻车）  
-- **症状:** 下边距过大，或与设计稿不一致  
-- **根因倾向:** 根视图 `.padding(.vertical)` / HTML `py-*` 再叠 `IslandChrome.contentBottom`  
-- **防护:** 壳层定外距；widget/通知卡根视图只排内容  
-- **自动化建议:** 抽查关键 View 根修饰符；或 snapshot 对比 chrome 后边距
+- **occurrences:** 3+（通知卡 / 多 widget 反复翻车；**2026-11-10 会前提示 tip 根上再叠 nudge，左右底距偏大**）  
+- **症状:** 下边距过大，左右离岛边过宽，或 tip 误用展开页大底距  
+- **根因倾向:** 根视图 `.padding(.vertical/.horizontal)` / HTML `px/py` / 翼 tip `nudgeInward` 再叠 `IslandChrome`；或未标 `usesNotchWingChrome` 退回 `contentBottom`  
+- **防护:** 左右/底只走 `IslandChrome.insets(for:)`；widget/通知卡根视图只排内容；会议 tip 禁根上外圈 padding  
+- **自动化:** `RegressionCatalogTests.test_islandChromeDoublePadding_*`（令牌固定值 + 各 surface 左右/底 inset + `meetingLead` 须 wing chrome）
 
 ### settings-preview-live-data — 设置预览用真数据
 
@@ -127,6 +128,46 @@
 - **相关代码:** `MenuBarController`、`IslandController.pollPointer`、`IslandWindow.sendEvent`  
 - **自动化建议:** 设置 presented 且鼠标在设置 frame 内时 `ignoresMouseEvents == true`；windowShouldClose 后 `isSettingsPresented == false`
 
+### island-family-presence — 提示/实况/面板上岛与悬停展开
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10 产品规则落地）  
+- **症状:** 提示类常驻分页；实况开启即占岛；无面板时悬停仍展开空岛  
+- **根因倾向:** `WidgetLibraryFamily` 仅用于设置分段，Runtime 未按 family 闸门；`enabledPanes` 含电量即进分页；hover 无条件 expand  
+- **防护:** tip 禁 `requestDisplay`；live 须 `LiveIslandGate.open`；panel 直接上岛；`allowsHoverExpand` 无面板/未点进实况时拒绝 hover  
+- **相关代码:** `LiveIslandGate`、`WidgetRuntime.buildVisiblePages` / `allowsHoverExpand`、`IslandController.pollPointer`  
+- **自动化:** `RegressionCatalogTests.test_widgetLibraryFamily_*`
+
+### controldeck-init-battery-reentrancy — 控制台 init 重入启动崩
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10：打开 App 立即退出，菜单栏无图标）  
+- **症状:** `open Ridge` 后无进程；崩溃 `BUG IN CLIENT OF LIBDISPATCH: trying to lock recursively`  
+- **根因倾向:** `WidgetSettings` → `ControlDeckSettings.init` 同步 `BatterySession.start` → `refreshLiveInvite` 再取 `ControlDeckSettings.shared`，`dispatch_once` 重入  
+- **防护:** ControlDeck init 内模块 `start()` 改为 `Task { @MainActor in … }` 延后到 shared 完成后再跑  
+- **相关代码:** `ControlDeckSettings.init`、`BatterySession.refreshLiveInvite`  
+- **自动化建议:** 单测/冒烟：构造 `ControlDeckSettings.shared` 且 battery 模块已开时不得同步回访 shared
+
+### island-focus-steal — 岛抢鼠标/键盘焦点
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10：点别处无法聚焦输入）  
+- **症状:** 悬停或点过岛后，其它 App 点不进、键盘粘在 Ridge；会议常驻 tip 尤甚  
+- **根因倾向:** 关穿透 / 展开 / `hostingMouseDown` 一律 `activate`+`makeKey`；常驻 tip 不收岛时不 `resignKey`、不降 accessory  
+- **防护:** `IslandFocusPolicy`：悬停与普通点击不抢前台；开启穿透即 `resignKey`+accessory；仅文本框 `prepare`  
+- **相关代码:** `IslandFocusPolicy`、`IslandController.setClickThrough`、`IslandHostingView.mouseDown`、`IslandWindow.sendEvent`  
+- **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`
+
+### tip-outline-panel — 瞬时提示上直角下圆角
+
+- **recurring:** true  
+- **occurrences:** 2（2026-11-10：先改四角等弧，后改回上直角）  
+- **症状:** tip 上角圆/直角与产品期望反复不一致  
+- **根因倾向:** tip 外形在 `.capsule` / `.panel` 间摇摆  
+- **防护:** 真岛与设置预览一律 `IslandOutlineStyle.panel`（左上/右上直角、下圆角）  
+- **相关代码:** `IslandContentView.outlineStyle`、`WidgetSamplePreview.outlineStyle(for:)`、各 tip 配置页  
+- **自动化:** `RegressionCatalogTests.test_islandOutline_panelKeepsSquareTopCorners`
+
 ---
 
 ## 变更日志
@@ -137,5 +178,11 @@
 | 2026-11-08 | 录入 AI 额度账号作用域提示问题，并修换号嗅探 / 换回再弹 |
 | 2026-11-09 | 录入取色后岛永久穿透假死；修 tip expand 抢前台 + Esc/超时退出 |
 | 2026-11-10 | 录入 Continuity iPhone 不上列表；发现即上屏 + 重试冷却解耦 |
+| 2026-11-10 | 录入提示/实况/面板上岛闸门与无面板禁悬停展开 |
 | 2026-11-10 | 录入设置窗关不掉；presented 标记 + 关窗先 orderOut + 禁抬层 |
 | 2026-11-10 | hover-retention +1（列表纵滑误收）；`scrollHold` + `RegressionCatalogTests`；recurring 改完必跑测 |
+| 2026-11-10 | 录入 controldeck-init-battery-reentrancy；ControlDeck init 延后 start 会话 |
+| 2026-11-10 | chrome-double-padding +1（会议 tip）；`IslandChrome.insets` + 强化自动化 |
+| 2026-11-10 | 录入 tip-outline-capsule；瞬时提示（含会议）一律全胶囊，禁翼 tip 特判 panel |
+| 2026-11-10 | 录入 island-focus-steal；悬停/展开不 activate，穿透即 resignKey |
+| 2026-11-10 | tip-outline 改回 panel 上直角（occurrences=2，recurring） |

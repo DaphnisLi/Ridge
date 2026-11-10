@@ -5,6 +5,7 @@ import SwiftUI
 /// SwiftUI `Color` 经透明 NSPanel 合成时常被抬灰；device 色绕过 ColorSync，是屏幕能出的最黑。
 struct IslandOpaqueFillView: NSViewRepresentable {
     var bottomRadius: CGFloat
+    var outlineStyle: IslandOutlineStyle
     var fill: NSColor
 
     func makeNSView(context: Context) -> IslandOpaqueFillNSView {
@@ -12,13 +13,14 @@ struct IslandOpaqueFillView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: IslandOpaqueFillNSView, context: Context) {
-        nsView.apply(fill: fill, bottomRadius: bottomRadius)
+        nsView.apply(fill: fill, bottomRadius: bottomRadius, outlineStyle: outlineStyle)
     }
 }
 
 final class IslandOpaqueFillNSView: NSView {
     private let shapeLayer = CAShapeLayer()
     private var bottomRadius: CGFloat = 0
+    private var outlineStyle: IslandOutlineStyle = .panel
     private var fill: NSColor = IslandTheme.notchDeviceBlack
 
     override var isFlipped: Bool { true }
@@ -41,15 +43,17 @@ final class IslandOpaqueFillNSView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func apply(fill: NSColor, bottomRadius: CGFloat) {
+    func apply(fill: NSColor, bottomRadius: CGFloat, outlineStyle: IslandOutlineStyle) {
         let fillChanged = self.fill != fill
         let radiusChanged = abs(self.bottomRadius - bottomRadius) > 0.05
+        let styleChanged = self.outlineStyle != outlineStyle
         self.fill = fill
         self.bottomRadius = bottomRadius
+        self.outlineStyle = outlineStyle
         if fillChanged {
             shapeLayer.fillColor = fill.cgColor
         }
-        if fillChanged || radiusChanged || shapeLayer.path == nil {
+        if fillChanged || radiusChanged || styleChanged || shapeLayer.path == nil {
             rebuildPath()
         }
     }
@@ -66,8 +70,8 @@ final class IslandOpaqueFillNSView: NSView {
             shapeLayer.path = nil
             return
         }
-        shapeLayer.path = IslandPanelShape(bottomRadius: bottomRadius)
-            .path(in: bounds)
+        shapeLayer.path = IslandOutlinePath
+            .path(style: outlineStyle, bottomRadius: bottomRadius, in: bounds)
             .cgPath
     }
 }

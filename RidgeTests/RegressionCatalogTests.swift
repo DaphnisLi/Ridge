@@ -77,6 +77,76 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertGreaterThan(IslandChrome.contentBottom, 0)
     }
 
+    func test_islandChromeDoublePadding_tokensAreFixed() {
+        // 左右 / 底是固定令牌；改数须有意为之，并同步本用例。
+        XCTAssertEqual(IslandChrome.contentHorizontal, 14)
+        XCTAssertEqual(IslandChrome.contentBottom, 14)
+        XCTAssertEqual(IslandChrome.compactTipTopInset, 0)
+        XCTAssertEqual(IslandChrome.compactTipBottom, 4)
+        XCTAssertEqual(IslandChrome.shortTipBottom, 6)
+        XCTAssertLessThan(IslandChrome.compactTipBottom, IslandChrome.contentBottom)
+        XCTAssertLessThan(IslandChrome.shortTipBottom, IslandChrome.contentBottom)
+    }
+
+    func test_islandChromeDoublePadding_surfaceInsetsLockHorizontalAndBottom() {
+        let notchH: CGFloat = 32
+        let expanded = IslandChrome.insets(for: .expanded, notchHeight: notchH)
+        let wing = IslandChrome.insets(for: .notchWingTip, notchHeight: notchH)
+        let shortTip = IslandChrome.insets(for: .shortBelowNotchTip, notchHeight: notchH)
+        let notice = IslandChrome.insets(for: .notice, notchHeight: notchH)
+
+        // 所有表面左右边距同一固定令牌。
+        for insets in [expanded, wing, shortTip, notice] {
+            XCTAssertEqual(insets.horizontal, IslandChrome.contentHorizontal)
+        }
+
+        XCTAssertEqual(expanded.bottom, IslandChrome.contentBottom)
+        XCTAssertEqual(notice.bottom, IslandChrome.contentBottom)
+        // 翼 tip / 短 tip 底距必须用紧凑令牌，禁止误退回 contentBottom（会议 tip 曾叠大底距）。
+        XCTAssertEqual(wing.bottom, IslandChrome.compactTipBottom)
+        XCTAssertEqual(wing.top, IslandChrome.compactTipTopInset)
+        XCTAssertEqual(shortTip.bottom, IslandChrome.shortTipBottom)
+        XCTAssertNotEqual(wing.bottom, IslandChrome.contentBottom)
+        XCTAssertNotEqual(shortTip.bottom, IslandChrome.contentBottom)
+    }
+
+    func test_islandChrome_meetingUsesNotchWing_othersShortCapsule() {
+        // 会议：左右翼贴刘海；取色/OCR：矮胶囊短条。
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
+        XCTAssertTrue(meeting.usesNotchWingChrome)
+        XCTAssertFalse(meeting.usesShortBelowNotchChrome)
+        XCTAssertFalse(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
+        XCTAssertTrue(IslandNoticePayload.colorPickTip.usesShortBelowNotchChrome)
+        XCTAssertFalse(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
+        XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesShortBelowNotchChrome)
+    }
+
+    func test_meetingLead_keepsExpandedWithoutHover() {
+        // 会前提示常驻到入会/结束；移开指针不得 hoverEnd 收岛。
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
+        XCTAssertTrue(meeting.keepsExpandedWithoutHover)
+        XCTAssertNil(meeting.autoDismissNanoseconds)
+    }
+
+    func test_islandOutline_panelKeepsSquareTopCorners() {
+        // tip-outline：真岛 / 预览一律上直角；左上 (1,1) 须在路径内。
+        let rect = CGRect(x: 0, y: 0, width: 200, height: 40)
+        let panel = IslandPanelShape(bottomRadius: 12).path(in: rect)
+        XCTAssertTrue(panel.contains(CGPoint(x: 1, y: 1)), "左上应为直角填实")
+        XCTAssertTrue(panel.contains(CGPoint(x: 199, y: 1)), "右上应为直角填实")
+        XCTAssertFalse(panel.contains(CGPoint(x: 1, y: 39)), "左下应挖空圆角")
+        XCTAssertTrue(panel.contains(CGPoint(x: 100, y: 20)))
+    }
+
+    func test_islandFocusPolicy_neverStealsOnHoverOrPlainClick() {
+        // island-focus-steal：悬停关穿透 / 展开 / 普通点击均不得 activate；穿透开启须交还 key。
+        XCTAssertFalse(IslandFocusPolicy.shouldActivateAppWhenDisablingClickThrough)
+        XCTAssertFalse(IslandFocusPolicy.shouldActivateAppOnExpand)
+        XCTAssertFalse(IslandFocusPolicy.shouldStealFocusOnPlainIslandMouseDown)
+        XCTAssertTrue(IslandFocusPolicy.shouldResignKeyWhenEnablingClickThrough)
+    }
+
+
     // MARK: - settings-preview-live-data（股票样张条数）
 
     func test_settingsPreviewLiveData_stockSampleUsesFixedFakePair() {
@@ -112,5 +182,22 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.volume"), .panel)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.focusTimer"), .panel)
         XCTAssertNil(WidgetLibraryFamily.family(for: "system.empty"))
+    }
+
+    func test_widgetLibraryFamily_tipNeverPlacesContentDirectly() {
+        XCTAssertFalse(WidgetLibraryFamily.tip.placesContentDirectlyOnIsland)
+        XCTAssertFalse(WidgetLibraryFamily.live.placesContentDirectlyOnIsland)
+        XCTAssertTrue(WidgetLibraryFamily.panel.placesContentDirectlyOnIsland)
+    }
+
+    @MainActor
+    func test_widgetLibraryFamily_tipAndClosedLiveRejectedFromContentPage() {
+        LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testReset")
+        LiveIslandGate.shared.close(LiveIslandGate.batteryID, reason: "testReset")
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.meeting"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.mediaID))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.batteryID))
+        XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage("builtin.focusTimer"))
+        XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage("system.controlDeck.volume"))
     }
 }

@@ -42,25 +42,9 @@ final class IslandWindow: NSPanel {
         return window
     }
 
-    /// 点击前若丢了 key，先夺回再派发，否则 SwiftUI 手势不吃这次 mouseDown。
+    /// 普通点击不 makeKey：nonactivatingPanel + acceptsFirstMouse 即可点按钮。
+    /// 以前 mouseDown 补 makeKey 会从其它 App 抢走键盘；文本框走 `IslandInteractionFocus.prepare`。
     override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown,
-           !ignoresMouseEvents,
-           interactiveFrameInWindow.contains(event.locationInWindow),
-           !isKeyWindow {
-            // 设置窗展示中且指针在设置上：绝不能抢 key，否则红灯点不动像卡死。
-            if MenuBarController.shared?.isPointerOverPresentedSettings() == true {
-                AppLog.warn("Overlay", "设置窗上跳过岛 makeKey", [
-                    "appActive": NSApp.isActive
-                ])
-            } else {
-                makeKeyAndOrderFront(nil)
-                AppLog.info("Overlay", "mouseDown 前补 makeKey", [
-                    "key": isKeyWindow,
-                    "appActive": NSApp.isActive
-                ])
-            }
-        }
         super.sendEvent(event)
     }
 }
@@ -254,23 +238,32 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
 
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
-        IslandInteractionFocus.prepare(window: window, reason: "hostingMouseDown")
         let editable = editableSubview(at: point)
-        AppLog.warn("Overlay", "hosting mouseDown", [
+        // 仅文本框抢前台；普通按钮点击禁止 activate（否则点一下岛就粘住键盘）。
+        if let editable {
+            IslandInteractionFocus.prepare(window: window, reason: "hostingMouseDown.editable")
+            AppLog.warn("Overlay", "hosting mouseDown 文本", [
+                "x": Int(point.x),
+                "y": Int(point.y),
+                "key": window?.isKeyWindow ?? false,
+                "activeApp": NSApp.isActive,
+                "editableHit": String(describing: type(of: editable))
+            ])
+            editable.mouseDown(with: event)
+            return
+        }
+        if IslandFocusPolicy.shouldStealFocusOnPlainIslandMouseDown {
+            IslandInteractionFocus.prepare(window: window, reason: "hostingMouseDown.plain")
+        }
+        AppLog.debug("Overlay", "hosting mouseDown", [
             "x": Int(point.x),
             "y": Int(point.y),
             "key": window?.isKeyWindow ?? false,
             "activeApp": NSApp.isActive,
             "controlDeck": WidgetRuntime.shared.isControlDeckPage,
-            "editableHit": editable.map { String(describing: type(of: $0)) } ?? "nil",
             "hostW": Int(bounds.width),
             "hostH": Int(bounds.height)
         ])
-        // 命中可编辑控件时直接转发，避免 SwiftUI 宿主吞掉首击。
-        if let editable {
-            editable.mouseDown(with: event)
-            return
-        }
         super.mouseDown(with: event)
     }
 

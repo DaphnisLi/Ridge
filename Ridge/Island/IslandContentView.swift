@@ -9,6 +9,7 @@ struct IslandContentView: View {
     @ObservedObject private var controlDeck = ControlDeckSettings.shared
     @ObservedObject private var shelfDropSession = ShelfDropSession.shared
     @ObservedObject private var focusTimer = FocusTimerSession.shared
+    @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
     @State private var shelfDropTargeted = false
 
     private var shelfDropEnabled: Bool {
@@ -56,6 +57,9 @@ struct IslandContentView: View {
         return compactSize
     }
 
+    /// 瞬时提示与常驻面板同一外形：左上/右上直角，下圆角贴刘海。
+    private var outlineStyle: IslandOutlineStyle { .panel }
+
     private var appliedBottomRadius: CGFloat {
         // 控制台混音台稿面底部约 26pt 圆角。
         let preferred = runtime.isControlDeckPage
@@ -71,12 +75,13 @@ struct IslandContentView: View {
     private var palette: IslandPalette { settings.theme.palette }
 
     var body: some View {
-        let shape = IslandPanelShape(bottomRadius: appliedBottomRadius)
+        let shape = IslandOutlineShape(style: outlineStyle, bottomRadius: appliedBottomRadius)
         return ZStack(alignment: .top) {
             ZStack(alignment: .top) {
                 // AppKit device 色不透明层：比 SwiftUI Color 经透明窗合成更接近刘海漆黑。
                 IslandOpaqueFillView(
                     bottomRadius: appliedBottomRadius,
+                    outlineStyle: outlineStyle,
                     fill: settings.theme.nsFillColor
                 )
                 .frame(width: bodySize.width, height: bodySize.height)
@@ -305,25 +310,28 @@ private struct IslandBody: View {
             && !runtime.activeTitle.isEmpty
     }
 
+    private var chromeSurface: IslandChrome.Surface {
+        if usesNotchWingTip { return .notchWingTip }
+        if usesShortBelowNotchTip { return .shortBelowNotchTip }
+        if runtime.isTransientNoticePage { return .notice }
+        return .expanded
+    }
+
+    private var chromeInsets: IslandChrome.Insets {
+        IslandChrome.insets(for: chromeSurface, notchHeight: notchHeight)
+    }
+
     private var contentHorizontalInset: CGFloat {
-        IslandChrome.contentHorizontal
+        chromeInsets.horizontal
     }
 
     private var contentTopInset: CGFloat {
-        if usesNotchWingTip { return IslandChrome.compactTipTopInset }
-        if usesShortBelowNotchTip {
-            return IslandChrome.shortTipTopInset(notchHeight: notchHeight)
-        }
-        if runtime.isTransientNoticePage {
-            return IslandChrome.noticeTopInset(notchHeight: notchHeight)
-        }
-        return IslandChrome.expandedTopInset(notchHeight: notchHeight)
+        chromeInsets.top
     }
 
     private var contentBottomInset: CGFloat {
-        if usesNotchWingTip { return IslandChrome.compactTipBottom }
-        if usesShortBelowNotchTip { return IslandChrome.shortTipBottom }
-        if focusTimer.phase == .completed { return 8 }
-        return IslandChrome.contentBottom
+        // 番茄完成态略收底距；其余一律走 IslandChrome 固定令牌。
+        if chromeSurface == .expanded, focusTimer.phase == .completed { return 8 }
+        return chromeInsets.bottom
     }
 }

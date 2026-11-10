@@ -114,10 +114,36 @@ final class WidgetRuntime: ObservableObject {
 
     // MARK: - Demand（供 Context 调用）
 
+    /// 岛上是否已有可悬停展开的面板（面板类分页，或已点进的实况）。仅瞬时提示时为 false。
+    var allowsHoverExpand: Bool {
+        if isTransientNoticePage || IslandNoticeCenter.shared.current != nil {
+            return true
+        }
+        for id in pageIDs {
+            if registry.manifest(for: id)?.kind == .systemTransient { continue }
+            switch WidgetLibraryFamily.family(for: id) {
+            case .panel:
+                return true
+            case .live:
+                if LiveIslandGate.shared.isOpened(id) { return true }
+            case .tip, .none:
+                continue
+            }
+        }
+        return false
+    }
+
     func requestDisplay(_ id: WidgetID) {
         guard let kind = registry.manifest(for: id)?.kind,
               kind == .content || kind == .systemTransient
         else { return }
+        if kind == .content, !WidgetLibraryFamily.allowsIslandContentPage(id) {
+            AppLog.warn("Widget", "申请展示被拒：须提示点进或禁止常驻", [
+                "id": id,
+                "family": WidgetLibraryFamily.family(for: id)?.rawValue ?? "nil"
+            ])
+            return
+        }
         let isNewDemand = demandTimestamps[id] == nil
         if isNewDemand {
             demandTimestamps[id] = Date()
@@ -318,12 +344,20 @@ final class WidgetRuntime: ObservableObject {
         recompute(reason: "settingsFocus")
     }
 
-    /// 强制切到指定内容页（番茄终局命名、媒体出曲等）。
+    /// 强制切到指定内容页（番茄终局命名、实况点进等）。
     /// - Parameter remember: 是否写入「上次浏览页」。媒体自动抢页应传 `false`，避免覆盖用户手势记忆。
     func revealPage(_ id: WidgetID, reason: String, remember: Bool = true) {
         guard registry.manifest(for: id)?.kind == .content else { return }
         guard settings.isEnabled(id) else {
             AppLog.warn("Widget", "强制切页跳过：未启用", ["id": id, "reason": reason])
+            return
+        }
+        if !WidgetLibraryFamily.allowsIslandContentPage(id) {
+            AppLog.warn("Widget", "强制切页跳过：实况未点进或提示类禁止常驻", [
+                "id": id,
+                "reason": reason,
+                "family": WidgetLibraryFamily.family(for: id)?.rawValue ?? "nil"
+            ])
             return
         }
         _ = ensureInstance(id)
@@ -443,7 +477,8 @@ final class WidgetRuntime: ObservableObject {
         let isTall: Bool
     }
 
-    /// 瞬时通知页优先；随后每个控制台模块一高页；争夺中的内容型各占一页。
+    /// 瞬时通知页优先；随后每个已上岛的控制台模块一高页；争夺中的内容型各占一页。
+    /// 实况控制台（电量）须 `LiveIslandGate` 点进后才进分页；提示类内容永不进此列表。
     private func buildVisiblePages(demanding: Set<WidgetID>) -> [VisiblePage] {
         var result: [VisiblePage] = []
         let transientIDs = demanding
@@ -453,9 +488,11 @@ final class WidgetRuntime: ObservableObject {
             result.append(VisiblePage(ids: [id], isTall: false))
         }
         for pane in controlDeck.enabledPanes {
+            guard WidgetLibraryFamily.controlDeckPaneAppearsWhenEnabled(pane) else { continue }
             result.append(VisiblePage(ids: [pane.pageID], isTall: true))
         }
         for id in settings.order where demanding.contains(id) {
+            guard WidgetLibraryFamily.allowsIslandContentPage(id) else { continue }
             result.append(VisiblePage(ids: [id], isTall: false))
         }
         return result
@@ -599,6 +636,12 @@ final class WidgetRuntime: ObservableObject {
         keep.formUnion(demandTimestamps.keys.filter {
             registry.manifest(for: $0)?.kind == .systemTransient || settings.isEnabled($0)
         })
+        // 提示类（会议等）不占分页，但仍要跑日历/倒计时会话；启用中勿 reap，否则 tip 停表。
+        for id in settings.order where settings.isEnabled(id) {
+            if WidgetLibraryFamily.family(for: id) == .tip {
+                keep.insert(id)
+            }
+        }
         for id in Array(instances.keys) where !keep.contains(id) {
             tearDown(id, reason: reason)
         }

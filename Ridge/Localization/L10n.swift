@@ -150,6 +150,11 @@ enum L10n {
             }
         }
 
+        /// 实况邀请提示上的主按钮。
+        static var liveInviteOpen: String {
+            tr("widgets.live_invite.open", "打开")
+        }
+
         /// 库卡分类徽章。
         static func categoryBadge(for widgetID: WidgetID) -> String {
             switch widgetID {
@@ -355,7 +360,7 @@ enum L10n {
 
         static var moduleBattery: String { tr("control_deck.module.battery", "电量与外设") }
         static var moduleBatterySummary: String {
-            tr("control_deck.module.battery_summary", "已连接外设电量；低电与满电经岛内瞬时通知提示")
+            tr("control_deck.module.battery_summary", "有外设时先提示，点进后查看电量；低电与满电亦经瞬时通知")
         }
         static var moduleVolume: String { tr("control_deck.module.volume", "输出音量") }
         static var moduleProjects: String { tr("control_deck.module.projects", "项目释放") }
@@ -859,12 +864,15 @@ enum L10n {
     enum Media {
         static var widgetName: String { tr("media.widget.name", "正在播放") }
         static var widgetSummary: String {
-            tr("media.widget.summary", "显示封面与播放控制，播放时自动出现在灵动岛")
+            tr("media.widget.summary", "有正在播放时先提示，点进后显示封面与播放控制")
+        }
+        static var liveInviteSubtitle: String {
+            tr("media.live_invite.subtitle", "点击打开正在播放面板")
         }
         static var settingsIntro: String {
             tr(
                 "media.settings.intro",
-                "系统正在播放音乐、播客或网页媒体时，灵动岛会显示封面、进度与控制按钮。支持拖动进度条跳转。"
+                "系统正在播放音乐、播客或网页媒体时，灵动岛先弹出提示；点「打开」后显示封面、进度与控制。支持拖动进度条跳转。"
             )
         }
         static var playersTitle: String { tr("media.players.title", "支持的播放器") }
@@ -1537,12 +1545,31 @@ enum L10n {
         static var previewSampleTitle: String {
             tr("meeting.preview.sample_title", "周度产研协同同步会")
         }
+        static var previewSampleTitleRelaxed: String {
+            tr("meeting.preview.sample_title_relaxed", "周度产研协同")
+        }
+        static var previewSampleTitleWarning: String {
+            tr("meeting.preview.sample_title_warning", "产研评审会")
+        }
+        static var previewSampleTitleCritical: String {
+            tr("meeting.preview.sample_title_critical", "全员同步大会")
+        }
         static func previewMinutesAhead(_ minutes: Int) -> String {
             String(format: tr("meeting.preview.minutes_ahead_format", "%d 分钟后开始"), minutes)
         }
         static var joinMeeting: String { tr("meeting.join", "进入会议") }
         static var joinA11y: String { tr("meeting.join_a11y", "加入会议") }
-        static var joinShort: String { tr("meeting.join_short", "Join") }
+        static var joinShort: String { tr("meeting.join_short", "进入") }
+        /// 充裕 / 临近态右翼按钮。
+        static var joinEnter: String { tr("meeting.join_enter", "进入") }
+        /// 紧急态右翼按钮。
+        static var joinEnterNow: String { tr("meeting.join_enter_now", "立即进入") }
+        static var urgencyRelaxed: String { tr("meeting.urgency.relaxed", "充裕状态") }
+        static var urgencyWarning: String { tr("meeting.urgency.warning", "临近提醒") }
+        static var urgencyCritical: String { tr("meeting.urgency.critical", "紧急冲刺") }
+        static var urgencyRelaxedBadge: String { tr("meeting.urgency.relaxed_badge", "> 5 MIN") }
+        static var urgencyWarningBadge: String { tr("meeting.urgency.warning_badge", "3 ~ 5 MIN") }
+        static var urgencyCriticalBadge: String { tr("meeting.urgency.critical_badge", "< 2 MIN") }
         static var inProgress: String { tr("meeting.in_progress", "进行中") }
         static var ended: String { tr("meeting.ended", "已结束") }
         static var noUpcoming: String { tr("meeting.no_upcoming", "暂无即将开始的日程") }
@@ -1594,6 +1621,15 @@ enum L10n {
     // MARK: - Battery（控制台电量与外设）
 
     enum Battery {
+        static var liveInviteTitle: String {
+            tr("battery.live_invite.title", "外设电量")
+        }
+        static func liveInviteSubtitle(_ count: Int) -> String {
+            String(
+                format: tr("battery.live_invite.subtitle_format", "%d 台设备 · 点开查看"),
+                count
+            )
+        }
         static var emptyTitle: String { tr("battery.empty.title", "暂无外设电量") }
         static var emptyHint: String {
             tr(
@@ -1637,7 +1673,7 @@ enum L10n {
         static var alertsIntro: String {
             tr(
                 "battery.alerts.intro",
-                "开启后可在灵动岛查看已连接外设电量。低电与满电经瞬时通知提示，约三秒后自动收起。"
+                "开启后有外设时先弹出提示，点「打开」后在灵动岛查看电量。低电与满电亦经瞬时通知，约三秒后自动收起；点提示可进入电量面板。"
             )
         }
         static var forceExpandTitle: String {

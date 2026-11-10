@@ -27,6 +27,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
     )
     /// 久坐起身提醒（须点「稍后」/「今天不再」；不自动收）。
     case moveReminder(MoveReminderSession.Notice)
+    /// 会前提示（提示类；入会或日程结束前挂着，不占内容分页）。
+    case meetingLead(meetingID: String)
+    /// 实况邀请：有状态但尚未点进面板（点「打开」后常驻上岛）。
+    case liveInvite(LiveIslandInvite)
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
     static let ocrSelectTipID = "shelf.capture.ocrSelectTip"
@@ -49,6 +53,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return id
         case .moveReminder(let notice):
             return notice.id
+        case .meetingLead(let meetingID):
+            return "meeting.lead.\(meetingID)"
+        case .liveInvite(let invite):
+            return invite.noticeID
         }
     }
 
@@ -68,14 +76,18 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "aiUsage"
         case .moveReminder:
             return "moveReminder"
+        case .meetingLead:
+            return "meeting"
+        case .liveInvite(let invite):
+            return "live.\(invite.widgetID)"
         }
     }
 
     /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色/OCR 引导、久坐起身）。
     var autoDismissNanoseconds: UInt64? {
         switch self {
-        case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder:
-            // 久坐起身：一直挂着，直到点「稍后」或「今天不再提醒」。
+        case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder, .meetingLead, .liveInvite:
+            // 会议 / 实况邀请：挂到用户处理或状态结束；久坐同理。
             return nil
         case .clipboardCaptureHint:
             // 「已复制」短提示：约 2s，取色/OCR 成功后更容易看见。
@@ -91,27 +103,39 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip:
             return false
-        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert, .moveReminder:
+        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge,
+             .aiUsageAlert, .moveReminder, .meetingLead, .liveInvite:
             return true
         }
     }
 
-    /// 取色 / OCR 引导：顶距 0，左右翼贴刘海。
+    /// 会前提示：顶距 0，左右翼贴刘海；外形上直角、下圆角。
     var usesNotchWingChrome: Bool {
         switch self {
-        case .colorPickTip, .ocrSelectTip:
+        case .meetingLead:
             return true
         default:
             return false
         }
     }
 
-    /// 「已复制」/ AI 额度：顶距躲开刘海，整条落在正下方（不占左右翼；比普通通知顶距更紧）。
+    /// 矮胶囊短条顶距（取色 / OCR / 已复制 / AI 额度）。
+    /// 较高提示卡（RAM / 进程结束 / 实况邀请等）走普通通知顶距，岛壳仍是胶囊。
     var usesShortBelowNotchChrome: Bool {
         switch self {
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")
-        case .aiUsageAlert:
+        case .aiUsageAlert, .colorPickTip, .ocrSelectTip:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// 指针离开岛时仍保持展开（会议 / 久坐 / 实况邀请等须常驻到用户处理）。
+    var keepsExpandedWithoutHover: Bool {
+        switch self {
+        case .meetingLead, .moveReminder, .liveInvite, .ramPressure, .colorPickTip, .ocrSelectTip:
             return true
         default:
             return false
@@ -133,8 +157,8 @@ final class IslandNoticeCenter: ObservableObject {
         // 勿先清空再设：会走 dismiss→收岛，0.5s「已复制」来不及看见。
         // 同内容再投由业务侧换唯一 id（如 copy.token）保证 @Published 触发。
         //
-        // 短「已复制」必须在改 current 之前预备尺寸：SwiftUI 会立刻 Preference，
-        // 若仍卡在宽翼引导尺寸会被误缩守卫拒绝，提示整段被顶出可视区。
+        // 短胶囊必须在改 current 之前预备尺寸：SwiftUI 会立刻 Preference，
+        // 若仍卡在上一通知尺寸会被误缩守卫拒绝，提示整段被顶出可视区。
         if payload.usesShortBelowNotchChrome {
             IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(payload.id)")
         }
