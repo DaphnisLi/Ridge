@@ -42,9 +42,23 @@ final class IslandWindow: NSPanel {
         return window
     }
 
-    /// 普通点击不 makeKey：nonactivatingPanel + acceptsFirstMouse 即可点按钮。
-    /// 以前 mouseDown 补 makeKey 会从其它 App 抢走键盘；文本框走 `IslandInteractionFocus.prepare`。
+    /// 普通点击只 `makeKey`（nonactivatingPanel 不 activate App），否则 SwiftUI 按钮首击无响应。
+    /// 指针离开穿透时由控制器 `resignKey`，避免键盘粘住。
     override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown,
+           !ignoresMouseEvents,
+           IslandFocusPolicy.shouldMakeKeyOnPlainIslandMouseDown,
+           interactiveFrameInWindow.contains(event.locationInWindow),
+           !isKeyWindow
+        {
+            if MenuBarController.shared?.isPointerOverPresentedSettings() == true {
+                AppLog.warn("Overlay", "设置窗上跳过岛 makeKey", [
+                    "appActive": NSApp.isActive
+                ])
+            } else {
+                IslandInteractionFocus.makeKeyOnly(window: self, reason: "sendEvent.mouseDown")
+            }
+        }
         super.sendEvent(event)
     }
 }
@@ -122,9 +136,9 @@ protocol IslandEditableTextHosting: AnyObject {
     var editableField: NSView { get }
 }
 
-/// 岛上文本输入前：临时升 regular + activate + makeKey（与开设置同一套）。
-/// 纯 accessory 下 `NSApp.activate` 常看起来成功但 `isActive` 仍为 false，field editor 起不来。
+/// 岛上焦点：文本框才 activate；普通点击只 makeKey（供 SwiftUI 按钮）。
 enum IslandInteractionFocus {
+    /// 文本输入：临时升 regular + activate + makeKey。
     static func prepare(window: NSWindow?, reason: String) {
         var promoted = false
         if NSApp.activationPolicy() != .regular {
@@ -133,12 +147,23 @@ enum IslandInteractionFocus {
         }
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
-        // warn：info 在统一日志里经常看不到，焦点问题必须可查。
         AppLog.warn("Overlay", "文本输入焦点就绪", [
             "reason": reason,
             "promoted": promoted,
             "appActive": NSApp.isActive,
             "key": window?.isKeyWindow ?? false
+        ])
+    }
+
+    /// 普通点击：只让岛成为 key，不 `activate` 抢前台。
+    static func makeKeyOnly(window: NSWindow?, reason: String) {
+        guard let window else { return }
+        guard !window.isKeyWindow else { return }
+        window.makeKeyAndOrderFront(nil)
+        AppLog.warn("Overlay", "岛 makeKey（不 activate）", [
+            "reason": reason,
+            "key": window.isKeyWindow,
+            "appActive": NSApp.isActive
         ])
     }
 
@@ -239,7 +264,7 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         let editable = editableSubview(at: point)
-        // 仅文本框抢前台；普通按钮点击禁止 activate（否则点一下岛就粘住键盘）。
+        // 文本框：activate；普通按钮：只 makeKey，否则 SwiftUI 首击无响应。
         if let editable {
             IslandInteractionFocus.prepare(window: window, reason: "hostingMouseDown.editable")
             AppLog.warn("Overlay", "hosting mouseDown 文本", [
@@ -252,10 +277,12 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
             editable.mouseDown(with: event)
             return
         }
-        if IslandFocusPolicy.shouldStealFocusOnPlainIslandMouseDown {
+        if IslandFocusPolicy.shouldActivateAppOnPlainIslandMouseDown {
             IslandInteractionFocus.prepare(window: window, reason: "hostingMouseDown.plain")
+        } else if IslandFocusPolicy.shouldMakeKeyOnPlainIslandMouseDown {
+            IslandInteractionFocus.makeKeyOnly(window: window, reason: "hostingMouseDown.plain")
         }
-        AppLog.debug("Overlay", "hosting mouseDown", [
+        AppLog.warn("Overlay", "hosting mouseDown", [
             "x": Int(point.x),
             "y": Int(point.y),
             "key": window?.isKeyWindow ?? false,

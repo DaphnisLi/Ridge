@@ -140,9 +140,11 @@ final class RegressionCatalogTests: XCTestCase {
 
     func test_islandFocusPolicy_neverStealsOnHoverOrPlainClick() {
         // island-focus-steal：悬停关穿透 / 展开 / 普通点击均不得 activate；穿透开启须交还 key。
+        // 普通点击仍须 makeKey，否则 SwiftUI 按钮首击无响应。
         XCTAssertFalse(IslandFocusPolicy.shouldActivateAppWhenDisablingClickThrough)
         XCTAssertFalse(IslandFocusPolicy.shouldActivateAppOnExpand)
-        XCTAssertFalse(IslandFocusPolicy.shouldStealFocusOnPlainIslandMouseDown)
+        XCTAssertFalse(IslandFocusPolicy.shouldActivateAppOnPlainIslandMouseDown)
+        XCTAssertTrue(IslandFocusPolicy.shouldMakeKeyOnPlainIslandMouseDown)
         XCTAssertTrue(IslandFocusPolicy.shouldResignKeyWhenEnablingClickThrough)
     }
 

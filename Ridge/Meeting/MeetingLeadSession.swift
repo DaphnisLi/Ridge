@@ -1,7 +1,8 @@
+import AppKit
 import Foundation
 
 /// 会前提示会话：会议 widget 写入快照，岛通知卡只读展示（不占内容分页）。
-/// 倒计时由本会话自有 timer 驱动，不依赖 widget 是否仍存活（tip 实例会被 reap）。
+/// 倒计时与入会由本会话自持，不依赖 tip widget 是否仍存活。
 @MainActor
 final class MeetingLeadSession: ObservableObject {
     static let shared = MeetingLeadSession()
@@ -15,6 +16,10 @@ final class MeetingLeadSession: ObservableObject {
         let secondsToStart: TimeInterval
         let showJoin: Bool
         let showAuth: Bool
+        /// 入会深链 / 网页回退；点「进入」直接打开，不经 widget weak self。
+        let joinOpenURL: URL?
+        let joinSourceURL: URL?
+        let joinPlatform: String?
 
         var urgency: MeetingLeadUrgency {
             MeetingLeadUrgency.resolve(secondsToStart: secondsToStart)
@@ -23,8 +28,8 @@ final class MeetingLeadSession: ObservableObject {
 
     @Published private(set) var snapshot: Snapshot?
 
-    /// 由 `MeetingCountdownWidget` 注册；通知卡点入会 / 授权。
-    var onJoin: (() -> Void)?
+    /// 入会成功后通知 widget 记 dismissed（可选）。
+    var onJoined: ((String) -> Void)?
     var onRequestAuth: (() -> Void)?
 
     private var tick: Timer?
@@ -48,20 +53,58 @@ final class MeetingLeadSession: ObservableObject {
                     "reason": reason,
                     "meeting": String(next.meetingID.prefix(8)),
                     "join": next.showJoin,
+                    "hasJoinURL": next.joinOpenURL != nil,
                     "urgency": next.urgency.rawValue,
                     "secToStart": Int(next.secondsToStart)
                 ])
             }
-        } else if let previousID = previous?.meetingID {
+        } else if previous?.meetingID != nil {
             stopTicking()
-            IslandNoticeCenter.shared.dismiss(id: "meeting.lead.\(previousID)")
+            if let previousID = previous?.meetingID {
+                IslandNoticeCenter.shared.dismiss(id: "meeting.lead.\(previousID)")
+            }
             AppLog.info("Meeting", "会前提示已清除", ["reason": reason])
         }
     }
 
     func joinFromNotice() {
-        AppLog.info("Meeting", "通知卡点击入会")
-        onJoin?()
+        AppLog.warn("Meeting", "通知卡点击入会", [
+            "hasSnapshot": snapshot != nil,
+            "hasJoinURL": snapshot?.joinOpenURL != nil,
+            "showJoin": snapshot?.showJoin ?? false
+        ])
+        guard let snap = snapshot else {
+            AppLog.warn("Meeting", "Join 失败：无快照")
+            return
+        }
+        guard snap.showJoin, let openURL = snap.joinOpenURL else {
+            AppLog.warn("Meeting", "Join 失败：无链接", [
+                "meeting": String(snap.meetingID.prefix(8)),
+                "showJoin": snap.showJoin
+            ])
+            return
+        }
+
+        var opened = NSWorkspace.shared.open(openURL)
+        if !opened, let source = snap.joinSourceURL, source != openURL {
+            opened = NSWorkspace.shared.open(source)
+            AppLog.warn("Meeting", "deep link 失败，回退网页链接", [
+                "platform": snap.joinPlatform ?? "unknown"
+            ])
+        }
+        AppLog.warn("Meeting", "点击 Join", [
+            "platform": snap.joinPlatform ?? "unknown",
+            "opened": opened,
+            "meeting": String(snap.meetingID.prefix(8))
+        ])
+
+        guard opened else { return }
+        let meetingID = snap.meetingID
+        publish(nil, reason: "joined")
+        onJoined?(meetingID)
+        AppLog.info("Meeting", "入会成功，已撤回会前提示", [
+            "meeting": String(meetingID.prefix(8))
+        ])
     }
 
     func requestAuthFromNotice() {
@@ -108,7 +151,10 @@ final class MeetingLeadSession: ObservableObject {
             endDate: current.endDate,
             secondsToStart: seconds,
             showJoin: current.showJoin,
-            showAuth: current.showAuth
+            showAuth: current.showAuth,
+            joinOpenURL: current.joinOpenURL,
+            joinSourceURL: current.joinSourceURL,
+            joinPlatform: current.joinPlatform
         )
         guard next != current else { return }
         snapshot = next

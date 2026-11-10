@@ -152,7 +152,8 @@ struct MeetingIslandCardView: View {
                 .fixedSize(horizontal: true, vertical: false)
         }
         .clipped()
-        .accessibilityElement(children: .combine)
+        // contain：保留子按钮可点；combine 会吞掉「进入」点击。
+        .accessibilityElement(children: .contain)
         .accessibilityLabel(accessibilityText)
     }
 

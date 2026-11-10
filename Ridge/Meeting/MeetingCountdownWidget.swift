@@ -35,7 +35,14 @@ final class MeetingCountdownWidget: IslandWidget {
     init(context: WidgetContext) {
         self.context = context
         calendar.start()
-        MeetingLeadSession.shared.onJoin = { [weak self] in self?.joinMeeting() }
+        // 入会打开链接由 MeetingLeadSession 自持；此处只记「已入会」以免同场会再上岛。
+        MeetingLeadSession.shared.onJoined = { [weak self] meetingID in
+            self?.dismissedAfterJoinID = meetingID
+            self?.latchedMeetingID = nil
+            AppLog.info("Meeting", "会话入会回调：已标记 dismissed", [
+                "meeting": String(meetingID.prefix(8))
+            ])
+        }
         MeetingLeadSession.shared.onRequestAuth = { [weak self] in self?.requestCalendarAccess() }
         // dropFirst：避免订阅时同步回调；初始状态靠下方同步 reevaluate。
         calendar.$nextMeeting
@@ -161,7 +168,8 @@ final class MeetingCountdownWidget: IslandWidget {
             return
         }
 
-        let showJoin = meeting.join != nil
+        let join = meeting.join
+        let showJoin = join != nil
         let urgency = MeetingLeadUrgency.resolve(secondsToStart: secondsToStart)
         publishLead(
             meetingID: meeting.id,
@@ -170,6 +178,9 @@ final class MeetingCountdownWidget: IslandWidget {
             endDate: meeting.endDate,
             secondsToStart: secondsToStart,
             showJoin: showJoin,
+            joinOpenURL: join?.openURL,
+            joinSourceURL: join?.sourceURL,
+            joinPlatform: join?.logLabel,
             reason: reason
         )
 
@@ -192,6 +203,9 @@ final class MeetingCountdownWidget: IslandWidget {
         endDate: Date,
         secondsToStart: TimeInterval,
         showJoin: Bool,
+        joinOpenURL: URL?,
+        joinSourceURL: URL?,
+        joinPlatform: String?,
         reason: String
     ) {
         wantsDisplay = false
@@ -203,7 +217,10 @@ final class MeetingCountdownWidget: IslandWidget {
                 endDate: endDate,
                 secondsToStart: secondsToStart,
                 showJoin: showJoin,
-                showAuth: false
+                showAuth: false,
+                joinOpenURL: joinOpenURL,
+                joinSourceURL: joinSourceURL,
+                joinPlatform: joinPlatform
             ),
             reason: reason
         )
@@ -226,36 +243,4 @@ final class MeetingCountdownWidget: IslandWidget {
         }
     }
 
-    private func joinMeeting() {
-        guard let meeting = calendar.nextMeeting else {
-            AppLog.warn("Meeting", "Join 失败：无当前会议")
-            return
-        }
-        guard let join = meeting.join else {
-            AppLog.warn("Meeting", "Join 失败：无链接")
-            return
-        }
-
-        var opened = NSWorkspace.shared.open(join.openURL)
-        if !opened, join.openURL != join.sourceURL {
-            opened = NSWorkspace.shared.open(join.sourceURL)
-            AppLog.warn("Meeting", "deep link 失败，回退网页链接", [
-                "platform": join.logLabel
-            ])
-        }
-        AppLog.info("Meeting", "点击 Join", [
-            "platform": join.logLabel,
-            "opened": opened,
-            "meeting": String(meeting.id.prefix(8))
-        ])
-
-        // 点了入会即撤提示。
-        guard opened else { return }
-        dismissedAfterJoinID = meeting.id
-        latchedMeetingID = nil
-        clearLead(reason: "joined")
-        AppLog.info("Meeting", "入会成功，已撤回会前提示", [
-            "meeting": String(meeting.id.prefix(8))
-        ])
-    }
 }

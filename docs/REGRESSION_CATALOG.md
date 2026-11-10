@@ -22,6 +22,7 @@
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥3 | 取色引导后「已复制」投递了但不显示 | present 前 `forcePanelSize` 短条；勿先 dismiss 再 present |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
+| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
 
 ---
 
@@ -150,12 +151,12 @@
 
 ### island-focus-steal — 岛抢鼠标/键盘焦点
 
-- **recurring:** false  
-- **occurrences:** 1（2026-11-10：点别处无法聚焦输入）  
-- **症状:** 悬停或点过岛后，其它 App 点不进、键盘粘在 Ridge；会议常驻 tip 尤甚  
-- **根因倾向:** 关穿透 / 展开 / `hostingMouseDown` 一律 `activate`+`makeKey`；常驻 tip 不收岛时不 `resignKey`、不降 accessory  
-- **防护:** `IslandFocusPolicy`：悬停与普通点击不抢前台；开启穿透即 `resignKey`+accessory；仅文本框 `prepare`  
-- **相关代码:** `IslandFocusPolicy`、`IslandController.setClickThrough`、`IslandHostingView.mouseDown`、`IslandWindow.sendEvent`  
+- **recurring:** true  
+- **occurrences:** 2（2026-11-10：点别处无法聚焦；矫枉过正后「进入」按钮无响应）  
+- **症状:** 悬停或点过岛后其它 App 点不进；或普通点击岛上按钮首击无反应  
+- **根因倾向:** 关穿透 / 展开一律 `activate`+`makeKey` 且不 resign；矫枉后连 `makeKey` 去掉导致 SwiftUI Button 失效；入会曾依赖 widget weak `onJoin`  
+- **防护:** 悬停/展开不 `activate`；普通点击只 `makeKey`；穿透即 `resignKey`；入会链接写入 `MeetingLeadSession` 快照自开  
+- **相关代码:** `IslandFocusPolicy`、`IslandInteractionFocus.makeKeyOnly`、`MeetingLeadSession.joinFromNotice`  
 - **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`
 
 ### tip-outline-panel — 瞬时提示上直角下圆角
@@ -186,3 +187,4 @@
 | 2026-11-10 | 录入 tip-outline-capsule；瞬时提示（含会议）一律全胶囊，禁翼 tip 特判 panel |
 | 2026-11-10 | 录入 island-focus-steal；悬停/展开不 activate，穿透即 resignKey |
 | 2026-11-10 | tip-outline 改回 panel 上直角（occurrences=2，recurring） |
+| 2026-11-10 | island-focus-steal +1：普通点击恢复 makeKey；入会改会话自开链接 |
