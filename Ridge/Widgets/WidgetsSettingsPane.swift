@@ -431,12 +431,11 @@ private struct WidgetLibraryCard: View {
     let widgetID: WidgetID
     let title: String
     let summary: String
-    /// 提示族走稿面灰底居中黑岛；实况 / 面板保持原卡。
+    /// 提示族：矮卡 + 灰底居中舞台；黑岛内容仍走 `WidgetSamplePreview` 原样。
     var family: WidgetLibraryFamily? = nil
     @Binding var isEnabled: Bool
     var onOpen: () -> Void
 
-    /// 全库默认卡面；提示族更矮，岛区居中。
     private enum CardLayout {
         static let islandStageHeight: CGFloat = 176
         static let cardHeight: CGFloat = 340
@@ -475,7 +474,7 @@ private struct WidgetLibraryCard: View {
         .opacity(isEnabled ? 1 : 0.72)
     }
 
-    /// 提示族：灰底仿真台 + 居中黑岛；底栏仅标题说明 + 开关 / 配置。
+    /// 提示族：灰底仿真台居中放黑岛（岛内内容不改）；底栏标题说明 + 开关 / 配置。
     private var tipCardBody: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button(action: onOpen) {
@@ -519,7 +518,7 @@ private struct WidgetLibraryCard: View {
         }
     }
 
-    /// 灰舞台居中黑岛（稿面 `surface-container-low` + 黑 tip）。
+    /// 灰舞台居中：只改卡面舞台，黑岛内容仍是原 tip 样张。
     private var tipIslandStage: some View {
         WidgetSamplePreview.island(for: widgetID, compact: true)
             .fixedSize(horizontal: true, vertical: true)

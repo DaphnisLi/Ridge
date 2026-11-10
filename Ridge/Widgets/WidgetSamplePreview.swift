@@ -335,15 +335,15 @@ enum WidgetSamplePreview {
     }
 
     private static func colorPickSample(compact: Bool) -> some View {
-        // 与久坐 tip 同款：黑岛贴合内容；样张右翼带示例 HEX。
-        ColorPickTipIslandView(compact: true, showsPreviewSample: true)
+        // 与久坐 tip 同款：黑岛贴合内容，舞台只补左右/底。
+        ColorPickTipIslandView(compact: true)
             .padding(.horizontal, IslandChrome.contentHorizontal)
             .padding(.bottom, IslandChrome.compactTipBottom)
             .frame(minHeight: compact ? 30 : 34)
     }
 
     private static func ocrSelectSample(compact: Bool) -> some View {
-        OCRSelectTipIslandView(compact: true, showsPreviewSample: true)
+        OCRSelectTipIslandView(compact: true)
             .padding(.horizontal, IslandChrome.contentHorizontal)
             .padding(.bottom, IslandChrome.compactTipBottom)
             .frame(minHeight: compact ? 30 : 34)

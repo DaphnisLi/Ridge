@@ -6810,28 +6810,6 @@
         }
       }
     },
-    "shelf.clipboard.color_pick_preview_hex": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HEX #0070EB"
-          }
-        }
-      }
-    },
-    "shelf.clipboard.ocr_select_preview_ready": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OCR 离线就绪"
-          }
-        }
-      }
-    },
     "shelf.clipboard.ocr_select_tip_left": {
       "extractionState": "manual",
       "localizations": {

@@ -1326,14 +1326,6 @@ enum L10n {
         static var colorPickTipEsc: String {
             tr("shelf.clipboard.color_pick_tip_esc", "Esc 取消")
         }
-        /// 库卡 / 详情样张右翼：示例色值。
-        static var colorPickPreviewHex: String {
-            tr("shelf.clipboard.color_pick_preview_hex", "HEX #0070EB")
-        }
-        /// 库卡 / 详情样张右翼：OCR 就绪态。
-        static var ocrSelectPreviewReady: String {
-            tr("shelf.clipboard.ocr_select_preview_ready", "OCR 离线就绪")
-        }
         static var previewStageTitle: String {
             tr("shelf.preview.stage_title", "岛上预览")
         }

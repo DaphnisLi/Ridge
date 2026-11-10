@@ -54,7 +54,7 @@ struct OCRSelectWidgetConfigSection: View {
             selection: .constant("guide")
         ) { _ in
             // 与久坐 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
-            OCRSelectTipIslandView(compact: true, showsPreviewSample: true)
+            OCRSelectTipIslandView(compact: true)
                 .padding(.horizontal, IslandChrome.contentHorizontal)
                 .padding(.bottom, IslandChrome.compactTipBottom)
                 .frame(minHeight: 34)

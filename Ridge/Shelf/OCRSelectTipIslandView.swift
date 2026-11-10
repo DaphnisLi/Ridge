@@ -1,14 +1,12 @@
 import SwiftUI
 
 /// OCR 框选引导 tip：左右翼贴刘海（同久坐 / 取色）。
-/// 左：框选角标 +「左键框选文字」；右：Esc 取消（样张可带就绪态）。
+/// 左：框选角标 +「左键框选文字」；右：Esc 取消胶囊。
 /// 壳层 `usesNotchWingChrome`；根视图禁止外圈 padding。
 struct OCRSelectTipIslandView: View {
     var accent: Color = Color(red: 0.0, green: 0.44, blue: 0.92)
     var compact: Bool = false
     var previewNotchWidth: CGFloat = 110
-    /// 库卡 / 设置样张：右翼展示就绪态（实况引导不带）。
-    var showsPreviewSample: Bool = false
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
     @Environment(\.islandNotchHeight) private var envNotchHeight
@@ -22,11 +20,7 @@ struct OCRSelectTipIslandView: View {
         return max(envNotchHeight, 32)
     }
 
-    /// 样张右翼带就绪态，略加宽以免裁切。
-    private var wingWidth: CGFloat {
-        if showsPreviewSample { return compact ? 108 : 112 }
-        return compact ? 88 : 94
-    }
+    private var wingWidth: CGFloat { compact ? 88 : 94 }
 
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
 
@@ -63,30 +57,21 @@ struct OCRSelectTipIslandView: View {
     // MARK: - Right
 
     private var rightCluster: some View {
-        HStack(spacing: showsPreviewSample ? 8 : 4) {
-            if showsPreviewSample {
-                Text(L10n.Shelf.ocrSelectPreviewReady)
-                    .font(.system(size: compact ? 10.5 : 11, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.55))
-                    .lineLimit(1)
-            }
-
-            HStack(spacing: 4) {
-                Text("⎋")
-                    .font(.system(size: compact ? 10 : 11, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.65))
-                Text(L10n.Shelf.colorPickTipEsc)
-                    .font(.system(size: compact ? 10.5 : 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.92))
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, compact ? 7 : 8)
-            .padding(.vertical, compact ? 2.5 : 3)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.white.opacity(0.18))
-            )
+        HStack(spacing: 4) {
+            Text("⎋")
+                .font(.system(size: compact ? 10 : 11, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white.opacity(0.65))
+            Text(L10n.Shelf.colorPickTipEsc)
+                .font(.system(size: compact ? 10.5 : 11, weight: .medium))
+                .foregroundStyle(.white.opacity(0.92))
+                .lineLimit(1)
         }
+        .padding(.horizontal, compact ? 7 : 8)
+        .padding(.vertical, compact ? 2.5 : 3)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color.white.opacity(0.18))
+        )
         .layoutPriority(1)
     }
 }
