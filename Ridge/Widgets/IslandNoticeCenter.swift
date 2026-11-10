@@ -29,7 +29,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case moveReminder(MoveReminderSession.Notice)
     /// 会前提示（提示类；入会或日程结束前挂着，不占内容分页）。
     case meetingLead(meetingID: String)
-    /// 实况邀请：有状态但尚未点进面板（点「打开」后常驻上岛）。
+    /// 实况邀请（遗留 case；电量/媒体已改为直接准入，不再投递）。
     case liveInvite(LiveIslandInvite)
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
@@ -141,10 +141,30 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return false
         }
     }
+
+    /// 抢占优先级：数值越大越不易被盖掉。会前提示最高，其它瞬时条不得盖住它。
+    var preemptionRank: Int {
+        switch self {
+        case .meetingLead:
+            return 100
+        default:
+            return 0
+        }
+    }
+}
+
+/// 瞬时通知抢占策略（纯函数，便于单测）。
+enum IslandNoticePreemption {
+    /// 是否允许 `incoming` 替换当前条。同级可互相替换；低优先级不得盖高优先级。
+    static func shouldAccept(incoming: IslandNoticePayload, replacing current: IslandNoticePayload?) -> Bool {
+        guard let current else { return true }
+        if current.id == incoming.id { return true }
+        return incoming.preemptionRank >= current.preemptionRank
+    }
 }
 
 /// 瞬时通知中枢：任意模块 `present`，`system.islandNotice` 统一上岛。
-/// 同时只展示一条；后到的替换当前条。自动收起 / 悬停逻辑在 `IslandNoticeWidget`。
+/// 同时只展示一条；后到的替换当前条（受抢占优先级约束）。自动收起 / 悬停逻辑在 `IslandNoticeWidget`。
 @MainActor
 final class IslandNoticeCenter: ObservableObject {
     static let shared = IslandNoticeCenter()
@@ -156,6 +176,19 @@ final class IslandNoticeCenter: ObservableObject {
     func present(_ payload: IslandNoticePayload) {
         // 勿先清空再设：会走 dismiss→收岛，0.5s「已复制」来不及看见。
         // 同内容再投由业务侧换唯一 id（如 copy.token）保证 @Published 触发。
+        //
+        // 会前提示优先级最高：其它瞬时条在会议仍展示时直接丢弃，不得盖下去。
+        if !IslandNoticePreemption.shouldAccept(incoming: payload, replacing: current) {
+            AppLog.info("IslandNotice", "瞬时通知被更高优先级挡住", [
+                "blocked": payload.id,
+                "blockedSource": payload.sourceTag,
+                "current": current?.id ?? "",
+                "currentSource": current?.sourceTag ?? "",
+                "blockedRank": payload.preemptionRank,
+                "currentRank": current?.preemptionRank ?? 0
+            ])
+            return
+        }
         //
         // 短胶囊必须在改 current 之前预备尺寸：SwiftUI 会立刻 Preference，
         // 若仍卡在上一通知尺寸会被误缩守卫拒绝，提示整段被顶出可视区。
@@ -170,7 +203,8 @@ final class IslandNoticeCenter: ObservableObject {
             "id": payload.id,
             "source": payload.sourceTag,
             "shortTip": payload.usesShortBelowNotchChrome,
-            "wingTip": payload.usesNotchWingChrome
+            "wingTip": payload.usesNotchWingChrome,
+            "rank": payload.preemptionRank
         ])
     }
 

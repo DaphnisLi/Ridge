@@ -1,6 +1,6 @@
 import Foundation
 
-/// 实况类（`WidgetLibraryFamily.live`）上岛闸门：先提示，用户点进后才占岛分页。
+/// 实况类（`WidgetLibraryFamily.live`）上岛闸门：有状态时直接准入分页（不再投「打开」邀请 tip）。
 @MainActor
 final class LiveIslandGate: ObservableObject {
     static let shared = LiveIslandGate()
@@ -8,7 +8,7 @@ final class LiveIslandGate: ObservableObject {
     static let mediaID: WidgetID = "builtin.media"
     static let batteryID: WidgetID = "system.controlDeck.battery"
 
-    /// 用户已从提示点进、当前允许常驻上岛的实况 id。
+    /// 当前允许常驻上岛的实况 id（有曲目 / 有外设时自动 admit）。
     @Published private(set) var openedIDs: Set<WidgetID> = []
 
     private init() {}
@@ -21,7 +21,23 @@ final class LiveIslandGate: ObservableObject {
         "live.invite.\(widgetID)"
     }
 
-    /// 点提示进入实况面板：登记 → 撤邀请提示 → 切页并展开。
+    /// 有内容时直接准入分页，并清掉遗留的实况邀请 tip（产品已去掉邀请条）。
+    func admit(_ id: WidgetID, reason: String) {
+        guard WidgetLibraryFamily.family(for: id) == .live else {
+            AppLog.warn("LiveGate", "admit 跳过：非实况组件", ["id": id, "reason": reason])
+            return
+        }
+        IslandNoticeCenter.shared.dismiss(id: Self.inviteNoticeID(for: id))
+        let inserted = openedIDs.insert(id).inserted
+        guard inserted else { return }
+        WidgetRuntime.shared.recompute(reason: "liveAdmit:\(reason)")
+        AppLog.info("LiveGate", "实况已自动准入", [
+            "id": id,
+            "reason": reason
+        ])
+    }
+
+    /// 点低电等瞬时条进入实况面板：登记 → 切页并展开。
     func open(_ id: WidgetID, reason: String) {
         guard WidgetLibraryFamily.family(for: id) == .live else {
             AppLog.warn("LiveGate", "open 跳过：非实况组件", ["id": id, "reason": reason])

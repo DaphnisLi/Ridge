@@ -4,7 +4,7 @@ import Foundation
 enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
     /// 瞬时提示：触阈/事件冒一下。
     case tip
-    /// 有状态提示，点提示可进面板（如电量、正在播放）。
+    /// 有状态时直接上岛（如电量、正在播放）；不再先冒「打开」邀请 tip。
     case live
     /// 常驻操作面板，不靠提示冒出。
     case panel
@@ -59,7 +59,7 @@ enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// 控制台模块启用后是否立刻进分页（实况须点提示后才进）。
+    /// 控制台模块启用后是否立刻进分页（实况须已 admit）。
     @MainActor
     static func controlDeckPaneAppearsWhenEnabled(_ pane: ControlDeckSettings.Pane) -> Bool {
         allowsIslandContentPage(pane.pageID)

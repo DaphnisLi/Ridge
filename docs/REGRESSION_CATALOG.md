@@ -179,6 +179,26 @@
 - **相关代码:** `MeetingCalendarService`、`MeetingLeadTipSelector`、`MeetingCountdownWidget`、`MeetingLeadSession`  
 - **自动化:** `RegressionCatalogTests.test_meetingTipAdvanceNext_*`
 
+### meeting-tip-preemption — 其它瞬时提示盖住会前提示
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10：产品要求会议 tip 优先级最高）  
+- **症状:** 复制成功 / 取色 / 电量等后到的瞬时条把会前提示顶掉  
+- **根因倾向:** `IslandNoticeCenter.present` 一律后到覆盖，无抢占优先级  
+- **防护:** `IslandNoticePayload.preemptionRank`；会议=100，其它=0；`IslandNoticePreemption.shouldAccept` 挡住低优先级  
+- **相关代码:** `IslandNoticeCenter`、`IslandNoticePreemption`  
+- **自动化:** `RegressionCatalogTests.test_meetingTipPreemption_*`
+
+### live-invite-removed — 去掉电量/媒体「打开」邀请 tip
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10：产品要求去掉实况邀请条）  
+- **症状:** 外设电量 / 正在播放先冒「打开」tip，盖住或打断会前提示  
+- **根因倾向:** `LiveIslandGate` 先 tip 再点进；Battery/Media 持续 `present(.liveInvite)`  
+- **防护:** 有状态时 `admit` 直接准入分页；不再投递 liveInvite；低电等瞬时告警仍保留  
+- **相关代码:** `LiveIslandGate.admit`、`BatterySession.refreshLivePresence`、`MediaNowPlayingWidget`  
+- **自动化:** `RegressionCatalogTests.test_liveInviteRemoved_admitAllowsContentPage`
+
 ---
 
 ## 变更日志
@@ -199,3 +219,5 @@
 | 2026-11-10 | tip-outline 改回 panel 上直角（occurrences=2，recurring） |
 | 2026-11-10 | island-focus-steal +1：普通点击恢复 makeKey；入会改会话自开链接 |
 | 2026-11-10 | 录入 meeting-tip-advance-next；多场会议 tip 可接力 |
+| 2026-11-10 | 录入 meeting-tip-preemption；会议 tip 不被其它瞬时条盖住 |
+| 2026-11-10 | 录入 live-invite-removed；电量/媒体去掉「打开」邀请 tip |

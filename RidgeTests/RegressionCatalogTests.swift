@@ -128,6 +128,27 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertNil(meeting.autoDismissNanoseconds)
     }
 
+    /// meeting-tip-preemption：会议 tip 在场时，其它瞬时通知不得盖住。
+    func test_meetingTipPreemption_blocksLowerPriorityWhileMeetingShowing() {
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "m1")
+        let otherMeeting = IslandNoticePayload.meetingLead(meetingID: "m2")
+        let copy = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.test",
+            text: "已复制",
+            symbol: "doc.on.doc"
+        )
+        let ram = IslandNoticePayload.colorPickTip
+
+        XCTAssertEqual(meeting.preemptionRank, 100)
+        XCTAssertEqual(copy.preemptionRank, 0)
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: nil))
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: copy))
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: otherMeeting, replacing: meeting))
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: meeting))
+        XCTAssertFalse(IslandNoticePreemption.shouldAccept(incoming: copy, replacing: meeting))
+        XCTAssertFalse(IslandNoticePreemption.shouldAccept(incoming: ram, replacing: meeting))
+    }
+
     func test_islandOutline_panelKeepsSquareTopCorners() {
         // tip-outline：真岛 / 预览一律上直角；左上 (1,1) 须在路径内。
         let rect = CGRect(x: 0, y: 0, width: 200, height: 40)
@@ -307,5 +328,19 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.batteryID))
         XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage("builtin.focusTimer"))
         XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage("system.controlDeck.volume"))
+    }
+
+    /// live-invite-removed：实况有状态时 admit 即可上岛，不再依赖「打开」邀请 tip。
+    @MainActor
+    func test_liveInviteRemoved_admitAllowsContentPage() {
+        LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testReset")
+        LiveIslandGate.shared.close(LiveIslandGate.batteryID, reason: "testReset")
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.mediaID))
+        LiveIslandGate.shared.admit(LiveIslandGate.mediaID, reason: "test")
+        XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.mediaID))
+        LiveIslandGate.shared.admit(LiveIslandGate.batteryID, reason: "test")
+        XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.batteryID))
+        LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testReset")
+        LiveIslandGate.shared.close(LiveIslandGate.batteryID, reason: "testReset")
     }
 }

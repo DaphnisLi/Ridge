@@ -864,7 +864,7 @@ enum L10n {
     enum Media {
         static var widgetName: String { tr("media.widget.name", "正在播放") }
         static var widgetSummary: String {
-            tr("media.widget.summary", "有正在播放时先提示，点进后显示封面与播放控制")
+            tr("media.widget.summary", "显示封面与播放控制，播放时自动出现在灵动岛")
         }
         static var liveInviteSubtitle: String {
             tr("media.live_invite.subtitle", "点击打开正在播放面板")
@@ -872,7 +872,7 @@ enum L10n {
         static var settingsIntro: String {
             tr(
                 "media.settings.intro",
-                "系统正在播放音乐、播客或网页媒体时，灵动岛先弹出提示；点「打开」后显示封面、进度与控制。支持拖动进度条跳转。"
+                "系统正在播放音乐、播客或网页媒体时，灵动岛会显示封面、进度与控制按钮。支持拖动进度条跳转。"
             )
         }
         static var playersTitle: String { tr("media.players.title", "支持的播放器") }
@@ -1717,7 +1717,7 @@ enum L10n {
         static var alertsIntro: String {
             tr(
                 "battery.alerts.intro",
-                "开启后有外设时先弹出提示，点「打开」后在灵动岛查看电量。低电与满电亦经瞬时通知，约三秒后自动收起；点提示可进入电量面板。"
+                "开启后可在灵动岛查看已连接外设电量。低电与满电经瞬时通知提示，约三秒后自动收起。"
             )
         }
         static var forceExpandTitle: String {

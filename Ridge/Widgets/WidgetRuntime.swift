@@ -478,7 +478,7 @@ final class WidgetRuntime: ObservableObject {
     }
 
     /// 瞬时通知页优先；随后每个已上岛的控制台模块一高页；争夺中的内容型各占一页。
-    /// 实况控制台（电量）须 `LiveIslandGate` 点进后才进分页；提示类内容永不进此列表。
+    /// 实况控制台（电量）须 `LiveIslandGate` 准入后才进分页；提示类内容永不进此列表。
     private func buildVisiblePages(demanding: Set<WidgetID>) -> [VisiblePage] {
         var result: [VisiblePage] = []
         let transientIDs = demanding

@@ -44,15 +44,6 @@ final class MediaNowPlayingWidget: IslandWidget {
                 self?.reevaluate(reason: "trackChanged")
             }
             .store(in: &observers)
-        IslandNoticeCenter.shared.$current
-            .dropFirst()
-            .receive(on: RunLoop.main)
-            .sink { [weak self] payload in
-                // 其它瞬时条结束后，若仍有曲目且未点进，补投实况邀请。
-                guard payload == nil else { return }
-                self?.reevaluate(reason: "noticeCleared")
-            }
-            .store(in: &observers)
         reevaluate(reason: "init")
     }
 
@@ -114,85 +105,43 @@ final class MediaNowPlayingWidget: IslandWidget {
             withdrawDebounceTask?.cancel()
             withdrawDebounceTask = nil
 
-            let opened = LiveIslandGate.shared.isOpened(Self.manifest.id)
-            if opened {
-                dismissLiveInvite()
-                let becameVisible = !wantsDisplay
-                let alreadyDemanding = WidgetRuntime.shared.isDemanding(Self.manifest.id)
-                if becameVisible {
-                    wantsDisplay = true
-                    requestedAt = Date()
-                    AppLog.info("Media", "实况已点进，申请展示", [
-                        "reason": reason,
-                        "alreadyDemanding": alreadyDemanding
-                    ])
+            // 有曲目直接准入分页，不再投「打开」邀请 tip。
+            LiveIslandGate.shared.admit(Self.manifest.id, reason: reason)
+            let becameVisible = !wantsDisplay
+            let alreadyDemanding = WidgetRuntime.shared.isDemanding(Self.manifest.id)
+            if becameVisible {
+                wantsDisplay = true
+                requestedAt = Date()
+                AppLog.info("Media", "有曲目，申请展示", [
+                    "reason": reason,
+                    "alreadyDemanding": alreadyDemanding
+                ])
+            }
+            guard becameVisible else { return }
+            Task { @MainActor [weak self] in
+                guard let self, self.wantsDisplay else { return }
+                WidgetRuntime.shared.revealPage(
+                    Self.manifest.id,
+                    reason: "media:\(reason)",
+                    remember: false
+                )
+                let shouldExpand = !self.didAutoExpandForSession && !alreadyDemanding
+                if shouldExpand {
+                    self.didAutoExpandForSession = true
+                    IslandController.shared?.expand(reason: "mediaNowPlaying")
+                    self.scheduleAutoCollapseIfNeeded()
                 }
-                guard becameVisible else { return }
-                Task { @MainActor [weak self] in
-                    guard let self, self.wantsDisplay else { return }
-                    WidgetRuntime.shared.revealPage(
-                        Self.manifest.id,
-                        reason: "media:\(reason)",
-                        remember: false
-                    )
-                    let shouldExpand = !self.didAutoExpandForSession && !alreadyDemanding
-                    if shouldExpand {
-                        self.didAutoExpandForSession = true
-                        IslandController.shared?.expand(reason: "mediaNowPlaying")
-                        self.scheduleAutoCollapseIfNeeded()
-                    }
-                    AppLog.warn("Media", "媒体页已就绪", [
-                        "reason": reason,
-                        "expand": shouldExpand,
-                        "title": String((self.service.snapshot?.title ?? "").prefix(24)),
-                        "active": WidgetRuntime.shared.activeID ?? "nil"
-                    ])
-                }
-            } else {
-                // 未点进：撤内容页，改投实况邀请提示。
-                if wantsDisplay {
-                    wantsDisplay = false
-                    context.withdrawDisplay()
-                }
-                presentLiveInvite(reason: reason)
+                AppLog.warn("Media", "媒体页已就绪", [
+                    "reason": reason,
+                    "expand": shouldExpand,
+                    "title": String((self.service.snapshot?.title ?? "").prefix(24)),
+                    "active": WidgetRuntime.shared.activeID ?? "nil"
+                ])
             }
             return
         }
 
         scheduleDebouncedWithdraw(reason: reason)
-    }
-
-    private func presentLiveInvite(reason: String) {
-        let snap = service.snapshot
-        let title = snap?.title.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let artist = snap?.artist.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let invite = LiveIslandInvite(
-            widgetID: Self.manifest.id,
-            title: title.isEmpty ? L10n.Media.widgetName : title,
-            subtitle: artist.isEmpty ? L10n.Media.liveInviteSubtitle : artist,
-            symbol: "music.note"
-        )
-        let current = IslandNoticeCenter.shared.current
-        if case .liveInvite(let existing) = current, existing == invite {
-            return
-        }
-        // 若正展示其它通知，不抢（等其结束后再投）；曲目仍在时下次 reevaluate 会补。
-        if let current, current.id != invite.noticeID {
-            AppLog.debug("Media", "实况邀请暂缓：其它通知占用", [
-                "reason": reason,
-                "current": current.id
-            ])
-            return
-        }
-        IslandNoticeCenter.shared.present(.liveInvite(invite))
-        AppLog.info("Media", "已投递实况邀请提示", [
-            "reason": reason,
-            "title": String(invite.title.prefix(24))
-        ])
-    }
-
-    private func dismissLiveInvite() {
-        IslandNoticeCenter.shared.dismiss(id: LiveIslandGate.inviteNoticeID(for: Self.manifest.id))
     }
 
     /// 自动展开后若指针不在岛上，稍后收起，避免点播放后一直挂着。
@@ -223,7 +172,6 @@ final class MediaNowPlayingWidget: IslandWidget {
             self.wantsDisplay = false
             self.didAutoExpandForSession = false
             self.model.applyEmpty()
-            self.dismissLiveInvite()
             LiveIslandGate.shared.close(Self.manifest.id, reason: "mediaWithdraw:\(reason)")
             self.context.withdrawDisplay()
             if IslandController.shared?.isHoveringIsland != true {
