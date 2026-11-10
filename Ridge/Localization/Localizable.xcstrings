@@ -1465,12 +1465,23 @@
       }
     },
     "meeting.lead.subtitle": {
-      "extractionState": "manual",
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "会议开始前在灵动岛显示入会按钮"
+          }
+        }
+      }
+    },
+    "meeting.lead.subtitle_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议开始前 %d 分钟在灵动岛显示入会按钮"
           }
         }
       }
@@ -1482,6 +1493,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "提前提醒时间"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始后保留提示"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.subtitle": {
+      "extractionState": "stale",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议开始后，灵动岛入会提示保留多久"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.subtitle_at_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议一开始即收起灵动岛入会提示"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.subtitle_until_end": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议开始后一直保留，直到日程结束"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.subtitle_minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议开始后保留 %d 分钟再收起入会提示"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.at_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始即关"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.until_end": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直到结束"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.badge_at_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始即关"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.badge_until_end": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直到结束"
+          }
+        }
+      }
+    },
+    "meeting.tip_dismiss.badge_minutes_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开始后 %d 分钟"
           }
         }
       }

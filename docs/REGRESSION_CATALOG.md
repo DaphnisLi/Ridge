@@ -152,11 +152,11 @@
 ### island-focus-steal — 岛抢鼠标/键盘焦点
 
 - **recurring:** true  
-- **occurrences:** 2（2026-11-10：点别处无法聚焦；矫枉过正后「进入」按钮无响应）  
-- **症状:** 悬停或点过岛后其它 App 点不进；或普通点击岛上按钮首击无反应  
-- **根因倾向:** 关穿透 / 展开一律 `activate`+`makeKey` 且不 resign；矫枉后连 `makeKey` 去掉导致 SwiftUI Button 失效；入会曾依赖 widget weak `onJoin`  
-- **防护:** 悬停/展开不 `activate`；普通点击只 `makeKey`；穿透即 `resignKey`；入会链接写入 `MeetingLeadSession` 快照自开  
-- **相关代码:** `IslandFocusPolicy`、`IslandInteractionFocus.makeKeyOnly`、`MeetingLeadSession.joinFromNotice`  
+- **occurrences:** 3（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿）  
+- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」点了没反应  
+- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 NSControl；会议 tip 可点区停在刘海/短条，右翼落在 `interactiveFrame` 外  
+- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl`；会议 tip present 前 `prepareMeetingWingNoticeLayout`；入会用 AppKit 按钮 + 会话自开链接  
+- **相关代码:** `IslandFocusPolicy`、`prepareMeetingWingNoticeLayout`、`MeetingLeadAppKitPillButton`、`MeetingLeadSession`  
 - **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`
 
 ### tip-outline-panel — 瞬时提示上直角下圆角
@@ -168,6 +168,16 @@
 - **防护:** 真岛与设置预览一律 `IslandOutlineStyle.panel`（左上/右上直角、下圆角）  
 - **相关代码:** `IslandContentView.outlineStyle`、`WidgetSamplePreview.outlineStyle(for:)`、各 tip 配置页  
 - **自动化:** `RegressionCatalogTests.test_islandOutline_panelKeepsSquareTopCorners`
+
+### meeting-tip-advance-next — 第一场关掉后不提示第二场
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-10：背靠背会议，第一场开始后保留结束无第二场 tip）  
+- **症状:** 关闭/过期第一场会前提示后，即使第二场已在 lead 窗口内也不上岛  
+- **根因倾向:** 日历只暴露 `nextMeeting`（仍进行中的第一场）；widget 在 grace 过期后提前 return，从不改选下一场  
+- **防护:** `upcomingMeetings` 列表 + `MeetingLeadTipSelector`；grace/入会后 `onTipExpired` / `joinedAdvance` 立刻 reevaluate  
+- **相关代码:** `MeetingCalendarService`、`MeetingLeadTipSelector`、`MeetingCountdownWidget`、`MeetingLeadSession`  
+- **自动化:** `RegressionCatalogTests.test_meetingTipAdvanceNext_*`
 
 ---
 
@@ -188,3 +198,4 @@
 | 2026-11-10 | 录入 island-focus-steal；悬停/展开不 activate，穿透即 resignKey |
 | 2026-11-10 | tip-outline 改回 panel 上直角（occurrences=2，recurring） |
 | 2026-11-10 | island-focus-steal +1：普通点击恢复 makeKey；入会改会话自开链接 |
+| 2026-11-10 | 录入 meeting-tip-advance-next；多场会议 tip 可接力 |

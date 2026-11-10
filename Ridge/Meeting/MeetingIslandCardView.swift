@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// 会前提示紧迫度：稿面三态（充裕绿 / 临近琥珀 / 紧急红）。
@@ -130,29 +131,16 @@ struct MeetingIslandCardView: View {
 
     var body: some View {
         // 左右 / 底外边距只由壳层 `IslandChrome`（notchWing）提供；根上禁止再叠 padding。
-        // 岛宽由双翼+刘海占位固定；左右内容 overlay：右侧固有宽贴右并伸进刘海（整体左移），按钮文字不被压扁。
+        // 主轴 HStack 承载左右内容（勿用全清底+overlay，易把右翼按钮点穿）。
         HStack(spacing: 0) {
-            Color.clear
-                .frame(width: wingWidth)
-                .accessibilityHidden(true)
-            Color.clear
-                .frame(width: notchWidth)
-                .accessibilityHidden(true)
-            Color.clear
-                .frame(width: wingWidth)
-                .accessibilityHidden(true)
-        }
-        .frame(width: totalWidth, height: barHeight)
-        .overlay(alignment: .leading) {
             leftCluster
-                .frame(maxWidth: wingWidth + notchWidth * 0.48, alignment: .leading)
-        }
-        .overlay(alignment: .trailing) {
+                .frame(width: wingWidth + notchWidth * 0.48, alignment: .leading)
+            Spacer(minLength: 0)
             rightCluster
                 .fixedSize(horizontal: true, vertical: false)
         }
+        .frame(width: totalWidth, height: barHeight)
         .clipped()
-        // contain：保留子按钮可点；combine 会吞掉「进入」点击。
         .accessibilityElement(children: .contain)
         .accessibilityLabel(accessibilityText)
     }
@@ -227,28 +215,19 @@ struct MeetingIslandCardView: View {
         pulsing: Bool,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: compact ? 9.5 : 10, weight: .semibold))
-                .foregroundStyle(foreground)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-                .padding(.horizontal, compact ? 7 : 8)
-                .padding(.vertical, compact ? 2.5 : 3)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(background)
-                )
-                .overlay {
-                    if let border {
-                        Capsule(style: .continuous)
-                            .strokeBorder(border, lineWidth: 1)
-                    }
-                }
-                .modifier(MeetingLeadButtonPulseModifier(enabled: pulsing))
-        }
-        .buttonStyle(.plain)
-        .fixedSize(horizontal: true, vertical: false)
+        // AppKit 按钮：其它 App 前台时 SwiftUI Button 常首击无响应；NSButton + acceptsFirstMouse 可靠。
+        MeetingLeadAppKitPillButton(
+            title: title,
+            foreground: NSColor(foreground),
+            background: NSColor(background),
+            border: border.map { NSColor($0) },
+            compact: compact,
+            pulsing: pulsing,
+            action: action
+        )
+        // 高度锁定；整颗胶囊都是热区（见 NSButton hitTest）。
+        .frame(height: MeetingLeadAppKitPillButton.fixedHeight(compact: compact))
+        .fixedSize(horizontal: true, vertical: true)
     }
 
     private var accessibilityText: String {
@@ -335,18 +314,157 @@ private struct MeetingLeadPulseDot: View {
     }
 }
 
-private struct MeetingLeadButtonPulseModifier: ViewModifier {
-    let enabled: Bool
-    @State private var glow = false
+/// 会前提示操作钮：AppKit `NSButton`，其它 App 在前台时仍吃得下首击。
+private struct MeetingLeadAppKitPillButton: NSViewRepresentable {
+    let title: String
+    let foreground: NSColor
+    let background: NSColor
+    let border: NSColor?
+    let compact: Bool
+    let pulsing: Bool
+    let action: () -> Void
 
-    func body(content: Content) -> some View {
-        content
-            .opacity(enabled && glow ? 0.72 : 1)
-            .onAppear {
-                guard enabled else { return }
-                withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
-                    glow = true
-                }
-            }
+    static func fixedHeight(compact: Bool) -> CGFloat { compact ? 18 : 20 }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(action: action)
+    }
+
+    func makeNSView(context: Context) -> MeetingLeadPillNSButton {
+        let button = MeetingLeadPillNSButton(compact: compact)
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.tap(_:))
+        button.apply(
+            title: title,
+            foreground: foreground,
+            background: background,
+            border: border,
+            pulsing: pulsing
+        )
+        return button
+    }
+
+    func updateNSView(_ button: MeetingLeadPillNSButton, context: Context) {
+        context.coordinator.action = action
+        button.apply(
+            title: title,
+            foreground: foreground,
+            background: background,
+            border: border,
+            pulsing: pulsing
+        )
+    }
+
+    final class Coordinator: NSObject {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+
+        @objc func tap(_ sender: Any?) {
+            AppLog.warn("Meeting", "AppKit 入会按钮已点击")
+            action()
+        }
+    }
+}
+
+private final class MeetingLeadPillNSButton: NSButton {
+    private let compact: Bool
+    private let fixedHeight: CGFloat
+    private var pulseTimer: Timer?
+    private var pulseDimmed = false
+    private var baseBackground = NSColor.white
+
+    init(compact: Bool) {
+        self.compact = compact
+        self.fixedHeight = MeetingLeadAppKitPillButton.fixedHeight(compact: compact)
+        super.init(frame: .zero)
+        isBordered = false
+        setButtonType(.momentaryLight)
+        isEnabled = true
+        focusRingType = .none
+        wantsLayer = true
+        layer?.masksToBounds = true
+        // 禁止系统按压态改高度 / 缩进。
+        (cell as? NSButtonCell)?.highlightsBy = []
+        (cell as? NSButtonCell)?.showsStateBy = []
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var intrinsicContentSize: NSSize {
+        let font = NSFont.systemFont(ofSize: compact ? 9.5 : 10, weight: .semibold)
+        let textSize = (title as NSString).size(withAttributes: [.font: font])
+        let hPad: CGFloat = compact ? 7 : 8
+        return NSSize(
+            width: ceil(textSize.width) + hPad * 2,
+            height: fixedHeight
+        )
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    /// 整颗胶囊 bounds 都可点，不限于文字字形。
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        bounds.contains(point) ? self : nil
+    }
+
+    func apply(
+        title: String,
+        foreground: NSColor,
+        background: NSColor,
+        border: NSColor?,
+        pulsing: Bool
+    ) {
+        self.title = title
+        baseBackground = background
+        let font = NSFont.systemFont(ofSize: compact ? 9.5 : 10, weight: .semibold)
+        attributedTitle = NSAttributedString(
+            string: title,
+            attributes: [
+                .font: font,
+                .foregroundColor: foreground
+            ]
+        )
+        layer?.cornerRadius = fixedHeight / 2
+        paintBackground(dimmed: pulseDimmed && pulsing)
+        if let border {
+            layer?.borderWidth = 1
+            layer?.borderColor = border.cgColor
+        } else {
+            layer?.borderWidth = 0
+            layer?.borderColor = nil
+        }
+        invalidateIntrinsicContentSize()
+        setPulsing(pulsing)
+    }
+
+    private func paintBackground(dimmed: Bool) {
+        let fill = dimmed
+            ? baseBackground.withAlphaComponent(max(0.55, baseBackground.alphaComponent * 0.72))
+            : baseBackground
+        layer?.backgroundColor = fill.cgColor
+        // 控件本身保持不透明，避免 alpha 动画把边缘点穿。
+        alphaValue = 1
+    }
+
+    private func setPulsing(_ enabled: Bool) {
+        pulseTimer?.invalidate()
+        pulseTimer = nil
+        pulseDimmed = false
+        paintBackground(dimmed: false)
+        guard enabled else { return }
+        let timer = Timer(timeInterval: 0.9, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.pulseDimmed.toggle()
+            self.paintBackground(dimmed: self.pulseDimmed)
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        pulseTimer = timer
+    }
+
+    deinit {
+        pulseTimer?.invalidate()
     }
 }

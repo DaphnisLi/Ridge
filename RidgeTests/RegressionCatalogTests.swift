@@ -138,6 +138,112 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(panel.contains(CGPoint(x: 100, y: 20)))
     }
 
+    @MainActor
+    func test_meetingTipDismiss_retainWindowMatchesMode() {
+        let settings = MeetingSettings.shared
+        let previousMode = settings.tipDismissMode
+        let previousMinutes = settings.tipDismissMinutes
+        defer {
+            settings.tipDismissMode = previousMode
+            settings.tipDismissMinutes = previousMinutes
+        }
+
+        settings.tipDismissMode = .atStart
+        XCTAssertTrue(settings.shouldRetainLeadTip(secondsToStart: 60, secondsToEnd: 3600))
+        XCTAssertFalse(settings.shouldRetainLeadTip(secondsToStart: 0, secondsToEnd: 3600))
+        XCTAssertFalse(settings.shouldRetainLeadTip(secondsToStart: -1, secondsToEnd: 3600))
+
+        settings.tipDismissMode = .afterMinutes
+        settings.tipDismissMinutes = 5
+        XCTAssertTrue(settings.shouldRetainLeadTip(secondsToStart: -299, secondsToEnd: 3600))
+        XCTAssertFalse(settings.shouldRetainLeadTip(secondsToStart: -300, secondsToEnd: 3600))
+
+        settings.tipDismissMode = .untilEnd
+        XCTAssertTrue(settings.shouldRetainLeadTip(secondsToStart: -600, secondsToEnd: 10))
+        XCTAssertFalse(settings.shouldRetainLeadTip(secondsToStart: -600, secondsToEnd: 0))
+    }
+
+    /// meeting-tip-advance-next：第一场开始后保留窗口结束，应立刻选中仍在 lead 窗口内的第二场。
+    func test_meetingTipAdvanceNext_selectsSecondWhenFirstGraceExpired() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let first = MeetingEvent(
+            id: "m1",
+            title: "第一场",
+            startDate: now.addingTimeInterval(-6 * 60),
+            endDate: now.addingTimeInterval(24 * 60),
+            calendarIdentifier: "cal",
+            calendarTitle: "日历",
+            join: nil
+        )
+        let second = MeetingEvent(
+            id: "m2",
+            title: "第二场",
+            startDate: now.addingTimeInterval(4 * 60),
+            endDate: now.addingTimeInterval(34 * 60),
+            calendarIdentifier: "cal",
+            calendarTitle: "日历",
+            join: nil
+        )
+
+        let afterFirstGrace = MeetingLeadTipSelector.Input(
+            now: now,
+            leadSeconds: 10 * 60,
+            tipDismissMode: .afterMinutes,
+            tipDismissMinutes: 5,
+            dismissedAfterJoinID: nil,
+            latchedMeetingID: first.id
+        )
+        let selected = MeetingLeadTipSelector.select(from: [first, second], input: afterFirstGrace)
+        XCTAssertEqual(selected?.meeting.id, second.id)
+
+        // 第一场开始后仅 3 分钟：仍在 5 分钟保留内，应继续 latched 第一场。
+        let duringFirstGrace = MeetingLeadTipSelector.Input(
+            now: first.startDate.addingTimeInterval(3 * 60),
+            leadSeconds: 10 * 60,
+            tipDismissMode: .afterMinutes,
+            tipDismissMinutes: 5,
+            dismissedAfterJoinID: nil,
+            latchedMeetingID: first.id
+        )
+        XCTAssertEqual(
+            MeetingLeadTipSelector.select(from: [first, second], input: duringFirstGrace)?.meeting.id,
+            first.id
+        )
+    }
+
+    /// 入会撤掉第一场后，第二场已进入 lead 窗口时应被选中。
+    func test_meetingTipAdvanceNext_selectsSecondAfterJoinDismiss() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let first = MeetingEvent(
+            id: "m1",
+            title: "第一场",
+            startDate: now.addingTimeInterval(-2 * 60),
+            endDate: now.addingTimeInterval(28 * 60),
+            calendarIdentifier: "cal",
+            calendarTitle: "日历",
+            join: nil
+        )
+        let second = MeetingEvent(
+            id: "m2",
+            title: "第二场",
+            startDate: now.addingTimeInterval(5 * 60),
+            endDate: now.addingTimeInterval(35 * 60),
+            calendarIdentifier: "cal",
+            calendarTitle: "日历",
+            join: nil
+        )
+        let input = MeetingLeadTipSelector.Input(
+            now: now,
+            leadSeconds: 10 * 60,
+            tipDismissMode: .afterMinutes,
+            tipDismissMinutes: 5,
+            dismissedAfterJoinID: first.id,
+            latchedMeetingID: nil
+        )
+        let selected = MeetingLeadTipSelector.select(from: [first, second], input: input)
+        XCTAssertEqual(selected?.meeting.id, second.id)
+    }
+
     func test_islandFocusPolicy_neverStealsOnHoverOrPlainClick() {
         // island-focus-steal：悬停关穿透 / 展开 / 普通点击均不得 activate；穿透开启须交还 key。
         // 普通点击仍须 makeKey，否则 SwiftUI 按钮首击无响应。

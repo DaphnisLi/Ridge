@@ -549,6 +549,30 @@ final class IslandController: NSObject {
         ])
     }
 
+    /// 会议翼 tip 上岛前强制宽面板：否则可点区停在刘海/短条，右翼「进入」点穿到下层。
+    func prepareMeetingWingNoticeLayout(reason: String) {
+        let notchH = viewModel.notchHeight
+        let notchW = max(viewModel.notchWidth, 110)
+        let wing: CGFloat = 98
+        let height = IslandChrome.compactTipTopInset
+            + max(notchH, 32)
+            + IslandChrome.compactTipBottom
+        let width = wing * 2 + notchW + IslandChrome.horizontalInsetTotal
+        viewModel.forcePanelSize(CGSize(width: width, height: height), reason: reason)
+        if viewModel.isExpanded {
+            updateInteractiveFrame(expanded: true)
+        } else {
+            // 尚未展开时也先写可点框，避免首击落在刘海外被 HitTest 放行。
+            updateInteractiveFrame(expanded: true)
+        }
+        AppLog.warn("Island", "会议翼通知布局已预备", [
+            "reason": reason,
+            "w": Int(width),
+            "h": Int(height),
+            "notchW": Int(notchW)
+        ])
+    }
+
     /// 取色 / OCR 结束：清按住钉住。若仍展开（如瞬时通知）只恢复按悬停逻辑穿透，不再强行收岛。
     func endExternalPointerTool(reason: String) {
         isExternalPointerToolActive = false
@@ -983,20 +1007,26 @@ final class IslandController: NSObject {
                 "appActive": NSApp.isActive
             ])
         }
-        let level: (String, [String: Any]) -> Void = { message, fields in
-            if WidgetRuntime.shared.isControlDeckPage {
-                AppLog.info("Overlay", message, fields)
-            } else {
-                AppLog.debug("Overlay", message, fields)
-            }
+        let meetingTip = IslandNoticeCenter.shared.current?.usesNotchWingChrome == true
+        // 会议 tip 穿透切换必须落盘：按钮点穿多半是可点区过窄 + 仍穿透。
+        if meetingTip || WidgetRuntime.shared.isControlDeckPage {
+            AppLog.warn("Overlay", enabled ? "开启点击穿透" : "关闭点击穿透", [
+                "reason": reason,
+                "expanded": viewModel.isExpanded,
+                "meetingTip": meetingTip,
+                "panelW": Int(viewModel.panelSize.width),
+                "panelH": Int(viewModel.panelSize.height),
+                "islandKey": window.isKeyWindow,
+                "appActive": NSApp.isActive
+            ])
+        } else {
+            AppLog.debug("Overlay", enabled ? "开启点击穿透" : "关闭点击穿透", [
+                "reason": reason,
+                "expanded": viewModel.isExpanded,
+                "islandKey": window.isKeyWindow,
+                "appActive": NSApp.isActive
+            ])
         }
-        level(enabled ? "开启点击穿透" : "关闭点击穿透", [
-            "reason": reason,
-            "expanded": viewModel.isExpanded,
-            "controlDeck": WidgetRuntime.shared.isControlDeckPage,
-            "islandKey": window.isKeyWindow,
-            "appActive": NSApp.isActive
-        ])
     }
 
     /// 文本输入等少数路径才升 regular + activate；悬停 / 普通点击禁止走这里。

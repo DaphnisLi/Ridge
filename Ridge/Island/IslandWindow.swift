@@ -182,13 +182,22 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
     /// nonactivatingPanel 不抢前台；必须允许首击直达 SwiftUI 按钮，否则「点一下没反应」。
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    /// 1) 别的 App 在前台时，SwiftUI 子视图不吃 first mouse → 由本 view 接手。
-    /// 2) 透明/无控件区域 `super.hitTest` 会 nil → 也必须接手，否则点击漏到下层页面。
-    /// 3) 可编辑 AppKit 控件（NSTextField 等）优先命中，否则永远轮不到插入光标。
+    /// 1) 可编辑字段优先。
+    /// 2) AppKit 控件（会议「进入」NSButton 等）必须直达，否则 hosting 吞掉 mouseDown。
+    /// 3) 其余仍由本 view 接手（acceptsFirstMouse + makeKey），避免透明区漏点。
     override func hitTest(_ point: NSPoint) -> NSView? {
         guard bounds.contains(point) else { return nil }
         if let editable = editableSubview(at: point) {
             return editable
+        }
+        if let systemHit = super.hitTest(point) {
+            var cursor: NSView? = systemHit
+            while let cur = cursor, cur !== self {
+                if cur is NSControl {
+                    return cur
+                }
+                cursor = cur.superview
+            }
         }
         return self
     }

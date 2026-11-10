@@ -7,6 +7,7 @@ struct MeetingWidgetConfigSection: View {
     @ObservedObject private var settings = MeetingSettings.shared
     @ObservedObject private var calendar = MeetingCalendarService.shared
     @State private var leadText: String = ""
+    @State private var tipDismissText: String = ""
     @State private var customName: String = ""
     @State private var customLink: String = ""
     @State private var customError: String?
@@ -16,6 +17,7 @@ struct MeetingWidgetConfigSection: View {
 
     private enum Field: Hashable {
         case leadMinutes
+        case tipDismissMinutes
         case customName
         case customLink
     }
@@ -30,6 +32,7 @@ struct MeetingWidgetConfigSection: View {
                     authCard
                     islandPreviewCard
                     leadMinutesCard
+                    tipDismissCard
                     supportedPlatformsCard
                     customAppsCard
                 }
@@ -44,6 +47,7 @@ struct MeetingWidgetConfigSection: View {
                 resignFields()
                 settings.restoreDefaults()
                 leadText = "\(settings.leadMinutes)"
+                tipDismissText = "\(settings.tipDismissMinutes)"
                 AppLog.info("Meeting", "用户恢复默认设置")
             }
         }
@@ -51,6 +55,7 @@ struct MeetingWidgetConfigSection: View {
         .background(SettingsChrome.pageBackground)
         .onAppear {
             leadText = "\(settings.leadMinutes)"
+            tipDismissText = "\(settings.tipDismissMinutes)"
             calendar.start()
             calendar.refreshUpcoming(reason: "widgetPreviewConfig")
             AppLog.debug("Meeting", "会议配置区已显示（预览页）")
@@ -61,9 +66,18 @@ struct MeetingWidgetConfigSection: View {
                 leadText = next
             }
         }
+        .onChange(of: settings.tipDismissMinutes) { _, value in
+            let next = "\(value)"
+            if focusedField != .tipDismissMinutes, tipDismissText != next {
+                tipDismissText = next
+            }
+        }
         .onChange(of: focusedField) { old, new in
             if old == .leadMinutes, new != .leadMinutes {
                 commitLeadMinutes()
+            }
+            if old == .tipDismissMinutes, new != .tipDismissMinutes {
+                commitTipDismissMinutes()
             }
         }
     }
@@ -175,7 +189,7 @@ struct MeetingWidgetConfigSection: View {
                         Text(L10n.Meeting.leadTitle)
                             .font(.system(size: 13.5, weight: .semibold))
                             .foregroundStyle(SettingsChrome.onSurface)
-                        Text(L10n.Meeting.leadSubtitle)
+                        Text(L10n.Meeting.leadSubtitle(settings.leadMinutes))
                             .font(.system(size: 12))
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
                     }
@@ -269,6 +283,148 @@ struct MeetingWidgetConfigSection: View {
             AppLog.info("Meeting", "提前倒计时已更新", ["minutes": clamped])
         }
         leadText = "\(clamped)"
+    }
+
+    // MARK: - 开始后保留提示
+
+    private var tipDismissCard: some View {
+        SettingsCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L10n.Meeting.tipDismissTitle)
+                            .font(SettingsChrome.Font.rowTitle)
+                            .foregroundStyle(SettingsChrome.onSurface)
+                        Text(
+                            L10n.Meeting.tipDismissSubtitle(
+                                settings.tipDismissMode,
+                                minutes: settings.tipDismissMinutes
+                            )
+                        )
+                        .font(SettingsChrome.Font.body)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    }
+                    Spacer(minLength: 8)
+                    Text(
+                        L10n.Meeting.tipDismissBadge(
+                            settings.tipDismissMode,
+                            minutes: settings.tipDismissMinutes
+                        )
+                    )
+                    .font(SettingsChrome.Font.footnote)
+                    .foregroundStyle(SettingsChrome.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(SettingsChrome.primary.opacity(0.10))
+                    )
+                }
+
+                HStack(spacing: 4) {
+                    tipDismissPresetButton(
+                        title: L10n.Meeting.tipDismissAtStart,
+                        selected: settings.tipDismissMode == .atStart
+                    ) {
+                        resignFields()
+                        settings.tipDismissMode = .atStart
+                    }
+
+                    tipDismissPresetButton(
+                        title: L10n.Meeting.minutesRecommended(5),
+                        selected: settings.tipDismissMode == .afterMinutes
+                            && settings.tipDismissMinutes == 5
+                    ) {
+                        resignFields()
+                        tipDismissText = "5"
+                        settings.tipDismissMinutes = 5
+                        settings.tipDismissMode = .afterMinutes
+                    }
+
+                    tipDismissPresetButton(
+                        title: L10n.Meeting.tipDismissUntilEnd,
+                        selected: settings.tipDismissMode == .untilEnd
+                    ) {
+                        resignFields()
+                        settings.tipDismissMode = .untilEnd
+                    }
+
+                    Rectangle()
+                        .fill(SettingsChrome.outlineVariant.opacity(0.60))
+                        .frame(width: 1, height: 18)
+                        .padding(.horizontal, 4)
+
+                    HStack(spacing: 4) {
+                        TextField("", text: $tipDismissText)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 44)
+                            .multilineTextAlignment(.center)
+                            .font(.system(size: 12).monospacedDigit())
+                            .focused($focusedField, equals: .tipDismissMinutes)
+                            .onSubmit {
+                                commitTipDismissMinutes()
+                                focusedField = nil
+                            }
+                            .onChange(of: tipDismissText) { _, newValue in
+                                let filtered = newValue.filter(\.isNumber)
+                                if filtered != newValue { tipDismissText = filtered }
+                            }
+                        Text(L10n.Common.minuteUnit)
+                            .font(.system(size: 11))
+                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    }
+                    .padding(.leading, 2)
+                }
+                .padding(4)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(SettingsChrome.surfaceContainerLow)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
+                        )
+                )
+            }
+            .padding(SettingsChrome.Spacing.cardPadding)
+        }
+    }
+
+    private func tipDismissPresetButton(
+        title: String,
+        selected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
+                .foregroundStyle(selected ? SettingsChrome.onSurface : SettingsChrome.onSurfaceVariant)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(selected ? Color.white : Color.clear)
+                        .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 2, y: 1)
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func commitTipDismissMinutes() {
+        let parsed = Int(tipDismissText) ?? settings.tipDismissMinutes
+        let clamped = min(
+            max(parsed, MeetingSettings.tipDismissMinutesRange.lowerBound),
+            MeetingSettings.tipDismissMinutesRange.upperBound
+        )
+        settings.tipDismissMinutes = clamped
+        settings.tipDismissMode = .afterMinutes
+        tipDismissText = "\(clamped)"
+        AppLog.info("Meeting", "开始后保留分钟已更新", [
+            "minutes": clamped,
+            "mode": settings.tipDismissMode.rawValue
+        ])
     }
 
     // MARK: - 支持的平台

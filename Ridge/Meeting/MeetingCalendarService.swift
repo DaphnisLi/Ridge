@@ -28,7 +28,10 @@ final class MeetingCalendarService: ObservableObject {
     static let shared = MeetingCalendarService()
 
     @Published private(set) var authStatus: MeetingAuthStatus = .notDetermined
-    @Published private(set) var nextMeeting: MeetingEvent?
+    /// 未结束的近期会议（按开始时间升序）；会前提示可在第一场关掉后切到下一场。
+    @Published private(set) var upcomingMeetings: [MeetingEvent] = []
+    /// 最近一场未结束会议（兼容旧调用）。
+    var nextMeeting: MeetingEvent? { upcomingMeetings.first }
     @Published private(set) var lastErrorMessage: String?
 
     private let store = EKEventStore()
@@ -145,7 +148,7 @@ final class MeetingCalendarService: ObservableObject {
     func refreshUpcoming(reason: String) {
         refreshAuthStatus()
         guard authStatus == .authorized else {
-            nextMeeting = nil
+            upcomingMeetings = []
             AppLog.debug("Meeting", "未授权，跳过刷新", ["reason": reason])
             return
         }
@@ -153,7 +156,7 @@ final class MeetingCalendarService: ObservableObject {
         // 直接遍历系统全部日历；从 location / notes / url 解析入会链接。
         let ekCalendars = store.calendars(for: .event)
         guard !ekCalendars.isEmpty else {
-            nextMeeting = nil
+            upcomingMeetings = []
             AppLog.debug("Meeting", "系统无日历源", ["reason": reason])
             return
         }
@@ -165,52 +168,55 @@ final class MeetingCalendarService: ObservableObject {
             end: windowEnd,
             calendars: ekCalendars
         )
-        // 优先带入会链接的会议；否则退回下一场非全天事件。
+        // 全部未结束非全天事件（按开始时间）；提示层再按 lead / 保留策略挑场。
         let events = store.events(matching: predicate)
             .filter { !$0.isAllDay }
             .filter { $0.endDate > now }
             .sorted { $0.startDate < $1.startDate }
 
         let customs = settings.customApps
-        let withJoin = events.first { event in
-            MeetingLinkDetector.detect(
-                location: event.location,
-                notes: event.notes,
-                url: event.url,
+        let mapped: [MeetingEvent] = events.map { ek in
+            let join = MeetingLinkDetector.detect(
+                location: ek.location,
+                notes: ek.notes,
+                url: ek.url,
                 customApps: customs
-            ) != nil
+            )
+            return MeetingEvent(
+                id: ek.eventIdentifier ?? "\(ek.startDate.timeIntervalSince1970)-\(ek.title ?? "")",
+                title: (ek.title?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? L10n.Meeting.untitled,
+                startDate: ek.startDate,
+                endDate: ek.endDate,
+                calendarIdentifier: ek.calendar.calendarIdentifier,
+                calendarTitle: ek.calendar.title,
+                join: join,
+                isAllDay: ek.isAllDay
+            )
         }
-        guard let ek = withJoin ?? events.first else {
-            nextMeeting = nil
+
+        // 有入会链接的优先排在同起点之前：同 start 时带 join 的排前；整体仍按 start 升序。
+        let ordered = mapped.sorted { lhs, rhs in
+            if lhs.startDate != rhs.startDate { return lhs.startDate < rhs.startDate }
+            switch (lhs.join != nil, rhs.join != nil) {
+            case (true, false): return true
+            case (false, true): return false
+            default: return false
+            }
+        }
+
+        upcomingMeetings = ordered
+        if let first = ordered.first {
+            AppLog.info("Meeting", "已刷新近期会议", [
+                "reason": reason,
+                "count": ordered.count,
+                "titlePrefix": String(first.title.prefix(8)),
+                "startInSec": Int(first.startDate.timeIntervalSinceNow),
+                "hasJoin": first.join != nil,
+                "platform": first.join?.logLabel ?? "none"
+            ])
+        } else {
             AppLog.debug("Meeting", "窗口内无会议", ["reason": reason])
-            return
         }
-
-        let join = MeetingLinkDetector.detect(
-            location: ek.location,
-            notes: ek.notes,
-            url: ek.url,
-            customApps: customs
-        )
-
-        let mapped = MeetingEvent(
-            id: ek.eventIdentifier ?? "\(ek.startDate.timeIntervalSince1970)-\(ek.title ?? "")",
-            title: (ek.title?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? L10n.Meeting.untitled,
-            startDate: ek.startDate,
-            endDate: ek.endDate,
-            calendarIdentifier: ek.calendar.calendarIdentifier,
-            calendarTitle: ek.calendar.title,
-            join: join,
-            isAllDay: ek.isAllDay
-        )
-        nextMeeting = mapped
-        AppLog.info("Meeting", "已刷新下一场会议", [
-            "reason": reason,
-            "titlePrefix": String(mapped.title.prefix(8)),
-            "startInSec": Int(mapped.startDate.timeIntervalSinceNow),
-            "hasJoin": join != nil,
-            "platform": join?.logLabel ?? "none"
-        ])
     }
 
     private func beginObserving() {

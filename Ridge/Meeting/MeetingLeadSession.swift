@@ -30,6 +30,8 @@ final class MeetingLeadSession: ObservableObject {
 
     /// 入会成功后通知 widget 记 dismissed（可选）。
     var onJoined: ((String) -> Void)?
+    /// 保留窗口结束 / 日程结束自动撤 tip 后，让 widget 立刻改选下一场。
+    var onTipExpired: ((String) -> Void)?
     var onRequestAuth: (() -> Void)?
 
     private var tick: Timer?
@@ -137,13 +139,28 @@ final class MeetingLeadSession: ObservableObject {
             return
         }
         let now = Date()
-        // 日程已结束：清提示（widget 可能已 reap，不能只靠它）。
-        if current.endDate.timeIntervalSince(now) <= 0 {
+        let secondsToEnd = current.endDate.timeIntervalSince(now)
+        let seconds = current.startDate.timeIntervalSince(now)
+        // 日程结束，或超过「开始后保留」策略：清提示（widget 可能已 reap）。
+        if secondsToEnd <= 0 {
             AppLog.info("Meeting", "会前提示：日程已结束，自动清除")
             publish(nil, reason: "leadTickEnded")
+            onTipExpired?("leadTickEnded")
             return
         }
-        let seconds = current.startDate.timeIntervalSince(now)
+        if !MeetingSettings.shared.shouldRetainLeadTip(
+            secondsToStart: seconds,
+            secondsToEnd: secondsToEnd
+        ) {
+            AppLog.info("Meeting", "会前提示：已过开始后保留窗口，自动清除", [
+                "mode": MeetingSettings.shared.tipDismissMode.rawValue,
+                "minutes": MeetingSettings.shared.tipDismissMinutes,
+                "secToStart": Int(seconds)
+            ])
+            publish(nil, reason: "leadTickGraceExpired")
+            onTipExpired?("leadTickGraceExpired")
+            return
+        }
         let next = Snapshot(
             meetingID: current.meetingID,
             title: current.title,

@@ -1494,8 +1494,12 @@ enum L10n {
         }
 
         static var leadTitle: String { tr("meeting.lead.title", "提前提醒时间") }
-        static var leadSubtitle: String {
-            tr("meeting.lead.subtitle", "会议开始前在灵动岛显示入会按钮")
+        /// 随下方所选提前分钟变化。
+        static func leadSubtitle(_ minutes: Int) -> String {
+            String(
+                format: tr("meeting.lead.subtitle_format", "会议开始前 %d 分钟在灵动岛显示入会按钮"),
+                minutes
+            )
         }
         static func leadBadge(_ minutes: Int) -> String {
             String(format: tr("meeting.lead.badge_format", "提前 %d 分钟"), minutes)
@@ -1505,6 +1509,46 @@ enum L10n {
         }
         static func minutesRecommended(_ n: Int) -> String {
             String(format: tr("meeting.lead.minutes_recommended_format", "%d 分钟 (推荐)"), n)
+        }
+
+        static var tipDismissTitle: String { tr("meeting.tip_dismiss.title", "开始后保留提示") }
+        /// 随下方所选策略变化。
+        static func tipDismissSubtitle(_ mode: MeetingTipDismissMode, minutes: Int) -> String {
+            switch mode {
+            case .atStart:
+                return tr(
+                    "meeting.tip_dismiss.subtitle_at_start",
+                    "会议一开始即收起灵动岛入会提示"
+                )
+            case .untilEnd:
+                return tr(
+                    "meeting.tip_dismiss.subtitle_until_end",
+                    "会议开始后一直保留，直到日程结束"
+                )
+            case .afterMinutes:
+                return String(
+                    format: tr(
+                        "meeting.tip_dismiss.subtitle_minutes_format",
+                        "会议开始后保留 %d 分钟再收起入会提示"
+                    ),
+                    minutes
+                )
+            }
+        }
+        static var tipDismissAtStart: String { tr("meeting.tip_dismiss.at_start", "开始即关") }
+        static var tipDismissUntilEnd: String { tr("meeting.tip_dismiss.until_end", "直到结束") }
+        static func tipDismissBadge(_ mode: MeetingTipDismissMode, minutes: Int) -> String {
+            switch mode {
+            case .atStart:
+                return tr("meeting.tip_dismiss.badge_at_start", "开始即关")
+            case .untilEnd:
+                return tr("meeting.tip_dismiss.badge_until_end", "直到结束")
+            case .afterMinutes:
+                return String(
+                    format: tr("meeting.tip_dismiss.badge_minutes_format", "开始后 %d 分钟"),
+                    minutes
+                )
+            }
         }
 
         static var platformsTitle: String { tr("meeting.platforms.title", "支持的会议平台") }

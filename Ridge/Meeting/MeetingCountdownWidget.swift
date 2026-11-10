@@ -29,7 +29,7 @@ final class MeetingCountdownWidget: IslandWidget {
     private var observers: Set<AnyCancellable> = []
     /// 用户已点击入会的会议 id；该场会不再上岛，直到换下一场。
     private var dismissedAfterJoinID: String?
-    /// 已进入提醒窗口的会议 id：持续展示到入会或日程结束。
+    /// 已进入提醒窗口的会议 id：持续展示到入会或保留窗口结束。
     private var latchedMeetingID: String?
 
     init(context: WidgetContext) {
@@ -42,10 +42,17 @@ final class MeetingCountdownWidget: IslandWidget {
             AppLog.info("Meeting", "会话入会回调：已标记 dismissed", [
                 "meeting": String(meetingID.prefix(8))
             ])
+            // 入会撤掉本场后，立刻看是否该提示下一场。
+            self?.reevaluate(reason: "joinedAdvance")
+        }
+        MeetingLeadSession.shared.onTipExpired = { [weak self] reason in
+            // 开始后保留窗口结束：清 latch，改选下一场。
+            self?.latchedMeetingID = nil
+            self?.reevaluate(reason: reason)
         }
         MeetingLeadSession.shared.onRequestAuth = { [weak self] in self?.requestCalendarAccess() }
         // dropFirst：避免订阅时同步回调；初始状态靠下方同步 reevaluate。
-        calendar.$nextMeeting
+        calendar.$upcomingMeetings
             .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -56,6 +63,18 @@ final class MeetingCountdownWidget: IslandWidget {
             .dropFirst()
             .sink { [weak self] _ in
                 self?.reevaluate(reason: "meetingSettings")
+            }
+            .store(in: &observers)
+        settings.$tipDismissMode
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.reevaluate(reason: "tipDismissSettings")
+            }
+            .store(in: &observers)
+        settings.$tipDismissMinutes
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.reevaluate(reason: "tipDismissSettings")
             }
             .store(in: &observers)
         startTicking()
@@ -103,10 +122,7 @@ final class MeetingCountdownWidget: IslandWidget {
 
     private func reevaluate(reason: String) {
         let now = Date()
-        // 进入提醒窗口后以瞬时提示挂着，直到用户点「进入」；日程结束则清场。不占内容分页。
-        guard calendar.authStatus == .authorized,
-              let meeting = calendar.nextMeeting
-        else {
+        guard calendar.authStatus == .authorized else {
             latchedMeetingID = nil
             clearLead(reason: reason)
             if reason != "tick" {
@@ -120,54 +136,59 @@ final class MeetingCountdownWidget: IslandWidget {
             return
         }
 
-        if let dismissed = dismissedAfterJoinID, dismissed != meeting.id {
+        let meetings = calendar.upcomingMeetings
+        // 已入会场次若不在列表（已结束），清 dismissed，避免脏状态挡下一场。
+        if let dismissed = dismissedAfterJoinID,
+           !meetings.contains(where: { $0.id == dismissed })
+        {
             dismissedAfterJoinID = nil
         }
 
-        let lead = TimeInterval(settings.leadMinutes * 60)
-        let secondsToStart = meeting.startDate.timeIntervalSince(now)
-        let secondsToEnd = meeting.endDate.timeIntervalSince(now)
-        let meetingAlive = secondsToEnd > 0
-        let enteredLead = secondsToStart <= lead && meetingAlive
+        let input = MeetingLeadTipSelector.Input(
+            now: now,
+            leadSeconds: TimeInterval(settings.leadMinutes * 60),
+            tipDismissMode: settings.tipDismissMode,
+            tipDismissMinutes: settings.tipDismissMinutes,
+            dismissedAfterJoinID: dismissedAfterJoinID,
+            latchedMeetingID: latchedMeetingID
+        )
 
-        if !meetingAlive {
-            if latchedMeetingID == meeting.id {
-                latchedMeetingID = nil
+        guard let selected = MeetingLeadTipSelector.select(from: meetings, input: input) else {
+            if latchedMeetingID != nil {
+                AppLog.info("Meeting", "会前提示窗口已结束，暂无下一场可提示", [
+                    "reason": reason,
+                    "upcoming": meetings.count,
+                    "previousLatch": String((latchedMeetingID ?? "").prefix(8))
+                ])
             }
+            latchedMeetingID = nil
             clearLead(reason: reason)
             if reason != "tick" {
                 context.log("会议展示状态", fields: [
                     "reason": reason,
-                    "ended": true,
+                    "upcoming": meetings.count,
                     "tip": false
                 ])
             }
             return
         }
 
-        if enteredLead {
+        let meeting = selected.meeting
+        let previousLatch = latchedMeetingID
+        if selected.shouldLatch {
             latchedMeetingID = meeting.id
-        } else if latchedMeetingID != meeting.id {
-            latchedMeetingID = nil
         }
 
-        let joinedAway = dismissedAfterJoinID == meeting.id
-        let shouldShow = !joinedAway && (latchedMeetingID == meeting.id)
-
-        guard shouldShow else {
-            clearLead(reason: reason)
-            if reason != "tick" {
-                context.log("会议展示状态", fields: [
-                    "reason": reason,
-                    "enteredLead": enteredLead,
-                    "joinedAway": joinedAway,
-                    "tip": false,
-                    "secToStart": Int(secondsToStart)
-                ])
-            }
-            return
+        if previousLatch != nil, previousLatch != meeting.id {
+            AppLog.info("Meeting", "会前提示已切换到下一场", [
+                "reason": reason,
+                "from": String((previousLatch ?? "").prefix(8)),
+                "to": String(meeting.id.prefix(8)),
+                "secToStart": Int(meeting.startDate.timeIntervalSince(now))
+            ])
         }
 
+        let secondsToStart = meeting.startDate.timeIntervalSince(now)
         let join = meeting.join
         let showJoin = join != nil
         let urgency = MeetingLeadUrgency.resolve(secondsToStart: secondsToStart)
@@ -191,7 +212,8 @@ final class MeetingCountdownWidget: IslandWidget {
                 "showJoin": showJoin,
                 "tip": true,
                 "urgency": urgency.rawValue,
-                "secToStart": Int(secondsToStart)
+                "secToStart": Int(secondsToStart),
+                "upcoming": meetings.count
             ])
         }
     }

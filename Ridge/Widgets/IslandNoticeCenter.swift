@@ -161,12 +161,16 @@ final class IslandNoticeCenter: ObservableObject {
         // 若仍卡在上一通知尺寸会被误缩守卫拒绝，提示整段被顶出可视区。
         if payload.usesShortBelowNotchChrome {
             IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(payload.id)")
+        } else if payload.usesNotchWingChrome {
+            // 翼 tip 必须先抬到双翼宽度，否则右翼按钮落在 interactiveFrame 外，点击整窗穿透。
+            IslandController.shared?.prepareMeetingWingNoticeLayout(reason: "present:\(payload.id)")
         }
         current = payload
         AppLog.warn("IslandNotice", "已投递瞬时通知", [
             "id": payload.id,
             "source": payload.sourceTag,
-            "shortTip": payload.usesShortBelowNotchChrome
+            "shortTip": payload.usesShortBelowNotchChrome,
+            "wingTip": payload.usesNotchWingChrome
         ])
     }
 
