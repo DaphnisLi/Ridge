@@ -451,7 +451,7 @@ enum L10n {
             )
         }
         static var smartAvoidTitle: String {
-            tr("move_reminder.smart_avoid.title", "智能避让全屏演讲与专注模式")
+            tr("move_reminder.smart_avoid.title", "智能避让全屏演讲")
         }
         static var smartAvoidSubtitle: String {
             tr(
@@ -465,6 +465,10 @@ enum L10n {
         static func noticeTitle(_ minutes: Int) -> String {
             String(format: tr("move_reminder.notice.title_format", "已连续坐 %d 分钟"), minutes)
         }
+        /// 岛上左翼极简度规：`久坐 30m`
+        static func metricTitle(_ minutes: Int) -> String {
+            String(format: tr("move_reminder.notice.metric_format", "久坐 %dm"), minutes)
+        }
         static var noticeBadge: String {
             tr("move_reminder.notice.badge", "推荐起立")
         }
@@ -476,6 +480,10 @@ enum L10n {
         }
         static var snoozeTen: String {
             tr("move_reminder.notice.snooze_ten", "稍后 10 分钟")
+        }
+        /// 岛上右翼微钮：`+10m`
+        static var snoozeShort: String {
+            tr("move_reminder.notice.snooze_short", "+10m")
         }
         static var muteToday: String {
             tr("move_reminder.notice.mute_today", "今天不再提醒")

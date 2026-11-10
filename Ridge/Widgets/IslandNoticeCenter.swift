@@ -109,10 +109,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 会议 / AI 额度：顶距 0，左右翼贴刘海；外形上直角、下圆角。
+    /// 会议 / AI 额度 / 久坐：顶距 0，左右翼贴刘海；外形上直角、下圆角。
     var usesNotchWingChrome: Bool {
         switch self {
-        case .meetingLead, .aiUsageAlert:
+        case .meetingLead, .aiUsageAlert, .moveReminder:
             return true
         default:
             return false

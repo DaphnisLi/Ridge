@@ -7828,7 +7828,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "智能避让全屏演讲与专注模式"
+            "value": "智能避让全屏演讲"
           }
         }
       }
@@ -7862,6 +7862,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "已连续坐 %d 分钟"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.metric_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "久坐 %dm"
+          }
+        }
+      }
+    },
+    "move_reminder.notice.snooze_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+10m"
           }
         }
       }

@@ -120,10 +120,15 @@ final class RegressionCatalogTests: XCTestCase {
             stage: .warning,
             resetsAt: Date().addingTimeInterval(9 * 3600)
         )
+        let move = IslandNoticePayload.moveReminder(
+            .init(id: "move.test", activeMinutes: 30, restMinutes: 2)
+        )
         XCTAssertTrue(meeting.usesNotchWingChrome)
         XCTAssertFalse(meeting.usesShortBelowNotchChrome)
         XCTAssertTrue(aiUsage.usesNotchWingChrome)
         XCTAssertFalse(aiUsage.usesShortBelowNotchChrome)
+        XCTAssertTrue(move.usesNotchWingChrome)
+        XCTAssertFalse(move.usesShortBelowNotchChrome)
         XCTAssertFalse(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
         XCTAssertTrue(IslandNoticePayload.colorPickTip.usesShortBelowNotchChrome)
         XCTAssertFalse(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)

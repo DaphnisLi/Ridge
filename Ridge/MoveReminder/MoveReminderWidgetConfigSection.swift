@@ -1,13 +1,11 @@
 import SwiftUI
 
-/// 久坐起身提醒设置：居中岛样张 + 触发 / 离开重置 / 联动活动时长 / 反馈免打扰。
+/// 久坐起身提醒设置：岛样张 + 触发 / 离开重置 / 反馈免打扰。
 struct MoveReminderWidgetConfigSection: View {
     @ObservedObject private var settings = MoveReminderSettings.shared
     @ObservedObject private var session = MoveReminderSession.shared
 
     private let amber = Color(red: 1.0, green: 0.584, blue: 0.0)
-    /// 岛内左右统一边距（预览无 IslandChrome，需自行对称）。
-    private let islandEdgeInset: CGFloat = 20
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,7 +14,6 @@ struct MoveReminderWidgetConfigSection: View {
                     islandPreviewStage
                     activeTriggerCard
                     leaveResetCard
-                    restDurationCard
                     feedbackCard
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
@@ -50,24 +47,27 @@ struct MoveReminderWidgetConfigSection: View {
                     id: "move",
                     title: L10n.MoveReminder.widgetName,
                     badge: "\(settings.activeTriggerMinutes)m",
-                    symbol: "figure.stand",
+                    symbol: "figure.seated.side.right",
                     tint: amber,
-                    maxIslandWidth: 420,
+                    maxIslandWidth: 360,
                     hugsContent: true,
-                    bottomRadius: 22,
+                    bottomRadius: 18,
                     outlineStyle: .panel,
-                    minStageHeight: 120,
+                    minStageHeight: 88,
                     compactShell: true
                 )
             ],
             selection: .constant("move")
         ) { _ in
+            // 与会议 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
             MoveReminderNoticeCard.previewSample(
                 activeMinutes: settings.activeTriggerMinutes,
-                restMinutes: settings.suggestedRestMinutes
+                restMinutes: settings.suggestedRestMinutes,
+                compact: true
             )
-            .padding(.horizontal, islandEdgeInset)
-            .padding(.vertical, 12)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.compactTipBottom)
+            .frame(minHeight: 34)
             .id("\(settings.activeTriggerMinutes)-\(settings.suggestedRestMinutes)")
         }
     }
@@ -126,37 +126,6 @@ struct MoveReminderWidgetConfigSection: View {
                         }
                     }
                 )
-            }
-            .padding(SettingsChrome.Spacing.cardPadding)
-        }
-    }
-
-    private var restDurationCard: some View {
-        SettingsCard {
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.MoveReminder.restTitle)
-                        .font(SettingsChrome.Font.sectionTitle)
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    Text(L10n.MoveReminder.restSubtitle)
-                        .font(SettingsChrome.Font.caption)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 8)
-                SettingsSegmentedControl(
-                    items: settings.restOptionsForActive.map { minutes in
-                        SettingsSegmentedControl.Item(
-                            id: "rest-\(settings.activeTriggerMinutes)-\(minutes)",
-                            title: L10n.MoveReminder.minutes(minutes),
-                            selected: settings.suggestedRestMinutes == minutes
-                        ) {
-                            settings.suggestedRestMinutes = minutes
-                        }
-                    }
-                )
-                .frame(maxWidth: 280)
-                .id(settings.activeTriggerMinutes)
             }
             .padding(SettingsChrome.Spacing.cardPadding)
         }

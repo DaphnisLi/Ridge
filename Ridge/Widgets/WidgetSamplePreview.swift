@@ -315,16 +315,15 @@ enum WidgetSamplePreview {
 
     private static func moveReminderSample(compact: Bool) -> some View {
         let settings = MoveReminderSettings.shared
-        let edge: CGFloat = compact ? 14 : 20
-        // 预览壳无 IslandChrome：左右对称边距；分钟数跟设置走。
+        // 与会议 tip 同款翼布局预览边距。
         return MoveReminderNoticeCard.previewSample(
             activeMinutes: settings.activeTriggerMinutes,
-            restMinutes: settings.suggestedRestMinutes
+            restMinutes: settings.suggestedRestMinutes,
+            compact: true
         )
-        .padding(.horizontal, edge)
-        .padding(.vertical, compact ? 8 : 12)
-        .fixedSize(horizontal: true, vertical: true)
-        .frame(minHeight: compact ? 44 : 52)
+        .padding(.horizontal, IslandChrome.contentHorizontal)
+        .padding(.bottom, IslandChrome.compactTipBottom)
+        .frame(minHeight: compact ? 30 : 34)
     }
 
     private static func worldClockSample(compact: Bool) -> some View {
