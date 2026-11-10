@@ -1921,7 +1921,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "下一场会议倒计时，到点一键入会"
+            "value": "开会前 5 分钟自动顶栏常驻并在入会后收起"
           }
         }
       }
@@ -6810,6 +6810,28 @@
         }
       }
     },
+    "shelf.clipboard.color_pick_preview_hex": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HEX #0070EB"
+          }
+        }
+      }
+    },
+    "shelf.clipboard.ocr_select_preview_ready": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OCR 离线就绪"
+          }
+        }
+      }
+    },
     "shelf.clipboard.ocr_select_tip_left": {
       "extractionState": "manual",
       "localizations": {
@@ -6937,7 +6959,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI 额度"
+            "value": "AI 额度追踪"
           }
         }
       }
@@ -6948,7 +6970,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "后台监测 Cursor 额度；触达充裕 / 警戒 / 截流阈值时岛上提示约 3 秒"
+            "value": "消耗峰值与夜间配额重置即时弹窗预警"
           }
         }
       }
@@ -7707,7 +7729,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "久坐起身"
+            "value": "久坐起身律动"
           }
         }
       }
@@ -7718,7 +7740,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "连续在电脑前达到时长后岛上提醒起身；离开自动清零，无需输入监控权限"
+            "value": "无声呼吸态微动画提醒，支持快捷推迟 10 分钟"
           }
         }
       }
@@ -8829,7 +8851,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "屏幕取色"
+            "value": "取色器"
           }
         }
       }
@@ -8840,7 +8862,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "快捷键唤起系统取色器，色值写入剪贴板"
+            "value": "快捷键唤起取色，色值写入剪贴板"
           }
         }
       }

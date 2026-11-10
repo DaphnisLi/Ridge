@@ -404,11 +404,11 @@ enum L10n {
     // MARK: - Move Reminder（久坐起身）
 
     enum MoveReminder {
-        static var widgetName: String { tr("move_reminder.widget.name", "久坐起身") }
+        static var widgetName: String { tr("move_reminder.widget.name", "久坐起身律动") }
         static var widgetSummary: String {
             tr(
                 "move_reminder.widget.summary",
-                "连续在电脑前达到时长后岛上提醒起身；离开自动清零，无需输入监控权限"
+                "无声呼吸态微动画提醒，支持快捷推迟 10 分钟"
             )
         }
         static var activeTriggerTitle: String {
@@ -695,11 +695,11 @@ enum L10n {
     // MARK: - AI Usage（额度监测）
 
     enum AIUsage {
-        static var widgetName: String { tr("ai_usage.widget.name", "AI 额度") }
+        static var widgetName: String { tr("ai_usage.widget.name", "AI 额度追踪") }
         static var widgetSummary: String {
             tr(
                 "ai_usage.widget.summary",
-                "后台监测 Cursor 额度；触达充裕 / 警戒 / 截流阈值时岛上提示约 3 秒"
+                "消耗峰值与夜间配额重置即时弹窗预警"
             )
         }
         static var bannerTitle: String {
@@ -1225,9 +1225,9 @@ enum L10n {
     }
 
     enum ColorPick {
-        static var widgetName: String { tr("color_pick.widget_name", "屏幕取色") }
+        static var widgetName: String { tr("color_pick.widget_name", "取色器") }
         static var widgetSummary: String {
-            tr("color_pick.widget_summary", "快捷键唤起系统取色器，色值写入剪贴板")
+            tr("color_pick.widget_summary", "快捷键唤起取色，色值写入剪贴板")
         }
         static var hotKeyTitle: String { tr("color_pick.hotkey_title", "唤醒快捷键") }
         static var hotKeySubtitle: String {
@@ -1325,6 +1325,14 @@ enum L10n {
         }
         static var colorPickTipEsc: String {
             tr("shelf.clipboard.color_pick_tip_esc", "Esc 取消")
+        }
+        /// 库卡 / 详情样张右翼：示例色值。
+        static var colorPickPreviewHex: String {
+            tr("shelf.clipboard.color_pick_preview_hex", "HEX #0070EB")
+        }
+        /// 库卡 / 详情样张右翼：OCR 就绪态。
+        static var ocrSelectPreviewReady: String {
+            tr("shelf.clipboard.ocr_select_preview_ready", "OCR 离线就绪")
         }
         static var previewStageTitle: String {
             tr("shelf.preview.stage_title", "岛上预览")
@@ -1491,7 +1499,7 @@ enum L10n {
     enum Meeting {
         static var widgetName: String { tr("meeting.widget.name", "下一场会议") }
         static var widgetSummary: String {
-            tr("meeting.widget.summary", "下一场会议倒计时，到点一键入会")
+            tr("meeting.widget.summary", "开会前 5 分钟自动顶栏常驻并在入会后收起")
         }
 
         static var calendarAccess: String { tr("meeting.calendar.access", "系统日历访问权限") }

@@ -236,6 +236,7 @@ struct WidgetsSettingsPane: View {
             widgetID: id,
             title: manifest.displayName,
             summary: manifest.summary,
+            family: family,
             isEnabled: Binding(
                 get: { settings.isEnabled(id) },
                 set: { enabled in
@@ -258,6 +259,7 @@ struct WidgetsSettingsPane: View {
                 widgetID: id,
                 title: manifest.displayName,
                 summary: manifest.summary,
+                family: family,
                 isEnabled: .constant(settings.isEnabled(id)),
                 onOpen: {}
             )
@@ -429,24 +431,116 @@ private struct WidgetLibraryCard: View {
     let widgetID: WidgetID
     let title: String
     let summary: String
+    /// 提示族走稿面灰底居中黑岛；实况 / 面板保持原卡。
+    var family: WidgetLibraryFamily? = nil
     @Binding var isEnabled: Bool
     var onOpen: () -> Void
 
-    /// 全库统一卡面尺寸：岛区贴顶、信息区贴底，中间留白。
+    /// 全库默认卡面；提示族更矮，岛区居中。
     private enum CardLayout {
         static let islandStageHeight: CGFloat = 176
         static let cardHeight: CGFloat = 340
+        /// 提示稿：灰舞台约 106，整卡约 196。
+        static let tipIslandStageHeight: CGFloat = 106
+        static let tipCardHeight: CGFloat = 196
     }
+
+    private var isTipCard: Bool { family == .tip }
 
     private var category: String { L10n.Widgets.categoryBadge(for: widgetID) }
     private var footerHint: String { L10n.Widgets.cardFooterHint(for: widgetID) }
     private var footerSymbol: String { L10n.Widgets.cardFooterSymbol(for: widgetID) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // 黑岛样张内容不变；固定舞台高度，矮岛也贴顶。
+        Group {
+            if isTipCard {
+                tipCardBody
+            } else {
+                standardCardBody
+            }
+        }
+        .padding(SettingsChrome.Spacing.cardInner)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(
+            height: isTipCard ? CardLayout.tipCardHeight : CardLayout.cardHeight,
+            alignment: .top
+        )
+        .background(SettingsChrome.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
+                .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
+        .opacity(isEnabled ? 1 : 0.72)
+    }
+
+    /// 提示族：灰底仿真台 + 居中黑岛；底栏仅标题说明 + 开关 / 配置。
+    private var tipCardBody: some View {
+        VStack(alignment: .leading, spacing: 10) {
             Button(action: onOpen) {
-                // 黑岛按内容固有高，贴顶落在固定灰舞台上；勿拉满舞台高，否则下圆角被拉成直角、卡片被纵向撑开。
+                tipIslandStage
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            HStack(alignment: .center, spacing: 8) {
+                Button(action: onOpen) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(SettingsChrome.Font.sectionTitle)
+                            .foregroundStyle(SettingsChrome.onSurface)
+                            .lineLimit(1)
+                        Text(summary)
+                            .font(SettingsChrome.Font.caption)
+                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
+                Toggle("", isOn: $isEnabled)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+
+                Button(action: onOpen) {
+                    Image(systemName: "arrow.up.right")
+                        .font(SettingsChrome.Font.iconInline)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant.opacity(0.7))
+                        .padding(4)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L10n.Widgets.configureLink)
+            }
+        }
+    }
+
+    /// 灰舞台居中黑岛（稿面 `surface-container-low` + 黑 tip）。
+    private var tipIslandStage: some View {
+        WidgetSamplePreview.island(for: widgetID, compact: true)
+            .fixedSize(horizontal: true, vertical: true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding(.horizontal, 10)
+            .frame(height: CardLayout.tipIslandStageHeight)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(SettingsChrome.surfaceContainerLow)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(SettingsChrome.outlineVariant.opacity(0.45), lineWidth: 1)
+                    )
+            )
+            .clipped()
+    }
+
+    /// 实况 / 面板：原卡（岛区贴顶、分类徽章、脚注）。
+    private var standardCardBody: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button(action: onOpen) {
                 WidgetSamplePreview.island(for: widgetID, compact: true)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -529,17 +623,6 @@ private struct WidgetLibraryCard: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(SettingsChrome.Spacing.cardInner)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: CardLayout.cardHeight, alignment: .top)
-        .background(SettingsChrome.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
-        .opacity(isEnabled ? 1 : 0.72)
     }
 }
 
