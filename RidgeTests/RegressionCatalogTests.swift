@@ -453,6 +453,44 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(sparse, 148)
     }
 
+    /// 电量岛：列数/行数随台数收缩；两台不得占满三列宽。
+    func test_controlDeckBattery_adaptsWidthAndCapsAtTwoRows() {
+        XCTAssertEqual(ControlDeckContentSize.batteryColumnCount(deviceCount: 1), 1)
+        XCTAssertEqual(ControlDeckContentSize.batteryColumnCount(deviceCount: 2), 2)
+        XCTAssertEqual(ControlDeckContentSize.batteryColumnCount(deviceCount: 3), 3)
+        XCTAssertEqual(ControlDeckContentSize.batteryColumnCount(deviceCount: 5), 3)
+
+        XCTAssertEqual(ControlDeckContentSize.batteryVisualRowCount(deviceCount: 2), 1)
+        XCTAssertEqual(ControlDeckContentSize.batteryVisualRowCount(deviceCount: 3), 1)
+        XCTAssertEqual(ControlDeckContentSize.batteryVisualRowCount(deviceCount: 4), 2)
+        XCTAssertEqual(ControlDeckContentSize.batteryVisualRowCount(deviceCount: 9), 2)
+
+        let full = ControlDeckContentSize.width
+        let two = ControlDeckContentSize.batteryContentWidth(deviceCount: 2)
+        let three = ControlDeckContentSize.batteryContentWidth(deviceCount: 3)
+        XCTAssertLessThan(two, three, "两台应明显窄于三台满宽")
+        XCTAssertEqual(three, full)
+
+        let oneRowCanvas = ControlDeckContentSize.batteryContentCanvasHeight(deviceCount: 2)
+        let twoRowCanvas = ControlDeckContentSize.batteryContentCanvasHeight(deviceCount: 5)
+        XCTAssertEqual(
+            oneRowCanvas,
+            ControlDeckContentSize.batteryGridPadTop
+                + ControlDeckContentSize.batteryGridPadBottom
+                + ControlDeckContentSize.batteryCardHeight
+        )
+        XCTAssertEqual(
+            twoRowCanvas,
+            ControlDeckContentSize.batteryGridPadTop
+                + ControlDeckContentSize.batteryGridPadBottom
+                + ControlDeckContentSize.batteryCardHeight * 2
+                + ControlDeckContentSize.batteryRowSpacing
+        )
+        XCTAssertLessThan(oneRowCanvas, twoRowCanvas)
+        // 画布贴合卡片，不得再按旧 178 面板减 chrome 多留底空。
+        XCTAssertLessThan(oneRowCanvas, 140)
+    }
+
     // MARK: - widget library family（提示 → 实况 → 面板）
 
     func test_widgetLibraryFamily_displayOrderIsTipLivePanel() {

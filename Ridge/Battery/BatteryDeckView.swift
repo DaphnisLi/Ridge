@@ -80,13 +80,15 @@ private struct BatteryDeckCanvas: View {
     private let cardBorder = Color.white.opacity(0.07)
 
     /// 浮层 Panel 上系统 ScrollView 滚不动；不铺灰底，透出灵动岛黑色。
-    private let columnCount = NotchGeometry.batteryDeckColumns
     private let maxRows = NotchGeometry.batteryDeckMaxRows
-    private let rowSpacing: CGFloat = 8
-    private let gridPadTop: CGFloat = 8
-    private let gridPadBottom: CGFloat = 8
-    /// AirPods 三格黑底需要比进度条略高；一行时按此高度，不撑成两行空白。
-    private var preferredCardHeight: CGFloat { isPreview ? 112 : 116 }
+    private let rowSpacing = ControlDeckContentSize.batteryRowSpacing
+    private let cardSpacing = ControlDeckContentSize.batteryCardSpacing
+    private let gridPadTop = ControlDeckContentSize.batteryGridPadTop
+    private let gridPadBottom = ControlDeckContentSize.batteryGridPadBottom
+    /// 预览略矮；真岛与画布高度令牌一致，避免 GeometryReader 多吃一截底空。
+    private var preferredCardHeight: CGFloat {
+        isPreview ? 112 : ControlDeckContentSize.batteryCardHeight
+    }
 
     var body: some View {
         Group {
@@ -114,7 +116,7 @@ private struct BatteryDeckCanvas: View {
                     // 设置预览：单行样张，避免 AlwaysVisibleScrollView 在库卡滚动时拖累合成。
                     let grid = VStack(spacing: rowSpacing) {
                         ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                            HStack(spacing: 10) {
+                            HStack(spacing: cardSpacing) {
                                 ForEach(row) { device in
                                     deviceCard(device)
                                         .frame(
@@ -124,7 +126,8 @@ private struct BatteryDeckCanvas: View {
                                             alignment: .topLeading
                                         )
                                 }
-                                if !isPreview, row.count < cols {
+                                // 末行不足列数时补空白，仅用于当前列数对齐（列数已随台数收缩）。
+                                if row.count < cols {
                                     ForEach(0..<(cols - row.count), id: \.self) { _ in
                                         Color.clear
                                             .frame(
@@ -154,7 +157,9 @@ private struct BatteryDeckCanvas: View {
                     .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
                     .onAppear {
                         AppLog.info("Battery", "电量页布局", [
+                            "viewportW": geo.size.width,
                             "viewportH": geo.size.height,
+                            "cols": cols,
                             "rows": rows.count,
                             "visualRows": visualRowCount,
                             "cardH": cardH,
@@ -168,12 +173,9 @@ private struct BatteryDeckCanvas: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// 预览按实际台数排（2 台就两列撑满）；真岛仍固定三列网格。
+    /// 列数随台数 1…3 收缩；满 3 列后多出来的进第二行 / 纵滑。
     private var layoutColumnCount: Int {
-        if isPreview {
-            return max(1, min(devices.count, columnCount))
-        }
-        return columnCount
+        ControlDeckContentSize.batteryColumnCount(deviceCount: devices.count)
     }
 
     /// 每行最多 `columns` 张；真岛末行用空白补齐与前排对齐。

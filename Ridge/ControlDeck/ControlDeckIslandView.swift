@@ -2,8 +2,61 @@ import SwiftUI
 
 /// 控制台内容画布：宽高由本模块给出，岛壳只加 IslandChrome 后测量。
 enum ControlDeckContentSize {
-    /// 内容区宽度（不含左右 IslandChrome）。
+    /// 内容区宽度（不含左右 IslandChrome）。混音台 / 货架等满宽。
     static let width: CGFloat = NotchGeometry.controlDeckPreferredWidth - IslandChrome.horizontalInsetTotal
+
+    /// 电量卡间距（与 `BatteryDeckCanvas` 一致）。
+    static let batteryCardSpacing: CGFloat = 10
+    /// 真岛电量卡高（与画布贴合，勿再按固定 178/300 留底空）。
+    static let batteryCardHeight: CGFloat = 116
+    static let batteryGridPadTop: CGFloat = 4
+    /// 底内边距收紧：壳层已有 `IslandChrome.contentBottom`，勿再叠厚。
+    static let batteryGridPadBottom: CGFloat = 2
+    static let batteryRowSpacing: CGFloat = 8
+
+    /// 电量列数：1…3，随台数收缩，避免两台仍占满三列留黑空。
+    static func batteryColumnCount(deviceCount: Int) -> Int {
+        guard deviceCount > 0 else { return 1 }
+        return min(deviceCount, NotchGeometry.batteryDeckColumns)
+    }
+
+    /// 电量可视行数：最多两行；超出部分在视口内纵滑。
+    static func batteryVisualRowCount(deviceCount: Int) -> Int {
+        let cols = batteryColumnCount(deviceCount: deviceCount)
+        guard deviceCount > 0 else { return 1 }
+        let rows = Int(ceil(Double(deviceCount) / Double(cols)))
+        return min(max(rows, 1), NotchGeometry.batteryDeckMaxRows)
+    }
+
+    /// 三列满宽时的单卡宽，少台数时按此宽度收缩岛宽（不含壳层）。
+    static var batteryCardWidthAtFullDeck: CGFloat {
+        let gaps = CGFloat(NotchGeometry.batteryDeckColumns - 1) * batteryCardSpacing
+        return floor((width - gaps) / CGFloat(NotchGeometry.batteryDeckColumns))
+    }
+
+    /// 电量内容宽：按列数自适应，上限为控制台满宽。
+    static func batteryContentWidth(deviceCount: Int) -> CGFloat {
+        let cols = batteryColumnCount(deviceCount: max(deviceCount, 1))
+        let cardW = batteryCardWidthAtFullDeck
+        let gaps = CGFloat(max(cols - 1, 0)) * batteryCardSpacing
+        let needed = CGFloat(cols) * cardW + gaps
+        return min(width, max(needed, cardW))
+    }
+
+    /// 电量内容画布高（不含 IslandChrome）：按可视行数贴合卡片，禁止多留底黑。
+    static func batteryContentCanvasHeight(deviceCount: Int) -> CGFloat {
+        let rows = batteryVisualRowCount(deviceCount: max(deviceCount, 1))
+        return batteryGridPadTop
+            + batteryGridPadBottom
+            + CGFloat(rows) * batteryCardHeight
+            + CGFloat(max(rows - 1, 0)) * batteryRowSpacing
+    }
+
+    /// 电量整岛面板高（内容 + 顶/底 chrome），供占位与测试。
+    static func batteryPanelHeight(deviceCount: Int, notchHeight: CGFloat = 32) -> CGFloat {
+        let chrome = IslandChrome.expandedTopInset(notchHeight: notchHeight) + IslandChrome.contentBottom
+        return batteryContentCanvasHeight(deviceCount: deviceCount) + chrome
+    }
 
     /// 混音台 / 货架 / 项目等内容高度（不含顶 chrome 与底 padding）。
     static func height(
@@ -15,22 +68,27 @@ enum ControlDeckContentSize {
     ) -> CGFloat {
         let topChrome = IslandChrome.expandedTopInset(notchHeight: notchHeight)
         let chromeTotal = topChrome + IslandChrome.contentBottom
-        let panelHeight: CGFloat = {
-            switch pane {
-            case .battery:
-                return batteryDeviceCount > NotchGeometry.batteryDeckColumns
-                    ? NotchGeometry.controlDeckBatteryDualRowMinHeight
-                    : NotchGeometry.controlDeckBatterySingleRowMinHeight
-            case .volume:
-                return volumePanelHeight(
-                    deviceCount: volumeDeviceCount,
-                    appCount: volumeAppCount
-                )
-            case .shelf, .projects, nil:
-                return NotchGeometry.controlDeckMinHeight
-            }
-        }()
-        return max(120, panelHeight - chromeTotal)
+        switch pane {
+        case .battery:
+            return batteryContentCanvasHeight(deviceCount: batteryDeviceCount)
+        case .volume:
+            return max(
+                120,
+                volumePanelHeight(deviceCount: volumeDeviceCount, appCount: volumeAppCount) - chromeTotal
+            )
+        case .shelf, .projects, nil:
+            return max(120, NotchGeometry.controlDeckMinHeight - chromeTotal)
+        }
+    }
+
+    /// 内容区宽度（电量随台数收缩；其它页满宽）。
+    static func contentWidth(pane: ControlDeckSettings.Pane?, batteryDeviceCount: Int) -> CGFloat {
+        switch pane {
+        case .battery:
+            return batteryContentWidth(deviceCount: batteryDeviceCount)
+        case .volume, .shelf, .projects, .none:
+            return width
+        }
     }
 
     /// 混音台面板高：按左右栏内容估算，上限为原固定高 `controlDeckMinHeight`。
@@ -93,7 +151,10 @@ struct ControlDeckIslandView: View {
 
     private var canvasSize: CGSize {
         CGSize(
-            width: ControlDeckContentSize.width,
+            width: ControlDeckContentSize.contentWidth(
+                pane: currentPane,
+                batteryDeviceCount: batterySession.devices.count
+            ),
             height: ControlDeckContentSize.height(
                 pane: currentPane,
                 batteryDeviceCount: batterySession.devices.count,
@@ -127,6 +188,11 @@ struct ControlDeckIslandView: View {
         }
         .onChange(of: runtime.activeID) { _, _ in
             reconcilePane()
+            logCanvasSize(reason: "activeID")
+        }
+        .onChange(of: batterySession.devices.count) { _, _ in
+            guard currentPane == .battery else { return }
+            logCanvasSize(reason: "batteryDevices")
         }
         .onChange(of: volumeDeviceCount) { _, _ in
             guard currentPane == .volume else { return }

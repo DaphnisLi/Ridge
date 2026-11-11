@@ -35,8 +35,9 @@ struct NotchGeometry: Equatable {
     /// 电量页：每行最多 3 台，最多 2 行；一行时岛高只撑一行，避免空出第二行。
     static let batteryDeckColumns: Int = 3
     static let batteryDeckMaxRows: Int = 2
-    static let controlDeckBatterySingleRowMinHeight: CGFloat = 178
-    static let controlDeckBatteryDualRowMinHeight: CGFloat = 300
+    /// 电量一行 / 两行面板参考高（约等于内容贴合 + 典型刘海 chrome）；真高由 `ControlDeckContentSize.batteryPanelHeight` 算。
+    static let controlDeckBatterySingleRowMinHeight: CGFloat = 168
+    static let controlDeckBatteryDualRowMinHeight: CGFloat = 292
 
     var compactSize: CGSize {
         CGSize(
@@ -114,8 +115,11 @@ struct NotchGeometry: Equatable {
     func expandedSize(width: CGFloat, layout: ExpandedLayout) -> CGSize {
         let preferredWidth: CGFloat = {
             switch layout {
-            case .controlDeck, .controlDeckBatterySingle, .controlDeckBatteryDual:
+            case .controlDeck:
                 return max(width, Self.controlDeckPreferredWidth)
+            case .controlDeckBatterySingle, .controlDeckBatteryDual:
+                // 电量页宽随台数收缩，勿强行满宽 660 留下右侧黑空。
+                return width
             case .standard, .combo, .notice, .focusTimer:
                 return width
             }
