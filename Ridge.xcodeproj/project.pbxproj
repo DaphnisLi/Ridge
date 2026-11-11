@@ -25,6 +25,7 @@
 		144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */; };
 		17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */; };
 		19167EB80BB407F50CC8069A /* ResourceChipInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */; };
+		195729684A43B3A82BA65EAC /* PeripheralTipWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C760E298216B7217C9F78B9 /* PeripheralTipWidget.swift */; };
 		19B7A06C226E91AE5D54E862 /* ResourceActivityStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A94D44D22EBF3A18C1804E7 /* ResourceActivityStore.swift */; };
 		1A5DDC7CD5AFE9DFE1664F76 /* ShelfClipboardDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */; };
 		1A9E3C68653272B3A87E5B74 /* BatteryHIDProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B37885E316757E08B49442F /* BatteryHIDProbe.swift */; };
@@ -43,6 +44,7 @@
 		3224FD5F78ADC744FF364248 /* StockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7794C7F4789BBAAB698182 /* StockModels.swift */; };
 		33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */; };
 		3777FAB8F28FB13D3C4C7875 /* StockSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA67CE1C61B9353C800FECA4 /* StockSession.swift */; };
+		37F9D7A65AF14899BADE4DB4 /* BatteryAlertOptionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 558B9A44A2735B1372BD91DC /* BatteryAlertOptionsCard.swift */; };
 		383E5DAC9149BC38CF6A1B61 /* ShelfCaptureTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */; };
 		38E07147B859BA2648E95197 /* IslandFocusPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */; };
 		3936513DBBA9C04D204678B8 /* ProjectReleaseSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */; };
@@ -133,6 +135,8 @@
 		B1E5D50DB91D355DCD3D6DA6 /* FocusTimerTitleBackfillCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */; };
 		B20B99352F2BB4E10A110518 /* MeetingSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 805E8C3EC21B563B5572C0F1 /* MeetingSettingsPane.swift */; };
 		B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */; };
+		B66CC576D19A2286F97ADDFE /* CopiedNoticeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59767F7C87E4F8C0F734A7FA /* CopiedNoticeWidget.swift */; };
+		B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381BB46A02D1F24D68CC4117 /* PeripheralTipWidgetConfigSection.swift */; };
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
 		B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */; };
 		BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */; };
@@ -156,6 +160,7 @@
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
 		E4600D6376CCF890DB980440 /* StockIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93EA63BEE5683B482701E421 /* StockIslandViews.swift */; };
+		E49B786452EB42EDDEA8128F /* CopiedNoticeWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3DBF22EFFE6CDF6CF689B7 /* CopiedNoticeWidgetConfigSection.swift */; };
 		E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */; };
 		E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073E52F82BA9EE649BA7890 /* IslandController.swift */; };
 		E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */; };
@@ -237,7 +242,9 @@
 		355E2BF28C19689E133FF0A0 /* BatteryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryModels.swift; sourceTree = "<group>"; };
 		3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandPanelShape.swift; sourceTree = "<group>"; };
 		3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectTipIslandView.swift; sourceTree = "<group>"; };
+		381BB46A02D1F24D68CC4117 /* PeripheralTipWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeripheralTipWidgetConfigSection.swift; sourceTree = "<group>"; };
 		3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettings.swift; sourceTree = "<group>"; };
+		3C760E298216B7217C9F78B9 /* PeripheralTipWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeripheralTipWidget.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
 		4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropStagingView.swift; sourceTree = "<group>"; };
 		435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderSettings.swift; sourceTree = "<group>"; };
@@ -258,9 +265,11 @@
 		54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandSettingsPane.swift; sourceTree = "<group>"; };
 		54E6ABB9A1D52944282FBA09 /* AIUsageWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageWidget.swift; sourceTree = "<group>"; };
 		5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetContextImpl.swift; sourceTree = "<group>"; };
+		558B9A44A2735B1372BD91DC /* BatteryAlertOptionsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAlertOptionsCard.swift; sourceTree = "<group>"; };
 		57CD968F1C037CF4DB7ED2EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicy.swift; sourceTree = "<group>"; };
 		5894114050B192E21DBC168B /* IslandContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandContentView.swift; sourceTree = "<group>"; };
+		59767F7C87E4F8C0F734A7FA /* CopiedNoticeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedNoticeWidget.swift; sourceTree = "<group>"; };
 		5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidgetConfigSection.swift; sourceTree = "<group>"; };
 		5C1CE8183C9AB3757E2A5B69 /* MeetingLeadSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLeadSession.swift; sourceTree = "<group>"; };
 		5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOBluetooth.framework; path = System/Library/Frameworks/IOBluetooth.framework; sourceTree = SDKROOT; };
@@ -359,6 +368,7 @@
 		DA67CE1C61B9353C800FECA4 /* StockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockSession.swift; sourceTree = "<group>"; };
 		DE2DAC872E498304E243C7C7 /* BatterySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySession.swift; sourceTree = "<group>"; };
 		DE2EC5167644AA47B11298CB /* StockYahooClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockYahooClient.swift; sourceTree = "<group>"; };
+		DE3DBF22EFFE6CDF6CF689B7 /* CopiedNoticeWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedNoticeWidgetConfigSection.swift; sourceTree = "<group>"; };
 		E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRuntimeSampler.swift; sourceTree = "<group>"; };
 		E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropSession.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
@@ -408,6 +418,7 @@
 		067FD7939F4B3CC048E6FC92 /* Battery */ = {
 			isa = PBXGroup;
 			children = (
+				558B9A44A2735B1372BD91DC /* BatteryAlertOptionsCard.swift */,
 				219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */,
 				A89C6CF2F1E33BD5FAE10DE2 /* BatteryCoreBluetoothMonitor.swift */,
 				11ACC1E6A8FDF457FF84CD5E /* BatteryDeckView.swift */,
@@ -419,6 +430,8 @@
 				880C963E64D0E720AFA4F20F /* BatterySettings.swift */,
 				2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */,
 				93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */,
+				3C760E298216B7217C9F78B9 /* PeripheralTipWidget.swift */,
+				381BB46A02D1F24D68CC4117 /* PeripheralTipWidgetConfigSection.swift */,
 			);
 			path = Battery;
 			sourceTree = "<group>";
@@ -663,6 +676,8 @@
 				E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */,
 				9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */,
 				FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */,
+				59767F7C87E4F8C0F734A7FA /* CopiedNoticeWidget.swift */,
+				DE3DBF22EFFE6CDF6CF689B7 /* CopiedNoticeWidgetConfigSection.swift */,
 				3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */,
 				D8238AE010AEFFF72F8F2351 /* ScreenRegionOCRController.swift */,
 				43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */,
@@ -880,6 +895,7 @@
 				7321D80063E0CCA14B7539E6 /* AlwaysVisibleScrollView.swift in Sources */,
 				B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */,
 				90D890B66F172EDA7F680261 /* AppLog.swift in Sources */,
+				37F9D7A65AF14899BADE4DB4 /* BatteryAlertOptionsCard.swift in Sources */,
 				3ED590A3F12B0419A63D83EF /* BatteryBluetoothProbe.swift in Sources */,
 				5C9DB2E08020853AE2F64B7F /* BatteryCoreBluetoothMonitor.swift in Sources */,
 				CCB033412341708A8F3387B5 /* BatteryDeckView.swift in Sources */,
@@ -900,6 +916,8 @@
 				C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */,
 				94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */,
 				5A5FAF628460840B773CAA96 /* ControlDeckSettingsPane.swift in Sources */,
+				B66CC576D19A2286F97ADDFE /* CopiedNoticeWidget.swift in Sources */,
+				E49B786452EB42EDDEA8128F /* CopiedNoticeWidgetConfigSection.swift in Sources */,
 				4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */,
 				0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */,
 				681A4ADFAC6C48A79B81E4DA /* CursorUsageClient.swift in Sources */,
@@ -959,6 +977,8 @@
 				11EF5958F4F4BADDA2B6521B /* OCRSelectTipIslandView.swift in Sources */,
 				3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */,
 				9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */,
+				195729684A43B3A82BA65EAC /* PeripheralTipWidget.swift in Sources */,
+				B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */,
 				76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */,
 				EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */,
 				4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */,

@@ -220,6 +220,8 @@ private struct IslandNoticeCardView: View {
             PeripheralBatteryNoticeCard(notice: notice, style: .low)
         case .peripheralFullCharge(let notice):
             PeripheralBatteryNoticeCard(notice: notice, style: .full)
+        case .peripheralConnected(let notice):
+            PeripheralBatteryNoticeCard(notice: notice, style: .connect)
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
                 ClipboardCopiedIslandView(detail: text)
@@ -243,8 +245,6 @@ private struct IslandNoticeCardView: View {
             MoveReminderNoticeCard(notice: notice)
         case .meetingLead:
             MeetingLeadNoticeCard()
-        case .liveInvite(let invite):
-            LiveInviteNoticeCard(invite: invite)
         case .none:
             ProcessEndedNoticeCard(notice: nil)
         }
@@ -271,57 +271,6 @@ private struct MeetingLeadNoticeCard: View {
     }
 }
 
-/// 实况邀请：点「打开」后常驻上岛。
-private struct LiveInviteNoticeCard: View {
-    let invite: LiveIslandInvite
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.white.opacity(0.10))
-                Image(systemName: invite.symbol)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.92))
-            }
-            .frame(width: 30, height: 30)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(invite.title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Text(invite.subtitle)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Button {
-                AppLog.info("IslandNotice", "实况邀请：点进面板", ["id": invite.widgetID])
-                LiveIslandGate.shared.open(invite.widgetID, reason: "noticeTap")
-            } label: {
-                Text(L10n.Widgets.liveInviteOpen)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.black)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Capsule().fill(Color.white))
-            }
-            .buttonStyle(.plain)
-        }
-        .frame(minWidth: 320)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            LiveIslandGate.shared.open(invite.widgetID, reason: "noticeCardTap")
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(invite.title)，\(invite.subtitle)")
-        .accessibilityHint(L10n.Widgets.liveInviteOpen)
-    }
-}
-
 private struct ClipboardCaptureHintNoticeCard: View {
     let text: String
     var symbol: String = "eyedropper"
@@ -342,11 +291,12 @@ private struct ClipboardCaptureHintNoticeCard: View {
     }
 }
 
-/// 外设低电 / 满电信息条（约 3s 自动收；低电可「稍后提醒」30 分钟）。
-private struct PeripheralBatteryNoticeCard: View {
+/// 外设低电 / 满电 / 接入信息条（约 3s 自动收；低电可点进实况）。
+struct PeripheralBatteryNoticeCard: View {
     enum Style {
         case low
         case full
+        case connect
     }
 
     let notice: BatteryPeripheralNotice
@@ -354,29 +304,149 @@ private struct PeripheralBatteryNoticeCard: View {
 
     private let accentRed = Color(red: 0.729, green: 0.102, blue: 0.102)
     private let accentGreen = Color(red: 0.447, green: 0.996, blue: 0.533)
-
-    private var accent: Color {
-        style == .low ? accentRed : accentGreen
-    }
+    private let accentBlue = Color(red: 0.35, green: 0.62, blue: 1.0)
 
     private var badge: String {
         switch style {
-        case .low: return L10n.Battery.tipLowBadge(notice.percent)
-        case .full: return L10n.Battery.tipFullBadge
+        case .low:
+            return L10n.Battery.tipLowBadge(notice.percent ?? 0)
+        case .full:
+            return L10n.Battery.tipFullBadge
+        case .connect:
+            return L10n.PeripheralTip.connectBadge
         }
+    }
+
+    /// 设置预览样张。
+    static func previewSample(style: Style, threshold: Int = 15, compact: Bool = true) -> some View {
+        let notice: BatteryPeripheralNotice
+        switch style {
+        case .low:
+            notice = BatteryPeripheralNotice(
+                id: "preview.low",
+                deviceID: "preview.mouse",
+                deviceName: L10n.Battery.tipSampleMouse,
+                kind: .mouse,
+                percent: 12,
+                threshold: threshold,
+                detail: L10n.Battery.lowNoticeDetail(12, threshold)
+            )
+        case .full:
+            notice = BatteryPeripheralNotice(
+                id: "preview.full",
+                deviceID: "preview.keyboard",
+                deviceName: L10n.Battery.tipSampleKeyboard,
+                kind: .keyboard,
+                percent: 100,
+                threshold: 100,
+                detail: L10n.Battery.fullNoticeDetail
+            )
+        case .connect:
+            notice = BatteryPeripheralNotice(
+                id: "preview.connect",
+                deviceID: "preview.headphones",
+                deviceName: L10n.PeripheralTip.tipSampleHeadphones,
+                kind: .headphones,
+                percent: 86,
+                threshold: 0,
+                detail: L10n.PeripheralTip.connectNoticeDetail
+            )
+        }
+        return PeripheralBatteryNoticeCard(notice: notice, style: style)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.shortTipBottom)
+            .frame(minHeight: compact ? 34 : 40)
     }
 
     var body: some View {
         Group {
-            if style == .full {
+            switch style {
+            case .full:
                 fullBody
-            } else {
+            case .connect:
+                connectBody
+            case .low:
                 lowBody
             }
         }
         .frame(minWidth: 320)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(notice.deviceName)，\(badge)")
+    }
+
+    private var connectBody: some View {
+        HStack(alignment: .center, spacing: 12) {
+            connectDeviceIcon
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(notice.deviceName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(notice.detail)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.45))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(3)
+
+            connectPill
+                .fixedSize()
+                .layoutPriority(2)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { openBatteryLive(reason: "connectNoticeTap") }
+    }
+
+    private var connectDeviceIcon: some View {
+        ZStack(alignment: .bottomTrailing) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(accentBlue.opacity(0.85), lineWidth: 1.2)
+                    )
+                Image(systemName: notice.kind.systemSymbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.92))
+            }
+            .frame(width: 30, height: 30)
+            .shadow(color: accentBlue.opacity(0.55), radius: 7, x: 0, y: 0)
+
+            ZStack {
+                Circle()
+                    .fill(accentBlue)
+                    .frame(width: 12, height: 12)
+                Image(systemName: "plus")
+                    .font(.system(size: 7, weight: .bold))
+                    .foregroundStyle(Color.black.opacity(0.88))
+            }
+            .offset(x: 3, y: 3)
+            .accessibilityHidden(true)
+        }
+        .frame(width: 30, height: 30)
+    }
+
+    private var connectPill: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "cable.connector")
+                .font(.system(size: 9, weight: .semibold))
+            Text(badge)
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(accentBlue)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(accentBlue.opacity(0.14))
+                .overlay(
+                    Capsule().strokeBorder(accentBlue.opacity(0.75), lineWidth: 1)
+                )
+        )
+        .shadow(color: accentBlue.opacity(0.45), radius: 7, x: 0, y: 0)
     }
 
     /// 满电：左发光图标（右下角闪电图标）+ 文案 + 右发光「100% 已充满」；点卡可进电量实况。
@@ -533,7 +603,7 @@ private struct PeripheralBatteryNoticeCard: View {
     private var lowChargePill: some View {
         HStack(spacing: 5) {
             CyclingBatteryBarsGlyph(tint: .white)
-            Text(L10n.Battery.tipLowBadge(notice.percent))
+            Text(L10n.Battery.tipLowBadge(notice.percent ?? 0))
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(.white)
         }

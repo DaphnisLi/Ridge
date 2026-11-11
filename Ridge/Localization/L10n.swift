@@ -150,11 +150,6 @@ enum L10n {
             }
         }
 
-        /// 实况邀请提示上的主按钮。
-        static var liveInviteOpen: String {
-            tr("widgets.live_invite.open", "打开")
-        }
-
         /// 库卡分类徽章。
         static func categoryBadge(for widgetID: WidgetID) -> String {
             switch widgetID {
@@ -184,6 +179,10 @@ enum L10n {
                 return tr("widgets.category.color_pick", "屏幕取色")
             case "builtin.ocrSelect":
                 return tr("widgets.category.ocr_select", "框选文字提取")
+            case "builtin.peripheralTip":
+                return tr("widgets.category.peripheral_tip", "外设状态")
+            case "builtin.copiedNotice":
+                return tr("widgets.category.copied_notice", "剪贴板提示")
             default:
                 return tr("widgets.category.generic", "小组件")
             }
@@ -218,6 +217,10 @@ enum L10n {
                 return tr("widgets.footer.color_pick", "快捷键唤醒 · 色值写入剪贴板")
             case "builtin.ocrSelect":
                 return tr("widgets.footer.ocr_select", "快捷键唤醒 · 框选识别文字")
+            case "builtin.peripheralTip":
+                return tr("widgets.footer.peripheral_tip", "低电 / 满电 / 接入瞬时提示")
+            case "builtin.copiedNotice":
+                return tr("widgets.footer.copied_notice", "复制成功短暂上岛")
             default:
                 return tr("widgets.footer.generic", "点击进入配置")
             }
@@ -238,6 +241,8 @@ enum L10n {
             case "builtin.stocks": return "chart.line.uptrend.xyaxis"
             case "builtin.colorPick": return "eyedropper"
             case "builtin.ocrSelect": return "text.viewfinder"
+            case "builtin.peripheralTip": return "battery.25"
+            case "builtin.copiedNotice": return "doc.on.clipboard"
             default: return "slider.horizontal.3"
             }
         }
@@ -884,9 +889,6 @@ enum L10n {
         static var widgetName: String { tr("media.widget.name", "正在播放") }
         static var widgetSummary: String {
             tr("media.widget.summary", "显示封面与播放控制，播放时自动出现在灵动岛")
-        }
-        static var liveInviteSubtitle: String {
-            tr("media.live_invite.subtitle", "点击打开正在播放面板")
         }
         static var settingsIntro: String {
             tr(
@@ -1684,13 +1686,10 @@ enum L10n {
     // MARK: - Battery（控制台电量与外设）
 
     enum Battery {
-        static var liveInviteTitle: String {
-            tr("battery.live_invite.title", "外设电量")
-        }
-        static func liveInviteSubtitle(_ count: Int) -> String {
-            String(
-                format: tr("battery.live_invite.subtitle_format", "%d 台设备 · 点开查看"),
-                count
+        static var liveConfigIntro: String {
+            tr(
+                "battery.live_config.intro",
+                "有已连接外设时直接上岛显示电量。低电、满电与接入提示请在「外设提示」中配置。"
             )
         }
         static var emptyTitle: String { tr("battery.empty.title", "暂无外设电量") }
@@ -1740,16 +1739,22 @@ enum L10n {
             )
         }
         static var forceExpandTitle: String {
-            tr("battery.alerts.force_expand_title", "严重低电量强制展开灵动岛")
+            tr("battery.alerts.force_expand_title", "低电量强提醒")
         }
         static var forceExpandSubtitle: String {
             tr(
                 "battery.alerts.force_expand_subtitle",
-                "当任一外设电量低于设定阈值时，自动展开刘海进行视觉警告"
+                "当外设低于设定电量时展开灵动岛预警"
             )
         }
         static var lowAlertToggle: String { tr("battery.alerts.low_toggle", "低电量提醒") }
-        static var lowThreshold: String { tr("battery.alerts.low_threshold", "低电量触发阈值") }
+        static var lowThreshold: String { tr("battery.alerts.low_threshold", "预警触发阈值") }
+        static var lowThresholdSubtitle: String {
+            tr(
+                "battery.alerts.low_threshold_subtitle",
+                "当外设电量低于此设定值时展开灵动岛预警"
+            )
+        }
         static func lowThresholdHint(_ percent: Int) -> String {
             String(
                 format: String(
@@ -1759,13 +1764,32 @@ enum L10n {
                 percent
             )
         }
+        /// 阈值分段标签：仅 15% 带「推荐」。
+        static func lowThresholdPresetLabel(_ percent: Int) -> String {
+            if percent == 15 {
+                return String(
+                    format: String(
+                        localized: "battery.alerts.low_threshold_preset_recommended_format",
+                        defaultValue: "%d%% 推荐"
+                    ),
+                    percent
+                )
+            }
+            return String(
+                format: String(
+                    localized: "battery.alerts.low_threshold_preset_format",
+                    defaultValue: "%d%%"
+                ),
+                percent
+            )
+        }
         static var fullAlertToggle: String {
-            tr("battery.alerts.full_toggle", "充满电提醒（防止过充）")
+            tr("battery.alerts.full_toggle", "充满电提醒 (防过充)")
         }
         static var fullAlertHint: String {
             tr(
                 "battery.alerts.full_hint",
-                "外设电量达到 100% 时弹出灵动岛横幅，提醒及时移除充电线缆以保护电池"
+                "达到 100% 满电时提示拔除充电线"
             )
         }
         static var snoozeHint: String {
@@ -1839,6 +1863,61 @@ enum L10n {
         }
         static var fullNoticeDetail: String {
             tr("battery.notice.full_detail", "电池已充满 · 建议拔除充电线缆")
+        }
+    }
+
+    // MARK: - Peripheral tip（外设低电 / 满电 / 接入瞬时提示）
+
+    enum PeripheralTip {
+        static var widgetName: String { tr("peripheral_tip.widget.name", "外设提示") }
+        static var widgetSummary: String {
+            tr(
+                "peripheral_tip.widget.summary",
+                "低电、满电与接入经瞬时通知提示，约三秒后自动收起"
+            )
+        }
+
+        static var lowToggle: String { tr("peripheral_tip.low.toggle", "低电量强提醒") }
+        static var lowSubtitle: String {
+            tr("peripheral_tip.low.subtitle", "当外设低于设定电量时展开灵动岛预警")
+        }
+        static var fullToggle: String { tr("peripheral_tip.full.toggle", "充满电提醒 (防过充)") }
+        static var fullSubtitle: String {
+            tr("peripheral_tip.full.subtitle", "达到 100% 满电时提示拔除充电线")
+        }
+        static var connectToggle: String { tr("peripheral_tip.connect.toggle", "接入提醒") }
+        static var connectSubtitle: String {
+            tr("peripheral_tip.connect.subtitle", "外设新连接时在灵动岛短暂提示")
+        }
+
+        static var previewLow: String { tr("peripheral_tip.preview.low", "低电") }
+        static var previewFull: String { tr("peripheral_tip.preview.full", "满电") }
+        static var previewConnect: String { tr("peripheral_tip.preview.connect", "接入") }
+        static var previewConnectBadge: String {
+            tr("peripheral_tip.preview.connect_badge", "已连接")
+        }
+
+        static var connectBadge: String { tr("peripheral_tip.connect.badge", "已接入") }
+        static var tipSampleHeadphones: String {
+            tr("peripheral_tip.sample.headphones", "AirPods Pro")
+        }
+        static var connectNoticeDetail: String {
+            tr("peripheral_tip.connect.notice_detail", "设备已连接 · 点此查看电量")
+        }
+    }
+
+    // MARK: - Copied notice（复制成功瞬时提示）
+
+    enum CopiedNotice {
+        static var widgetName: String { tr("copied_notice.widget.name", "已复制") }
+        static var widgetSummary: String {
+            tr("copied_notice.widget.summary", "复制成功时短暂上岛提示")
+        }
+        static var configBody: String {
+            tr(
+                "copied_notice.config.body",
+                "开启后，复制文字、图片或色值时灵动岛短暂显示「已复制」。总开关在小组件库。"
+            )
         }
     }
 

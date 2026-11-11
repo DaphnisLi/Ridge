@@ -69,14 +69,15 @@ struct BatteryDevice: Identifiable, Equatable {
     }
 }
 
-/// 外设低电 / 满电岛内瞬时通知载荷。
+/// 外设低电 / 满电 / 接入岛内瞬时通知载荷。
 struct BatteryPeripheralNotice: Hashable, Identifiable {
     let id: String
     let deviceID: String
     let deviceName: String
     let kind: BatteryDeviceKind
-    let percent: Int
-    /// 低电：触发阈值；满电：100。
+    /// 低电 / 满电必有；接入时可能无电量读数。
+    let percent: Int?
+    /// 低电：触发阈值；满电：100；接入：0。
     let threshold: Int
     let detail: String
 }

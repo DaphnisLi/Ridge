@@ -14,9 +14,17 @@ final class BatterySession: ObservableObject {
     private var started = false
     private var lowAlertArmed: Set<String> = []
     private var fullAlertArmed: Set<String> = []
+    /// 已见过的外设 id；首轮只播种不弹「接入」，之后出现新 id 才提示。
+    private var knownDeviceIDs: Set<String> = []
+    private var connectSeeded = false
     private var isRefreshing = false
 
     private init() {}
+
+    /// 小组件库总开关：关则低电 / 满电 / 接入都不投递。
+    private var isPeripheralTipEnabled: Bool {
+        WidgetSettings.shared.isEnabled(PeripheralTipWidget.manifest.id)
+    }
 
     func start() {
         guard !started else {
@@ -462,12 +470,20 @@ final class BatterySession: ObservableObject {
     private func evaluateAlerts(_ devices: [BatteryDevice]) {
         let threshold = settings.lowThresholdPercent
         let liveIDs = Set(devices.map(\.id))
+        let tipOn = isPeripheralTipEnabled
 
         for id in lowAlertArmed where !liveIDs.contains(id) {
             lowAlertArmed.remove(id)
         }
         for id in fullAlertArmed where !liveIDs.contains(id) {
             fullAlertArmed.remove(id)
+        }
+
+        evaluateConnectAlerts(devices: devices, liveIDs: liveIDs, tipOn: tipOn)
+
+        guard tipOn else {
+            AppLog.debug("Battery", "外设提示库卡已关，跳过低电/满电")
+            return
         }
 
         for device in devices {
@@ -536,6 +552,48 @@ final class BatterySession: ObservableObject {
                     "percent": percent
                 ])
             }
+        }
+    }
+
+    /// 新接入外设瞬时提示；首轮只记录已知 id，避免启动刷屏。
+    private func evaluateConnectAlerts(devices: [BatteryDevice], liveIDs: Set<String>, tipOn: Bool) {
+        if !connectSeeded {
+            knownDeviceIDs = liveIDs
+            connectSeeded = true
+            AppLog.debug("Battery", "接入提示已播种已知设备", ["count": liveIDs.count])
+            return
+        }
+
+        let newcomers = liveIDs.subtracting(knownDeviceIDs)
+        knownDeviceIDs = liveIDs
+
+        guard tipOn, settings.connectAlertEnabled, !newcomers.isEmpty else {
+            if !newcomers.isEmpty {
+                AppLog.debug("Battery", "接入提示已跳过", [
+                    "tipOn": tipOn,
+                    "connectEnabled": settings.connectAlertEnabled,
+                    "newcomers": newcomers.count
+                ])
+            }
+            return
+        }
+
+        for id in newcomers {
+            guard let device = devices.first(where: { $0.id == id }) else { continue }
+            let notice = BatteryPeripheralNotice(
+                id: "battery.connect.\(device.id).\(UUID().uuidString.prefix(8))",
+                deviceID: device.id,
+                deviceName: device.name,
+                kind: device.kind,
+                percent: device.percent,
+                threshold: 0,
+                detail: L10n.PeripheralTip.connectNoticeDetail
+            )
+            IslandNoticeCenter.shared.present(.peripheralConnected(notice))
+            AppLog.info("Battery", "已投递接入通知", [
+                "name": device.name,
+                "percent": device.percent ?? -1
+            ])
         }
     }
 }

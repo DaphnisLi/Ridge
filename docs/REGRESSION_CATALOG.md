@@ -23,6 +23,7 @@
 | `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥4 | 取色/框选后「已复制」投递了但不显示 | present 前 `forcePanelSize`；翼→短须放行缩宽；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
+| `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 2 | 黑岛过高；电量单行样张底下大块黑空 | `batterySample` 单行高；`test_libraryIslandStageStretch_*` |
 
 ---
 
@@ -55,14 +56,15 @@
 - **防护:** `WidgetSamplePreview.island` / `SettingsIslandPreviewCard`；假数据固定形态（股票两卡样张）  
 - **自动化建议:** 预览路径不得依赖网络；股票样张条数断言 `== 2`
 
-### library-island-stage-stretch — 库卡黑岛被舞台拉满
+### library-island-stage-stretch — 库卡/详情预览黑岛被拉高留空
 
-- **recurring:** false  
-- **occurrences:** 1（2026-11-09：股票库卡直角黑块 + 卡片纵向过长）  
-- **症状:** 库卡预览黑岛呈直角高矩形；股票卡被撑高、价签截断  
-- **根因倾向:** `WidgetLibraryCard` 对岛施 `maxHeight: .infinity` 且无 `fixedSize(vertical:)`，黑底填满固定舞台高；窄内容未 `hugsContent` 时横向也拉满；`drawingGroup` 易糊掉下圆角  
-- **防护:** 库卡岛 `.fixedSize(horizontal: false, vertical: true)` 贴顶；窄 widget（股票等）`hugsContent`；预览股票 `compactChrome`（矮分时、藏日区间）  
-- **自动化建议:** 库卡预览岛固有高 < `islandStageHeight`；股票样张宽约两卡固有宽
+- **recurring:** true  
+- **occurrences:** 2（2026-11-09：股票库卡；**2026-11-11 电量详情预览单行样张却按双行 210 高，底下大块黑空**）  
+- **症状:** 库卡/详情预览黑岛呈过高矩形；股票卡被撑高；电量样张卡片贴顶、下半截空黑  
+- **根因倾向:** 对岛施 `maxHeight: .infinity` / 写死双行高；样张行数与占位高度不一致  
+- **防护:** 库卡岛 `.fixedSize(vertical: true)`；窄 widget `hugsContent`；`batterySample` 按单行样张高度，禁止再写 210  
+- **相关代码:** `WidgetSamplePreview.batterySampleContentHeight`、`BatteryDeckView.sampleDevices`  
+- **自动化:** `RegressionCatalogTests.test_libraryIslandStageStretch_batteryPreviewSingleRowHeight`
 
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
@@ -195,8 +197,8 @@
 - **occurrences:** 1（2026-11-10：产品要求去掉实况邀请条）  
 - **症状:** 外设电量 / 正在播放先冒「打开」tip，盖住或打断会前提示  
 - **根因倾向:** `LiveIslandGate` 先 tip 再点进；Battery/Media 持续 `present(.liveInvite)`  
-- **防护:** 有状态时 `admit` 直接准入分页；不再投递 liveInvite；低电等瞬时告警仍保留  
-- **相关代码:** `LiveIslandGate.admit`、`BatterySession.refreshLivePresence`、`MediaNowPlayingWidget`  
+- **防护:** 有状态时 `admit` 直接准入分页；`IslandNoticePayload.liveInvite` 已删除；低电/满电/接入走 `builtin.peripheralTip`  
+- **相关代码:** `LiveIslandGate.admit`、`BatterySession.refreshLivePresence`、`MediaNowPlayingWidget`、`PeripheralTipWidget`  
 - **自动化:** `RegressionCatalogTests.test_liveInviteRemoved_admitAllowsContentPage`
 
 ---
@@ -205,6 +207,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-11 | 外设低电/满电/接入合并为 `builtin.peripheralTip`；「已复制」独立 `builtin.copiedNotice`；删除 liveInvite 残留 |
 | 2026-11-08 | 初版：收录悬停热区、边距叠层、预览真数据为重复出现；录入复制提示缺失等 |
 | 2026-11-08 | 录入 AI 额度账号作用域提示问题，并修换号嗅探 / 换回再弹 |
 | 2026-11-09 | 录入取色后岛永久穿透假死；修 tip expand 抢前台 + Esc/超时退出 |

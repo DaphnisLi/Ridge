@@ -17,17 +17,12 @@ final class LiveIslandGate: ObservableObject {
         openedIDs.contains(id)
     }
 
-    nonisolated static func inviteNoticeID(for widgetID: WidgetID) -> String {
-        "live.invite.\(widgetID)"
-    }
-
-    /// 有内容时直接准入分页，并清掉遗留的实况邀请 tip（产品已去掉邀请条）。
+    /// 有内容时直接准入分页。
     func admit(_ id: WidgetID, reason: String) {
         guard WidgetLibraryFamily.family(for: id) == .live else {
             AppLog.warn("LiveGate", "admit 跳过：非实况组件", ["id": id, "reason": reason])
             return
         }
-        IslandNoticeCenter.shared.dismiss(id: Self.inviteNoticeID(for: id))
         let inserted = openedIDs.insert(id).inserted
         guard inserted else { return }
         WidgetRuntime.shared.recompute(reason: "liveAdmit:\(reason)")
@@ -44,7 +39,6 @@ final class LiveIslandGate: ObservableObject {
             return
         }
         let inserted = openedIDs.insert(id).inserted
-        IslandNoticeCenter.shared.dismiss(id: Self.inviteNoticeID(for: id))
 
         switch id {
         case Self.batteryID:
@@ -67,7 +61,6 @@ final class LiveIslandGate: ObservableObject {
     /// 内容消失 / 模块关闭：撤常驻资格，并触发分页重算。
     func close(_ id: WidgetID, reason: String) {
         guard openedIDs.remove(id) != nil else { return }
-        IslandNoticeCenter.shared.dismiss(id: Self.inviteNoticeID(for: id))
         if ControlDeckSettings.isControlDeckPageID(id) {
             WidgetRuntime.shared.recompute(reason: "liveClose:\(reason)")
         }
@@ -78,25 +71,10 @@ final class LiveIslandGate: ObservableObject {
         let ids = openedIDs
         guard !ids.isEmpty else { return }
         openedIDs.removeAll()
-        for id in ids {
-            IslandNoticeCenter.shared.dismiss(id: Self.inviteNoticeID(for: id))
-        }
         WidgetRuntime.shared.recompute(reason: "liveCloseAll:\(reason)")
         AppLog.info("LiveGate", "已清空全部实况常驻", [
             "reason": reason,
             "count": ids.count
         ])
-    }
-}
-
-/// 实况「点进面板」邀请提示载荷。
-struct LiveIslandInvite: Hashable {
-    let widgetID: WidgetID
-    let title: String
-    let subtitle: String
-    let symbol: String
-
-    var noticeID: String {
-        LiveIslandGate.inviteNoticeID(for: widgetID)
     }
 }

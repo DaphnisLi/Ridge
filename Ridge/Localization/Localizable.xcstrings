@@ -7,7 +7,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "当任一外设电量低于设定阈值时，自动展开刘海进行视觉警告"
+            "value": "当外设低于设定电量时展开灵动岛预警"
           }
         }
       }
@@ -18,7 +18,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "严重低电量强制展开灵动岛"
+            "value": "低电量强提醒"
           }
         }
       }
@@ -29,7 +29,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "外设电量达到 100% 时弹出灵动岛横幅，提醒及时移除充电线缆以保护电池"
+            "value": "达到 100% 满电时提示拔除充电线"
           }
         }
       }
@@ -40,7 +40,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "充满电提醒（防止过充）"
+            "value": "充满电提醒 (防过充)"
           }
         }
       }
@@ -62,7 +62,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "低电量触发阈值"
+            "value": "预警触发阈值"
           }
         }
       }
@@ -74,6 +74,39 @@
           "stringUnit": {
             "state": "translated",
             "value": "电量 ≤ %d%% 且未在充电时提醒"
+          }
+        }
+      }
+    },
+    "battery.alerts.low_threshold_preset_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d%%"
+          }
+        }
+      }
+    },
+    "battery.alerts.low_threshold_preset_recommended_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d%% 推荐"
+          }
+        }
+      }
+    },
+    "battery.alerts.low_threshold_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当外设电量低于此设定值时展开灵动岛预警"
           }
         }
       }
@@ -9017,6 +9050,248 @@
           "stringUnit": {
             "state": "translated",
             "value": "快捷键唤醒 · 框选识别文字"
+          }
+        }
+      }
+    },
+    "peripheral_tip.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设提示"
+          }
+        }
+      }
+    },
+    "peripheral_tip.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电、满电与接入经瞬时通知提示，约三秒后自动收起"
+          }
+        }
+      }
+    },
+    "peripheral_tip.low.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电量强提醒"
+          }
+        }
+      }
+    },
+    "peripheral_tip.low.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当外设低于设定电量时展开灵动岛预警"
+          }
+        }
+      }
+    },
+    "peripheral_tip.full.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "充满电提醒 (防过充)"
+          }
+        }
+      }
+    },
+    "peripheral_tip.full.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "达到 100% 满电时提示拔除充电线"
+          }
+        }
+      }
+    },
+    "peripheral_tip.connect.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接入提醒"
+          }
+        }
+      }
+    },
+    "peripheral_tip.connect.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设新连接时在灵动岛短暂提示"
+          }
+        }
+      }
+    },
+    "peripheral_tip.preview.low": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电"
+          }
+        }
+      }
+    },
+    "peripheral_tip.preview.full": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "满电"
+          }
+        }
+      }
+    },
+    "peripheral_tip.preview.connect": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接入"
+          }
+        }
+      }
+    },
+    "peripheral_tip.preview.connect_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已连接"
+          }
+        }
+      }
+    },
+    "peripheral_tip.connect.badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已接入"
+          }
+        }
+      }
+    },
+    "peripheral_tip.sample.headphones": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AirPods Pro"
+          }
+        }
+      }
+    },
+    "peripheral_tip.connect.notice_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设备已连接 · 点此查看电量"
+          }
+        }
+      }
+    },
+    "copied_notice.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已复制提示"
+          }
+        }
+      }
+    },
+    "copied_notice.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制成功时在灵动岛短暂提示"
+          }
+        }
+      }
+    },
+    "copied_notice.config.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制成功后约三秒内在灵动岛显示「已复制」。总开关在小组件库。"
+          }
+        }
+      }
+    },
+    "widgets.category.peripheral_tip": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设状态"
+          }
+        }
+      }
+    },
+    "widgets.category.copied_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "剪贴板提示"
+          }
+        }
+      }
+    },
+    "widgets.footer.peripheral_tip": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电 / 满电 / 接入瞬时提示"
+          }
+        }
+      }
+    },
+    "widgets.footer.copied_notice": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "复制成功短暂上岛"
           }
         }
       }

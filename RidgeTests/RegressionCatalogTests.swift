@@ -377,6 +377,29 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(sample.count, 2, "股票设置预览样张必须固定 2 条")
     }
 
+    // MARK: - library-island-stage-stretch（电量预览勿按双行留黑空）
+
+    @MainActor
+    func test_libraryIslandStageStretch_batteryPreviewSingleRowHeight() {
+        let devices = BatteryDeckView.sampleDevices
+        XCTAssertEqual(devices.count, 2, "电量样张固定 2 台一行")
+        XCTAssertLessThanOrEqual(
+            devices.count,
+            NotchGeometry.batteryDeckColumns,
+            "样张不得超过单行列数，否则应改双行高"
+        )
+        let detailH = WidgetSamplePreview.batterySampleContentHeight(compact: false)
+        let compactH = WidgetSamplePreview.batterySampleContentHeight(compact: true)
+        XCTAssertLessThan(
+            detailH,
+            NotchGeometry.controlDeckBatteryDualRowMinHeight,
+            "详情预览内容高不得按双行 300 占位（曾用 210 导致底下大块黑空）"
+        )
+        XCTAssertLessThan(compactH, detailH + 1)
+        XCTAssertGreaterThanOrEqual(detailH, 120)
+        XCTAssertLessThan(detailH, 180, "单行内容高应远低于旧双行预览 210")
+    }
+
     // MARK: - volume adaptive height（控制台混音台）
 
     func test_controlDeckVolumeHeight_adaptsBelowMaxAndCapsAtMax() {
@@ -399,11 +422,35 @@ final class RegressionCatalogTests: XCTestCase {
 
     func test_widgetLibraryFamily_mapsKnownWidgets() {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.meeting"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.peripheralTip"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.copiedNotice"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.media"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.battery"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.volume"), .panel)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.focusTimer"), .panel)
         XCTAssertNil(WidgetLibraryFamily.family(for: "system.empty"))
+    }
+
+    @MainActor
+    func test_widgetLibraryFamily_peripheralAndCopiedTipsNeverContentPage() {
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.peripheralTip"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.copiedNotice"))
+    }
+
+    func test_islandNoticePayload_peripheralConnectedIsTransient() {
+        let notice = BatteryPeripheralNotice(
+            id: "test.connect",
+            deviceID: "d1",
+            deviceName: "Mouse",
+            kind: .mouse,
+            percent: 80,
+            threshold: 0,
+            detail: "connected"
+        )
+        let payload = IslandNoticePayload.peripheralConnected(notice)
+        XCTAssertEqual(payload.autoDismissNanoseconds, 3_000_000_000)
+        XCTAssertEqual(payload.sourceTag, "battery.connect")
+        XCTAssertFalse(payload.usesNotchWingChrome)
     }
 
     func test_widgetLibraryFamily_tipNeverPlacesContentDirectly() {

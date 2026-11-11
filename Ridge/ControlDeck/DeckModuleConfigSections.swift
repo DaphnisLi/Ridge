@@ -1,37 +1,16 @@
 import AppKit
 import SwiftUI
 
-/// 货架模块预览配置；「已复制」为下方独立开关 + 预览。
+/// 货架模块预览配置（「已复制」提示已独立为 `builtin.copiedNotice`）。
 struct ShelfWidgetConfigSection: View {
-    @ObservedObject private var shelfSettings = ShelfSettings.shared
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             SettingsIslandPreviewCard(
                 widgetID: ControlDeckSettings.pageIDPrefix + ".shelf"
             )
-
-            copiedNoticeSection
         }
         .onAppear {
             AppLog.debug("ControlDeck", "货架配置预览已显示")
-        }
-    }
-
-    private var copiedNoticeSection: some View {
-        SettingsCard {
-            VStack(alignment: .leading, spacing: 12) {
-                SettingsIslandStage(compact: true, maxIslandWidth: 148) {
-                    ClipboardCopiedIslandView(compact: true)
-                }
-
-                SettingsSwitchRow(
-                    title: L10n.Shelf.copiedNoticeToggle,
-                    subtitle: L10n.Shelf.copiedNoticeToggleSubtitle,
-                    isOn: $shelfSettings.showCopiedNotice
-                )
-            }
-            .padding(.top, 12)
         }
     }
 }

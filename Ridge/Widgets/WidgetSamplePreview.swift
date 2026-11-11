@@ -238,7 +238,12 @@ enum WidgetSamplePreview {
              "builtin.aiUsage",
              "builtin.moveReminder",
              "builtin.focusTimer",
-             "builtin.meeting":
+             "builtin.meeting",
+             "builtin.peripheralTip",
+             "builtin.peripheralTip.low",
+             "builtin.peripheralTip.full",
+             "builtin.peripheralTip.connect",
+             "builtin.copiedNotice":
             return true
         default:
             return false
@@ -266,6 +271,14 @@ enum WidgetSamplePreview {
             colorPickSample(compact: compact)
         case "builtin.ocrSelect":
             ocrSelectSample(compact: compact)
+        case "builtin.peripheralTip", "builtin.peripheralTip.low":
+            peripheralTipSample(style: .low, compact: compact)
+        case "builtin.peripheralTip.full":
+            peripheralTipSample(style: .full, compact: compact)
+        case "builtin.peripheralTip.connect":
+            peripheralTipSample(style: .connect, compact: compact)
+        case "builtin.copiedNotice":
+            copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":
             batterySample(compact: compact)
         case "system.controlDeck.volume":
@@ -349,6 +362,24 @@ enum WidgetSamplePreview {
             .frame(minHeight: compact ? 30 : 34)
     }
 
+    private static func peripheralTipSample(
+        style: PeripheralBatteryNoticeCard.Style,
+        compact: Bool
+    ) -> some View {
+        PeripheralBatteryNoticeCard.previewSample(
+            style: style,
+            threshold: BatterySettings.shared.lowThresholdPercent,
+            compact: compact
+        )
+    }
+
+    private static func copiedNoticeSample(compact: Bool) -> some View {
+        ClipboardCopiedIslandView(compact: true)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.shortTipBottom)
+            .frame(minHeight: compact ? 30 : 34)
+    }
+
     private static func stocksSample(compact: Bool) -> some View {
         // 两卡紧凑样张：单卡约 128（价签不截断）；纵向贴合内容，勿拉高。
         StockIslandView.previewSample(compact: true)
@@ -357,11 +388,18 @@ enum WidgetSamplePreview {
             .fixedSize(horizontal: true, vertical: true)
     }
 
+    /// 电量样张内容高（不含外壳 padding）。单行 2 台；禁止再用双行 210。
+    static func batterySampleContentHeight(compact: Bool) -> CGFloat {
+        compact ? 128 : 136
+    }
+
     private static func batterySample(compact: Bool) -> some View {
+        // 样张固定 2 台一行；高度贴合单行卡，勿按双行占位留下大块黑底空档。
         BatteryDeckView(previewDevices: BatteryDeckView.sampleDevices)
-            .frame(height: compact ? 148 : 210)
+            .frame(height: batterySampleContentHeight(compact: compact))
             .padding(.horizontal, compact ? 6 : 0)
             .padding(.vertical, compact ? 8 : 12)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private static func volumeSample(compact: Bool) -> some View {

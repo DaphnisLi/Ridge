@@ -11,6 +11,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case peripheralLowBattery(BatteryPeripheralNotice)
     /// 外设满电（约 3s 自动收）。
     case peripheralFullCharge(BatteryPeripheralNotice)
+    /// 外设接入（约 3s 自动收）。
+    case peripheralConnected(BatteryPeripheralNotice)
     /// 剪贴板相关提示（复制成功 / 权限 / 失败）。`symbol` 为 SF Symbol。
     case clipboardCaptureHint(id: String, text: String, symbol: String)
     /// 取色进行中的操作提示（左键 / Esc）；取完或取消后由业务侧 dismiss。
@@ -29,8 +31,6 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case moveReminder(MoveReminderSession.Notice)
     /// 会前提示（提示类；入会或日程结束前挂着，不占内容分页）。
     case meetingLead(meetingID: String)
-    /// 实况邀请（遗留 case；电量/媒体已改为直接准入，不再投递）。
-    case liveInvite(LiveIslandInvite)
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
     static let ocrSelectTipID = "shelf.capture.ocrSelectTip"
@@ -41,7 +41,9 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return notice.id
         case .ramPressure(let notice):
             return notice.id
-        case .peripheralLowBattery(let notice), .peripheralFullCharge(let notice):
+        case .peripheralLowBattery(let notice),
+             .peripheralFullCharge(let notice),
+             .peripheralConnected(let notice):
             return notice.id
         case .clipboardCaptureHint(let id, _, _):
             return "shelf.capture.\(id)"
@@ -55,8 +57,6 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return notice.id
         case .meetingLead(let meetingID):
             return "meeting.lead.\(meetingID)"
-        case .liveInvite(let invite):
-            return invite.noticeID
         }
     }
 
@@ -70,6 +70,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "battery.low"
         case .peripheralFullCharge:
             return "battery.full"
+        case .peripheralConnected:
+            return "battery.connect"
         case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip:
             return "shelf.capture"
         case .aiUsageAlert:
@@ -78,22 +80,22 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return "moveReminder"
         case .meetingLead:
             return "meeting"
-        case .liveInvite(let invite):
-            return "live.\(invite.widgetID)"
         }
     }
 
     /// 自动收起时长；`nil` 表示不自动收（如 RAM 高压、取色/OCR 引导、久坐起身）。
     var autoDismissNanoseconds: UInt64? {
         switch self {
-        case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder, .meetingLead, .liveInvite:
-            // 会议 / 实况邀请：挂到用户处理或状态结束；久坐同理。
+        case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder, .meetingLead:
             return nil
         case .clipboardCaptureHint:
             // 「已复制」短提示：约 2s，取色/OCR 成功后更容易看见。
             return 2_000_000_000
-        case .processEnded, .peripheralLowBattery, .peripheralFullCharge, .aiUsageAlert:
-            // 额度等瞬时条约 3s。
+        case .processEnded,
+             .peripheralLowBattery,
+             .peripheralFullCharge,
+             .peripheralConnected,
+             .aiUsageAlert:
             return 3_000_000_000
         }
     }
@@ -104,7 +106,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip:
             return false
         case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge,
-             .aiUsageAlert, .moveReminder, .meetingLead, .liveInvite:
+             .peripheralConnected, .aiUsageAlert, .moveReminder, .meetingLead:
             return true
         }
     }
@@ -120,7 +122,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
     }
 
     /// 矮胶囊短条顶距（「已复制」等）。
-    /// 较高提示卡（RAM / 进程结束 / 实况邀请等）走普通通知顶距，岛壳仍为胶囊。
+    /// 较高提示卡（RAM / 进程结束等）走普通通知顶距，岛壳仍为胶囊。
     var usesShortBelowNotchChrome: Bool {
         switch self {
         case .clipboardCaptureHint(let id, _, _):
@@ -130,10 +132,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 指针离开岛时仍保持展开（会议 / 久坐 / 实况邀请等须常驻到用户处理）。
+    /// 指针离开岛时仍保持展开（会议 / 久坐等须常驻到用户处理）。
     var keepsExpandedWithoutHover: Bool {
         switch self {
-        case .meetingLead, .moveReminder, .liveInvite, .ramPressure, .colorPickTip, .ocrSelectTip:
+        case .meetingLead, .moveReminder, .ramPressure, .colorPickTip, .ocrSelectTip:
             return true
         default:
             return false

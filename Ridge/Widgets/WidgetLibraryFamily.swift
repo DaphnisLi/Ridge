@@ -20,7 +20,9 @@ enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
              "builtin.aiUsage",
              "builtin.moveReminder",
              "builtin.colorPick",
-             "builtin.ocrSelect":
+             "builtin.ocrSelect",
+             "builtin.peripheralTip",
+             "builtin.copiedNotice":
             return .tip
         case "system.controlDeck.battery",
              "builtin.media":

@@ -659,6 +659,8 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.stocks"
             || widgetID == "builtin.colorPick"
             || widgetID == "builtin.ocrSelect"
+            || widgetID == "builtin.peripheralTip"
+            || widgetID == "builtin.copiedNotice"
     }
 
     var body: some View {
@@ -701,6 +703,10 @@ private struct WidgetPreviewPane: View {
             ColorPickWidgetConfigSection()
         } else if widgetID == "builtin.ocrSelect" {
             OCRSelectWidgetConfigSection()
+        } else if widgetID == "builtin.peripheralTip" {
+            PeripheralTipWidgetConfigSection()
+        } else if widgetID == "builtin.copiedNotice" {
+            CopiedNoticeWidgetConfigSection()
         }
     }
 

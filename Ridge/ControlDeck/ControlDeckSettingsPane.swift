@@ -7,7 +7,6 @@ struct ControlDeckSettingsPane: View {
     @ObservedObject private var soundSettings = SoundSettings.shared
     @ObservedObject private var sound = SoundSession.shared
     @ObservedObject private var projectSettings = ProjectSettings.shared
-    @ObservedObject private var batterySettings = BatterySettings.shared
 
     var body: some View {
         ScrollView {
@@ -18,9 +17,6 @@ struct ControlDeckSettingsPane: View {
                 }
                 if settings.isModuleEnabled("projects") {
                     projectRootsCard
-                }
-                if settings.isModuleEnabled("battery") {
-                    batteryAlertsCard
                 }
             }
             .padding(.horizontal, 28)
@@ -224,85 +220,5 @@ struct ControlDeckSettingsPane: View {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         projectSettings.addRoot(url.path)
         AppLog.info("Projects", "设置页添加项目根目录")
-    }
-
-    private var batteryAlertsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.Battery.alertsTitle)
-                .font(.system(size: 15, weight: .semibold))
-            Text(L10n.Battery.alertsIntro)
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            VStack(alignment: .leading, spacing: 0) {
-                SettingsSwitchRow(
-                    title: L10n.Battery.lowAlertToggle,
-                    isOn: $batterySettings.lowAlertEnabled
-                )
-                Divider().padding(.leading, 14)
-                SettingsSwitchRow(
-                    title: L10n.Battery.fullAlertToggle,
-                    isOn: $batterySettings.fullChargeAlertEnabled
-                )
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(SettingsChrome.surfaceContainerLow.opacity(0.70))
-            )
-
-            if batterySettings.lowAlertEnabled {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(L10n.Battery.lowThreshold)
-                            .font(.system(size: 13, weight: .medium))
-                        Spacer(minLength: 8)
-                        Text("\(batterySettings.lowThresholdPercent)%")
-                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
-                    Slider(
-                        value: Binding(
-                            get: { Double(batterySettings.lowThresholdPercent) },
-                            set: { batterySettings.lowThresholdPercent = Int($0.rounded()) }
-                        ),
-                        in: 5...40,
-                        step: 1
-                    )
-                    Text(L10n.Battery.lowThresholdHint(batterySettings.lowThresholdPercent))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                    Text(L10n.Battery.snoozeHint)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.horizontal, 4)
-            }
-
-            if batterySettings.fullChargeAlertEnabled {
-                Text(L10n.Battery.fullAlertHint)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 4)
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(SettingsChrome.cardBackground)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
-                )
-        )
-        .onAppear {
-            BatterySession.shared.start()
-            AppLog.debug("Battery", "电量告警设置卡已显示", [
-                "low": batterySettings.lowAlertEnabled,
-                "threshold": batterySettings.lowThresholdPercent,
-                "full": batterySettings.fullChargeAlertEnabled
-            ])
-        }
     }
 }
