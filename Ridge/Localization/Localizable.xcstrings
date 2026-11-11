@@ -89,13 +89,24 @@
         }
       }
     },
+    "battery.alerts.low_threshold_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≤ %d%%"
+          }
+        }
+      }
+    },
     "battery.alerts.low_threshold_preset_recommended_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d%% 推荐"
+            "value": "%d%% (推荐)"
           }
         }
       }
@@ -254,6 +265,50 @@
         }
       }
     },
+    "battery.click_action.open_bluetooth": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开蓝牙偏好设置"
+          }
+        }
+      }
+    },
+    "battery.click_action.refresh_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅刷新电量"
+          }
+        }
+      }
+    },
+    "battery.click_action.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在灵动岛内直接单击对应设备卡片时触发的行为。"
+          }
+        }
+      }
+    },
+    "battery.click_action.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击外设卡片操作"
+          }
+        }
+      }
+    },
     "battery.empty.title": {
       "extractionState": "manual",
       "localizations": {
@@ -261,6 +316,105 @@
           "stringUnit": {
             "state": "translated",
             "value": "暂无外设电量"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.battery_low_to_high": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按剩余电量从低到高"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.connection_order": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按设备连接顺序"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.hint.battery_low_to_high": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前策略：电量越低越靠前，方便优先关注需充电的设备。"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.hint.connection_order": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前策略：按外设接入先后固定排布，新接入的排在后面。"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.hint.recent_activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前策略：优先前置当前正在发送输入信号或音频播放的外接硬件。"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.recent_activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按最近使用活跃度"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "决定多外设同时在线时的排布先后顺序。"
+          }
+        }
+      }
+    },
+    "battery.sort_logic.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设排序逻辑"
+          }
+        }
+      }
+    },
+    "battery.sort_priority.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "排序与优先级"
           }
         }
       }
@@ -353,13 +507,13 @@
         }
       }
     },
-    "battery.tip.full_badge": {
+    "battery.tip.full_badge_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "100% 已充满"
+            "value": "%d%% 满电"
           }
         }
       }
@@ -370,7 +524,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d%% 严重低电"
+            "value": "%d%% 电量低"
           }
         }
       }
@@ -1079,13 +1233,35 @@
         }
       }
     },
+    "media.player.apple_music.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "原生支持"
+          }
+        }
+      }
+    },
     "media.player.browser": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "浏览器 / YouTube"
+            "value": "网页媒体"
+          }
+        }
+      }
+    },
+    "media.player.browser.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览器媒体流"
           }
         }
       }
@@ -1101,6 +1277,17 @@
         }
       }
     },
+    "media.player.podcasts.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podcasts"
+          }
+        }
+      }
+    },
     "media.player.spotify": {
       "extractionState": "manual",
       "localizations": {
@@ -1112,13 +1299,24 @@
         }
       }
     },
+    "media.player.spotify.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
+          }
+        }
+      }
+    },
     "media.players.all_supported": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "全部已支持"
+            "value": "已全部就绪"
           }
         }
       }
@@ -1129,7 +1327,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "读取系统 Now Playing；Apple Music、Spotify、播客与浏览器内网页播放均可。"
+            "value": "（自动接管系统媒体协议）"
           }
         }
       }
@@ -1140,7 +1338,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "支持的播放器"
+            "value": "支持的播放源"
           }
         }
       }
@@ -1167,13 +1365,46 @@
         }
       }
     },
-    "media.settings.intro": {
+    "media.preview.stage.expanded": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "系统正在播放音乐、播客或网页媒体时，灵动岛会显示封面、进度与控制按钮。支持拖动进度条跳转。"
+            "value": "展开播放"
+          }
+        }
+      }
+    },
+    "media.preview.stage.standby": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起待命"
+          }
+        }
+      }
+    },
+    "media.preview.badge.expanded": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制"
+          }
+        }
+      }
+    },
+    "media.preview.badge.standby": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "02:14"
           }
         }
       }
@@ -9192,7 +9423,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已接入"
+            "value": "已连接"
           }
         }
       }
@@ -9241,13 +9472,24 @@
         }
       }
     },
-    "copied_notice.config.body": {
+    "copied_notice.haptic.title": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "复制成功后约三秒内在灵动岛显示「已复制」。总开关在小组件库。"
+            "value": "触感反馈"
+          }
+        }
+      }
+    },
+    "copied_notice.haptic.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "灵动岛弹出「已复制」提示时，触控板提供轻微震动反馈"
           }
         }
       }

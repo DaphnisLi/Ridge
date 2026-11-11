@@ -1,104 +1,275 @@
+import AppKit
 import SwiftUI
 
 /// 嵌入「正在播放」小组件预览页的配置区。
 struct MediaWidgetConfigSection: View {
+    @State private var previewTab: MediaPreviewTab = .expanded
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             islandPreviewCard
-            introCard
             supportedPlayersCard
         }
         .onAppear {
-            NowPlayingService.shared.start()
-            AppLog.debug("Media", "媒体配置区已显示（预览页）")
+            // 预览只用假数据；勿在此 start Now Playing，避免设置窗跟真播放 0.5s 刷。
+            AppLog.debug("Media", "媒体配置区已显示（预览页）", ["tab": previewTab.rawValue])
         }
     }
 
     private var islandPreviewCard: some View {
-        SettingsIslandPreviewCard(widgetID: "builtin.media")
+        SettingsIslandStage(
+            options: MediaPreviewTab.allCases.map(stageOption),
+            selection: Binding(
+                get: { previewTab.rawValue },
+                set: { previewTab = MediaPreviewTab(rawValue: $0) ?? .expanded }
+            )
+        ) { option in
+            let tab = MediaPreviewTab(rawValue: option.id) ?? .expanded
+            Group {
+                switch tab {
+                case .expanded:
+                    MediaIslandCardView.previewSample(animatedEqualizer: false)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                        .padding(.vertical, IslandChrome.contentBottom)
+                case .standby:
+                    // 仅待命 Tab 开轻律动，切走即停，减轻设置卡顿。
+                    MediaCompactStandbyView.previewSample(animatedEqualizer: true)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                }
+            }
+            .id(tab.rawValue)
+        }
     }
 
-    private var introCard: some View {
-        SettingsCard {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.Media.widgetName)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(SettingsChrome.onSurface)
-                Text(L10n.Media.settingsIntro)
-                    .font(.system(size: 12))
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
+    private func stageOption(_ tab: MediaPreviewTab) -> SettingsIslandStageOption {
+        SettingsIslandStageOption(
+            id: tab.rawValue,
+            title: tab.stageTitle,
+            badge: tab.stageBadge,
+            symbol: tab.symbol,
+            tint: tab.tint,
+            maxIslandWidth: tab.isCompact ? NotchGeometry.mediaCompactWidth : 360,
+            hugsContent: !tab.isCompact,
+            bottomRadius: tab.isCompact ? 20 : 24,
+            outlineStyle: .panel,
+            minStageHeight: tab.isCompact ? 100 : 168,
+            compactShell: tab.isCompact
+        )
     }
 
     private var supportedPlayersCard: some View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .center, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(L10n.Media.playersTitle)
-                            .font(.system(size: 13.5, weight: .semibold))
+                            .font(SettingsChrome.Font.rowTitle)
+                            .fontWeight(.semibold)
                             .foregroundStyle(SettingsChrome.onSurface)
                         Text(L10n.Media.playersSubtitle)
-                            .font(.system(size: 12))
+                            .font(SettingsChrome.Font.caption)
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
                     Spacer(minLength: 8)
-                    Text(L10n.Media.playersAllSupported)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(SettingsChrome.secondary)
+                    readyBadge
                 }
 
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: 8),
-                        GridItem(.flexible(), spacing: 8)
-                    ],
-                    spacing: 8
-                ) {
-                    playerRow(symbol: "music.note", name: L10n.Media.playerAppleMusic, tint: Color(red: 0.98, green: 0.22, blue: 0.35))
-                    playerRow(symbol: "waveform", name: L10n.Media.playerSpotify, tint: Color(red: 0.11, green: 0.73, blue: 0.33))
-                    playerRow(symbol: "safari", name: L10n.Media.playerBrowser, tint: Color(red: 0.20, green: 0.48, blue: 0.96))
-                    playerRow(symbol: "headphones", name: L10n.Media.playerPodcasts, tint: Color(red: 0.55, green: 0.35, blue: 0.95))
+                HStack(spacing: 8) {
+                    ForEach(MediaSupportedPlayer.all) { player in
+                        playerSourceCard(player)
+                    }
                 }
             }
-            .padding(16)
+            .padding(SettingsChrome.Spacing.cardPadding)
         }
     }
 
-    private func playerRow(symbol: String, name: String, tint: Color) -> some View {
-        HStack(spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(tint)
-                Image(systemName: symbol)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.white)
+    private var readyBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(SettingsChrome.Font.footnote)
+            Text(L10n.Media.playersAllSupported)
+                .font(SettingsChrome.Font.chip)
+        }
+        .foregroundStyle(SettingsChrome.onSecondaryContainer)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            Capsule(style: .continuous)
+                .fill(SettingsChrome.secondaryContainer)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(L10n.Media.playersAllSupported)
+    }
+
+    private func playerSourceCard(_ player: MediaSupportedPlayer) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            playerIcon(player)
+                .frame(width: 28, height: 28)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(player.title)
+                    .font(SettingsChrome.Font.label)
+                    .foregroundStyle(SettingsChrome.onSurface)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                Text(player.subtitle)
+                    .font(SettingsChrome.Font.footnote)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .frame(width: 20, height: 20)
-
-            Text(name)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(SettingsChrome.onSurface)
-                .lineLimit(1)
-
             Spacer(minLength: 0)
         }
-        .padding(8)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(SettingsChrome.surfaceContainerLow.opacity(0.70))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(SettingsChrome.cardBackground)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(SettingsChrome.cardStroke.opacity(0.85), lineWidth: SettingsChrome.cardStrokeWidth)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(SettingsChrome.outlineVariant, lineWidth: SettingsChrome.cardStrokeWidth)
                 )
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(name)
+        .accessibilityLabel("\(player.title)，\(player.subtitle)")
+    }
+
+    @ViewBuilder
+    private func playerIcon(_ player: MediaSupportedPlayer) -> some View {
+        if let image = player.cachedIcon {
+            Image(nsImage: image)
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fill)
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(player.fallbackTint)
+                Image(systemName: player.fallbackSymbol)
+                    .font(SettingsChrome.Font.iconInline)
+                    .foregroundStyle(.white)
+            }
+        }
     }
 }
 
+// MARK: - 预览形态
+
+private enum MediaPreviewTab: String, CaseIterable, Identifiable {
+    case expanded
+    case standby
+
+    var id: String { rawValue }
+
+    var isCompact: Bool { self == .standby }
+
+    var stageTitle: String {
+        switch self {
+        case .expanded: return L10n.Media.previewStageExpanded
+        case .standby: return L10n.Media.previewStageStandby
+        }
+    }
+
+    var stageBadge: String {
+        switch self {
+        case .expanded: return L10n.Media.previewExpandedBadge
+        case .standby: return L10n.Media.previewStandbyBadge
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .expanded: return "music.note.list"
+        case .standby: return "waveform"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .expanded: return Color(red: 1.0, green: 0.42, blue: 0.29)
+        case .standby: return Color(red: 0.196, green: 0.843, blue: 0.294)
+        }
+    }
+}
+
+/// 设置页「支持的播放源」四卡样张（说明性，非实时探测）。
+private struct MediaSupportedPlayer: Identifiable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let bundleIDs: [String]
+    let fallbackSymbol: String
+    let fallbackTint: Color
+    /// 首次解析后缓存，避免每次 body 刷 NSWorkspace。
+    let cachedIcon: NSImage?
+
+    static let all: [MediaSupportedPlayer] = [
+        make(
+            id: "appleMusic",
+            title: L10n.Media.playerAppleMusic,
+            subtitle: L10n.Media.playerAppleMusicSubtitle,
+            bundleIDs: ["com.apple.Music"],
+            fallbackSymbol: "music.note",
+            fallbackTint: Color(red: 0.98, green: 0.22, blue: 0.35)
+        ),
+        make(
+            id: "spotify",
+            title: L10n.Media.playerSpotify,
+            subtitle: L10n.Media.playerSpotifySubtitle,
+            bundleIDs: ["com.spotify.client"],
+            fallbackSymbol: "waveform",
+            fallbackTint: Color(red: 0.11, green: 0.73, blue: 0.33)
+        ),
+        make(
+            id: "web",
+            title: L10n.Media.playerBrowser,
+            subtitle: L10n.Media.playerBrowserSubtitle,
+            bundleIDs: ["com.apple.Safari"],
+            fallbackSymbol: "safari",
+            fallbackTint: Color(red: 0.20, green: 0.48, blue: 0.96)
+        ),
+        make(
+            id: "podcasts",
+            title: L10n.Media.playerPodcasts,
+            subtitle: L10n.Media.playerPodcastsSubtitle,
+            bundleIDs: ["com.apple.podcasts"],
+            fallbackSymbol: "headphones",
+            fallbackTint: Color(red: 0.55, green: 0.35, blue: 0.95)
+        )
+    ]
+
+    private static func make(
+        id: String,
+        title: String,
+        subtitle: String,
+        bundleIDs: [String],
+        fallbackSymbol: String,
+        fallbackTint: Color
+    ) -> MediaSupportedPlayer {
+        MediaSupportedPlayer(
+            id: id,
+            title: title,
+            subtitle: subtitle,
+            bundleIDs: bundleIDs,
+            fallbackSymbol: fallbackSymbol,
+            fallbackTint: fallbackTint,
+            cachedIcon: resolveIcon(bundleIDs: bundleIDs)
+        )
+    }
+
+    private static func resolveIcon(bundleIDs: [String]) -> NSImage? {
+        for bid in bundleIDs {
+            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bid) else { continue }
+            let icon = NSWorkspace.shared.icon(forFile: url.path)
+            icon.size = NSSize(width: 28, height: 28)
+            return icon
+        }
+        return nil
+    }
+}

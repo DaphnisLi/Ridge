@@ -9,11 +9,21 @@ struct IslandContentView: View {
     @ObservedObject private var controlDeck = ControlDeckSettings.shared
     @ObservedObject private var shelfDropSession = ShelfDropSession.shared
     @ObservedObject private var focusTimer = FocusTimerSession.shared
+    @ObservedObject private var nowPlaying = NowPlayingService.shared
+    @ObservedObject private var widgetSettings = WidgetSettings.shared
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
     @State private var shelfDropTargeted = false
 
     private var shelfDropEnabled: Bool {
         controlDeck.isModuleEnabled("shelf")
+    }
+
+    /// 播放中收起待命（番茄优先占用左右翼）。
+    private var showsMediaCompactStandby: Bool {
+        !focusTimer.showsCompactStandby
+            && widgetSettings.isEnabled("builtin.media")
+            && nowPlaying.snapshot?.hasTrack == true
+            && nowPlaying.snapshot?.isPlaying == true
     }
 
     private var compactSize: CGSize {
@@ -25,6 +35,16 @@ struct IslandContentView: View {
                 ),
                 height: NotchGeometry.pixelAlign(
                     max(viewModel.notchHeight * NotchGeometry.compactScale, NotchGeometry.focusTimerCompactHeight)
+                )
+            )
+        }
+        if showsMediaCompactStandby {
+            return CGSize(
+                width: NotchGeometry.pixelAlign(
+                    max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.mediaCompactWidth)
+                ),
+                height: NotchGeometry.pixelAlign(
+                    max(viewModel.notchHeight * NotchGeometry.compactScale, NotchGeometry.mediaCompactHeight)
                 )
             )
         }
@@ -142,10 +162,11 @@ struct IslandContentView: View {
         .animation(islandSpring, value: viewModel.panelSize)
         .animation(islandSpring, value: focusTimer.showsCompactStandby)
         .animation(islandSpring, value: focusTimer.snapshot.remainingSeconds)
+        .animation(islandSpring, value: showsMediaCompactStandby)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
         .onPreferenceChange(IslandPanelSizeKey.self) { size in
-            guard viewModel.isExpanded || focusTimer.showsCompactStandby else { return }
+            guard viewModel.isExpanded || focusTimer.showsCompactStandby || showsMediaCompactStandby else { return }
             guard size.width > 1, size.height > 1 else { return }
             var resolved = size
             // 番茄：高度始终不低于态下限；宽度仅终局抬升（选时等由内容测量，避免右侧虚空）。
@@ -185,6 +206,14 @@ struct IslandContentView: View {
         }
         .onChange(of: focusTimer.showsCompactStandby) { _, _ in
             syncCompactPanelSizeIfNeeded()
+        }
+        .onChange(of: showsMediaCompactStandby) { _, active in
+            syncCompactPanelSizeIfNeeded()
+            AppLog.info("Media", "播放收起待命已更新", [
+                "active": active,
+                "playing": nowPlaying.snapshot?.isPlaying ?? false,
+                "title": String((nowPlaying.snapshot?.title ?? "").prefix(24))
+            ])
         }
         .onChange(of: shelfDropTargeted) { _, targeted in
             let active = targeted && shelfDropEnabled
@@ -238,6 +267,8 @@ private struct IslandBody: View {
     let notchHeight: CGFloat
     @ObservedObject var runtime: WidgetRuntime
     @ObservedObject private var focusTimer = FocusTimerSession.shared
+    @ObservedObject private var nowPlaying = NowPlayingService.shared
+    @ObservedObject private var widgetSettings = WidgetSettings.shared
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
     @Environment(\.islandPalette) private var palette
 
@@ -254,6 +285,13 @@ private struct IslandBody: View {
     private var hidesPageDots: Bool {
         // 瞬时通知不参与翻页点（含 AI 额度等走普通通知顶距的条）。
         usesNotchWingTip || usesShortBelowNotchTip || runtime.isTransientNoticePage
+    }
+
+    private var showsMediaCompactStandby: Bool {
+        !focusTimer.showsCompactStandby
+            && widgetSettings.isEnabled("builtin.media")
+            && nowPlaying.snapshot?.hasTrack == true
+            && nowPlaying.snapshot?.isPlaying == true
     }
 
     var body: some View {
@@ -295,6 +333,19 @@ private struct IslandBody: View {
                         )
                     )
                     .allowsHitTesting(false)
+            } else if showsMediaCompactStandby, let snap = nowPlaying.snapshot {
+                MediaCompactStandbyView(
+                    title: snap.title,
+                    artwork: snap.artwork,
+                    elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
+                    isPlaying: snap.isPlaying
+                )
+                .padding(.horizontal, 10)
+                .frame(
+                    width: NotchGeometry.mediaCompactWidth,
+                    height: max(0, NotchGeometry.mediaCompactHeight - 4)
+                )
+                .allowsHitTesting(false)
             } else {
                 Color.clear
                     .frame(width: 1, height: 1)

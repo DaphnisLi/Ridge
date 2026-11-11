@@ -890,32 +890,47 @@ enum L10n {
         static var widgetSummary: String {
             tr("media.widget.summary", "显示封面与播放控制，播放时自动出现在灵动岛")
         }
-        static var settingsIntro: String {
-            tr(
-                "media.settings.intro",
-                "系统正在播放音乐、播客或网页媒体时，灵动岛会显示封面、进度与控制按钮。支持拖动进度条跳转。"
-            )
-        }
-        static var playersTitle: String { tr("media.players.title", "支持的播放器") }
+        static var playersTitle: String { tr("media.players.title", "支持的播放源") }
         static var playersSubtitle: String {
-            tr(
-                "media.players.subtitle",
-                "读取系统 Now Playing；Apple Music、Spotify、播客与浏览器内网页播放均可。"
-            )
+            tr("media.players.subtitle", "（自动接管系统媒体协议）")
         }
         static var playersAllSupported: String {
-            tr("media.players.all_supported", "全部已支持")
+            tr("media.players.all_supported", "已全部就绪")
         }
         static var playerAppleMusic: String { tr("media.player.apple_music", "Apple Music") }
+        static var playerAppleMusicSubtitle: String {
+            tr("media.player.apple_music.subtitle", "原生支持")
+        }
         static var playerSpotify: String { tr("media.player.spotify", "Spotify") }
-        static var playerBrowser: String { tr("media.player.browser", "浏览器 / YouTube") }
+        static var playerSpotifySubtitle: String {
+            tr("media.player.spotify.subtitle", "Connect")
+        }
+        static var playerBrowser: String { tr("media.player.browser", "网页媒体") }
+        static var playerBrowserSubtitle: String {
+            tr("media.player.browser.subtitle", "浏览器媒体流")
+        }
         static var playerPodcasts: String { tr("media.player.podcasts", "播客") }
+        static var playerPodcastsSubtitle: String {
+            tr("media.player.podcasts.subtitle", "Podcasts")
+        }
 
         static var previewSampleTitle: String {
             tr("media.preview.sample_title", "Midnight City")
         }
         static var previewSampleArtist: String {
             tr("media.preview.sample_artist", "M83")
+        }
+        static var previewStageExpanded: String {
+            tr("media.preview.stage.expanded", "展开播放")
+        }
+        static var previewStageStandby: String {
+            tr("media.preview.stage.standby", "收起待命")
+        }
+        static var previewExpandedBadge: String {
+            tr("media.preview.badge.expanded", "控制")
+        }
+        static var previewStandbyBadge: String {
+            tr("media.preview.badge.standby", "02:14")
         }
         static var idleArtist: String { tr("media.idle_artist", "暂无正在播放的内容") }
         static var unknownArtist: String { tr("media.unknown_artist", "未知艺术家") }
@@ -1692,6 +1707,64 @@ enum L10n {
                 "有已连接外设时直接上岛显示电量。低电、满电与接入提示请在「外设提示」中配置。"
             )
         }
+
+        static var sortPrioritySection: String {
+            tr("battery.sort_priority.section", "排序与优先级")
+        }
+        static var sortLogicTitle: String {
+            tr("battery.sort_logic.title", "外设排序逻辑")
+        }
+        static var sortLogicSubtitle: String {
+            tr(
+                "battery.sort_logic.subtitle",
+                "决定多外设同时在线时的排布先后顺序。"
+            )
+        }
+        static var sortRecentActivity: String {
+            tr("battery.sort_logic.recent_activity", "按最近使用活跃度")
+        }
+        static var sortBatteryLowToHigh: String {
+            tr("battery.sort_logic.battery_low_to_high", "按剩余电量从低到高")
+        }
+        static var sortConnectionOrder: String {
+            tr("battery.sort_logic.connection_order", "按设备连接顺序")
+        }
+        static func sortStrategyHint(_ mode: BatteryPeripheralSortMode) -> String {
+            switch mode {
+            case .recentActivity:
+                return tr(
+                    "battery.sort_logic.hint.recent_activity",
+                    "当前策略：优先前置当前正在发送输入信号或音频播放的外接硬件。"
+                )
+            case .batteryLowToHigh:
+                return tr(
+                    "battery.sort_logic.hint.battery_low_to_high",
+                    "当前策略：电量越低越靠前，方便优先关注需充电的设备。"
+                )
+            case .connectionOrder:
+                return tr(
+                    "battery.sort_logic.hint.connection_order",
+                    "当前策略：按外设接入先后固定排布，新接入的排在后面。"
+                )
+            }
+        }
+
+        static var clickActionTitle: String {
+            tr("battery.click_action.title", "点击外设卡片操作")
+        }
+        static var clickActionSubtitle: String {
+            tr(
+                "battery.click_action.subtitle",
+                "在灵动岛内直接单击对应设备卡片时触发的行为。"
+            )
+        }
+        static var clickOpenBluetooth: String {
+            tr("battery.click_action.open_bluetooth", "打开蓝牙偏好设置")
+        }
+        static var clickRefreshOnly: String {
+            tr("battery.click_action.refresh_only", "仅刷新电量")
+        }
+
         static var emptyTitle: String { tr("battery.empty.title", "暂无外设电量") }
         static var emptyHint: String {
             tr(
@@ -1755,6 +1828,16 @@ enum L10n {
                 "当外设电量低于此设定值时展开灵动岛预警"
             )
         }
+        /// 与会议「提前 N 分钟」同款短徽章。
+        static func lowThresholdBadge(_ percent: Int) -> String {
+            String(
+                format: String(
+                    localized: "battery.alerts.low_threshold_badge_format",
+                    defaultValue: "≤ %d%%"
+                ),
+                percent
+            )
+        }
         static func lowThresholdHint(_ percent: Int) -> String {
             String(
                 format: String(
@@ -1764,13 +1847,13 @@ enum L10n {
                 percent
             )
         }
-        /// 阈值分段标签：仅 15% 带「推荐」。
+        /// 阈值分段标签：仅 15% 带「(推荐)」，文案格式对齐会议分钟档。
         static func lowThresholdPresetLabel(_ percent: Int) -> String {
             if percent == 15 {
                 return String(
                     format: String(
                         localized: "battery.alerts.low_threshold_preset_recommended_format",
-                        defaultValue: "%d%% 推荐"
+                        defaultValue: "%d%% (推荐)"
                     ),
                     percent
                 )
@@ -1828,12 +1911,20 @@ enum L10n {
             String(
                 format: String(
                     localized: "battery.tip.low_badge_format",
-                    defaultValue: "%d%% 严重低电"
+                    defaultValue: "%d%% 电量低"
                 ),
                 percent
             )
         }
-        static var tipFullBadge: String { tr("battery.tip.full_badge", "100% 已充满") }
+        static func tipFullBadge(_ percent: Int = 100) -> String {
+            String(
+                format: String(
+                    localized: "battery.tip.full_badge_format",
+                    defaultValue: "%d%% 满电"
+                ),
+                percent
+            )
+        }
         static var previewLowNotice: String { tr("battery.tip.preview_low", "预览低电提示") }
         static var previewFullNotice: String { tr("battery.tip.preview_full", "预览满电提示") }
         static var snoozeAction: String { tr("battery.tip.snooze_action", "稍后提醒") }
@@ -1897,7 +1988,7 @@ enum L10n {
             tr("peripheral_tip.preview.connect_badge", "已连接")
         }
 
-        static var connectBadge: String { tr("peripheral_tip.connect.badge", "已接入") }
+        static var connectBadge: String { tr("peripheral_tip.connect.badge", "已连接") }
         static var tipSampleHeadphones: String {
             tr("peripheral_tip.sample.headphones", "AirPods Pro")
         }
@@ -1913,10 +2004,13 @@ enum L10n {
         static var widgetSummary: String {
             tr("copied_notice.widget.summary", "复制成功时短暂上岛提示")
         }
-        static var configBody: String {
+        static var hapticTitle: String {
+            tr("copied_notice.haptic.title", "触感反馈")
+        }
+        static var hapticSubtitle: String {
             tr(
-                "copied_notice.config.body",
-                "开启后，复制文字、图片或色值时灵动岛短暂显示「已复制」。总开关在小组件库。"
+                "copied_notice.haptic.subtitle",
+                "灵动岛弹出「已复制」提示时，触控板提供轻微震动反馈"
             )
         }
     }

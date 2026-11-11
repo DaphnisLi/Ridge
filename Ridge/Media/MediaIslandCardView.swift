@@ -15,6 +15,8 @@ struct MediaIslandCardView: View {
     var onPrevious: (() -> Void)?
     var onNext: (() -> Void)?
     var onSeek: ((Double) -> Void)?
+    /// 设置预览关动画，避免库卡/详情 TimelineView 30fps 拖垮设置窗。
+    var animatedEqualizer: Bool = true
 
     @State private var isDragging = false
     @State private var dragProgress: Double = 0
@@ -46,7 +48,7 @@ struct MediaIslandCardView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                MediaAudioEqualizerView(isPlaying: isPlaying, tint: coral)
+                MediaAudioEqualizerView(isPlaying: isPlaying, tint: coral, animated: animatedEqualizer)
                     .accessibilityHidden(true)
             }
 
@@ -200,20 +202,24 @@ struct MediaIslandCardView: View {
         .buttonStyle(.plain)
     }
 
-    /// 设置页样张。
-    static func previewSample() -> MediaIslandCardView {
+    /// 设置页 / 库卡样张（律动条默认静止，防设置窗卡顿）。
+    static func previewSample(animatedEqualizer: Bool = false) -> MediaIslandCardView {
         MediaIslandCardView(
             title: L10n.Media.previewSampleTitle,
             artist: L10n.Media.previewSampleArtist,
-            artwork: makePreviewArtwork(),
+            artwork: previewArtwork,
             appIcon: NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Music")
                 .map { NSWorkspace.shared.icon(forFile: $0.path) },
             isPlaying: true,
             progress: 0.68,
             elapsedText: "2:59",
-            durationText: "-1:28"
+            durationText: "-1:28",
+            animatedEqualizer: animatedEqualizer
         )
     }
+
+    /// 收起待命样张共用假封面（只生成一次）。
+    static let previewArtwork: NSImage = makePreviewArtwork()
 
     /// 假封面：珊瑚渐变 + 音符，避免样张左侧空白。
     private static func makePreviewArtwork() -> NSImage {
@@ -249,10 +255,11 @@ struct MediaIslandCardView: View {
 
 // MARK: - Audio equalizer
 
-/// 右侧音乐律动条：播放时持续跳动，暂停时静止。
+/// 右侧音乐律动条：播放时持续跳动，暂停时静止；设置样张可关 `animated`。
 private struct MediaAudioEqualizerView: View {
     let isPlaying: Bool
     let tint: Color
+    var animated: Bool = true
 
     private let barCount = 5
     /// 各柱相位周期（秒），错开形成律动感。
@@ -261,7 +268,7 @@ private struct MediaAudioEqualizerView: View {
     private let maxHeights: [CGFloat] = [13, 20, 11, 22, 16]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: !isPlaying)) { context in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: !isPlaying || !animated)) { context in
             HStack(alignment: .bottom, spacing: 3) {
                 ForEach(0..<barCount, id: \.self) { index in
                     Capsule()
@@ -274,6 +281,9 @@ private struct MediaAudioEqualizerView: View {
     }
 
     private func height(for index: Int, at date: Date) -> CGFloat {
+        if !animated {
+            return (minHeights[index] + maxHeights[index]) * 0.5
+        }
         guard isPlaying else { return minHeights[index] }
         let t = date.timeIntervalSinceReferenceDate
         let phase = sin(t * (.pi * 2 / periods[index]) + Double(index) * 1.1)

@@ -182,9 +182,9 @@ final class ControlDeckSettings: ObservableObject {
         // 勿在 init 同步 start：BatterySession.refreshLiveInvite 会再取 ControlDeckSettings.shared，
         // 触发 dispatch_once 重入 → 启动即 SIGTRAP。
         Task { @MainActor in
-            if startShelf {
-                ClipboardHistoryStore.shared.start()
-            }
+            // 「已复制」tip 独立后：关货架仍须按 tip 开关保持剪贴板监听。
+            ShelfSettings.shared.migrateCopiedNoticeWidgetGateIfNeeded()
+            ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "controlDeckInit")
             if startProjects {
                 ProjectReleaseSession.shared.start()
             }
@@ -193,6 +193,7 @@ final class ControlDeckSettings: ObservableObject {
             }
             AppLog.debug("ControlDeck", "启动后已拉起模块会话", [
                 "shelf": startShelf,
+                "copiedTip": ClipboardCopiedNoticeGate.isTipEnabled,
                 "projects": startProjects,
                 "battery": startBattery
             ])
@@ -209,11 +210,7 @@ final class ControlDeckSettings: ObservableObject {
         AppLog.info("ControlDeck", "模块开关变更", ["id": id, "enabled": enabled])
 
         if id == "shelf" {
-            if enabled {
-                ClipboardHistoryStore.shared.start()
-            } else {
-                ClipboardHistoryStore.shared.stop()
-            }
+            ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "shelfModuleToggle")
         }
         if id == "projects" {
             if enabled {

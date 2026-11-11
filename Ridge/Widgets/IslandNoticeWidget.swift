@@ -291,7 +291,8 @@ private struct ClipboardCaptureHintNoticeCard: View {
     }
 }
 
-/// 外设低电 / 满电 / 接入信息条（约 3s 自动收；低电可点进实况）。
+/// 外设低电 / 满电 / 接入：左右翼贴刘海（同会议）；约 3s 自动收，可点进电量实况。
+/// 壳层 `usesNotchWingChrome`；根视图禁止外圈 padding；名称旁不展示 detail / 0x 代码。
 struct PeripheralBatteryNoticeCard: View {
     enum Style {
         case low
@@ -301,19 +302,57 @@ struct PeripheralBatteryNoticeCard: View {
 
     let notice: BatteryPeripheralNotice
     let style: Style
+    var compact: Bool = false
+    var previewNotchWidth: CGFloat = 110
 
-    private let accentRed = Color(red: 0.729, green: 0.102, blue: 0.102)
-    private let accentGreen = Color(red: 0.447, green: 0.996, blue: 0.533)
-    private let accentBlue = Color(red: 0.35, green: 0.62, blue: 1.0)
+    @Environment(\.islandNotchWidth) private var envNotchWidth
+    @Environment(\.islandNotchHeight) private var envNotchHeight
 
-    private var badge: String {
+    private let accentRed = Color(red: 0.86, green: 0.22, blue: 0.24)
+    private let accentGreen = Color(red: 0.18, green: 0.62, blue: 0.34)
+    private let accentBlue = Color(red: 0.20, green: 0.48, blue: 0.96)
+
+    private var notchWidth: CGFloat {
+        compact ? previewNotchWidth : max(envNotchWidth, 110)
+    }
+
+    private var barHeight: CGFloat {
+        if compact { return 30 }
+        return max(envNotchHeight, 32)
+    }
+
+    private var wingWidth: CGFloat { compact ? 96 : 104 }
+
+    private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
+
+    private var displayName: String {
+        Self.cleanedDeviceName(notice.deviceName)
+    }
+
+    private var statusText: String {
         switch style {
         case .low:
             return L10n.Battery.tipLowBadge(notice.percent ?? 0)
         case .full:
-            return L10n.Battery.tipFullBadge
+            return L10n.Battery.tipFullBadge(notice.percent ?? 100)
         case .connect:
             return L10n.PeripheralTip.connectBadge
+        }
+    }
+
+    private var statusTint: Color {
+        switch style {
+        case .low: return accentRed
+        case .full: return accentGreen
+        case .connect: return accentBlue
+        }
+    }
+
+    private var statusSymbol: String {
+        switch style {
+        case .low: return "battery.25"
+        case .full: return "battery.100"
+        case .connect: return "link"
         }
     }
 
@@ -352,304 +391,87 @@ struct PeripheralBatteryNoticeCard: View {
                 detail: L10n.PeripheralTip.connectNoticeDetail
             )
         }
-        return PeripheralBatteryNoticeCard(notice: notice, style: style)
+        return PeripheralBatteryNoticeCard(notice: notice, style: style, compact: true)
             .padding(.horizontal, IslandChrome.contentHorizontal)
-            .padding(.bottom, IslandChrome.shortTipBottom)
+            .padding(.bottom, IslandChrome.compactTipBottom)
             .frame(minHeight: compact ? 34 : 40)
     }
 
     var body: some View {
-        Group {
-            switch style {
-            case .full:
-                fullBody
-            case .connect:
-                connectBody
-            case .low:
-                lowBody
-            }
+        HStack(spacing: 0) {
+            leftCluster
+                .frame(width: wingWidth + notchWidth * 0.35, alignment: .leading)
+            Spacer(minLength: 0)
+            statusPill
+                .fixedSize(horizontal: true, vertical: false)
         }
-        .frame(minWidth: 320)
+        .frame(width: totalWidth, height: barHeight)
+        .clipped()
+        .contentShape(Rectangle())
+        .onTapGesture { openBatteryLive(reason: "\(style)NoticeTap") }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(notice.deviceName)，\(badge)")
+        .accessibilityLabel("\(displayName)，\(statusText)")
     }
 
-    private var connectBody: some View {
-        HStack(alignment: .center, spacing: 12) {
-            connectDeviceIcon
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(notice.deviceName)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Text(notice.detail)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(3)
-
-            connectPill
-                .fixedSize()
-                .layoutPriority(2)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { openBatteryLive(reason: "connectNoticeTap") }
-    }
-
-    private var connectDeviceIcon: some View {
-        ZStack(alignment: .bottomTrailing) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(accentBlue.opacity(0.85), lineWidth: 1.2)
-                    )
-                Image(systemName: notice.kind.systemSymbol)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.92))
-            }
-            .frame(width: 30, height: 30)
-            .shadow(color: accentBlue.opacity(0.55), radius: 7, x: 0, y: 0)
-
+    private var leftCluster: some View {
+        HStack(spacing: 7) {
             ZStack {
                 Circle()
-                    .fill(accentBlue)
-                    .frame(width: 12, height: 12)
-                Image(systemName: "plus")
-                    .font(.system(size: 7, weight: .bold))
-                    .foregroundStyle(Color.black.opacity(0.88))
-            }
-            .offset(x: 3, y: 3)
-            .accessibilityHidden(true)
-        }
-        .frame(width: 30, height: 30)
-    }
-
-    private var connectPill: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "cable.connector")
-                .font(.system(size: 9, weight: .semibold))
-            Text(badge)
-                .font(.system(size: 10, weight: .semibold))
-        }
-        .foregroundStyle(accentBlue)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            Capsule()
-                .fill(accentBlue.opacity(0.14))
-                .overlay(
-                    Capsule().strokeBorder(accentBlue.opacity(0.75), lineWidth: 1)
-                )
-        )
-        .shadow(color: accentBlue.opacity(0.45), radius: 7, x: 0, y: 0)
-    }
-
-    /// 满电：左发光图标（右下角闪电图标）+ 文案 + 右发光「100% 已充满」；点卡可进电量实况。
-    private var fullBody: some View {
-        HStack(alignment: .center, spacing: 12) {
-            fullDeviceIcon
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(notice.deviceName)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Text(notice.detail)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(3)
-
-            fullChargePill
-                .fixedSize()
-                .layoutPriority(2)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { openBatteryLive(reason: "fullNoticeTap") }
-    }
-
-    private var fullDeviceIcon: some View {
-        ZStack(alignment: .bottomTrailing) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(accentGreen.opacity(0.85), lineWidth: 1.2)
-                    )
+                    .fill(Color.white.opacity(0.14))
                 Image(systemName: notice.kind.systemSymbol)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: compact ? 10 : 11, weight: .semibold))
                     .foregroundStyle(Color.white.opacity(0.92))
             }
-            .frame(width: 30, height: 30)
-            .shadow(color: accentGreen.opacity(0.75), radius: 7, x: 0, y: 0)
-            .shadow(color: accentGreen.opacity(0.40), radius: 14, x: 0, y: 0)
+            .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
+            .layoutPriority(1)
 
-            ZStack {
-                Circle()
-                    .fill(accentGreen)
-                    .frame(width: 12, height: 12)
-                    .shadow(color: accentGreen.opacity(0.85), radius: 4, x: 0, y: 0)
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 7, weight: .bold))
-                    .foregroundStyle(Color.black.opacity(0.88))
-            }
-            .offset(x: 3, y: 3)
-            .accessibilityHidden(true)
+            Text(displayName)
+                .font(.system(size: compact ? 11 : 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
         }
-        .frame(width: 30, height: 30)
     }
 
-    private var fullChargePill: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 9, weight: .semibold))
-            Text(L10n.Battery.tipFullBadge)
-                .font(.system(size: 10, weight: .semibold))
+    private var statusPill: some View {
+        HStack(spacing: 5) {
+            Image(systemName: statusSymbol)
+                .font(.system(size: compact ? 9 : 10, weight: .semibold))
+            Text(statusText)
+                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                .monospacedDigit()
+                .lineLimit(1)
         }
-        .foregroundStyle(accentGreen)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .foregroundStyle(.white)
+        .padding(.horizontal, compact ? 8 : 10)
+        .padding(.vertical, compact ? 4 : 5)
         .background(
-            Capsule()
-                .fill(accentGreen.opacity(0.14))
-                .overlay(
-                    Capsule().strokeBorder(accentGreen.opacity(0.75), lineWidth: 1)
-                )
+            Capsule(style: .continuous)
+                .fill(statusTint)
+                .shadow(color: statusTint.opacity(0.45), radius: 6, y: 0)
         )
-        .shadow(color: accentGreen.opacity(0.70), radius: 7, x: 0, y: 0)
-        .shadow(color: accentGreen.opacity(0.35), radius: 12, x: 0, y: 0)
-    }
-
-    /// 低电：左发光图标（右上角闪烁感叹号）+ 文案 + 右发光红胶囊（循环电量格 + 百分比）；点卡可进电量实况。
-    private var lowBody: some View {
-        HStack(alignment: .center, spacing: 10) {
-            lowDeviceIcon
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(notice.deviceName)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Text(notice.detail)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(3)
-
-            lowChargePill
-                .fixedSize()
-                .layoutPriority(2)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { openBatteryLive(reason: "lowNoticeTap") }
     }
 
     private func openBatteryLive(reason: String) {
         guard ControlDeckSettings.shared.isModuleEnabled("battery") else { return }
-        AppLog.info("IslandNotice", "电量提示点进实况", ["reason": reason, "device": notice.deviceID])
+        AppLog.info("IslandNotice", "电量提示点进实况", [
+            "reason": reason,
+            "device": notice.deviceID,
+            "style": "\(style)"
+        ])
         IslandNoticeCenter.shared.dismiss(id: notice.id)
         LiveIslandGate.shared.open(LiveIslandGate.batteryID, reason: reason)
     }
 
-    private var lowDeviceIcon: some View {
-        ZStack(alignment: .topTrailing) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(accentRed.opacity(0.18))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(accentRed, lineWidth: 1.4)
-                    )
-                Image(systemName: notice.kind.systemSymbol)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(accentRed)
-            }
-            .frame(width: 30, height: 30)
-            .shadow(color: accentRed.opacity(0.95), radius: 8, x: 0, y: 0)
-            .shadow(color: accentRed.opacity(0.65), radius: 16, x: 0, y: 0)
-            .shadow(color: accentRed.opacity(0.35), radius: 22, x: 0, y: 0)
-
-            // 感叹号一闪一闪。
-            TimelineView(.animation(minimumInterval: 0.45, paused: false)) { context in
-                let on = Int(context.date.timeIntervalSinceReferenceDate / 0.45) % 2 == 0
-                ZStack {
-                    Circle()
-                        .fill(accentRed)
-                        .frame(width: 12, height: 12)
-                        .shadow(color: accentRed.opacity(on ? 1.0 : 0.35), radius: on ? 6 : 2, x: 0, y: 0)
-                    Image(systemName: "exclamationmark")
-                        .font(.system(size: 7, weight: .black))
-                        .foregroundStyle(.white)
-                }
-                .opacity(on ? 1.0 : 0.28)
-                .scaleEffect(on ? 1.0 : 0.92)
-            }
-            .offset(x: 3, y: -3)
-            .accessibilityHidden(true)
-        }
-        .frame(width: 30, height: 30)
-    }
-
-    private var lowChargePill: some View {
-        HStack(spacing: 5) {
-            CyclingBatteryBarsGlyph(tint: .white)
-            Text(L10n.Battery.tipLowBadge(notice.percent ?? 0))
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.white)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            Capsule()
-                .fill(accentRed)
-                .overlay(
-                    Capsule().strokeBorder(accentRed.opacity(0.95), lineWidth: 1)
-                )
-        )
-        .shadow(color: accentRed.opacity(0.75), radius: 7, x: 0, y: 0)
-        .shadow(color: accentRed.opacity(0.40), radius: 12, x: 0, y: 0)
-    }
-}
-
-/// 低电胶囊内循环电量格：1 → 2 → 3 → 1 …
-private struct CyclingBatteryBarsGlyph: View {
-    var tint: Color = .white
-    private let period: TimeInterval = 0.42
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: period, paused: false)) { context in
-            let lit = Int(context.date.timeIntervalSinceReferenceDate / period) % 3 + 1
-            HStack(spacing: 1.2) {
-                HStack(spacing: 1.4) {
-                    ForEach(1...3, id: \.self) { index in
-                        RoundedRectangle(cornerRadius: 0.8, style: .continuous)
-                            .fill(index <= lit ? tint : tint.opacity(0.22))
-                            .frame(width: 2.4, height: 6.5)
-                    }
-                }
-                .padding(.horizontal, 2.2)
-                .padding(.vertical, 2)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 2, style: .continuous)
-                        .strokeBorder(tint.opacity(0.95), lineWidth: 1)
-                )
-
-                RoundedRectangle(cornerRadius: 0.6, style: .continuous)
-                    .fill(tint.opacity(0.95))
-                    .frame(width: 1.4, height: 3.2)
-            }
-            .accessibilityHidden(true)
-        }
+    /// 去掉名称尾部 `0x…` / `(0x…)` 一类产品代码。
+    static func cleanedDeviceName(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let regex = try? NSRegularExpression(
+            pattern: #"\s*\(?0[xX][0-9A-Fa-f]+\)?\s*$"#
+        ) else { return trimmed }
+        let range = NSRange(trimmed.startIndex..<trimmed.endIndex, in: trimmed)
+        return regex.stringByReplacingMatches(in: trimmed, range: range, withTemplate: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

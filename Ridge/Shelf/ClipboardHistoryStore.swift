@@ -252,6 +252,7 @@ final class ClipboardHistoryStore: ObservableObject {
                 symbol: item.category.symbol == "paintpalette" ? "eyedropper" : item.category.symbol
             )
         )
+        CopiedNoticeSettings.shared.fireHapticIfNeeded()
         AppLog.warn("Clipboard", "已投递复制提示", [
             "category": item.category.rawValue,
             "previewChars": item.preview.count

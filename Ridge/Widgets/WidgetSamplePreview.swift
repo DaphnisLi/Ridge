@@ -271,12 +271,13 @@ enum WidgetSamplePreview {
             colorPickSample(compact: compact)
         case "builtin.ocrSelect":
             ocrSelectSample(compact: compact)
-        case "builtin.peripheralTip", "builtin.peripheralTip.low":
-            peripheralTipSample(style: .low, compact: compact)
+        case "builtin.peripheralTip", "builtin.peripheralTip.connect":
+            // 库卡默认展示「接入」样张（与设置页 Tab 顺序首位一致）。
+            peripheralTipSample(style: .connect, compact: compact)
         case "builtin.peripheralTip.full":
             peripheralTipSample(style: .full, compact: compact)
-        case "builtin.peripheralTip.connect":
-            peripheralTipSample(style: .connect, compact: compact)
+        case "builtin.peripheralTip.low":
+            peripheralTipSample(style: .low, compact: compact)
         case "builtin.copiedNotice":
             copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":

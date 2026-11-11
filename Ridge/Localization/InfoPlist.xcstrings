@@ -44,6 +44,17 @@
           }
         }
       }
+    },
+    "NSAppleEventsUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridge 需要控制「系统设置」以打开蓝牙面板，便于管理外设连接。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

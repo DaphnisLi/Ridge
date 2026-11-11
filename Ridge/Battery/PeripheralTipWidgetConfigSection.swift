@@ -3,7 +3,7 @@ import SwiftUI
 /// 外设提示设置：低电 / 满电 / 接入三档 + 岛上样张。
 struct PeripheralTipWidgetConfigSection: View {
     @ObservedObject private var settings = BatterySettings.shared
-    @State private var previewSelection = "low"
+    @State private var previewSelection = "connect"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,12 +40,12 @@ struct PeripheralTipWidgetConfigSection: View {
         SettingsIslandStage(
             options: [
                 SettingsIslandStageOption(
-                    id: "low",
-                    title: L10n.PeripheralTip.previewLow,
-                    badge: "\(settings.lowThresholdPercent)%",
-                    symbol: "battery.25",
-                    tint: SettingsChrome.error,
-                    maxIslandWidth: 420,
+                    id: "connect",
+                    title: L10n.PeripheralTip.previewConnect,
+                    badge: L10n.PeripheralTip.previewConnectBadge,
+                    symbol: "link",
+                    tint: SettingsChrome.primary,
+                    maxIslandWidth: 360,
                     hugsContent: true,
                     bottomRadius: 18,
                     outlineStyle: .panel,
@@ -58,7 +58,7 @@ struct PeripheralTipWidgetConfigSection: View {
                     badge: "100%",
                     symbol: "battery.100.bolt",
                     tint: SettingsChrome.secondary,
-                    maxIslandWidth: 420,
+                    maxIslandWidth: 360,
                     hugsContent: true,
                     bottomRadius: 18,
                     outlineStyle: .panel,
@@ -66,12 +66,12 @@ struct PeripheralTipWidgetConfigSection: View {
                     compactShell: true
                 ),
                 SettingsIslandStageOption(
-                    id: "connect",
-                    title: L10n.PeripheralTip.previewConnect,
-                    badge: L10n.PeripheralTip.previewConnectBadge,
-                    symbol: "cable.connector",
-                    tint: SettingsChrome.primary,
-                    maxIslandWidth: 420,
+                    id: "low",
+                    title: L10n.PeripheralTip.previewLow,
+                    badge: "\(settings.lowThresholdPercent)%",
+                    symbol: "battery.25",
+                    tint: SettingsChrome.error,
+                    maxIslandWidth: 360,
                     hugsContent: true,
                     bottomRadius: 18,
                     outlineStyle: .panel,

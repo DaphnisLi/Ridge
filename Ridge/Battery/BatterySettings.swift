@@ -1,6 +1,23 @@
 import Combine
 import Foundation
 
+/// 多外设同时在线时的岛上排布策略。
+enum BatteryPeripheralSortMode: String, CaseIterable, Identifiable {
+    case recentActivity
+    case batteryLowToHigh
+    case connectionOrder
+
+    var id: String { rawValue }
+}
+
+/// 点击岛上外设卡片时的行为。
+enum BatteryPeripheralClickAction: String, CaseIterable, Identifiable {
+    case openBluetoothSettings
+    case refreshBatteryOnly
+
+    var id: String { rawValue }
+}
+
 /// 电量模块：低电 / 满电 / 接入告警偏好与按设备稍后提醒。
 /// 总开关在小组件库 `builtin.peripheralTip`；本类只存各档细节。
 @MainActor
@@ -13,6 +30,8 @@ final class BatterySettings: ObservableObject {
         static let fullEnabled = "battery.fullAlertEnabled.v1"
         static let connectEnabled = "battery.connectAlertEnabled.v1"
         static let snoozeMap = "battery.lowSnoozeUntil.v1"
+        static let sortMode = "battery.peripheralSortMode.v1"
+        static let clickAction = "battery.peripheralClickAction.v1"
     }
 
     /// 设置页四档：10 / 15（推荐）/ 20 / 25。
@@ -62,6 +81,22 @@ final class BatterySettings: ObservableObject {
         }
     }
 
+    /// 多外设排布：默认按最近使用活跃度。
+    @Published var peripheralSortMode: BatteryPeripheralSortMode {
+        didSet {
+            UserDefaults.standard.set(peripheralSortMode.rawValue, forKey: Key.sortMode)
+            AppLog.info("Battery", "外设排序策略已更新", ["mode": peripheralSortMode.rawValue])
+        }
+    }
+
+    /// 点击岛上外设卡片：默认打开蓝牙设置。
+    @Published var peripheralClickAction: BatteryPeripheralClickAction {
+        didSet {
+            UserDefaults.standard.set(peripheralClickAction.rawValue, forKey: Key.clickAction)
+            AppLog.info("Battery", "外设卡片点击操作已更新", ["action": peripheralClickAction.rawValue])
+        }
+    }
+
     /// deviceID → 低电免打扰截止。
     private var snoozeUntilByDevice: [String: TimeInterval] {
         didSet {
@@ -77,6 +112,18 @@ final class BatterySettings: ObservableObject {
         fullChargeAlertEnabled = defaults.object(forKey: Key.fullEnabled) as? Bool ?? true
         connectAlertEnabled = defaults.object(forKey: Key.connectEnabled) as? Bool ?? true
         snoozeUntilByDevice = defaults.dictionary(forKey: Key.snoozeMap) as? [String: TimeInterval] ?? [:]
+        if let rawSort = defaults.string(forKey: Key.sortMode),
+           let mode = BatteryPeripheralSortMode(rawValue: rawSort) {
+            peripheralSortMode = mode
+        } else {
+            peripheralSortMode = .recentActivity
+        }
+        if let rawClick = defaults.string(forKey: Key.clickAction),
+           let action = BatteryPeripheralClickAction(rawValue: rawClick) {
+            peripheralClickAction = action
+        } else {
+            peripheralClickAction = .openBluetoothSettings
+        }
         if raw != lowThresholdPercent {
             UserDefaults.standard.set(lowThresholdPercent, forKey: Key.lowThreshold)
             AppLog.info("Battery", "低电阈值已对齐预设档", [
@@ -111,5 +158,12 @@ final class BatterySettings: ObservableObject {
         fullChargeAlertEnabled = true
         connectAlertEnabled = true
         AppLog.info("Battery", "外设提示已恢复默认")
+    }
+
+    /// 电量页「恢复默认」：排序与点击操作。
+    func restoreDeckDefaults() {
+        peripheralSortMode = .recentActivity
+        peripheralClickAction = .openBluetoothSettings
+        AppLog.info("Battery", "电量页排序与点击已恢复默认")
     }
 }

@@ -373,6 +373,7 @@ final class ShelfCaptureTools {
         IslandNoticeCenter.shared.present(
             .clipboardCaptureHint(id: tipID, text: detail, symbol: symbol)
         )
+        CopiedNoticeSettings.shared.fireHapticIfNeeded()
         AppLog.warn("ShelfCapture", "已投递复制成功提示", [
             "category": category,
             "detail": String(detail.prefix(48)),

@@ -55,6 +55,8 @@ targets:
       properties:
         com.apple.security.get-task-allow: true
         com.apple.security.personal-information.calendars: true
+        # 外设卡片打开系统蓝牙设置（AppleScript 揭面板）
+        com.apple.security.automation.apple-events: true
   RidgeTests:
     type: bundle.unit-test
     platform: macOS

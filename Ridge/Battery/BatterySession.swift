@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import CoreAudio
 import Foundation
@@ -18,6 +19,8 @@ final class BatterySession: ObservableObject {
     private var knownDeviceIDs: Set<String> = []
     private var connectSeeded = false
     private var isRefreshing = false
+    /// 按设备连接先后记录的 id（用于「按设备连接顺序」）。
+    private var connectionOrderIDs: [String] = []
 
     private init() {}
 
@@ -143,19 +146,232 @@ final class BatterySession: ObservableObject {
             continuity: continuity,
             threshold: threshold
         )
-        if mapped != devices {
-            devices = mapped
+        updateConnectionOrder(with: mapped.map(\.id))
+        let sorted = sortDevices(mapped)
+        if sorted != devices {
+            devices = sorted
             AppLog.info("Battery", "外设电量已刷新", [
                 "reason": reason,
-                "count": mapped.count,
-                "withBattery": mapped.filter(\.hasBatteryReading).count,
-                "withListening": mapped.filter { $0.listeningMode != nil }.count,
+                "count": sorted.count,
+                "sort": settings.peripheralSortMode.rawValue,
+                "withBattery": sorted.filter(\.hasBatteryReading).count,
+                "withListening": sorted.filter { $0.listeningMode != nil }.count,
                 "continuity": continuity.count,
-                "names": mapped.map(\.name).joined(separator: ",")
+                "names": sorted.map(\.name).joined(separator: ",")
             ])
         }
-        evaluateAlerts(mapped)
+        evaluateAlerts(sorted)
         refreshLivePresence(reason: reason)
+    }
+
+    private func updateConnectionOrder(with liveIDs: [String]) {
+        let live = Set(liveIDs)
+        for id in liveIDs where !connectionOrderIDs.contains(id) {
+            connectionOrderIDs.append(id)
+        }
+        connectionOrderIDs.removeAll { !live.contains($0) }
+    }
+
+    /// 按设置页排序策略重排；活跃度优先音频路由与输入类外设。
+    private func sortDevices(_ devices: [BatteryDevice]) -> [BatteryDevice] {
+        let audioNames = Self.connectedBluetoothAudioNames()
+        let orderIndex = Dictionary(
+            uniqueKeysWithValues: connectionOrderIDs.enumerated().map { ($0.element, $0.offset) }
+        )
+        switch settings.peripheralSortMode {
+        case .recentActivity:
+            return devices.sorted { lhs, rhs in
+                let l = Self.activityRank(lhs, audioNames: audioNames)
+                let r = Self.activityRank(rhs, audioNames: audioNames)
+                if l != r { return l < r }
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+        case .batteryLowToHigh:
+            return devices.sorted { lhs, rhs in
+                switch (lhs.percent, rhs.percent) {
+                case let (l?, r?):
+                    if l != r { return l < r }
+                case (_?, nil):
+                    return true
+                case (nil, _?):
+                    return false
+                case (nil, nil):
+                    break
+                }
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+        case .connectionOrder:
+            return devices.sorted { lhs, rhs in
+                let l = orderIndex[lhs.id] ?? Int.max
+                let r = orderIndex[rhs.id] ?? Int.max
+                if l != r { return l < r }
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
+            }
+        }
+    }
+
+    /// 0 最高：当前蓝牙音频路由 → 输入设备 → 其它耳机 → 其余。
+    private static func activityRank(_ device: BatteryDevice, audioNames: Set<String>) -> Int {
+        if matchesBluetoothAudio(deviceName: device.name, audioNames: audioNames) {
+            return 0
+        }
+        switch device.kind {
+        case .keyboard, .mouse, .trackpad:
+            return 1
+        case .headphones, .headset:
+            return 2
+        default:
+            return 3
+        }
+    }
+
+    /// 打开系统蓝牙设置：先经 System Settings 深链，再脚本揭开蓝牙面板。
+    func openBluetoothPreferences(reason: String) {
+        AppLog.info("Battery", "准备打开蓝牙设置", ["reason": reason])
+        openBluetoothDeepLink(index: 0, reason: reason)
+    }
+
+    private func openBluetoothDeepLink(index: Int, reason: String) {
+        let deepLinks = [
+            "x-apple.systempreferences:com.apple.BluetoothSettings",
+            "x-apple.systempreferences:com.apple.preferences.Bluetooth",
+            "x-apple.systempreferences:com.apple.preference.bluetooth"
+        ]
+        guard index < deepLinks.count else {
+            // 最后手段：/usr/bin/open + 脚本揭面板。
+            let opened = openBluetoothViaOpenCLI(reason: reason)
+            let revealed = revealBluetoothPaneViaAppleScript(reason: reason + "+fallback")
+            if !opened, !revealed {
+                AppLog.warn("Battery", "打开蓝牙设置失败", ["reason": reason])
+            }
+            return
+        }
+
+        let raw = deepLinks[index]
+        guard let url = URL(string: raw) else {
+            openBluetoothDeepLink(index: index + 1, reason: reason)
+            return
+        }
+
+        // 1) 直接 open URL（不依赖 System Settings.app 路径解析）。
+        if NSWorkspace.shared.open(url) {
+            AppLog.info("Battery", "已请求打开蓝牙设置", [
+                "reason": reason,
+                "url": raw,
+                "via": "nsWorkspaceOpen"
+            ])
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
+                _ = self?.revealBluetoothPaneViaAppleScript(reason: reason + "+reveal")
+            }
+            return
+        }
+
+        // 2) 指定 System Settings.app 打开深链。
+        let settingsApp = URL(fileURLWithPath: "/System/Applications/System Settings.app")
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = true
+
+        NSWorkspace.shared.open([url], withApplicationAt: settingsApp, configuration: config) { [weak self] _, error in
+            Task { @MainActor in
+                guard let self else { return }
+                if let error {
+                    AppLog.warn("Battery", "System Settings 深链失败，改试下一候选", [
+                        "reason": reason,
+                        "url": raw,
+                        "error": error.localizedDescription
+                    ])
+                    self.openBluetoothDeepLink(index: index + 1, reason: reason)
+                    return
+                }
+                AppLog.info("Battery", "已请求打开蓝牙设置", [
+                    "reason": reason,
+                    "url": raw,
+                    "via": "systemSettingsApp"
+                ])
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    _ = self.revealBluetoothPaneViaAppleScript(reason: reason + "+reveal")
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    private func openBluetoothViaOpenCLI(reason: String) -> Bool {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = [
+            "x-apple.systempreferences:com.apple.BluetoothSettings"
+        ]
+        do {
+            try process.run()
+            process.waitUntilExit()
+            let ok = process.terminationStatus == 0
+            AppLog.info("Battery", ok ? "open CLI 已打开蓝牙设置" : "open CLI 失败", [
+                "reason": reason,
+                "status": process.terminationStatus
+            ])
+            return ok
+        } catch {
+            AppLog.warn("Battery", "open CLI 异常", [
+                "reason": reason,
+                "error": error.localizedDescription
+            ])
+            return false
+        }
+    }
+
+    @discardableResult
+    private func revealBluetoothPaneViaAppleScript(reason: String) -> Bool {
+        let source = """
+        tell application "System Settings"
+          activate
+          try
+            reveal pane id "com.apple.BluetoothSettings"
+            return "ok"
+          on error
+            try
+              set current pane to pane id "com.apple.BluetoothSettings"
+              return "ok-set"
+            on error errMsg
+              return "fail:" & errMsg
+            end try
+          end try
+        end tell
+        """
+        var errorInfo: NSDictionary?
+        guard let script = NSAppleScript(source: source) else {
+            AppLog.warn("Battery", "蓝牙设置脚本创建失败", ["reason": reason])
+            return false
+        }
+        let result = script.executeAndReturnError(&errorInfo)
+        if let errorInfo {
+            AppLog.warn("Battery", "蓝牙设置脚本执行失败", [
+                "reason": reason,
+                "error": "\(errorInfo)"
+            ])
+            return false
+        }
+        let message = result.stringValue ?? ""
+        let ok = message.hasPrefix("ok")
+        AppLog.info("Battery", ok ? "已揭开蓝牙设置面板" : "蓝牙设置脚本未成功", [
+            "reason": reason,
+            "result": message
+        ])
+        return ok
+    }
+
+    func handlePeripheralCardTap(deviceID: String) {
+        let action = settings.peripheralClickAction
+        AppLog.info("Battery", "外设卡片被点击", [
+            "device": String(deviceID.prefix(24)),
+            "action": action.rawValue
+        ])
+        switch action {
+        case .openBluetoothSettings:
+            openBluetoothPreferences(reason: "cardTap:\(deviceID.prefix(12))")
+        case .refreshBatteryOnly:
+            refresh(reason: "cardTapRefresh:\(deviceID.prefix(12))")
+        }
     }
 
     /// 有外设且模块开启 → 直接准入电量页；无设备则撤常驻。不再投「打开」邀请 tip。

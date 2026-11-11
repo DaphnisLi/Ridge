@@ -138,7 +138,12 @@ if ! printf '%s' "${ENT_DUMP}" | grep -q 'personal-information.calendars'; then
   printf '%s\n' "${ENT_DUMP}" >&2
   exit 1
 fi
-echo "==> Entitlements OK (calendars present)"
+if ! printf '%s' "${ENT_DUMP}" | grep -q 'automation.apple-events'; then
+  echo "error: apple-events entitlement missing after re-sign" >&2
+  printf '%s\n' "${ENT_DUMP}" >&2
+  exit 1
+fi
+echo "==> Entitlements OK (calendars + apple-events present)"
 
 echo "==> Quitting existing ${APP_NAME}"
 pkill -x "${APP_NAME}" 2>/dev/null || true

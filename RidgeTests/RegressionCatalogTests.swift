@@ -47,6 +47,32 @@ final class RegressionCatalogTests: XCTestCase {
 
     // MARK: - shelf-copied-notice-miss
 
+    /// 关货架、开 tip 仍须监听剪贴板；否则独立 tip 形同虚设（shelf-copied-notice-miss）。
+    func test_shelfCopiedNoticeMiss_monitorPasteboardWhenTipOnEvenIfShelfOff() {
+        XCTAssertTrue(
+            ClipboardCopiedNoticeGate.shouldMonitorPasteboard(shelfEnabled: false, tipEnabled: true),
+            "已复制 tip 开启时，关货架也必须轮询剪贴板"
+        )
+        XCTAssertTrue(
+            ClipboardCopiedNoticeGate.shouldMonitorPasteboard(shelfEnabled: true, tipEnabled: false),
+            "货架开启时应监听（历史进货架）"
+        )
+        XCTAssertFalse(
+            ClipboardCopiedNoticeGate.shouldMonitorPasteboard(shelfEnabled: false, tipEnabled: false),
+            "货架与 tip 都关才停监听"
+        )
+        XCTAssertEqual(ClipboardCopiedNoticeGate.widgetID, "builtin.copiedNotice")
+    }
+
+    @MainActor
+    func test_shelfCopiedNoticeMiss_gateDefaultsToWidgetLibrarySwitch() {
+        // 闸门必须读 tip 库开关，禁止再绑死已删除的货架嵌套开关。
+        XCTAssertEqual(
+            ShelfSettings.shared.showCopiedNotice,
+            ClipboardCopiedNoticeGate.isTipEnabled
+        )
+    }
+
     /// 取色 / 框选翼引导 →「已复制」短条：缩宽必须可应用，否则卡在翼高看不见提示。
     func test_shelfCopiedNoticeMiss_wingGuideToCopiedAllowsWidthShrink() {
         let notchW: CGFloat = 160
@@ -450,7 +476,11 @@ final class RegressionCatalogTests: XCTestCase {
         let payload = IslandNoticePayload.peripheralConnected(notice)
         XCTAssertEqual(payload.autoDismissNanoseconds, 3_000_000_000)
         XCTAssertEqual(payload.sourceTag, "battery.connect")
-        XCTAssertFalse(payload.usesNotchWingChrome)
+        XCTAssertTrue(payload.usesNotchWingChrome)
+        XCTAssertEqual(
+            PeripheralBatteryNoticeCard.cleanedDeviceName("妙控鼠标 2 0x3C44"),
+            "妙控鼠标 2"
+        )
     }
 
     func test_widgetLibraryFamily_tipNeverPlacesContentDirectly() {

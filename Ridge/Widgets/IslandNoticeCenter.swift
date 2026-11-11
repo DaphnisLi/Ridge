@@ -111,10 +111,11 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 会议 / AI 额度 / 久坐 / 取色 / 框选：顶距 0，左右翼贴刘海；外形上直角、下圆角。
+    /// 会议 / AI 额度 / 久坐 / 取色 / 框选 / 外设电量：顶距 0，左右翼贴刘海；外形上直角、下圆角。
     var usesNotchWingChrome: Bool {
         switch self {
-        case .meetingLead, .aiUsageAlert, .moveReminder, .colorPickTip, .ocrSelectTip:
+        case .meetingLead, .aiUsageAlert, .moveReminder, .colorPickTip, .ocrSelectTip,
+             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:
             return true
         default:
             return false

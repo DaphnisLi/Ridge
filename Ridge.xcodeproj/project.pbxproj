@@ -86,6 +86,7 @@
 		6997AB6FDC5F0AD503C2BB9C /* MoveReminderWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */; };
 		6B766A59FB1C1C8952C3F595 /* WorldClockCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */; };
 		6C3175BFD0949B4AEEE41FD1 /* BatterySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880C963E64D0E720AFA4F20F /* BatterySettings.swift */; };
+		6D8426491761656D2B1B75D2 /* ClipboardCopiedNoticeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03E693DCD67F11AE5B3A00C9 /* ClipboardCopiedNoticeGate.swift */; };
 		6D8B89D35EB9E798166FE141 /* WidgetLibraryFamily.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */; };
 		7074AF75F8A041C93D2A2DDE /* MoveReminderNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F1A3168C908920AC348FA9 /* MoveReminderNoticeCard.swift */; };
 		72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */; };
@@ -140,6 +141,7 @@
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
 		B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */; };
 		BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */; };
+		BF7C3BB88AC273565B1B17BC /* CopiedNoticeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */; };
 		BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; };
 		C3616D999C1E12C1F7D29C9C /* BatteryListeningModeBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 81FA823E3DD358069BCD1369 /* BatteryListeningModeBridge.m */; };
 		C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */; };
@@ -156,6 +158,7 @@
 		D3131253CE98D17A73798553 /* SoundDeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BFECE714321CB884F2A555 /* SoundDeviceService.swift */; };
 		D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
+		DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */; };
 		E32D4090FC3C65B56B5F3870 /* FocusTimerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */; };
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
@@ -209,6 +212,7 @@
 /* Begin PBXFileReference section */
 		01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickWidget.swift; sourceTree = "<group>"; };
 		0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusTracker.swift; sourceTree = "<group>"; };
+		03E693DCD67F11AE5B3A00C9 /* ClipboardCopiedNoticeGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardCopiedNoticeGate.swift; sourceTree = "<group>"; };
 		07EC22739F9DB8CD07D03E0B /* Ridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		088CFC576E84896E553FC0DD /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
 		0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFocusPolicy.swift; sourceTree = "<group>"; };
@@ -225,6 +229,7 @@
 		1B971DE7978B73EEA55C59DC /* MoveReminderAvoidProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderAvoidProbe.swift; sourceTree = "<group>"; };
 		1D424EF6227B7F050BF3D294 /* AIUsageSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettingsPane.swift; sourceTree = "<group>"; };
 		1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSettings.swift; sourceTree = "<group>"; };
+		20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedNoticeSettings.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
 		219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBluetoothProbe.swift; sourceTree = "<group>"; };
 		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
@@ -306,6 +311,7 @@
 		8A1F446438C071BD1E1487B7 /* StockSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockSearchIndex.swift; sourceTree = "<group>"; };
 		8B37885E316757E08B49442F /* BatteryHIDProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryHIDProbe.swift; sourceTree = "<group>"; };
 		8B7B868652010E80E7A1FACC /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCompactStandbyView.swift; sourceTree = "<group>"; };
 		93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryWidgetConfigSection.swift; sourceTree = "<group>"; };
 		933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectShell.swift; sourceTree = "<group>"; };
 		934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderWidgetConfigSection.swift; sourceTree = "<group>"; };
@@ -651,6 +657,7 @@
 		9D5E85B8BF6D49494C76E583 /* Media */ = {
 			isa = PBXGroup;
 			children = (
+				8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */,
 				864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */,
 				B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */,
 				BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */,
@@ -674,8 +681,10 @@
 			children = (
 				D79667A99D118163528FB369 /* AlwaysVisibleScrollView.swift */,
 				E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */,
+				03E693DCD67F11AE5B3A00C9 /* ClipboardCopiedNoticeGate.swift */,
 				9964721F6138DD7D74D764B4 /* ClipboardHistoryStore.swift */,
 				FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */,
+				20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */,
 				59767F7C87E4F8C0F734A7FA /* CopiedNoticeWidget.swift */,
 				DE3DBF22EFFE6CDF6CF689B7 /* CopiedNoticeWidgetConfigSection.swift */,
 				3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */,
@@ -908,6 +917,7 @@
 				89BAB936D8EA48DE26DE3055 /* BatteryWidgetConfigSection.swift in Sources */,
 				BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */,
 				FC0247F925DDFD25398F70B7 /* ClipboardCopiedIslandView.swift in Sources */,
+				6D8426491761656D2B1B75D2 /* ClipboardCopiedNoticeGate.swift in Sources */,
 				B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */,
 				3C065C2CF6E12D77BCEF8954 /* ColorPickSettings.swift in Sources */,
 				3D462E034E453F1F314C7455 /* ColorPickTipIslandView.swift in Sources */,
@@ -916,6 +926,7 @@
 				C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */,
 				94B76F0F2523241948C36B95 /* ControlDeckSettings.swift in Sources */,
 				5A5FAF628460840B773CAA96 /* ControlDeckSettingsPane.swift in Sources */,
+				BF7C3BB88AC273565B1B17BC /* CopiedNoticeSettings.swift in Sources */,
 				B66CC576D19A2286F97ADDFE /* CopiedNoticeWidget.swift in Sources */,
 				E49B786452EB42EDDEA8128F /* CopiedNoticeWidgetConfigSection.swift in Sources */,
 				4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */,
@@ -952,6 +963,7 @@
 				DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */,
 				6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */,
 				7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */,
+				DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */,
 				17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */,
 				72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */,
 				5F8170AFD69C5D0FB0C3FEDF /* MediaSettingsPane.swift in Sources */,

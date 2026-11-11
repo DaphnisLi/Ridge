@@ -49,6 +49,9 @@ final class WidgetSettings: ObservableObject {
             pinnedIDs.remove(id)
         }
         AppLog.info("Widget", "开关变更", ["id": id, "enabled": enabled])
+        if id == ClipboardCopiedNoticeGate.widgetID {
+            ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "copiedTipToggle")
+        }
     }
 
     func isPinned(_ id: WidgetID) -> Bool {

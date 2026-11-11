@@ -209,32 +209,42 @@ private struct BatteryDeckCanvas: View {
         let border = low ? accentRed.opacity(0.35) : cardBorder
         let fill = low ? accentRed.opacity(0.14) : cardFill
 
-        return VStack(alignment: .leading, spacing: 6) {
-            header(device)
+        // 岛窗首击常需 makeKey；用 Button 比 onTapGesture 更稳（见 IslandWindow）。
+        return Button {
+            guard !isPreview else { return }
+            BatterySession.shared.handlePeripheralCardTap(deviceID: device.id)
+        } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                header(device)
 
-            if showsSplitBuds(device) {
-                airPodsBatteryRow(device, low: low)
-            } else {
-                meterBlock(device)
+                if showsSplitBuds(device) {
+                    airPodsBatteryRow(device, low: low)
+                } else {
+                    meterBlock(device)
+                }
+
+                Spacer(minLength: 0)
             }
-
-            Spacer(minLength: 0)
+            .padding(10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(fill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(border, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
-        .padding(10)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(fill)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(border, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .buttonStyle(.plain)
+        .disabled(isPreview)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             device.percent.map { "\(device.name), \($0)%" } ?? "\(device.name), \(L10n.Battery.statusUnknownBattery)"
         )
+        .accessibilityAddTraits(isPreview ? [] : .isButton)
     }
 
     private func showsSplitBuds(_ device: BatteryDevice) -> Bool {

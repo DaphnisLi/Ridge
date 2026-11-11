@@ -20,7 +20,7 @@
 | `island-hover-retention` | 岛悬停热区退化 | ≥5 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛 | `island-hover-retention.mdc`；`scrollHold`；`RidgeTests`（含 RegressionCatalogTests） |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
-| `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥4 | 取色/框选后「已复制」投递了但不显示 | present 前 `forcePanelSize`；翼→短须放行缩宽；`test_shelfCopiedNoticeMiss_*` |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥5 | 取色/框选后看不见；或 tip 开着但关货架后 Cmd+C 不上岛 | `ClipboardCopiedNoticeGate`；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 2 | 黑岛过高；电量单行样张底下大块黑空 | `batterySample` 单行高；`test_libraryIslandStageStretch_*` |
@@ -69,12 +69,12 @@
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
 - **recurring:** true  
-- **occurrences:** 4（2026-11-08 偶发；2026-11-09 取色两次；**2026-11-10 取色/框选改翼 tip 后再现**）  
-- **症状:** 复制文字/链接/颜色/截图后，偶发不出现「已复制」岛提示；取色 / 框选成功后尤甚  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② **宽翼引导→短「已复制」时 Preference 缩宽被误缩守卫整单拒绝，面板卡在翼高，短条顶距把文案顶出可视区**；③ `showCopiedNotice` 关闭；④ 仅靠 `allowPanelShrink` 窗口仍会竞态  
-- **防护:** `present` 对 short tip **先** `prepareShortNoticeLayout`；`shouldApplyMeasuredSize` 对翼→短（缩宽但高度不减）放行；`expand(islandNotice*)` 已展开时也 `allowPanelShrink`；勿先 dismiss 再 present  
-- **相关代码:** `IslandExpandedPanelPolicy.isWingToShortTipResize`、`IslandChrome.preparedShortTipPanelSize`、`IslandNoticeCenter.present`  
-- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`、`IslandExpandedPanelPolicyTests.testAllowsWingTipToShortCopiedResizeWithoutAllowShrink`
+- **occurrences:** 5（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；**2026-11-11 已复制拆 tip 后仍绑货架模块，关货架停剪贴板监听**）  
+- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ **剪贴板轮询只跟货架模块走，独立 tip 开着也不监听**  
+- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`（货架 **或** tip 开着就监听）；`prepareShortNoticeLayout`；翼→短放行  
+- **相关代码:** `ClipboardCopiedNoticeGate`、`ControlDeckSettings`、`WidgetSettings.setEnabled`、`IslandExpandedPanelPolicy`  
+- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关须监听）、`IslandExpandedPanelPolicyTests`
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
