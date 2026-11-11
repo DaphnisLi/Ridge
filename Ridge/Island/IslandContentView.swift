@@ -18,12 +18,9 @@ struct IslandContentView: View {
         controlDeck.isModuleEnabled("shelf")
     }
 
-    /// 播放中收起待命（番茄优先占用左右翼）。
+    /// 播放中常驻小岛（番茄优先占用左右翼；大面板仅点按后出现）。
     private var showsMediaCompactStandby: Bool {
-        !focusTimer.showsCompactStandby
-            && widgetSettings.isEnabled("builtin.media")
-            && nowPlaying.snapshot?.hasTrack == true
-            && nowPlaying.snapshot?.isPlaying == true
+        MediaCompactPresence.isActive
     }
 
     private var compactSize: CGSize {
@@ -209,7 +206,7 @@ struct IslandContentView: View {
         }
         .onChange(of: showsMediaCompactStandby) { _, active in
             syncCompactPanelSizeIfNeeded()
-            AppLog.info("Media", "播放收起待命已更新", [
+            AppLog.info("Media", "播放小岛已更新", [
                 "active": active,
                 "playing": nowPlaying.snapshot?.isPlaying ?? false,
                 "title": String((nowPlaying.snapshot?.title ?? "").prefix(24))
@@ -288,10 +285,7 @@ private struct IslandBody: View {
     }
 
     private var showsMediaCompactStandby: Bool {
-        !focusTimer.showsCompactStandby
-            && widgetSettings.isEnabled("builtin.media")
-            && nowPlaying.snapshot?.hasTrack == true
-            && nowPlaying.snapshot?.isPlaying == true
+        MediaCompactPresence.isActive
     }
 
     var body: some View {
@@ -345,7 +339,13 @@ private struct IslandBody: View {
                     width: NotchGeometry.mediaCompactWidth,
                     height: max(0, NotchGeometry.mediaCompactHeight - 4)
                 )
-                .allowsHitTesting(false)
+                // 悬停展开由 IslandController；点按保留给辅助功能。
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    MediaCompactPresence.openExpandedPanel(reason: "compactTap")
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint(L10n.Media.previewStageExpanded)
             } else {
                 Color.clear
                     .frame(width: 1, height: 1)

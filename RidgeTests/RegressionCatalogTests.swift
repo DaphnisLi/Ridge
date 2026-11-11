@@ -19,6 +19,18 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(frame.contains(midLower), "大岛下半截必须仍在保展开区")
     }
 
+    func test_islandHoverRetention_collapsedMediaCompactWingsAreInRetention() {
+        let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
+        let compact = CGRect(x: 311, y: 962, width: 380, height: 38)
+        let frame = IslandExpandedPanelPolicy.retentionFrame(
+            notchFrame: notch,
+            panelFrame: compact,
+            expanded: false
+        )
+        let leftWing = CGPoint(x: compact.minX + 12, y: compact.midY)
+        XCTAssertTrue(frame.contains(leftWing), "收起态播放小岛两翼须可悬停展开，不能只用刘海")
+    }
+
     func test_islandHoverRetention_rejectsAccidentalShrinkToNotch() {
         XCTAssertFalse(
             IslandExpandedPanelPolicy.shouldApplyMeasuredSize(
@@ -89,6 +101,10 @@ final class RegressionCatalogTests: XCTestCase {
         )
         XCTAssertTrue(copied.usesShortBelowNotchChrome)
         XCTAssertFalse(copied.usesNotchWingChrome)
+        // Cmd+C 后指针常不在岛上：须保持展开至自动收起，否则展开中途就被 hoverEnd 收掉。
+        XCTAssertTrue(copied.keepsExpandedWithoutHover)
+        XCTAssertEqual(copied.autoDismissNanoseconds, 3_000_000_000)
+        XCTAssertTrue(copied.holdsWhileHovering)
 
         // 短条须明显高于翼条，才能容纳 shortTip 顶距；否则文案被顶出。
         XCTAssertGreaterThan(
@@ -512,5 +528,50 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.batteryID))
         LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testReset")
         LiveIslandGate.shared.close(LiveIslandGate.batteryID, reason: "testReset")
+    }
+
+    /// 收起态小岛：高度统一，正在播放宽度不得窄于番茄翼。
+    func test_compactIsland_sharedHeightAndMediaWidth() {
+        XCTAssertEqual(NotchGeometry.focusTimerCompactHeight, NotchGeometry.compactIslandHeight)
+        XCTAssertEqual(NotchGeometry.mediaCompactHeight, NotchGeometry.compactIslandHeight)
+        XCTAssertGreaterThanOrEqual(
+            NotchGeometry.mediaCompactWidth,
+            NotchGeometry.focusTimerCompactWidth,
+            "播放小岛曾用 300 明显偏窄，至少与番茄翼同宽或更宽"
+        )
+    }
+
+    /// media-compact-not-resident：媒体大面板默认关闭；悬停准入后 close 须再拒绝（勿用 open，避免测里拉起 MediaRemote）。
+    @MainActor
+    func test_mediaCompactNotResident_gateClosedUntilOpen() {
+        LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testReset")
+        XCTAssertFalse(LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.mediaID))
+
+        // 产品上是 compactHover → open；闸门语义与 admit 相同，测 admit 避免 ensureInstance 拖死。
+        LiveIslandGate.shared.admit(LiveIslandGate.mediaID, reason: "testCompactHover")
+        XCTAssertTrue(LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID))
+        XCTAssertTrue(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.mediaID))
+
+        LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testCollapse")
+        XCTAssertFalse(LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage(LiveIslandGate.mediaID))
+        XCTAssertFalse(WidgetRuntime.shared.isDemanding(LiveIslandGate.mediaID))
+    }
+
+    /// media-compact-not-resident：有会议 tip 盖住时不算「正显示播放小岛」，不得开媒体大面板。
+    @MainActor
+    func test_mediaCompactNotResident_meetingTipBlocksVisibleCompact() {
+        IslandNoticeCenter.shared.dismiss(id: nil)
+        // 无 tip 时：仅看 isActive 不够，isVisiblyShowingCompact 还要求 current == nil。
+        XCTAssertNil(IslandNoticeCenter.shared.current)
+        IslandNoticeCenter.shared.present(.meetingLead(meetingID: "media-hover-guard"))
+        XCTAssertNotNil(IslandNoticeCenter.shared.current)
+        XCTAssertFalse(
+            MediaCompactPresence.isVisiblyShowingCompact,
+            "会议 tip 在场时悬停不得开播放大面板"
+        )
+        IslandNoticeCenter.shared.dismiss(id: "meeting.lead.media-hover-guard")
+        XCTAssertNil(IslandNoticeCenter.shared.current)
     }
 }

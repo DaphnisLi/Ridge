@@ -16,12 +16,14 @@ struct NotchGeometry: Equatable {
 
     /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
     static let compactScale: CGFloat = 0.96
-    /// 番茄倒计时收起待命（左右翼）最小尺寸；加宽让「专注中」与倒计时贴两边。
+    /// 收起态「小岛」统一高度（番茄 / 正在播放等）；宽度可按内容略不同。
+    static let compactIslandHeight: CGFloat = 38
+    /// 番茄倒计时收起待命（左右翼）最小宽度；加宽让「专注中」与倒计时贴两边。
     static let focusTimerCompactWidth: CGFloat = 348
-    static let focusTimerCompactHeight: CGFloat = 44
-    /// 正在播放收起待命：左封面歌名、右律动条+时长。
-    static let mediaCompactWidth: CGFloat = 300
-    static let mediaCompactHeight: CGFloat = 44
+    static var focusTimerCompactHeight: CGFloat { compactIslandHeight }
+    /// 正在播放常驻小岛：左封面歌名、右律动条+时长（略宽于番茄，避免歌名挤）。
+    static let mediaCompactWidth: CGFloat = 380
+    static var mediaCompactHeight: CGFloat { compactIslandHeight }
     /// 以下常量为各内容模块的**画布参考**（控制台等 GeometryReader 页自报尺寸用），
     /// 不再由壳层按 ExpandedLayout 写死可见面板宽高；展开面板由内容测量 + IslandChrome 撑开。
     static let fixedExpandedHeightMultiplier: CGFloat = 6

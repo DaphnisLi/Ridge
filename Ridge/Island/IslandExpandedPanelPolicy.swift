@@ -59,7 +59,8 @@ enum IslandExpandedPanelPolicy {
         return measured.height + 1 >= current.height
     }
 
-    /// 展开态保展开矩形：面板框外扩；收起态仅刘海。
+    /// 展开态保展开矩形：面板框外扩 ∪ 刘海。
+    /// 收起态：当前可见小岛（`panelFrame`）∪ 刘海——播放/番茄小岛宽于刘海时，翼上也须能悬停展开，禁止只用 notch。
     /// 下边多留一点：纵滑 / 滚到面板下沿时不易误判离开。
     static func retentionFrame(
         notchFrame: CGRect,
@@ -70,7 +71,10 @@ enum IslandExpandedPanelPolicy {
         panelBottomExtra: CGFloat = 20
     ) -> CGRect {
         let notchHit = notchFrame.insetBy(dx: -notchPad, dy: -2)
-        guard expanded else { return notchHit }
+        if !expanded {
+            let compactHit = panelFrame.insetBy(dx: -2, dy: -2)
+            return compactHit.union(notchHit)
+        }
         let padded = panelFrame.insetBy(dx: -panelPad, dy: -panelPad)
         let withBottom = CGRect(
             x: padded.origin.x,

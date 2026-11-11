@@ -1376,13 +1376,25 @@
         }
       }
     },
-    "media.preview.stage.standby": {
+    "media.preview.stage.playing": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "收起待命"
+            "value": "正在播放"
+          }
+        }
+      }
+    },
+    "media.preview.stage.standby": {
+      "extractionState": "stale",
+      "comment": "已改用 media.preview.stage.playing",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在播放"
           }
         }
       }
@@ -1437,7 +1449,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "显示封面与播放控制，播放时自动出现在灵动岛"
+            "value": "播放时以小岛常驻，悬停展开播放控制"
           }
         }
       }
@@ -9302,7 +9314,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "低电、满电与接入经瞬时通知提示，约三秒后自动收起"
+            "value": "低电、满电与接入经瞬时通知提示"
           }
         }
       }

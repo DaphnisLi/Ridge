@@ -88,25 +88,24 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder, .meetingLead:
             return nil
-        case .clipboardCaptureHint:
-            // 「已复制」短提示：约 2s，取色/OCR 成功后更容易看见。
-            return 2_000_000_000
-        case .processEnded,
+        case .clipboardCaptureHint,
+             .processEnded,
              .peripheralLowBattery,
              .peripheralFullCharge,
              .peripheralConnected,
              .aiUsageAlert:
+            // 与其它瞬时 tip 一致约 3s；「已复制」过短会在展开动画未完时就被 hoverEnd 收掉。
             return 3_000_000_000
         }
     }
 
-    /// 指针停在岛上时是否延后自动收起。剪贴板短提示强制按时长关掉。
+    /// 指针停在岛上时是否延后自动收起。
     var holdsWhileHovering: Bool {
         switch self {
-        case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip:
+        case .colorPickTip, .ocrSelectTip:
             return false
-        case .ramPressure, .processEnded, .peripheralLowBattery, .peripheralFullCharge,
-             .peripheralConnected, .aiUsageAlert, .moveReminder, .meetingLead:
+        case .clipboardCaptureHint, .ramPressure, .processEnded, .peripheralLowBattery,
+             .peripheralFullCharge, .peripheralConnected, .aiUsageAlert, .moveReminder, .meetingLead:
             return true
         }
     }
@@ -133,11 +132,13 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 指针离开岛时仍保持展开（会议 / 久坐等须常驻到用户处理）。
+    /// 指针离开岛时仍保持展开（会议 / 久坐 / 取色引导；「已复制」也须挂满自动收起时长，否则 Cmd+C 后移开指针会在展开中途收岛）。
     var keepsExpandedWithoutHover: Bool {
         switch self {
         case .meetingLead, .moveReminder, .ramPressure, .colorPickTip, .ocrSelectTip:
             return true
+        case .clipboardCaptureHint(let id, _, _):
+            return id.hasPrefix("copy.")
         default:
             return false
         }
@@ -175,7 +176,7 @@ final class IslandNoticeCenter: ObservableObject {
     private init() {}
 
     func present(_ payload: IslandNoticePayload) {
-        // 勿先清空再设：会走 dismiss→收岛，0.5s「已复制」来不及看见。
+        // 勿先清空再设：会走 dismiss→收岛，「已复制」来不及看见。
         // 同内容再投由业务侧换唯一 id（如 copy.token）保证 @Published 触发。
         //
         // 会前提示优先级最高：其它瞬时条在会议仍展示时直接丢弃，不得盖下去。

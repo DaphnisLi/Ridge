@@ -103,13 +103,29 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
         // 下边额外外扩：贴底外侧一点仍应保展开。
         let belowPanel = CGPoint(x: panel.midX, y: panel.minY - 10)
         XCTAssertTrue(frame.contains(belowPanel))
-        // 仅刘海时，下半截不应命中。
-        let notchOnly = IslandExpandedPanelPolicy.retentionFrame(
+        // 收起且小岛≈刘海时，大面板下半截不在保展开区。
+        let collapsedNotchSized = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: notch,
-            panelFrame: panel,
+            panelFrame: notch,
             expanded: false
         )
-        XCTAssertFalse(notchOnly.contains(lowerPoint))
+        XCTAssertFalse(collapsedNotchSized.contains(lowerPoint))
+    }
+
+    /// 收起态播放/番茄小岛宽于刘海：两翼也须在命中区内（悬停展开大面板）。
+    func testRetentionUsesCompactIslandNotOnlyNotchWhenCollapsed() {
+        let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
+        let mediaCompact = CGRect(x: 311, y: 962, width: 380, height: 38)
+        let frame = IslandExpandedPanelPolicy.retentionFrame(
+            notchFrame: notch,
+            panelFrame: mediaCompact,
+            expanded: false
+        )
+        let leftWing = CGPoint(x: mediaCompact.minX + 16, y: mediaCompact.midY)
+        let rightWing = CGPoint(x: mediaCompact.maxX - 16, y: mediaCompact.midY)
+        XCTAssertTrue(frame.contains(leftWing), "左翼须可悬停")
+        XCTAssertTrue(frame.contains(rightWing), "右翼须可悬停")
+        XCTAssertFalse(notch.contains(leftWing), "左翼本就不在刘海内")
     }
 
     func testDetectsCollapsedSizedWhileExpanded() {

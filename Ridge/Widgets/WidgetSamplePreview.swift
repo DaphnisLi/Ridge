@@ -304,12 +304,22 @@ enum WidgetSamplePreview {
             .frame(minHeight: compact ? 30 : 34)
     }
 
+    @ViewBuilder
     private static func mediaSample(compact: Bool) -> some View {
-        MediaIslandCardView.previewSample()
-            .padding(.horizontal, compact ? 10 : 12)
-            .padding(.vertical, compact ? 10 : 14)
-            .frame(maxWidth: compact ? .infinity : 540)
-            .frame(minHeight: compact ? 96 : 160)
+        // 库卡展示常驻小岛；详情页双态预览走 MediaWidgetConfigSection。
+        if compact {
+            MediaCompactStandbyView.previewSample(animatedEqualizer: false)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 36)
+        } else {
+            MediaIslandCardView.previewSample()
+                .padding(.horizontal, 12)
+                .padding(.vertical, 14)
+                .frame(maxWidth: 540)
+                .frame(minHeight: 160)
+        }
     }
 
     private static func focusTimerSample(compact: Bool) -> some View {

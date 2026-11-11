@@ -4,7 +4,7 @@ import Foundation
 import MediaRemoteAdapter
 import SwiftUI
 
-/// 正在播放：有 Now Playing 会话时上岛（播放或暂停均展示）。
+/// 正在播放：播放中以小岛常驻；大面板仅在点按小岛后准入，收起即撤出分页。
 @MainActor
 final class MediaNowPlayingWidget: IslandWidget {
     static let manifest = WidgetManifest(
@@ -31,8 +31,6 @@ final class MediaNowPlayingWidget: IslandWidget {
     private var observers: Set<AnyCancellable> = []
     private let model = MediaNowPlayingModel()
     private var withdrawDebounceTask: Task<Void, Never>?
-    /// 本段曲目会话是否已自动展开过（防重建/闪断后反复 expand 导致收不起来）。
-    private var didAutoExpandForSession = false
 
     init(context: WidgetContext) {
         self.context = context
@@ -80,10 +78,10 @@ final class MediaNowPlayingWidget: IslandWidget {
 
     private func reevaluate(reason: String) {
         let snap = service.snapshot
-        let shouldShow = snap?.hasTrack == true
-        updateDemand(shouldShow: shouldShow, reason: reason)
+        let hasTrack = snap?.hasTrack == true
+        updateDemand(hasTrack: hasTrack, reason: reason)
 
-        if let snap, shouldShow {
+        if let snap, hasTrack {
             model.apply(snap)
         } else if !wantsDisplay {
             // 仍在争夺时保留上一帧曲目，勿闪成「暂无正在播放的内容」。
@@ -93,67 +91,35 @@ final class MediaNowPlayingWidget: IslandWidget {
         if reason != "trackChanged" {
             context.log("媒体展示状态", fields: [
                 "reason": reason,
-                "onIsland": shouldShow,
+                "hasTrack": hasTrack,
+                "panelOpen": LiveIslandGate.shared.isOpened(Self.manifest.id),
                 "playing": snap?.isPlaying ?? false,
                 "bundle": snap?.bundleIdentifier ?? "nil"
             ])
         }
     }
 
-    private func updateDemand(shouldShow: Bool, reason: String) {
-        if shouldShow {
+    private func updateDemand(hasTrack: Bool, reason: String) {
+        if hasTrack {
             withdrawDebounceTask?.cancel()
             withdrawDebounceTask = nil
-
-            // 有曲目直接准入分页，不再投「打开」邀请 tip。
-            LiveIslandGate.shared.admit(Self.manifest.id, reason: reason)
-            let becameVisible = !wantsDisplay
-            let alreadyDemanding = WidgetRuntime.shared.isDemanding(Self.manifest.id)
-            if becameVisible {
-                wantsDisplay = true
+            // 有曲目只驱动小岛；大面板须点按 `LiveIslandGate.open`，禁止自动 admit / expand。
+            let panelOpen = LiveIslandGate.shared.isOpened(Self.manifest.id)
+            wantsDisplay = panelOpen
+            if panelOpen, requestedAt == .distantPast {
                 requestedAt = Date()
-                AppLog.info("Media", "有曲目，申请展示", [
-                    "reason": reason,
-                    "alreadyDemanding": alreadyDemanding
-                ])
             }
-            guard becameVisible else { return }
-            Task { @MainActor [weak self] in
-                guard let self, self.wantsDisplay else { return }
-                WidgetRuntime.shared.revealPage(
-                    Self.manifest.id,
-                    reason: "media:\(reason)",
-                    remember: false
-                )
-                let shouldExpand = !self.didAutoExpandForSession && !alreadyDemanding
-                if shouldExpand {
-                    self.didAutoExpandForSession = true
-                    IslandController.shared?.expand(reason: "mediaNowPlaying")
-                    self.scheduleAutoCollapseIfNeeded()
-                }
-                AppLog.warn("Media", "媒体页已就绪", [
+            if reason == "init" || reason == "appear" || reason == "refresh" {
+                AppLog.info("Media", "有曲目：仅小岛常驻，大面板待点按", [
                     "reason": reason,
-                    "expand": shouldExpand,
-                    "title": String((self.service.snapshot?.title ?? "").prefix(24)),
-                    "active": WidgetRuntime.shared.activeID ?? "nil"
+                    "panelOpen": panelOpen,
+                    "playing": service.snapshot?.isPlaying ?? false
                 ])
             }
             return
         }
 
         scheduleDebouncedWithdraw(reason: reason)
-    }
-
-    /// 自动展开后若指针不在岛上，稍后收起，避免点播放后一直挂着。
-    private func scheduleAutoCollapseIfNeeded() {
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_400_000_000)
-            guard IslandController.shared?.isHoveringIsland != true else { return }
-            IslandController.shared?.collapse(reason: "mediaAutoCollapse")
-            AppLog.warn("Media", "媒体自动展开后已收起", [
-                "hovering": IslandController.shared?.isHoveringIsland ?? false
-            ])
-        }
     }
 
     private func scheduleDebouncedWithdraw(reason: String) {
@@ -170,15 +136,55 @@ final class MediaNowPlayingWidget: IslandWidget {
                 return
             }
             self.wantsDisplay = false
-            self.didAutoExpandForSession = false
+            self.requestedAt = .distantPast
             self.model.applyEmpty()
             LiveIslandGate.shared.close(Self.manifest.id, reason: "mediaWithdraw:\(reason)")
-            self.context.withdrawDisplay()
             if IslandController.shared?.isHoveringIsland != true {
                 IslandController.shared?.collapse(reason: "mediaWithdraw")
             }
             AppLog.warn("Media", "已撤回媒体展示（防抖后仍无曲目）", ["reason": reason])
         }
+    }
+}
+
+// MARK: - 播放小岛（收起态）
+
+enum MediaCompactPresence {
+    /// 播放中且未被番茄翼占用时，收起岛可展示媒体小岛。
+    @MainActor
+    static var isActive: Bool {
+        !FocusTimerSession.shared.showsCompactStandby
+            && WidgetSettings.shared.isEnabled(MediaNowPlayingWidget.manifest.id)
+            && NowPlayingService.shared.snapshot?.hasTrack == true
+            && NowPlayingService.shared.snapshot?.isPlaying == true
+    }
+
+    /// 画面上正是播放小岛：收起态、无瞬时 tip（会议等）盖住。仅此时悬停才开大面板。
+    @MainActor
+    static var isVisiblyShowingCompact: Bool {
+        isActive && IslandNoticeCenter.shared.current == nil
+    }
+
+    /// 准入大面板并展开（悬停小岛 / 辅助点按）。
+    @MainActor
+    static func openExpandedPanel(reason: String) {
+        guard isVisiblyShowingCompact else {
+            AppLog.debug("Media", "展开大面板跳过：当前不是播放小岛", [
+                "reason": reason,
+                "active": isActive,
+                "notice": IslandNoticeCenter.shared.current?.id ?? ""
+            ])
+            return
+        }
+        guard !LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID) else {
+            IslandController.shared?.expand(reason: "mediaAlreadyOpen:\(reason)")
+            return
+        }
+        AppLog.info("Media", "播放小岛触发，展开控制面板", [
+            "reason": reason,
+            "title": String((NowPlayingService.shared.snapshot?.title ?? "").prefix(24))
+        ])
+        LiveIslandGate.shared.open(LiveIslandGate.mediaID, reason: reason)
     }
 }
 

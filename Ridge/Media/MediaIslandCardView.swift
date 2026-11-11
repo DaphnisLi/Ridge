@@ -218,7 +218,7 @@ struct MediaIslandCardView: View {
         )
     }
 
-    /// 收起待命样张共用假封面（只生成一次）。
+    /// 播放小岛 / 展开面板样张共用假封面（只生成一次）。
     static let previewArtwork: NSImage = makePreviewArtwork()
 
     /// 假封面：珊瑚渐变 + 音符，避免样张左侧空白。

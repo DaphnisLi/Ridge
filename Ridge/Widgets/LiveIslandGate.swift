@@ -58,10 +58,13 @@ final class LiveIslandGate: ObservableObject {
         ])
     }
 
-    /// 内容消失 / 模块关闭：撤常驻资格，并触发分页重算。
+    /// 内容消失 / 模块关闭 / 收岛：撤常驻资格，并触发分页重算。
     func close(_ id: WidgetID, reason: String) {
         guard openedIDs.remove(id) != nil else { return }
-        if ControlDeckSettings.isControlDeckPageID(id) {
+        if id == Self.mediaID {
+            // 媒体大面板非常驻：撤资格时一并撤争夺，避免仍占分页。
+            WidgetRuntime.shared.withdrawDisplay(id)
+        } else {
             WidgetRuntime.shared.recompute(reason: "liveClose:\(reason)")
         }
         AppLog.info("LiveGate", "实况已撤出常驻", ["id": id, "reason": reason])

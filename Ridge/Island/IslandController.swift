@@ -647,6 +647,13 @@ final class IslandController: NSObject {
         updateInteractiveFrame(expanded: false)
         stopScrollPagingMonitors()
         scrollAccumX = 0
+        // 媒体大面板非常驻：收岛即撤出分页，回到仅小岛（若仍在播放）。
+        if reason != "settingsPreviewEnd",
+           LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID)
+        {
+            LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "collapse:\(reason)")
+            AppLog.info("Media", "收岛已撤出媒体大面板", ["reason": reason])
+        }
         // 媒体自动抢页不写「上次浏览」；收岛后拨回用户手势停留页，下次悬停仍进该页。
         if reason != "settingsPreviewEnd" {
             WidgetRuntime.shared.restoreRememberedBrowseAfterCollapse(reason: reason)
@@ -851,6 +858,12 @@ final class IslandController: NSObject {
             collapseWorkItem = nil
             // 无面板/已点进实况上岛时，禁止仅靠移入展开（瞬时提示可程序 expand，悬停仅保展开）。
             if viewModel.isExpanded {
+                return
+            }
+            // 仅当收起态正显示播放小岛（无会议 tip 等盖住）时，悬停才开媒体大面板。
+            // 会议等更高优先级 tip 展开中时上面已 return，不会走到这里。
+            if MediaCompactPresence.isVisiblyShowingCompact {
+                MediaCompactPresence.openExpandedPanel(reason: "compactHover")
                 return
             }
             if WidgetRuntime.shared.allowsHoverExpand {
@@ -1081,7 +1094,7 @@ final class IslandController: NSObject {
         let retention: Bool
     }
 
-    /// 刘海始终算命中；展开后可点 / 保展开跟内容撑开的 `panelSize` 走（见 `IslandExpandedPanelPolicy`）。
+    /// 刘海始终算命中；收起态跟可见小岛 `panelSize`（播放/番茄可能宽于刘海）；展开态跟大面板走。
     private func pointerIslandHit(
         mouse: NSPoint,
         geometry: NotchGeometry,
@@ -1117,9 +1130,10 @@ final class IslandController: NSObject {
             panelFrame: retentionBody,
             expanded: expanded
         )
-        let interactiveFrame = expanded
-            ? pageBody.insetBy(dx: -2, dy: -2).union(geometry.notchFrame.insetBy(dx: -4, dy: -2))
-            : geometry.notchFrame.insetBy(dx: -4, dy: -2)
+        // 收起态可点区 = 可见小岛 ∪ 刘海（勿只用 notch，否则播放小岛两翼悬停无效）。
+        let interactiveFrame = pageBody
+            .insetBy(dx: -2, dy: -2)
+            .union(geometry.notchFrame.insetBy(dx: -4, dy: -2))
 
         return IslandPointerHit(
             interactive: interactiveFrame.contains(mouse),

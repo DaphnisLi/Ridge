@@ -17,10 +17,10 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥5 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛 | `island-hover-retention.mdc`；`scrollHold`；`RidgeTests`（含 RegressionCatalogTests） |
+| `island-hover-retention` | 岛悬停热区退化 | ≥6 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**收起小岛两翼不认悬停** | `island-hover-retention.mdc`；收起态 panel∪notch；`RidgeTests` |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
-| `shelf-copied-notice-miss` | 复制成功提示看不见 | ≥5 | 取色/框选后看不见；或 tip 开着但关货架后 Cmd+C 不上岛 | `ClipboardCopiedNoticeGate`；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 | ≥6 | 取色/框选后看不见；关货架不上岛；或展开未完即 hoverEnd 收掉 | `ClipboardCopiedNoticeGate`；`copy.*` keepExpanded；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 2 | 黑岛过高；电量单行样张底下大块黑空 | `batterySample` 单行高；`test_libraryIslandStageStretch_*` |
@@ -32,11 +32,11 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 5+（历史反复；2026-11-09 tip 污染 lastStable；**2026-11-10 混音台列表纵滑一半收岛**）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；**控制台列表滚一半误收**  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；**纵滑无左键，不能靠 dragHold**  
-- **防护:** `isTransientShortPanel` / `shouldPreferStableRetention`；`noteContentScrollActivity` + `shouldHoldExpandForRecentScroll`；短条禁止写 `lastStable`  
-- **自动化:** `IslandExpandedPanelPolicyTests` + `RegressionCatalogTests.test_islandHoverRetention_*`（含 scroll hold）
+- **occurrences:** 6+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；**2026-11-11 收起播放小岛两翼只用刘海，悬停不展开**）  
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**播放小岛两翼划入无反应**  
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；**收起态 `retentionFrame` / interactive 仅 notch，宽于刘海的小岛翼区失效**  
+- **防护:** `isTransientShortPanel` / `shouldPreferStableRetention`；`scrollHold`；**收起态命中 = 可见小岛 panel ∪ 刘海**  
+- **自动化:** `IslandExpandedPanelPolicyTests` + `RegressionCatalogTests.test_islandHoverRetention_*`（含 scroll hold、collapsed media wings）
 
 ### island-chrome-double-padding — 岛边距叠两层
 
@@ -69,12 +69,12 @@
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
 - **recurring:** true  
-- **occurrences:** 5（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；**2026-11-11 已复制拆 tip 后仍绑货架模块，关货架停剪贴板监听**）  
-- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ **剪贴板轮询只跟货架模块走，独立 tip 开着也不监听**  
-- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`（货架 **或** tip 开着就监听）；`prepareShortNoticeLayout`；翼→短放行  
-- **相关代码:** `ClipboardCopiedNoticeGate`、`ControlDeckSettings`、`WidgetSettings.setEnabled`、`IslandExpandedPanelPolicy`  
-- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关须监听）、`IslandExpandedPanelPolicyTests`
+- **occurrences:** 6（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；2026-11-11 货架开关；**2026-11-11 展开未完即消失：`keepsExpandedWithoutHover` 未开，hoverEnd 秒收**）  
+- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**  
+- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；`prepareShortNoticeLayout`；翼→短放行；**`copy.*` 保持展开至约 3s 自动收起**  
+- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.keepsExpandedWithoutHover`、`IslandExpandedPanelPolicy`  
+- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关、copy 须 keepExpanded + 3s）、`IslandExpandedPanelPolicyTests`
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -197,9 +197,19 @@
 - **occurrences:** 1（2026-11-10：产品要求去掉实况邀请条）  
 - **症状:** 外设电量 / 正在播放先冒「打开」tip，盖住或打断会前提示  
 - **根因倾向:** `LiveIslandGate` 先 tip 再点进；Battery/Media 持续 `present(.liveInvite)`  
-- **防护:** 有状态时 `admit` 直接准入分页；`IslandNoticePayload.liveInvite` 已删除；低电/满电/接入走 `builtin.peripheralTip`  
+- **防护:** 电量有设备时 `admit` 准入；媒体改为播放小岛常驻、点按才 `open` 大面板（见 `media-compact-not-resident`）；`liveInvite` 已删；低电/满电/接入走 `builtin.peripheralTip`  
 - **相关代码:** `LiveIslandGate.admit`、`BatterySession.refreshLivePresence`、`MediaNowPlayingWidget`、`PeripheralTipWidget`  
 - **自动化:** `RegressionCatalogTests.test_liveInviteRemoved_admitAllowsContentPage`
+
+### media-compact-not-resident — 播放大面板不得常驻分页
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-11：产品纠正「收起待命」命名与常驻逻辑；同日改为悬停展开）  
+- **症状:** 有曲目即 admit/自动 expand，大面板占分页；设置预览误称「收起待命」  
+- **根因倾向:** `MediaNowPlayingWidget` 有曲目即 `admit`+`revealPage`+`expand`；与「仅小岛常驻」不符  
+- **防护:** 有曲目不自动 admit；收起态正显示播放小岛时悬停才 `open`；会议 tip 等盖住/展开时不打开媒体大面板；收岛 `close` 撤争夺；预览左「正在播放」右「展开播放」  
+- **相关代码:** `MediaNowPlayingWidget`、`MediaCompactPresence.isVisiblyShowingCompact`、`LiveIslandGate`、`IslandController`、`MediaSettingsPane`  
+- **自动化:** `RegressionCatalogTests.test_mediaCompactNotResident_gateClosedUntilOpen`
 
 ---
 
@@ -207,6 +217,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-11 | 媒体：播放小岛常驻、点按展开大面板；预览去掉「收起待命」；catalog `media-compact-not-resident` |
 | 2026-11-11 | 外设低电/满电/接入合并为 `builtin.peripheralTip`；「已复制」独立 `builtin.copiedNotice`；删除 liveInvite 残留 |
 | 2026-11-08 | 初版：收录悬停热区、边距叠层、预览真数据为重复出现；录入复制提示缺失等 |
 | 2026-11-08 | 录入 AI 额度账号作用域提示问题，并修换号嗅探 / 换回再弹 |

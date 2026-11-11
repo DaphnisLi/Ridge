@@ -888,7 +888,7 @@ enum L10n {
     enum Media {
         static var widgetName: String { tr("media.widget.name", "正在播放") }
         static var widgetSummary: String {
-            tr("media.widget.summary", "显示封面与播放控制，播放时自动出现在灵动岛")
+            tr("media.widget.summary", "播放时以小岛常驻，悬停展开播放控制")
         }
         static var playersTitle: String { tr("media.players.title", "支持的播放源") }
         static var playersSubtitle: String {
@@ -923,8 +923,9 @@ enum L10n {
         static var previewStageExpanded: String {
             tr("media.preview.stage.expanded", "展开播放")
         }
-        static var previewStageStandby: String {
-            tr("media.preview.stage.standby", "收起待命")
+        /// 播放中常驻小岛（勿称「收起待命」）。
+        static var previewStagePlaying: String {
+            tr("media.preview.stage.playing", "正在播放")
         }
         static var previewExpandedBadge: String {
             tr("media.preview.badge.expanded", "控制")
@@ -1964,7 +1965,7 @@ enum L10n {
         static var widgetSummary: String {
             tr(
                 "peripheral_tip.widget.summary",
-                "低电、满电与接入经瞬时通知提示，约三秒后自动收起"
+                "低电、满电与接入经瞬时通知提示"
             )
         }
 

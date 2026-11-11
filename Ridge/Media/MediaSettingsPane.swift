@@ -3,7 +3,8 @@ import SwiftUI
 
 /// 嵌入「正在播放」小组件预览页的配置区。
 struct MediaWidgetConfigSection: View {
-    @State private var previewTab: MediaPreviewTab = .expanded
+    /// 左侧为常驻小岛「正在播放」，右侧才是点按后的展开面板。
+    @State private var previewTab: MediaPreviewTab = .playing
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -21,21 +22,21 @@ struct MediaWidgetConfigSection: View {
             options: MediaPreviewTab.allCases.map(stageOption),
             selection: Binding(
                 get: { previewTab.rawValue },
-                set: { previewTab = MediaPreviewTab(rawValue: $0) ?? .expanded }
+                set: { previewTab = MediaPreviewTab(rawValue: $0) ?? .playing }
             )
         ) { option in
-            let tab = MediaPreviewTab(rawValue: option.id) ?? .expanded
+            let tab = MediaPreviewTab(rawValue: option.id) ?? .playing
             Group {
                 switch tab {
+                case .playing:
+                    // 仅「正在播放」Tab 开轻律动，切走即停，减轻设置卡顿。
+                    MediaCompactStandbyView.previewSample(animatedEqualizer: true)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
                 case .expanded:
                     MediaIslandCardView.previewSample(animatedEqualizer: false)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
                         .padding(.vertical, IslandChrome.contentBottom)
-                case .standby:
-                    // 仅待命 Tab 开轻律动，切走即停，减轻设置卡顿。
-                    MediaCompactStandbyView.previewSample(animatedEqualizer: true)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
                 }
             }
             .id(tab.rawValue)
@@ -162,38 +163,40 @@ struct MediaWidgetConfigSection: View {
 // MARK: - 预览形态
 
 private enum MediaPreviewTab: String, CaseIterable, Identifiable {
+    /// 播放中常驻小岛（左）。
+    case playing
+    /// 点按小岛后才出现的展开控制面板（右，非常驻）。
     case expanded
-    case standby
 
     var id: String { rawValue }
 
-    var isCompact: Bool { self == .standby }
+    var isCompact: Bool { self == .playing }
 
     var stageTitle: String {
         switch self {
+        case .playing: return L10n.Media.previewStagePlaying
         case .expanded: return L10n.Media.previewStageExpanded
-        case .standby: return L10n.Media.previewStageStandby
         }
     }
 
     var stageBadge: String {
         switch self {
+        case .playing: return L10n.Media.previewStandbyBadge
         case .expanded: return L10n.Media.previewExpandedBadge
-        case .standby: return L10n.Media.previewStandbyBadge
         }
     }
 
     var symbol: String {
         switch self {
+        case .playing: return "waveform"
         case .expanded: return "music.note.list"
-        case .standby: return "waveform"
         }
     }
 
     var tint: Color {
         switch self {
+        case .playing: return Color(red: 0.196, green: 0.843, blue: 0.294)
         case .expanded: return Color(red: 1.0, green: 0.42, blue: 0.29)
-        case .standby: return Color(red: 0.196, green: 0.843, blue: 0.294)
         }
     }
 }

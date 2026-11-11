@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// 播放中收起岛左右翼：左封面+歌名，右动态均衡条+已播时长。
+/// 播放中常驻小岛：左封面+歌名，右动态均衡条+已播时长；点按后展开控制面板。
 struct MediaCompactStandbyView: View {
     let title: String
     let artwork: NSImage?
@@ -42,7 +42,7 @@ struct MediaCompactStandbyView: View {
         .accessibilityLabel("\(title)，\(elapsedText)")
     }
 
-    /// 设置预览用假数据；仅当前选中的待命 Tab 开动画。
+    /// 设置预览用假数据；仅当前选中的「正在播放」Tab 开动画。
     static func previewSample(animatedEqualizer: Bool = true) -> MediaCompactStandbyView {
         MediaCompactStandbyView(
             title: L10n.Media.previewSampleTitle,

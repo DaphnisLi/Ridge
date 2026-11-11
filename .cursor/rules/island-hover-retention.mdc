@@ -11,10 +11,11 @@ alwaysApply: false
 ## 不变量（必须始终成立）
 
 1. **展开态保展开热区 = 当前可见大面板（可外扩）∪ 刘海**，禁止只用 `notchFrame`。
-2. **展开态 `panelSize` 禁止被 Preference 瞬间缩回接近刘海**（拖动、滚动、临时 layout 会误报）。仅翻页 / 刚 expand / 明确布局重置窗口内允许缩小。
-3. **左键在岛上按下后的拖动**：松开前不得 `scheduleCollapse` / `collapse(hoverEnd)`（含 ScrollView、滑条，不限翻页 pan）。
-4. **控制台列表纵滑**（触控板/滚轮，常无左键）：`noteContentScrollActivity` 后宽限内不得 `collapse(hoverEnd)`——滚一半误收属本类回归。
-5. 策略逻辑只进 `IslandExpandedPanelPolicy`；悬停收起路径必须走 `pointerIslandHit` + 上述策略，**禁止**再抄一套按刘海判断离开。
+2. **收起态命中 / 保展开 = 当前可见小岛 `panelSize` ∪ 刘海**（播放/番茄小岛常宽于刘海）；禁止收起态只用 `notchFrame`，否则两翼悬停无法展开大岛。
+3. **展开态 `panelSize` 禁止被 Preference 瞬间缩回接近刘海**（拖动、滚动、临时 layout 会误报）。仅翻页 / 刚 expand / 明确布局重置窗口内允许缩小。
+4. **左键在岛上按下后的拖动**：松开前不得 `scheduleCollapse` / `collapse(hoverEnd)`（含 ScrollView、滑条，不限翻页 pan）。
+5. **控制台列表纵滑**（触控板/滚轮，常无左键）：`noteContentScrollActivity` 后宽限内不得 `collapse(hoverEnd)`——滚一半误收属本类回归。
+6. 策略逻辑只进 `IslandExpandedPanelPolicy`；悬停收起路径必须走 `pointerIslandHit` + 上述策略，**禁止**再抄一套按刘海判断离开。
 
 权威代码：
 
