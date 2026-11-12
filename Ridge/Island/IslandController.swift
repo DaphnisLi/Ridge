@@ -401,6 +401,8 @@ final class IslandController: NSObject {
                 applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             } else if shelfDropExpand {
                 applyShelfDropPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
+            } else {
+                applyMediaExpandedPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             }
             updateInteractiveFrame(expanded: true)
             // 展开不抢前台（见 IslandFocusPolicy）；文本框点击时再 prepare。
@@ -428,6 +430,9 @@ final class IslandController: NSObject {
         applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
         if shelfDropExpand {
             applyShelfDropPanelSizeIfNeeded(reason: "expand:\(reason)")
+        } else {
+            // 媒体：立刻抬高可点区，否则 Preference 未到时底栏暂停/切歌落在 interactiveFrame 外。
+            applyMediaExpandedPanelSizeIfNeeded(reason: "expand:\(reason)")
         }
         // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
         updateInteractiveFrame(expanded: true)
@@ -462,6 +467,27 @@ final class IslandController: NSObject {
             "h": Int(size.height),
             "panelW": Int(viewModel.panelSize.width),
             "panelH": Int(viewModel.panelSize.height)
+        ])
+    }
+
+    /// 媒体展开页：先写入下限面板，避免可点区仍是小岛高度、底栏三点不中。
+    private func applyMediaExpandedPanelSizeIfNeeded(reason: String) {
+        guard WidgetRuntime.shared.activeID == MediaNowPlayingWidget.manifest.id else { return }
+        guard viewModel.isExpanded || reason.hasPrefix("expand:") else { return }
+        let size = MediaExpandedContentSize.panelSize()
+        // 只抬高 / 加宽，不把 Preference 已测到的更大尺寸压回去。
+        let next = CGSize(
+            width: max(viewModel.panelSize.width, size.width),
+            height: max(viewModel.panelSize.height, size.height)
+        )
+        viewModel.applyMeasuredPanelSize(next)
+        updateInteractiveFrame(expanded: true)
+        AppLog.info("Island", "媒体展开面板尺寸已套用", [
+            "reason": reason,
+            "w": Int(next.width),
+            "h": Int(next.height),
+            "floorW": Int(size.width),
+            "floorH": Int(size.height)
         ])
     }
 

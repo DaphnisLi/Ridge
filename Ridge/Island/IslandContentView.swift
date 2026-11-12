@@ -406,7 +406,13 @@ private struct IslandBody: View {
     }
 
     private var contentTopInset: CGFloat {
-        chromeInsets.top
+        // 媒体展开：顶行封面/律动与刘海同带，顶距置 0（勿用负 padding，否则命中区收缩点不中控件）。
+        if chromeSurface == .expanded,
+           runtime.activeID == MediaNowPlayingWidget.manifest.id
+        {
+            return 0
+        }
+        return chromeInsets.top
     }
 
     private var contentBottomInset: CGFloat {

@@ -777,6 +777,18 @@ final class RegressionCatalogTests: XCTestCase {
         LiveIslandGate.shared.close(LiveIslandGate.batteryID, reason: "testReset")
     }
 
+    /// 媒体展开下限须高于小岛，否则底栏暂停/切歌落在 interactiveFrame 外。
+    func test_mediaExpandedContentSize_tallerThanCompactIsland() {
+        let panel = MediaExpandedContentSize.panelSize()
+        XCTAssertGreaterThan(panel.height, NotchGeometry.mediaCompactHeight + 40)
+        XCTAssertEqual(
+            panel.width,
+            MediaExpandedContentSize.contentWidth + IslandChrome.horizontalInsetTotal,
+            accuracy: 0.5
+        )
+        XCTAssertGreaterThanOrEqual(MediaExpandedContentSize.minContentHeight, 140)
+    }
+
     /// 收起态小岛：高度统一，正在播放宽度不得窄于番茄翼。
     func test_compactIsland_sharedHeightAndMediaWidth() {
         XCTAssertEqual(NotchGeometry.focusTimerCompactHeight, NotchGeometry.compactIslandHeight)

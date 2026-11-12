@@ -22,7 +22,7 @@
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `widget-preview.mdc`：仅 `WidgetSamplePreview` 假数据；股票预览固定两卡假样张 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 | ≥6 | 取色/框选后看不见；关货架不上岛；或展开未完即 hoverEnd 收掉 | `ClipboardCopiedNoticeGate`；`copy.*` keepExpanded；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
-| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
+| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥4 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；`test_islandFocusPolicy_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 
@@ -175,11 +175,11 @@
 ### island-focus-steal — 岛抢鼠标/键盘焦点
 
 - **recurring:** true  
-- **occurrences:** 3（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿）  
-- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」点了没反应  
-- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 NSControl；会议 tip 可点区停在刘海/短条，右翼落在 `interactiveFrame` 外  
-- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl`；会议 tip present 前 `prepareMeetingWingNoticeLayout`；入会用 AppKit 按钮 + 会话自开链接  
-- **相关代码:** `IslandFocusPolicy`、`prepareMeetingWingNoticeLayout`、`MeetingLeadAppKitPillButton`、`MeetingLeadSession`  
+- **occurrences:** 4（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；**2026-11-12 媒体展开暂停/切歌 SwiftUI 首击无响应**）  
+- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体播放控件点了没反应  
+- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 SwiftUI 首击；会议 tip 可点区停在刘海/短条，右翼落在 `interactiveFrame` 外  
+- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl`；会议 tip / **媒体播放控件**用 AppKit 按钮；会议 tip present 前 `prepareMeetingWingNoticeLayout`  
+- **相关代码:** `IslandFocusPolicy`、`prepareMeetingWingNoticeLayout`、`MeetingLeadAppKitPillButton`、`MediaTransportAppKitButton`、`MeetingLeadSession`  
 - **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`
 
 ### tip-outline-panel — 瞬时提示上直角下圆角
@@ -247,6 +247,8 @@
 | 2026-11-12 | 电量库卡黑岛同比缩到 library 宽（`BatteryDeckIslandPreview.libraryPreviewScale`），灰舞台不缩 |
 | 2026-11-12 | 实况/面板库卡改提示同款灰舞台+底栏（`WidgetLibraryCardLayout`） |
 | 2026-11-12 | 专注待命环 22 + 预览边距对齐媒体小岛；`FocusTimerCompactMetrics`；stretch +1 |
+| 2026-11-12 | 媒体展开：立刻套用 `MediaExpandedContentSize` 抬高可点区；播放钮 AppKit 锁正圆（曾椭圆+底栏点空） |
+| 2026-11-12 | 媒体展开翼行贴刘海：壳层顶距 0，禁负 padding（曾缩命中区致播放/切歌点不中） |
 | 2026-11-12 | 详情预览恢复 tip360 / 媒体番茄380，仅库卡缩到 290；配置页不再套 library 缩放 |
 | 2026-11-12 | 小组件库取消提示/实况/面板分段；扁平默认序：已复制第一、货架紧接专注计时后，音量倒数第二、项目最后；`WidgetLibraryLayout` + 迁移 v4 |
 | 2026-11-12 | tip 预览恢复 hugs（禁强制 360）；番茄固定宽时高度仍 hugs，`minStageHeight` 只抬灰舞台；catalog `settings-preview-tip-forced-stretch` + stretch +1 |
