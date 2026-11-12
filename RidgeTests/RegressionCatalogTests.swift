@@ -482,6 +482,62 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertLessThan(detailH, 140)
     }
 
+    // MARK: - settings-preview-island-width（媒体 / 番茄预览黑岛宽统一；tip 必须 hugs）
+
+    @MainActor
+    func test_settingsPreviewIslandWidth_tipAndMediaFocusAligned() {
+        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 360)
+        XCTAssertEqual(SettingsIslandPreviewWidth.library, 360)
+        XCTAssertEqual(SettingsIslandPreviewWidth.standby, SettingsIslandPreviewWidth.expanded)
+        XCTAssertEqual(SettingsIslandPreviewWidth.standby, 380)
+        // 媒体 / 番茄库卡强制 360；tip 与圆岛「已复制」仍 hugs（左右 chrome 定死）。
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.meeting"))
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.aiUsage"))
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.peripheralTip"))
+        XCTAssertEqual(WidgetSamplePreview.libraryIslandWidth(for: "builtin.media"), 360)
+        XCTAssertEqual(WidgetSamplePreview.libraryIslandWidth(for: "builtin.focusTimer"), 360)
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.copiedNotice"))
+        // 真岛待命宽可与预览不同；本用例只锁预览令牌。
+        XCTAssertNotEqual(NotchGeometry.mediaCompactWidth, NotchGeometry.focusTimerCompactWidth)
+    }
+
+    // MARK: - settings-preview-tip-forced-stretch（tip 预览禁强制拉宽 / 番茄禁 minStageHeight 撑高黑岛）
+
+    @MainActor
+    func test_settingsPreviewTipForcedStretch_tipsMustHugAndChromeFixed() {
+        XCTAssertTrue(
+            WidgetSamplePreview.tipPreviewHugsContent,
+            "tip 详情 hugsContent 须为 true，禁止拉满 maxIslandWidth 撑开左右空档"
+        )
+        let tipIDs: [WidgetID] = [
+            "builtin.meeting",
+            "builtin.aiUsage",
+            "builtin.moveReminder",
+            "builtin.colorPick",
+            "builtin.ocrSelect",
+            "builtin.peripheralTip",
+            "builtin.peripheralTip.low",
+            "builtin.peripheralTip.full",
+            "builtin.peripheralTip.connect",
+        ]
+        for id in tipIDs {
+            XCTAssertTrue(
+                WidgetSamplePreview.hugsIslandContent(for: id),
+                "\(id) 库卡预览须 hugs，翼宽与 chrome 定死"
+            )
+            XCTAssertNil(
+                WidgetSamplePreview.libraryIslandWidth(for: id),
+                "\(id) 不得强制 libraryIslandWidth，否则左右间距被拉大"
+            )
+        }
+        // tip 左右边距令牌不得漂移（与 island-chrome-double-padding 同值）。
+        XCTAssertEqual(IslandChrome.contentHorizontal, 14)
+        XCTAssertEqual(IslandChrome.compactTipBottom, 4)
+        // 媒体/番茄可固定预览宽，但高度须贴内容（stageCanvas 不得把 minStageHeight 作用在黑岛上）。
+        XCTAssertFalse(WidgetSamplePreview.hugsIslandContent(for: "builtin.focusTimer"))
+        XCTAssertEqual(WidgetSamplePreview.libraryIslandWidth(for: "builtin.focusTimer"), 360)
+    }
+
     // MARK: - settings-preview-island-appearance（预览深色 + 可见顶距；禁 disabled 降透明度）
 
     @MainActor
@@ -639,6 +695,10 @@ final class RegressionCatalogTests: XCTestCase {
             NotchGeometry.focusTimerCompactWidth,
             "播放小岛曾用 300 明显偏窄，至少与番茄翼同宽或更宽"
         )
+        // 专注左环须与媒体封面同径，预览上下距/下限同媒体，避免黑岛虚高。
+        XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)
+        XCTAssertEqual(FocusTimerCompactMetrics.previewVerticalPadding, 6)
+        XCTAssertEqual(FocusTimerCompactMetrics.previewMinHeight, 36)
     }
 
     /// media-compact-not-resident：媒体大面板默认关闭；悬停准入后 close 须再拒绝（勿用 open，避免测里拉起 MediaRemote）。

@@ -50,8 +50,11 @@ struct MediaWidgetConfigSection: View {
             badge: tab.stageBadge,
             symbol: tab.symbol,
             tint: tab.tint,
-            maxIslandWidth: tab.isCompact ? NotchGeometry.mediaCompactWidth : 360,
-            hugsContent: !tab.isCompact,
+            // 预览宽与番茄统一；真岛仍用 NotchGeometry.mediaCompactWidth。
+            maxIslandWidth: tab.isCompact
+                ? SettingsIslandPreviewWidth.standby
+                : SettingsIslandPreviewWidth.expanded,
+            hugsContent: false,
             bottomRadius: tab.isCompact ? 20 : 24,
             outlineStyle: .panel,
             minStageHeight: tab.isCompact ? 100 : 168,

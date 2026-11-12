@@ -518,10 +518,9 @@ private struct WidgetLibraryCard: View {
         }
     }
 
-    /// 灰舞台居中：只改卡面舞台，黑岛内容仍是原 tip 样张。
+    /// 灰舞台居中：tip 库卡 hugs 固有宽；媒体/番茄由 `libraryIslandWidth` 定 360。
     private var tipIslandStage: some View {
         WidgetSamplePreview.island(for: widgetID, compact: true)
-            .fixedSize(horizontal: true, vertical: true)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .padding(.horizontal, 10)
             .frame(height: CardLayout.tipIslandStageHeight)

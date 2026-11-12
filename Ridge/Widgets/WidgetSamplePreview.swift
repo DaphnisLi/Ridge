@@ -3,6 +3,18 @@ import SwiftUI
 
 // MARK: - 统一岛预览舞台（灰底 + 可选多形态 Tab）
 
+/// 设置页黑岛预览宽度令牌（**仅预览**，不改真岛几何）。
+enum SettingsIslandPreviewWidth {
+    /// 库卡外层小岛 + tip 详情舞台统一宽。
+    static let tip: CGFloat = 360
+    /// 库卡外层小岛预览统一宽（与 tip 同值）。
+    static let library: CGFloat = tip
+    /// 媒体与番茄：详情待命 / 展开舞台统一宽。
+    static let standby: CGFloat = 380
+    /// 媒体与番茄：展开面板预览统一宽。
+    static let expanded: CGFloat = 380
+}
+
 /// 设置页岛预览的一种形态；多于 1 个时才显示上方选择题。
 struct SettingsIslandStageOption: Identifiable, Hashable {
     let id: String
@@ -83,7 +95,8 @@ struct SettingsIslandStage<Content: View>: View {
         ) {
             content(option)
         }
-        .frame(maxWidth: option.maxIslandWidth)
+        // 固定预览宽：用 width 而非仅 maxWidth，避免 hugs 关掉后仍随内容忽宽忽窄。
+        .modifier(SettingsIslandPreviewWidthClamp(maxIslandWidth: option.maxIslandWidth, hugsContent: option.hugsContent))
 
         return Group {
             if option.hugsContent {
@@ -92,7 +105,10 @@ struct SettingsIslandStage<Content: View>: View {
                     .fixedSize(horizontal: true, vertical: true)
                     .frame(maxWidth: .infinity, minHeight: option.minStageHeight, alignment: .top)
             } else {
+                // minStageHeight 只抬灰舞台，禁止作用在黑岛本身（否则番茄预览虚高）。
                 island
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .top)
                     .frame(maxWidth: .infinity, minHeight: option.minStageHeight, alignment: .top)
             }
         }
@@ -128,6 +144,22 @@ struct SettingsIslandStage<Content: View>: View {
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// 预览黑岛宽度钳制：非 hugs 时落到固定宽，保证 tip / 媒体 / 番茄舞台一致。
+private struct SettingsIslandPreviewWidthClamp: ViewModifier {
+    var maxIslandWidth: CGFloat?
+    var hugsContent: Bool
+
+    func body(content: Content) -> some View {
+        if let maxIslandWidth, !hugsContent {
+            content.frame(width: maxIslandWidth)
+        } else if let maxIslandWidth {
+            content.frame(maxWidth: maxIslandWidth)
+        } else {
+            content
+        }
     }
 }
 
@@ -211,7 +243,9 @@ struct WidgetIslandPreviewShell<Content: View>: View {
                 content()
                     .fixedSize(horizontal: true, vertical: true)
             } else {
+                // 固定预览宽时只拉横向；高度仍贴内容，避免番茄黑岛被 minStageHeight 撑高。
                 content()
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -242,17 +276,35 @@ struct WidgetIslandPreviewShell<Content: View>: View {
 @MainActor
 enum WidgetSamplePreview {
     /// 统一预览组件：壳 + 假数据内容。
+    /// 库卡外层小岛对 tip / 媒体 / 番茄强制 `library` 宽（360）；圆岛「已复制」仍 hugs。
     @ViewBuilder
     static func island(for id: WidgetID, compact: Bool) -> some View {
+        let fixedWidth = libraryIslandWidth(for: id)
+        let hugs = fixedWidth == nil && hugsIslandContent(for: id)
         WidgetIslandPreviewShell(
             compact: compact,
             outlineStyle: outlineStyle(for: id),
-            hugsContent: hugsIslandContent(for: id),
+            hugsContent: hugs,
             contentProvidesOpaqueShell: contentProvidesOpaqueShell(for: id)
         ) {
             content(for: id, compact: compact)
         }
+        .modifier(SettingsIslandPreviewWidthClamp(maxIslandWidth: fixedWidth, hugsContent: hugs))
     }
+
+    /// 库卡外层小岛固定宽；tip 翼条必须 hugs（左右 chrome 定死），勿强制拉到 360。
+    /// 媒体 / 番茄库卡统一 `library` 宽。
+    static func libraryIslandWidth(for id: WidgetID) -> CGFloat? {
+        switch id {
+        case "builtin.media", "builtin.focusTimer":
+            return SettingsIslandPreviewWidth.library
+        default:
+            return nil
+        }
+    }
+
+    /// tip 详情 / 库卡必须 hugs：翼宽与 `IslandChrome` 边距是定值，拉满会左右空一大截。
+    static var tipPreviewHugsContent: Bool { true }
 
     /// 电量等预览自带不透明岛底，避免壳层再叠一层发暗。
     static func contentProvidesOpaqueShell(for id: WidgetID) -> Bool {
@@ -264,22 +316,22 @@ enum WidgetSamplePreview {
         id == "builtin.copiedNotice" ? .circle : .panel
     }
 
-    /// 窄内容（股票两卡 / 电量少台 / 瞬时引导等）贴合固有宽，避免黑岛被舞台横向拉满发黑空。
+    /// 窄内容贴合固有宽；媒体/番茄库卡走固定宽时由 `island(for:)` 关 hugs。
     static func hugsIslandContent(for id: WidgetID) -> Bool {
+        if libraryIslandWidth(for: id) != nil { return false }
         switch id {
         case "builtin.stocks",
-             "builtin.colorPick",
-             "builtin.ocrSelect",
+             "builtin.copiedNotice",
+             "system.controlDeck.battery",
+             "builtin.meeting",
              "builtin.aiUsage",
              "builtin.moveReminder",
-             "builtin.focusTimer",
-             "builtin.meeting",
+             "builtin.colorPick",
+             "builtin.ocrSelect",
              "builtin.peripheralTip",
              "builtin.peripheralTip.low",
              "builtin.peripheralTip.full",
-             "builtin.peripheralTip.connect",
-             "builtin.copiedNotice",
-             "system.controlDeck.battery":
+             "builtin.peripheralTip.connect":
             return true
         default:
             return false
@@ -359,11 +411,15 @@ enum WidgetSamplePreview {
     }
 
     private static func focusTimerSample(compact: Bool) -> some View {
+        // 库卡待命高与媒体小岛对齐（环 22 + 上下 6），勿再抬到 44。
         FocusTimerIslandCardView.previewSample(phase: .running, compact: compact)
             .padding(.horizontal, compact ? 10 : 12)
-            .padding(.vertical, compact ? 8 : 12)
+            .padding(
+                .vertical,
+                compact ? FocusTimerCompactMetrics.previewVerticalPadding : 12
+            )
             .frame(maxWidth: compact ? .infinity : 540)
-            .frame(minHeight: compact ? 44 : 72)
+            .frame(minHeight: compact ? FocusTimerCompactMetrics.previewMinHeight : 72)
     }
 
     private static func aiUsageSample(compact: Bool) -> some View {

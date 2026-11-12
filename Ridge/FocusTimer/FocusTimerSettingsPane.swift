@@ -76,7 +76,9 @@ struct FocusTimerWidgetConfigSection: View {
                 )
                 .padding(
                     .vertical,
-                    tab.isCompact ? 6 : IslandChrome.contentBottom
+                    tab.isCompact
+                        ? FocusTimerCompactMetrics.previewVerticalPadding
+                        : IslandChrome.contentBottom
                 )
         }
     }
@@ -88,8 +90,11 @@ struct FocusTimerWidgetConfigSection: View {
             badge: tabBadge(tab),
             symbol: tabIcon(tab),
             tint: tabTint(tab),
-            maxIslandWidth: tab.isCompact ? NotchGeometry.focusTimerCompactWidth : nil,
-            hugsContent: !tab.isCompact,
+            // 预览宽与媒体统一；真岛仍用 NotchGeometry.focusTimerCompactWidth。
+            maxIslandWidth: tab.isCompact
+                ? SettingsIslandPreviewWidth.standby
+                : SettingsIslandPreviewWidth.expanded,
+            hugsContent: false,
             bottomRadius: tab.isCompact ? 20 : 24,
             minStageHeight: tab.isCompact ? 120 : 148,
             compactShell: tab.isCompact

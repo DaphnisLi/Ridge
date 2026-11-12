@@ -44,6 +44,7 @@ MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
 - **同款同内容**：同一 `widgetID` 在开关卡片与点进配置页的预览必须一致（仅 `compact` 尺寸不同）
 - **深色外观**：`WidgetIslandPreviewShell` 须 `.preferredColorScheme(.dark)`（真岛 `darkAqua`）；卡片/文字色用 sRGB 绝对值，禁止 `NSColor(calibratedWhite:)` 在浅色设置窗发灰
 - **展开顶距**：无刘海遮挡时用 `IslandChrome.previewExpandedVisibleTopInset`，勿照搬含盲区的 `expandedTopInset`
+- **预览黑岛宽**：详情 tip 舞台用 `SettingsIslandPreviewWidth.tip`；库卡外层小岛用 `.library`（=360，经 `WidgetSamplePreview.island`）；媒体与番茄详情待命/展开用 `.standby` / `.expanded`；**禁止**库卡 tip 再 `.fixedSize(horizontal: true)` 把 360 压回内容宽；不改真岛 `NotchGeometry`
 - 控制台磁贴 id：`system.controlDeck.battery` / `volume` / `projects` / `shelf`
 
 ## 禁止

@@ -23,7 +23,7 @@
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 | ≥6 | 取色/框选后看不见；关货架不上岛；或展开未完即 hoverEnd 收掉 | `ClipboardCopiedNoticeGate`；`copy.*` keepExpanded；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
-| `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 2 | 黑岛过高；电量单行样张底下大块黑空 | `batterySample` 单行高；`test_libraryIslandStageStretch_*` |
+| `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 
 ---
@@ -60,12 +60,22 @@
 ### library-island-stage-stretch — 库卡/详情预览黑岛被拉高留空
 
 - **recurring:** true  
-- **occurrences:** 2（2026-11-09：股票库卡；**2026-11-11 电量详情预览单行样张却按双行 210 高，底下大块黑空**）  
-- **症状:** 库卡/详情预览黑岛呈过高矩形；股票卡被撑高；电量样张卡片贴顶、下半截空黑  
-- **根因倾向:** 对岛施 `maxHeight: .infinity` / 写死双行高；样张行数与占位高度不一致  
-- **防护:** 库卡岛 `.fixedSize(vertical: true)`；窄 widget `hugsContent`；`batterySample` 按单行样张高度，禁止再写 210  
-- **相关代码:** `WidgetSamplePreview.batterySampleContentHeight`、`BatteryDeckView.sampleDevices`  
-- **自动化:** `RegressionCatalogTests.test_libraryIslandStageStretch_batteryPreviewSingleRowHeight`
+- **occurrences:** 4（2026-11-09 股票；2026-11-11 电量；2026-11-12 minStageHeight；**同日专注左环 24 + 库卡 vertical 8/minHeight 44，仍比媒体小岛高**）  
+- **症状:** 库卡/详情预览黑岛呈过高矩形；股票卡被撑高；电量样张卡片贴顶、下半截空黑；番茄待命黑岛比内容高一截  
+- **根因倾向:** 对岛施 `maxHeight: .infinity` / 写死双行高；样张行数与占位高度不一致；**`hugsContent: false` 时把 `minStageHeight` 写在岛 frame 上**；进度环大于媒体封面、预览垫高不一致  
+- **防护:** 库卡岛 `.fixedSize(vertical: true)`；窄 widget `hugsContent`；`batterySample` 按单行样张高度；固定预览宽时高度仍 hugs；**`FocusTimerCompactMetrics` 环 22、预览上下 6 / minHeight 36 对齐媒体**  
+- **相关代码:** `FocusTimerCompactMetrics`、`WidgetSamplePreview.focusTimerSample`、`SettingsIslandStage.stageCanvas`  
+- **自动化:** `RegressionCatalogTests.test_libraryIslandStageStretch_*`、`test_settingsPreviewTipForcedStretch_*`、`test_compactIsland_sharedHeightAndMediaWidth`
+
+### settings-preview-tip-forced-stretch — tip 预览被强制拉宽撑开左右间距
+
+- **recurring:** false（首次；与 chrome 定死约定相关，易再发）  
+- **occurrences:** 1（2026-11-12：统一 tip/媒体/番茄预览宽时把 tip `hugsContent` 关成 false 并强制库卡 360）  
+- **症状:** 设置里会议/额度/久坐/取色/框选/外设 tip 预览左右黑边变大，翼内容被拉散；本应贴合固有宽  
+- **根因倾向:** tip 翼宽与 `IslandChrome.contentHorizontal` 是定值，却套 `maxIslandWidth` + `hugsContent: false` / `libraryIslandWidth` 把黑岛拉满  
+- **防护:** `tipPreviewHugsContent == true`；tip id 不得进 `libraryIslandWidth`；详情 `hugsContent` 走 `tipPreviewHugsContent`；`maxIslandWidth: tip` 仅作上限  
+- **相关代码:** `WidgetSamplePreview.libraryIslandWidth` / `tipPreviewHugsContent`、各 tip SettingsPane  
+- **自动化:** `RegressionCatalogTests.test_settingsPreviewTipForcedStretch_*`
 
 ### settings-preview-island-appearance — 设置预览文字/卡片色与真岛不一致
 
@@ -228,6 +238,8 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-12 | 专注待命环 22 + 预览边距对齐媒体小岛；`FocusTimerCompactMetrics`；stretch +1 |
+| 2026-11-12 | tip 预览恢复 hugs（禁强制 360）；番茄固定宽时高度仍 hugs，`minStageHeight` 只抬灰舞台；catalog `settings-preview-tip-forced-stretch` + stretch +1 |
 | 2026-11-12 | 「已复制」改刘海右侧 Ø32 圆岛（方案 02 流光向心）；`usesNotchRightOrbChrome` + 预备布局 |
 | 2026-11-12 | 电量预览暗淡：根因是样张 `Button.disabled` 降透明度 → 改 `allowsHitTesting`；catalog recurring |
 | 2026-11-12 | 电量预览：锁深色 + sRGB 卡片色；去掉样张分页角点；顶距用可见 inset；catalog `settings-preview-island-appearance` |

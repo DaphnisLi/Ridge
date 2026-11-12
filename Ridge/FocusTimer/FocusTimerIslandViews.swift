@@ -1,6 +1,17 @@
 import AppKit
 import SwiftUI
 
+/// 收起待命与媒体小岛对齐：左环直径 = 封面边长，预览上下距同媒体。
+enum FocusTimerCompactMetrics {
+    /// 与 `MediaCompactStandbyView` 封面 22 一致，避免环偏大把岛撑高。
+    static let progressRingDiameter: CGFloat = 22
+    static let progressRingLineWidth: CGFloat = 2.5
+    static let progressRingIconPointSize: CGFloat = 9
+    /// 设置预览（详情待命 + 库卡）与媒体小岛同款。
+    static let previewVerticalPadding: CGFloat = 6
+    static let previewMinHeight: CGFloat = 36
+}
+
 /// 番茄面板下限：选时 / 进行中 / 顺延走内容 `fixedSize` + IslandChrome；
 /// 仅终局锁最小宽高，防止 Preference 矮框裁掉备注。
 enum FocusTimerContentSize {
@@ -1008,17 +1019,19 @@ private struct FocusTimerProgressRing: View {
     let iconColor: Color
 
     var body: some View {
+        let d = FocusTimerCompactMetrics.progressRingDiameter
+        let line = FocusTimerCompactMetrics.progressRingLineWidth
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.15), lineWidth: 3)
+                .stroke(Color.white.opacity(0.15), lineWidth: line)
             Circle()
                 .trim(from: 0, to: max(0.02, min(1, progress)))
-                .stroke(stroke, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(stroke, style: StrokeStyle(lineWidth: line, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: FocusTimerCompactMetrics.progressRingIconPointSize, weight: .semibold))
                 .foregroundStyle(iconColor)
         }
-        .frame(width: 24, height: 24)
+        .frame(width: d, height: d)
     }
 }
