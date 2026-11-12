@@ -24,6 +24,7 @@
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥2 | 粘键盘，或去掉 makeKey 后门按钮无响应 | 普通点击只 makeKey；穿透 resignKey；`test_islandFocusPolicy_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 2 | 黑岛过高；电量单行样张底下大块黑空 | `batterySample` 单行高；`test_libraryIslandStageStretch_*` |
+| `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 
 ---
 
@@ -65,6 +66,16 @@
 - **防护:** 库卡岛 `.fixedSize(vertical: true)`；窄 widget `hugsContent`；`batterySample` 按单行样张高度，禁止再写 210  
 - **相关代码:** `WidgetSamplePreview.batterySampleContentHeight`、`BatteryDeckView.sampleDevices`  
 - **自动化:** `RegressionCatalogTests.test_libraryIslandStageStretch_batteryPreviewSingleRowHeight`
+
+### settings-preview-island-appearance — 设置预览文字/卡片色与真岛不一致
+
+- **recurring:** true  
+- **occurrences:** 2（2026-11-12：角点/浅色窗发灰；**同日再发：样张仍比真岛暗一截——预览路径 `.disabled(true)` 整卡降透明度**）  
+- **症状:** 库卡/详情黑岛内文字与设备卡片明显比真岛暗淡；样张左右上角曾出现分页角点  
+- **根因倾向:** ① 预览 `Button.disabled` 系统降透明度；② 浅色设置窗 + `calibratedWhite` 抬灰；③ 误画 `pageDot`  
+- **防护:** 预览用 `allowsHitTesting(false)`，**禁止** `.disabled`；`.preferredColorScheme(.dark)`；卡片色 sRGB；**禁止**样张分页角点  
+- **相关代码:** `BatteryDeckView.deviceCard`、`BatteryDeckIslandPreview`、`WidgetIslandPreviewShell`  
+- **自动化:** `RegressionCatalogTests.test_settingsPreviewIslandAppearance_*`
 
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
@@ -217,6 +228,8 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-12 | 电量预览暗淡：根因是样张 `Button.disabled` 降透明度 → 改 `allowsHitTesting`；catalog recurring |
+| 2026-11-12 | 电量预览：锁深色 + sRGB 卡片色；去掉样张分页角点；顶距用可见 inset；catalog `settings-preview-island-appearance` |
 | 2026-11-11 | 电量岛宽高随台数自适应（最多 3×2，超出纵滑）；两台不再留右侧黑空 |
 | 2026-11-11 | 媒体：播放小岛常驻、点按展开大面板；预览去掉「收起待命」；catalog `media-compact-not-resident` |
 | 2026-11-11 | 外设低电/满电/接入合并为 `builtin.peripheralTip`；「已复制」独立 `builtin.copiedNotice`；删除 liveInvite 残留 |

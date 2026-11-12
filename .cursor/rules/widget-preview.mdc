@@ -42,6 +42,8 @@ MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
 - **形态 Tab**：`options.count > 1` 才显示选择题；仅一种形态不展示
 - **外形统一**：预览岛 **左上、右上直角；左下、右下圆角**（`IslandPanelShape`），列表与详情同形状
 - **同款同内容**：同一 `widgetID` 在开关卡片与点进配置页的预览必须一致（仅 `compact` 尺寸不同）
+- **深色外观**：`WidgetIslandPreviewShell` 须 `.preferredColorScheme(.dark)`（真岛 `darkAqua`）；卡片/文字色用 sRGB 绝对值，禁止 `NSColor(calibratedWhite:)` 在浅色设置窗发灰
+- **展开顶距**：无刘海遮挡时用 `IslandChrome.previewExpandedVisibleTopInset`，勿照搬含盲区的 `expandedTopInset`
 - 控制台磁贴 id：`system.controlDeck.battery` / `volume` / `projects` / `shelf`
 
 ## 禁止
@@ -50,6 +52,8 @@ MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
 - 为某一个设置页再造预览壳、灰底舞台或再写一套样张布局
 - 预览外形做成全圆角胶囊或四角同圆角（与真岛「贴顶直角」不一致）
 - 仅一种形态仍画出选择题条
+- 在库卡/详情样张上画分页角点（左右上角点儿只属于真岛多页运行时）
+- 预览路径对卡片/按钮写 `.disabled(true)`（系统会降透明度，样张比真岛暗；改用 `allowsHitTesting(false)`）
 
 ## 新小组件 checklist
 

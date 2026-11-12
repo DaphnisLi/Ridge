@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// 控制台「电量与外设」岛页：对齐稿面设备卡片（耳机三格 / 其它进度条）。
@@ -72,12 +71,14 @@ private struct BatteryDeckCanvas: View {
     let devices: [BatteryDevice]
     let isPreview: Bool
 
-    /// 稿面 secondary-fixed。
-    private let accentGreen = Color(red: 0.447, green: 0.996, blue: 0.533)
-    private let accentRed = Color(red: 0.729, green: 0.102, blue: 0.102)
+    /// 稿面 secondary-fixed（sRGB 绝对值，避免设置窗浅色外观把 NSColor 抬灰）。
+    private let accentGreen = Color(.sRGB, red: 0.447, green: 0.996, blue: 0.533, opacity: 1)
+    private let accentRed = Color(.sRGB, red: 0.729, green: 0.102, blue: 0.102, opacity: 1)
     /// 设备卡片底：更近黑（约 #141414）。
-    private let cardFill = Color(nsColor: NSColor(calibratedWhite: 0.08, alpha: 1))
+    private let cardFill = Color(.sRGB, red: 0.08, green: 0.08, blue: 0.08, opacity: 1)
     private let cardBorder = Color.white.opacity(0.07)
+    /// AirPods 三格小卡底（约 #0F0F0F）。
+    private let budCellFill = Color(.sRGB, red: 0.06, green: 0.06, blue: 0.06, opacity: 1)
 
     /// 浮层 Panel 上系统 ScrollView 滚不动；不铺灰底，透出灵动岛黑色。
     private let maxRows = NotchGeometry.batteryDeckMaxRows
@@ -85,9 +86,9 @@ private struct BatteryDeckCanvas: View {
     private let cardSpacing = ControlDeckContentSize.batteryCardSpacing
     private let gridPadTop = ControlDeckContentSize.batteryGridPadTop
     private let gridPadBottom = ControlDeckContentSize.batteryGridPadBottom
-    /// 预览略矮；真岛与画布高度令牌一致，避免 GeometryReader 多吃一截底空。
+    /// 与画布高度令牌一致，避免 GeometryReader 多吃一截底空。
     private var preferredCardHeight: CGFloat {
-        isPreview ? 112 : ControlDeckContentSize.batteryCardHeight
+        ControlDeckContentSize.batteryCardHeight
     }
 
     var body: some View {
@@ -108,7 +109,7 @@ private struct BatteryDeckCanvas: View {
                     let cardH: CGFloat = {
                         if visualRowCount <= 1 {
                             // 一行：贴近首选高度，勿把卡片拉成半屏。
-                            return min(preferredCardHeight, max(isPreview ? 96 : 108, fitted))
+                            return min(preferredCardHeight, max(108, fitted))
                         }
                         return min(128, max(preferredCardHeight, fitted))
                     }()
@@ -140,13 +141,15 @@ private struct BatteryDeckCanvas: View {
                             }
                         }
                     }
-                    .padding(.horizontal, isPreview ? 10 : 0)
+                    // 左右边距只走岛壳 IslandChrome；此处勿再加预览专用 padding，否则与真岛不一致。
+                    .padding(.horizontal, 0)
                     .padding(.top, gridPadTop)
                     .padding(.bottom, gridPadBottom)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
 
                     Group {
                         if isPreview {
+                            // 设置样张不套 ScrollView，避免库卡滚动时拖累合成；布局与真岛相同。
                             grid
                         } else {
                             AlwaysVisibleScrollView(viewportFill: nil) {
@@ -212,6 +215,7 @@ private struct BatteryDeckCanvas: View {
         let fill = low ? accentRed.opacity(0.14) : cardFill
 
         // 岛窗首击常需 makeKey；用 Button 比 onTapGesture 更稳（见 IslandWindow）。
+        // 预览禁止 `.disabled`：系统会整卡降透明度，设置样张比真岛暗一截。
         return Button {
             guard !isPreview else { return }
             BatterySession.shared.handlePeripheralCardTap(deviceID: device.id)
@@ -241,7 +245,7 @@ private struct BatteryDeckCanvas: View {
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
-        .disabled(isPreview)
+        .allowsHitTesting(!isPreview)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
             device.percent.map { "\(device.name), \($0)%" } ?? "\(device.name), \(L10n.Battery.statusUnknownBattery)"
@@ -437,7 +441,7 @@ private struct BatteryDeckCanvas: View {
         .padding(.horizontal, 4)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(nsColor: NSColor(calibratedWhite: 0.06, alpha: 1)))
+                .fill(budCellFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)

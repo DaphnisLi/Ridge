@@ -20,6 +20,12 @@ enum IslandChrome {
         max(16, notchHeight + 6)
     }
 
+    /// 设置预览用：真岛顶距含刘海盲区，贴顶时被硬件挡住；预览无刘海，若照搬会留下大块空黑、整体发暗。
+    /// 只保留「刘海下沿 → 内容」的可见间隙，左右/底与卡片样式仍与真岛一致。
+    static func previewExpandedVisibleTopInset(notchHeight: CGFloat = 32) -> CGFloat {
+        max(contentBottom, expandedTopInset(notchHeight: notchHeight) - notchHeight)
+    }
+
     /// 瞬时通知顶距（无标题行，略抬高整块内容）。
     static func noticeTopInset(notchHeight: CGFloat) -> CGFloat {
         max(expandedTopInset(notchHeight: notchHeight), (notchHeight * 0.5 + 4) * 2)

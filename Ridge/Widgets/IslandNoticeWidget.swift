@@ -308,9 +308,9 @@ struct PeripheralBatteryNoticeCard: View {
     @Environment(\.islandNotchWidth) private var envNotchWidth
     @Environment(\.islandNotchHeight) private var envNotchHeight
 
-    private let accentRed = Color(red: 0.86, green: 0.22, blue: 0.24)
-    private let accentGreen = Color(red: 0.18, green: 0.62, blue: 0.34)
-    private let accentBlue = Color(red: 0.20, green: 0.48, blue: 0.96)
+    private let accentRed = Color(.sRGB, red: 0.86, green: 0.22, blue: 0.24, opacity: 1)
+    private let accentGreen = Color(.sRGB, red: 0.18, green: 0.62, blue: 0.34, opacity: 1)
+    private let accentBlue = Color(.sRGB, red: 0.20, green: 0.48, blue: 0.96, opacity: 1)
 
     private var notchWidth: CGFloat {
         compact ? previewNotchWidth : max(envNotchWidth, 110)

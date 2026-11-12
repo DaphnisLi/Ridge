@@ -117,6 +117,7 @@
 		96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */; };
 		97173776F6C7F2BD8E1912DB /* AIUsageIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D45B8C898B0311F98C15DF30 /* AIUsageIslandViews.swift */; };
 		984A23B74427D2293DA3A8A8 /* WorldClockSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */; };
+		986C93770AB267A6396D9CEF /* BatteryDeckIslandPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ECE154103BEFEDA8D48A4DD /* BatteryDeckIslandPreview.swift */; };
 		98C8EA076814CA437DFDD3DC /* SettingsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6887EE1DEDE357B154C52B12 /* SettingsUI.swift */; };
 		991EEB9BF00F942F3D5BE346 /* ShelfSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F3C289C20C8FE9C5C25ED /* ShelfSettings.swift */; };
 		9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1266F73AC4146FF0C01385 /* RidgeApp.swift */; };
@@ -287,6 +288,7 @@
 		6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidget.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLibraryFamily.swift; sourceTree = "<group>"; };
+		6ECE154103BEFEDA8D48A4DD /* BatteryDeckIslandPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryDeckIslandPreview.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
 		713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSession.swift; sourceTree = "<group>"; };
 		71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCatalog.swift; sourceTree = "<group>"; };
@@ -427,6 +429,7 @@
 				558B9A44A2735B1372BD91DC /* BatteryAlertOptionsCard.swift */,
 				219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */,
 				A89C6CF2F1E33BD5FAE10DE2 /* BatteryCoreBluetoothMonitor.swift */,
+				6ECE154103BEFEDA8D48A4DD /* BatteryDeckIslandPreview.swift */,
 				11ACC1E6A8FDF457FF84CD5E /* BatteryDeckView.swift */,
 				8B37885E316757E08B49442F /* BatteryHIDProbe.swift */,
 				D54B42B1B8CE60A1B9B28EAC /* BatteryListeningModeBridge.h */,
@@ -907,6 +910,7 @@
 				37F9D7A65AF14899BADE4DB4 /* BatteryAlertOptionsCard.swift in Sources */,
 				3ED590A3F12B0419A63D83EF /* BatteryBluetoothProbe.swift in Sources */,
 				5C9DB2E08020853AE2F64B7F /* BatteryCoreBluetoothMonitor.swift in Sources */,
+				986C93770AB267A6396D9CEF /* BatteryDeckIslandPreview.swift in Sources */,
 				CCB033412341708A8F3387B5 /* BatteryDeckView.swift in Sources */,
 				1A9E3C68653272B3A87E5B74 /* BatteryHIDProbe.swift in Sources */,
 				C3616D999C1E12C1F7D29C9C /* BatteryListeningModeBridge.m in Sources */,

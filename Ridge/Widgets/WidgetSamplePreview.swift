@@ -20,6 +20,8 @@ struct SettingsIslandStageOption: Identifiable, Hashable {
     var minStageHeight: CGFloat = 148
     /// 传给 `WidgetIslandPreviewShell`：紧凑样张去掉重阴影。
     var compactShell: Bool = false
+    /// 内容已自绘不透明岛底（电量等），壳层不再叠 `IslandOpaqueFillView`。
+    var contentProvidesOpaqueShell: Bool = false
 }
 
 /// 设置页统一岛预览舞台：灰底仿真台 + 黑岛；多形态时显示选择题，仅一种时隐藏。
@@ -76,7 +78,8 @@ struct SettingsIslandStage<Content: View>: View {
             compact: option.compactShell,
             bottomRadius: option.bottomRadius,
             outlineStyle: option.outlineStyle,
-            hugsContent: option.hugsContent
+            hugsContent: option.hugsContent,
+            contentProvidesOpaqueShell: option.contentProvidesOpaqueShell
         ) {
             content(option)
         }
@@ -134,6 +137,9 @@ extension SettingsIslandStage {
         title: String? = nil,
         compact: Bool = false,
         maxIslandWidth: CGFloat? = nil,
+        hugsContent: Bool = false,
+        minStageHeight: CGFloat? = nil,
+        contentProvidesOpaqueShell: Bool = false,
         @ViewBuilder content: @escaping () -> Content
     ) {
         let option = SettingsIslandStageOption(
@@ -143,10 +149,11 @@ extension SettingsIslandStage {
             symbol: "",
             tint: .clear,
             maxIslandWidth: maxIslandWidth,
-            hugsContent: false,
+            hugsContent: hugsContent,
             bottomRadius: compact ? 16 : 26,
-            minStageHeight: compact ? 120 : 148,
-            compactShell: compact
+            minStageHeight: minStageHeight ?? (compact ? 120 : 148),
+            compactShell: compact,
+            contentProvidesOpaqueShell: contentProvidesOpaqueShell
         )
         self.title = title
         self.options = [option]
@@ -162,27 +169,39 @@ struct SettingsIslandPreviewCard: View {
     var title: String? = nil
 
     var body: some View {
-        SettingsIslandStage(title: title, compact: compact) {
+        SettingsIslandStage(
+            title: title,
+            compact: compact,
+            hugsContent: WidgetSamplePreview.hugsIslandContent(for: widgetID),
+            minStageHeight: compact ? 120 : 168,
+            contentProvidesOpaqueShell: WidgetSamplePreview.contentProvidesOpaqueShell(for: widgetID)
+        ) {
             WidgetSamplePreview.content(for: widgetID, compact: compact)
         }
     }
 }
 
 /// 设置页岛预览壳：上直角、下圆角。新预览请调 `WidgetSamplePreview.island` / `SettingsIslandStage`。
+/// 底色用主题 `palette.fill`（经典黑 = sRGB 纯黑）。
+/// 设置窗是不透明的：若用真岛 `IslandOpaqueFillView`+device 黑，会被抬成炭灰，和「正在播放」等预览对不齐。
 struct WidgetIslandPreviewShell<Content: View>: View {
+    @ObservedObject private var settings = IslandSettings.shared
     var compact: Bool = false
     var bottomRadius: CGFloat? = nil
     var outlineStyle: IslandOutlineStyle = .panel
     /// `true` 时黑岛随内容固有宽度，不横向拉满。
     var hugsContent: Bool = false
+    /// 内容已自带岛底与外形（如 `BatteryDeckIslandPreview`），壳层不再叠填充。
+    var contentProvidesOpaqueShell: Bool = false
     @ViewBuilder var content: () -> Content
 
     private var radius: CGFloat {
-        bottomRadius ?? (compact ? 16 : 26)
+        bottomRadius ?? (compact ? 16 : CGFloat(settings.bottomCornerRadius))
     }
 
     var body: some View {
         let shape = IslandOutlineShape(style: outlineStyle, bottomRadius: radius)
+        let fill = settings.theme.palette.fill
         // 库卡 compact：去掉阴影，滚动时少做一层离屏模糊合成。
         Group {
             if hugsContent {
@@ -193,20 +212,25 @@ struct WidgetIslandPreviewShell<Content: View>: View {
                     .frame(maxWidth: .infinity)
             }
         }
-        .background(
-            shape
-                // 与真岛不透明漆黑一致；半透明黑在库卡白底上会发灰（短 tip 尤甚）。
-                .fill(Color.black)
-                .overlay(
-                    shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
-                )
-                .shadow(
-                    color: compact ? .clear : .black.opacity(0.28),
-                    radius: compact ? 0 : 18,
-                    y: compact ? 0 : 8
-                )
-        )
+        .environment(\.islandPalette, settings.theme.palette)
+        .background {
+            if !contentProvidesOpaqueShell {
+                shape.fill(fill)
+            }
+        }
         .clipShape(shape)
+        .overlay {
+            if !contentProvidesOpaqueShell {
+                shape.stroke(Color.white.opacity(0.10), lineWidth: 1)
+            }
+        }
+        .shadow(
+            color: compact ? .clear : .black.opacity(0.28),
+            radius: compact ? 0 : 18,
+            y: compact ? 0 : 8
+        )
+        // 真岛 window/hosting 强制 darkAqua；设置窗浅色下锁深色，白字与卡片灰底才与真岛一致。
+        .preferredColorScheme(.dark)
     }
 }
 
@@ -220,17 +244,23 @@ enum WidgetSamplePreview {
         WidgetIslandPreviewShell(
             compact: compact,
             outlineStyle: outlineStyle(for: id),
-            hugsContent: hugsIslandContent(for: id)
+            hugsContent: hugsIslandContent(for: id),
+            contentProvidesOpaqueShell: contentProvidesOpaqueShell(for: id)
         ) {
             content(for: id, compact: compact)
         }
     }
 
+    /// 电量等预览自带不透明岛底，避免壳层再叠一层发暗。
+    static func contentProvidesOpaqueShell(for id: WidgetID) -> Bool {
+        id == "system.controlDeck.battery"
+    }
+
     /// 库卡 / 详情预览：一律上直角下圆角（与真岛一致）。
     private static func outlineStyle(for _: WidgetID) -> IslandOutlineStyle { .panel }
 
-    /// 窄内容（股票两卡 / 瞬时引导等）贴合固有宽，避免黑岛被库卡舞台横向拉满。
-    private static func hugsIslandContent(for id: WidgetID) -> Bool {
+    /// 窄内容（股票两卡 / 电量少台 / 瞬时引导等）贴合固有宽，避免黑岛被舞台横向拉满发黑空。
+    static func hugsIslandContent(for id: WidgetID) -> Bool {
         switch id {
         case "builtin.stocks",
              "builtin.colorPick",
@@ -243,7 +273,8 @@ enum WidgetSamplePreview {
              "builtin.peripheralTip.low",
              "builtin.peripheralTip.full",
              "builtin.peripheralTip.connect",
-             "builtin.copiedNotice":
+             "builtin.copiedNotice",
+             "system.controlDeck.battery":
             return true
         default:
             return false
@@ -399,18 +430,16 @@ enum WidgetSamplePreview {
             .fixedSize(horizontal: true, vertical: true)
     }
 
-    /// 电量样张内容高（不含外壳 padding）。单行 2 台；禁止再用双行 210。
+    /// 电量样张内容画布高（不含 IslandChrome）。单行 2 台。
     static func batterySampleContentHeight(compact: Bool) -> CGFloat {
-        compact ? 128 : 136
+        _ = compact
+        return ControlDeckContentSize.batteryContentCanvasHeight(deviceCount: 2)
     }
 
+    /// 真岛同款：`BatteryDeckIslandPreview`（不透明底 + chrome + 画布）。
     private static func batterySample(compact: Bool) -> some View {
-        // 样张固定 2 台一行；高度贴合单行卡，勿按双行占位留下大块黑底空档。
-        BatteryDeckView(previewDevices: BatteryDeckView.sampleDevices)
-            .frame(height: batterySampleContentHeight(compact: compact))
-            .padding(.horizontal, compact ? 6 : 0)
-            .padding(.vertical, compact ? 8 : 12)
-            .fixedSize(horizontal: false, vertical: true)
+        _ = compact
+        return BatteryDeckIslandPreview()
     }
 
     private static func volumeSample(compact: Bool) -> some View {

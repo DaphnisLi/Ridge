@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import Ridge
 
@@ -432,14 +433,54 @@ final class RegressionCatalogTests: XCTestCase {
         )
         let detailH = WidgetSamplePreview.batterySampleContentHeight(compact: false)
         let compactH = WidgetSamplePreview.batterySampleContentHeight(compact: true)
-        XCTAssertLessThan(
+        XCTAssertEqual(
             detailH,
-            NotchGeometry.controlDeckBatteryDualRowMinHeight,
-            "详情预览内容高不得按双行 300 占位（曾用 210 导致底下大块黑空）"
+            ControlDeckContentSize.batteryContentCanvasHeight(deviceCount: 2),
+            "详情预览画布须与真岛内容高一致"
         )
-        XCTAssertLessThan(compactH, detailH + 1)
-        XCTAssertGreaterThanOrEqual(detailH, 120)
-        XCTAssertLessThan(detailH, 180, "单行内容高应远低于旧双行预览 210")
+        XCTAssertEqual(compactH, detailH)
+        XCTAssertTrue(
+            WidgetSamplePreview.hugsIslandContent(for: "system.controlDeck.battery"),
+            "电量预览黑岛须 hugs"
+        )
+        XCTAssertTrue(
+            WidgetSamplePreview.contentProvidesOpaqueShell(for: "system.controlDeck.battery"),
+            "电量预览自带岛底（sRGB palette.fill），避免 device 黑在设置窗发灰"
+        )
+        // 经典黑预览底须为纯黑，与「正在播放」等库卡一致。
+        XCTAssertEqual(
+            IslandTheme.midnight.palette.fill,
+            Color(.sRGB, red: 0, green: 0, blue: 0, opacity: 1)
+        )
+        XCTAssertEqual(
+            ControlDeckContentSize.batteryPanelHeight(deviceCount: 2, notchHeight: 32),
+            IslandChrome.expandedTopInset(notchHeight: 32)
+                + detailH
+                + IslandChrome.contentBottom
+        )
+        XCTAssertLessThan(detailH, 140)
+    }
+
+    // MARK: - settings-preview-island-appearance（预览深色 + 可见顶距；禁 disabled 降透明度）
+
+    @MainActor
+    func test_settingsPreviewIslandAppearance_visibleTopInsetAndAbsoluteFill() {
+        // 设置预览无刘海遮挡：顶距只留可见间隙，勿照搬含盲区的 expandedTopInset。
+        let notch: CGFloat = 32
+        let visible = IslandChrome.previewExpandedVisibleTopInset(notchHeight: notch)
+        let full = IslandChrome.expandedTopInset(notchHeight: notch)
+        XCTAssertEqual(visible, max(IslandChrome.contentBottom, full - notch))
+        XCTAssertLessThan(visible, full, "预览顶距须短于真岛含盲区顶距，避免大块空黑发闷")
+        // 经典黑底保持 sRGB 纯黑（与真岛视觉对齐的设置窗路径）。
+        XCTAssertEqual(
+            IslandTheme.midnight.palette.fill,
+            Color(.sRGB, red: 0, green: 0, blue: 0, opacity: 1)
+        )
+        // 预览样张须走假数据路径；卡片交互用 allowsHitTesting，禁止 Button.disabled（会整卡降透明度）。
+        XCTAssertEqual(BatteryDeckView.sampleDevices.count, 2)
+        XCTAssertTrue(
+            WidgetSamplePreview.contentProvidesOpaqueShell(for: "system.controlDeck.battery")
+        )
     }
 
     // MARK: - volume adaptive height（控制台混音台）
