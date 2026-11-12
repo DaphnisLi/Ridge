@@ -42,13 +42,13 @@ struct CopiedNoticeWidgetConfigSection: View {
                     id: "copied",
                     title: L10n.CopiedNotice.widgetName,
                     badge: L10n.Shelf.previewStageCopiedBadge,
-                    symbol: "doc.on.clipboard",
+                    symbol: "clipboard",
                     tint: SettingsChrome.secondary,
-                    maxIslandWidth: 220,
+                    maxIslandWidth: 120,
                     hugsContent: true,
-                    bottomRadius: 18,
-                    outlineStyle: .panel,
-                    minStageHeight: 88,
+                    bottomRadius: IslandChrome.notchRightOrbDiameter / 2,
+                    outlineStyle: .circle,
+                    minStageHeight: 96,
                     compactShell: true
                 )
             ],

@@ -9479,7 +9479,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "复制成功时在灵动岛短暂提示"
+            "value": "复制成功时在刘海右侧显示圆形微岛"
           }
         }
       }
@@ -9545,7 +9545,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "复制成功短暂上岛"
+            "value": "复制成功时刘海右侧圆岛提示"
           }
         }
       }

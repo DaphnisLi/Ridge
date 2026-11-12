@@ -196,7 +196,10 @@ struct WidgetIslandPreviewShell<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
     private var radius: CGFloat {
-        bottomRadius ?? (compact ? 16 : CGFloat(settings.bottomCornerRadius))
+        if outlineStyle == .circle {
+            return bottomRadius ?? (IslandChrome.notchRightOrbDiameter / 2)
+        }
+        return bottomRadius ?? (compact ? 16 : CGFloat(settings.bottomCornerRadius))
     }
 
     var body: some View {
@@ -256,8 +259,10 @@ enum WidgetSamplePreview {
         id == "system.controlDeck.battery"
     }
 
-    /// 库卡 / 详情预览：一律上直角下圆角（与真岛一致）。
-    private static func outlineStyle(for _: WidgetID) -> IslandOutlineStyle { .panel }
+    /// 库卡 / 详情预览：默认上直角下圆角；「已复制」为刘海右侧正圆微岛。
+    private static func outlineStyle(for id: WidgetID) -> IslandOutlineStyle {
+        id == "builtin.copiedNotice" ? .circle : .panel
+    }
 
     /// 窄内容（股票两卡 / 电量少台 / 瞬时引导等）贴合固有宽，避免黑岛被舞台横向拉满发黑空。
     static func hugsIslandContent(for id: WidgetID) -> Bool {
@@ -416,10 +421,13 @@ enum WidgetSamplePreview {
     }
 
     private static func copiedNoticeSample(compact: Bool) -> some View {
-        ClipboardCopiedIslandView(compact: true)
-            .padding(.horizontal, IslandChrome.contentHorizontal)
-            .padding(.bottom, IslandChrome.shortTipBottom)
-            .frame(minHeight: compact ? 30 : 34)
+        // 刘海右侧 Ø32 圆岛终态样张；预览壳用 `.circle`，勿再叠 short tip 边距。
+        _ = compact
+        return ClipboardCopiedIslandView(compact: true, animationToken: "preview.copied")
+            .frame(
+                width: IslandChrome.notchRightOrbDiameter,
+                height: IslandChrome.notchRightOrbDiameter
+            )
     }
 
     private static func stocksSample(compact: Bool) -> some View {

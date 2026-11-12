@@ -86,12 +86,12 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
-    /// 取色 / 框选翼引导 →「已复制」短条：缩宽必须可应用，否则卡在翼高看不见提示。
+    /// 取色 / 框选翼引导 →「已复制」圆岛：缩宽必须可应用，否则卡在翼尺寸看不见提示。
     func test_shelfCopiedNoticeMiss_wingGuideToCopiedAllowsWidthShrink() {
         let notchW: CGFloat = 160
         let notchH: CGFloat = 32
         let wing = IslandChrome.preparedWingTipPanelSize(notchWidth: notchW, notchHeight: notchH)
-        let short = IslandChrome.preparedShortTipPanelSize(notchWidth: notchW, notchHeight: notchH)
+        let orb = IslandChrome.preparedNotchRightOrbPanelSize()
 
         XCTAssertTrue(IslandNoticePayload.colorPickTip.usesNotchWingChrome)
         XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
@@ -100,38 +100,53 @@ final class RegressionCatalogTests: XCTestCase {
             text: "已复制",
             symbol: "eyedropper"
         )
-        XCTAssertTrue(copied.usesShortBelowNotchChrome)
+        XCTAssertTrue(copied.usesNotchRightOrbChrome)
+        XCTAssertFalse(copied.usesShortBelowNotchChrome)
         XCTAssertFalse(copied.usesNotchWingChrome)
         // Cmd+C 后指针常不在岛上：须保持展开至自动收起，否则展开中途就被 hoverEnd 收掉。
         XCTAssertTrue(copied.keepsExpandedWithoutHover)
-        XCTAssertEqual(copied.autoDismissNanoseconds, 3_000_000_000)
+        // 入场约 0.9s + 定格 0.5s，勿再挂满 3s。
+        XCTAssertEqual(
+            copied.autoDismissNanoseconds,
+            IslandChrome.notchRightOrbAutoDismissNanoseconds
+        )
+        XCTAssertEqual(IslandChrome.notchRightOrbLingerNanoseconds, 500_000_000)
         XCTAssertTrue(copied.holdsWhileHovering)
 
-        // 短条须明显高于翼条，才能容纳 shortTip 顶距；否则文案被顶出。
+        XCTAssertEqual(orb.width, IslandChrome.notchRightOrbDiameter)
+        XCTAssertEqual(orb.height, IslandChrome.notchRightOrbDiameter)
         XCTAssertGreaterThan(
-            short.height,
-            IslandChrome.shortTipTopInset(notchHeight: notchH),
-            "短条高度须大于顶距，文案才有可视区"
+            IslandChrome.notchRightOrbCenterOffsetX(notchWidth: notchW),
+            notchW / 2,
+            "圆岛中心须在刘海右缘之外"
         )
         XCTAssertTrue(
             IslandExpandedPanelPolicy.shouldApplyMeasuredSize(
                 current: wing,
-                measured: short,
+                measured: orb,
                 isExpanded: true,
                 allowShrink: false
             ),
-            "翼→已复制：无 allowShrink 窗口也须放行（shelf-copied-notice-miss）"
+            "翼→已复制圆岛：无 allowShrink 窗口也须放行（shelf-copied-notice-miss）"
         )
     }
 
-    func test_shelfCopiedNoticeMiss_preparedShortTipTallerThanWingChrome() {
-        // 预备尺寸契约：present(copy) 先 force 到 short，再换皮。
-        let short = IslandChrome.preparedShortTipPanelSize(notchWidth: 160, notchHeight: 32)
+    func test_shelfCopiedNoticeMiss_preparedOrbSizeAndClamp() {
+        // 预备尺寸契约：present(copy) 先 force 到 Ø32，且 clamp 不得抬到刘海宽。
+        let orb = IslandChrome.preparedNotchRightOrbPanelSize()
         let wing = IslandChrome.preparedWingTipPanelSize(notchWidth: 160, notchHeight: 32)
-        XCTAssertGreaterThanOrEqual(short.height, wing.height)
-        XCTAssertLessThan(short.width, wing.width)
-        XCTAssertEqual(IslandChrome.shortTipContentHeight, 30)
+        XCTAssertTrue(IslandChrome.isNotchRightOrbPanelSize(orb))
+        XCTAssertLessThan(orb.width, wing.width)
+        XCTAssertEqual(IslandChrome.notchRightOrbGap, 2)
         XCTAssertEqual(IslandChrome.preparedWingWidth, 98)
+        let clamped = IslandPanelSizing.clamp(
+            orb,
+            notchWidth: 160,
+            notchHeight: 32,
+            maxWidth: 2000
+        )
+        XCTAssertEqual(clamped.width, IslandChrome.notchRightOrbDiameter)
+        XCTAssertEqual(clamped.height, IslandChrome.notchRightOrbDiameter)
     }
 
     func test_islandHoverRetention_contentScrollHoldsExpandWithinGrace() {
@@ -183,8 +198,9 @@ final class RegressionCatalogTests: XCTestCase {
         let wing = IslandChrome.insets(for: .notchWingTip, notchHeight: notchH)
         let shortTip = IslandChrome.insets(for: .shortBelowNotchTip, notchHeight: notchH)
         let notice = IslandChrome.insets(for: .notice, notchHeight: notchH)
+        let orb = IslandChrome.insets(for: .notchRightOrb, notchHeight: notchH)
 
-        // 所有表面左右边距同一固定令牌。
+        // 展开 / 翼 / 短 tip / 普通通知：左右边距同一固定令牌。
         for insets in [expanded, wing, shortTip, notice] {
             XCTAssertEqual(insets.horizontal, IslandChrome.contentHorizontal)
         }
@@ -197,10 +213,14 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(shortTip.bottom, IslandChrome.shortTipBottom)
         XCTAssertNotEqual(wing.bottom, IslandChrome.contentBottom)
         XCTAssertNotEqual(shortTip.bottom, IslandChrome.contentBottom)
+        // 「已复制」圆岛：内容自撑 Ø32，壳层零 inset。
+        XCTAssertEqual(orb.top, 0)
+        XCTAssertEqual(orb.bottom, 0)
+        XCTAssertEqual(orb.horizontal, 0)
     }
 
-    func test_islandChrome_meetingUsesNotchWing_othersShortCapsule() {
-        // 会议 / AI / 久坐 / 取色 / 框选：左右翼贴刘海；「已复制」仍为矮胶囊短条。
+    func test_islandChrome_meetingUsesNotchWing_copiedUsesRightOrb() {
+        // 会议 / AI / 久坐 / 取色 / 框选：左右翼贴刘海；「已复制」为刘海右侧圆岛。
         let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
         let aiUsage = IslandNoticePayload.aiUsageAlert(
             id: "aiUsage.test",
@@ -228,7 +248,8 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(IslandNoticePayload.ocrSelectTip.usesNotchWingChrome)
         XCTAssertFalse(IslandNoticePayload.ocrSelectTip.usesShortBelowNotchChrome)
         XCTAssertFalse(copied.usesNotchWingChrome)
-        XCTAssertTrue(copied.usesShortBelowNotchChrome)
+        XCTAssertFalse(copied.usesShortBelowNotchChrome)
+        XCTAssertTrue(copied.usesNotchRightOrbChrome)
     }
 
     /// AI 额度右翼重置文案三档。

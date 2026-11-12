@@ -45,7 +45,8 @@ alwaysApply: true
 
 - **禁止**再写外圈 `.padding(.vertical/…)` / `.padding(.horizontal/…)` 去「离岛边」
 - **禁止**把 HTML 稿的 `px-4 py-2` 原样叠到 SwiftUI 根上（稿面 padding ≠ 岛壳边距）
-- 卡片内部控件间距可以用；根视图只排内容，由 chrome / `usesNotchWingChrome` / `usesShortBelowNotchChrome` 定外距
+- 卡片内部控件间距可以用；根视图只排内容，由 chrome / `usesNotchWingChrome` / `usesNotchRightOrbChrome` / `usesShortBelowNotchChrome` 定外距
+- 「已复制」（`copy.*`）：刘海右侧 Ø32 圆形微岛（方案 02 流光向心）；`usesNotchRightOrbChrome`；预备 `prepareNotchRightOrbLayout`；禁再走下方短胶囊
 
 ## 禁止
 

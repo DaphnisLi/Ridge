@@ -43,19 +43,47 @@ enum IslandChrome {
     /// 短提示底距：仍明显小于展开页默认 contentBottom（14）。
     static let shortTipBottom: CGFloat = 6
 
-    /// 「已复制」等内容区估算高度（不含 chrome 顶/底）；与 `prepareShortNoticeLayout` 一致。
+    /// 「已复制」等内容区估算高度（不含 chrome 顶/底）；遗留短条契约仍保留给测试 / 旧路径。
     static let shortTipContentHeight: CGFloat = 30
+
+    /// 「已复制」圆形微岛直径（刘海右侧 Ø32）。
+    static let notchRightOrbDiameter: CGFloat = 32
+    /// 微岛相对刘海右缘的空隙（略贴刘海，比稿面 8px 更靠左）。
+    static let notchRightOrbGap: CGFloat = 2
+    /// 方案 02 入场时长（流光→坍缩→板夹→绿勾），约 0.9s。
+    static let notchRightOrbEntranceNanoseconds: UInt64 = 900_000_000
+    /// 入场结束后定格再消失的时长。
+    static let notchRightOrbLingerNanoseconds: UInt64 = 500_000_000
+    /// 「已复制」圆岛自动收起总时长 = 入场 + 定格。
+    static var notchRightOrbAutoDismissNanoseconds: UInt64 {
+        notchRightOrbEntranceNanoseconds + notchRightOrbLingerNanoseconds
+    }
 
     /// 翼 tip 单侧翼宽（与 `prepareMeetingWingNoticeLayout` 一致）。
     static let preparedWingWidth: CGFloat = 98
 
-    /// 短 tip 上岛前强制面板尺寸（`shelf-copied-notice-miss`：须先于换皮写入）。
+    /// 短 tip 上岛前强制面板尺寸（遗留；「已复制」已改圆岛）。
     static func preparedShortTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
         let height = shortTipTopInset(notchHeight: notchHeight)
             + shortTipContentHeight
             + shortTipBottom
         let width = max(notchWidth + 96, 260)
         return CGSize(width: width, height: height)
+    }
+
+    /// 「已复制」圆岛上岛前强制尺寸（Ø32）；须先于换皮写入。
+    static func preparedNotchRightOrbPanelSize() -> CGSize {
+        CGSize(width: notchRightOrbDiameter, height: notchRightOrbDiameter)
+    }
+
+    /// 相对刘海中心的水平偏移：把圆岛中心放到「刘海右缘 + gap + 半径」。
+    static func notchRightOrbCenterOffsetX(notchWidth: CGFloat) -> CGFloat {
+        notchWidth / 2 + notchRightOrbGap + notchRightOrbDiameter / 2
+    }
+
+    static func isNotchRightOrbPanelSize(_ size: CGSize, slop: CGFloat = 1) -> Bool {
+        abs(size.width - notchRightOrbDiameter) <= slop
+            && abs(size.height - notchRightOrbDiameter) <= slop
     }
 
     /// 翼 tip 上岛前强制面板尺寸。
@@ -75,8 +103,10 @@ enum IslandChrome {
         case expanded
         /// 遗留左右翼 tip inset（业务已改胶囊，勿再选用）。
         case notchWingTip
-        /// 刘海正下方矮胶囊（`usesShortBelowNotchChrome`）。
+        /// 刘海正下方矮胶囊（遗留短 tip）。
         case shortBelowNotchTip
+        /// 刘海右侧圆形微岛（「已复制」方案 02）；内容自撑 Ø32，无外圈 inset。
+        case notchRightOrb
         /// 其它瞬时通知（普通通知顶距 + 默认底距；外形仍为胶囊）。
         case notice
     }
@@ -102,6 +132,8 @@ enum IslandChrome {
                 bottom: shortTipBottom,
                 horizontal: contentHorizontal
             )
+        case .notchRightOrb:
+            return Insets(top: 0, bottom: 0, horizontal: 0)
         case .notice:
             return Insets(
                 top: noticeTopInset(notchHeight: notchHeight),
@@ -143,12 +175,20 @@ extension View {
 
 enum IslandPanelSizing {
     /// 将内容测得尺寸钳到刘海下限与屏宽上限。
+    /// 「已复制」圆岛 Ø32 不得抬到刘海宽高，否则贴右锚点错位。
     static func clamp(
         _ size: CGSize,
         notchWidth: CGFloat,
         notchHeight: CGFloat,
         maxWidth: CGFloat
     ) -> CGSize {
+        if IslandChrome.isNotchRightOrbPanelSize(size) {
+            let d = IslandChrome.notchRightOrbDiameter
+            return CGSize(
+                width: NotchGeometry.pixelAlign(d),
+                height: NotchGeometry.pixelAlign(d)
+            )
+        }
         let minW = max(notchWidth, 1)
         let minH = max(notchHeight, 1)
         let width = min(max(size.width, minW), max(maxWidth, minW))

@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// 岛外壳轮廓：默认上直角、下圆角（贴顶融刘海）；`capsule` 仅保留给特殊样张。
+/// 岛外壳轮廓：默认上直角、下圆角（贴顶融刘海）；`capsule` 仅保留给特殊样张；`circle` 给刘海右侧微岛。
 enum IslandOutlineStyle: String, Equatable {
     /// 贴顶直角，底边圆角（真岛 / tip / 常驻默认）。
     case panel
     /// 四角等弧度（非默认；产品现要求 tip 也走 panel）。
     case capsule
+    /// 正圆（「已复制」刘海右侧 Ø32 微岛）。
+    case circle
 }
 
 /// 上直角、下圆角（常驻面板）。
@@ -116,6 +118,19 @@ struct IslandCapsuleShape: Shape {
     }
 }
 
+/// 正圆路径（微岛）；半径取短边一半，居中于 `rect`。
+struct IslandCircleShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let side = min(rect.width, rect.height)
+        guard side > 0.5 else { return Path() }
+        let origin = CGPoint(
+            x: rect.midX - side / 2,
+            y: rect.midY - side / 2
+        )
+        return Path(ellipseIn: CGRect(origin: origin, size: CGSize(width: side, height: side)))
+    }
+}
+
 /// 按 `IslandOutlineStyle` 选择面板或四角等弧路径（SwiftUI clip / AppKit fill 共用）。
 struct IslandOutlineShape: Shape {
     var style: IslandOutlineStyle
@@ -127,6 +142,8 @@ struct IslandOutlineShape: Shape {
             return IslandPanelShape(bottomRadius: bottomRadius).path(in: rect)
         case .capsule:
             return IslandCapsuleShape(cornerRadius: bottomRadius).path(in: rect)
+        case .circle:
+            return IslandCircleShape().path(in: rect)
         }
     }
 }

@@ -224,7 +224,8 @@ private struct IslandNoticeCardView: View {
             PeripheralBatteryNoticeCard(notice: notice, style: .connect)
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
-                ClipboardCopiedIslandView(detail: text)
+                // token=完整 id，每次复制重播入场；板夹常显避免换页重建后只剩黑圆。
+                ClipboardCopiedIslandView(detail: text, animationToken: id)
             } else {
                 ClipboardCaptureHintNoticeCard(text: text, symbol: symbol)
             }

@@ -122,7 +122,7 @@ final class ShelfCaptureTools {
             }
         }
 
-        // 先结束穿透态；再投「已复制」。present 内会先预备短条尺寸再换皮，避免宽翼卡死。
+        // 先结束穿透态；再投「已复制」。present 内会先预备圆岛尺寸再换皮，避免宽翼卡死。
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
             IslandController.shared?.endExternalPointerTool(reason: "shelfColorPickDone")
             if let hex = copiedHex {
@@ -359,7 +359,7 @@ final class ShelfCaptureTools {
 
     /// 取色 / OCR 成功后的「已复制」短提示；须在 `endExternalPointerTool` 之后调用。
     /// 若引导 tip 仍在，直接替换（不先 dismiss 收岛）。
-    /// 翼引导→短条依赖 `prepareShortNoticeLayout` + 误缩守卫翼→短放行（shelf-copied-notice-miss）。
+    /// 翼引导→圆岛依赖 `prepareNotchRightOrbLayout` + 误缩守卫翼→圆岛放行（shelf-copied-notice-miss）。
     private static func presentCopiedSuccess(detail: String, category: String, symbol: String) {
         guard ShelfSettings.shared.showCopiedNotice else {
             IslandNoticeCenter.shared.dismiss(id: IslandNoticePayload.colorPickTipID)

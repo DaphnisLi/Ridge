@@ -160,8 +160,13 @@ struct NotchGeometry: Equatable {
     }
 
     /// 按实测面板尺寸贴顶居中（悬停热区 / 可点区与内容撑开一致）。
-    func panelFrameOnScreen(size: CGSize) -> CGRect {
-        centeredTopFrame(size: size)
+    /// - Parameter horizontalOffset: 相对刘海中心的水平偏移（「已复制」圆岛贴右用正值）。
+    func panelFrameOnScreen(size: CGSize, horizontalOffset: CGFloat = 0) -> CGRect {
+        var frame = centeredTopFrame(size: size)
+        if abs(horizontalOffset) > 0.5 {
+            frame.origin.x += horizontalOffset
+        }
+        return frame
     }
 
     /// 窗口在屏幕上的矩形（最大宽度占位）。

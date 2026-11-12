@@ -220,7 +220,7 @@ enum L10n {
             case "builtin.peripheralTip":
                 return tr("widgets.footer.peripheral_tip", "低电 / 满电 / 接入瞬时提示")
             case "builtin.copiedNotice":
-                return tr("widgets.footer.copied_notice", "复制成功短暂上岛")
+                return tr("widgets.footer.copied_notice", "复制成功时刘海右侧圆岛提示")
             default:
                 return tr("widgets.footer.generic", "点击进入配置")
             }
@@ -2003,7 +2003,7 @@ enum L10n {
     enum CopiedNotice {
         static var widgetName: String { tr("copied_notice.widget.name", "已复制") }
         static var widgetSummary: String {
-            tr("copied_notice.widget.summary", "复制成功时短暂上岛提示")
+            tr("copied_notice.widget.summary", "复制成功时在刘海右侧显示圆形微岛")
         }
         static var hapticTitle: String {
             tr("copied_notice.haptic.title", "触感反馈")

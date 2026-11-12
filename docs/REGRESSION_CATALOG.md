@@ -82,10 +82,10 @@
 - **recurring:** true  
 - **occurrences:** 6（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；2026-11-11 货架开关；**2026-11-11 展开未完即消失：`keepsExpandedWithoutHover` 未开，hoverEnd 秒收**）  
 - **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**  
-- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；`prepareShortNoticeLayout`；翼→短放行；**`copy.*` 保持展开至约 3s 自动收起**  
-- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.keepsExpandedWithoutHover`、`IslandExpandedPanelPolicy`  
-- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关、copy 须 keepExpanded + 3s）、`IslandExpandedPanelPolicyTests`
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**  
+- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至约 3s 自动收起**；clamp 不得把 Ø32 抬到刘海宽  
+- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.usesNotchRightOrbChrome`、`IslandExpandedPanelPolicy`、`ClipboardCopiedIslandView`  
+- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关、copy 须 keepExpanded + 圆岛尺寸）、`IslandExpandedPanelPolicyTests`
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -228,6 +228,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-12 | 「已复制」改刘海右侧 Ø32 圆岛（方案 02 流光向心）；`usesNotchRightOrbChrome` + 预备布局 |
 | 2026-11-12 | 电量预览暗淡：根因是样张 `Button.disabled` 降透明度 → 改 `allowsHitTesting`；catalog recurring |
 | 2026-11-12 | 电量预览：锁深色 + sRGB 卡片色；去掉样张分页角点；顶距用可见 inset；catalog `settings-preview-island-appearance` |
 | 2026-11-11 | 电量岛宽高随台数自适应（最多 3×2，超出纵滑）；两台不再留右侧黑空 |

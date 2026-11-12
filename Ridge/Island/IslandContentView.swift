@@ -74,10 +74,20 @@ struct IslandContentView: View {
         return compactSize
     }
 
-    /// 瞬时提示与常驻面板同一外形：左上/右上直角，下圆角贴刘海。
-    private var outlineStyle: IslandOutlineStyle { .panel }
+    /// 「已复制」等：刘海右侧正圆微岛；其余贴顶直角下圆角。
+    private var outlineStyle: IslandOutlineStyle {
+        usesNotchRightOrb ? .circle : .panel
+    }
+
+    private var usesNotchRightOrb: Bool {
+        runtime.isTransientNoticePage
+            && (noticeCenter.current?.usesNotchRightOrbChrome == true)
+    }
 
     private var appliedBottomRadius: CGFloat {
+        if usesNotchRightOrb {
+            return IslandChrome.notchRightOrbDiameter / 2
+        }
         // 控制台混音台稿面底部约 26pt 圆角。
         let preferred = runtime.isControlDeckPage
             ? max(CGFloat(settings.bottomCornerRadius), 26)
@@ -89,6 +99,12 @@ struct IslandContentView: View {
         )
     }
 
+    /// 圆岛相对刘海中心右偏（与 `IslandController` 可点区一致）。
+    private var panelHorizontalOffset: CGFloat {
+        guard usesNotchRightOrb else { return 0 }
+        return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)
+    }
+
     private var palette: IslandPalette { settings.theme.palette }
 
     var body: some View {
@@ -96,12 +112,15 @@ struct IslandContentView: View {
         return ZStack(alignment: .top) {
             ZStack(alignment: .top) {
                 // AppKit device 色不透明层：比 SwiftUI Color 经透明窗合成更接近刘海漆黑。
-                IslandOpaqueFillView(
-                    bottomRadius: appliedBottomRadius,
-                    outlineStyle: outlineStyle,
-                    fill: settings.theme.nsFillColor
-                )
-                .frame(width: bodySize.width, height: bodySize.height)
+                // 圆岛改由内容自绘 SwiftUI 黑底——NSView fill 易盖住 Ø32 内的 SF Symbol。
+                if !usesNotchRightOrb {
+                    IslandOpaqueFillView(
+                        bottomRadius: appliedBottomRadius,
+                        outlineStyle: outlineStyle,
+                        fill: settings.theme.nsFillColor
+                    )
+                    .frame(width: bodySize.width, height: bodySize.height)
+                }
 
                 if shelfDropEnabled, viewModel.isExpanded, shelfDropSession.isActive {
                     // 拖入中：整岛切成暂存区 UI，松手 / 离开后恢复。
@@ -122,6 +141,8 @@ struct IslandContentView: View {
                     // 按内容固有尺寸布局，再上报给 ViewModel；勿先铺满面板。
                     .fixedSize(horizontal: true, vertical: true)
                     .reportIslandPanelSize()
+                    // 圆岛内容压过 AppKit OpaqueFill，避免只见黑底不见图标。
+                    .zIndex(usesNotchRightOrb ? 2 : 0)
                 }
             }
             // 面板框跟已测尺寸走；内容用 fixedSize 自撑，避免矮框 clip 把新页热区裁掉。
@@ -130,6 +151,8 @@ struct IslandContentView: View {
             .clipShape(shape)
             // 整块面板都要可命中，避免透明子区把点击漏给下层页面。
             .contentShape(shape)
+            // 圆岛：先裁圆再右偏，避免 clip 吃掉偏移后的可视区。
+            .offset(x: panelHorizontalOffset)
             // 货架开启时：整岛接收文件拖入（不限货架小栏）。
             .onDrop(of: [.fileURL], isTargeted: $shelfDropTargeted) { providers in
                 guard shelfDropEnabled else { return false }
@@ -279,9 +302,14 @@ private struct IslandBody: View {
             && (noticeCenter.current?.usesShortBelowNotchChrome == true)
     }
 
+    private var usesNotchRightOrbTip: Bool {
+        runtime.isTransientNoticePage
+            && (noticeCenter.current?.usesNotchRightOrbChrome == true)
+    }
+
     private var hidesPageDots: Bool {
         // 瞬时通知不参与翻页点（含 AI 额度等走普通通知顶距的条）。
-        usesNotchWingTip || usesShortBelowNotchTip || runtime.isTransientNoticePage
+        usesNotchWingTip || usesShortBelowNotchTip || usesNotchRightOrbTip || runtime.isTransientNoticePage
     }
 
     private var showsMediaCompactStandby: Bool {
@@ -362,6 +390,7 @@ private struct IslandBody: View {
     }
 
     private var chromeSurface: IslandChrome.Surface {
+        if usesNotchRightOrbTip { return .notchRightOrb }
         if usesNotchWingTip { return .notchWingTip }
         if usesShortBelowNotchTip { return .shortBelowNotchTip }
         if runtime.isTransientNoticePage { return .notice }

@@ -36,8 +36,8 @@ enum IslandExpandedPanelPolicy {
         let shrinkW = current.width - measured.width
         let shrinkH = current.height - measured.height
         if shrinkW > shrinkThreshold || shrinkH > shrinkThreshold {
-            // shelf-copied-notice-miss：宽翼引导→「已复制」短条必缩宽，高度常持平或增高。
-            // 若因缩宽整单拒绝，面板卡在翼高，短条顶距把文案顶出可视区。
+            // shelf-copied-notice-miss：宽翼引导→「已复制」圆岛/短条必缩宽。
+            // 若因缩宽整单拒绝，面板卡在翼尺寸，提示看不见。
             if isWingToShortTipResize(current: current, measured: measured, shrinkH: shrinkH, shrinkThreshold: shrinkThreshold) {
                 return true
             }
@@ -46,15 +46,17 @@ enum IslandExpandedPanelPolicy {
         return true
     }
 
-    /// 宽翼 tip → 矮短条：允许明显缩宽（高度未大幅变矮）。
+    /// 宽翼 tip → 瞬时 tip（圆岛 Ø32 / 遗留短条）：允许明显缩宽。
     static func isWingToShortTipResize(
         current: CGSize,
         measured: CGSize,
         shrinkH: CGFloat,
         shrinkThreshold: CGFloat = accidentalShrinkThreshold
     ) -> Bool {
-        // 高度仍在变矮（缩回刘海）→ 不走此放行。
+        // 高度仍在大幅变矮（缩回异常框）→ 不走此放行。
         guard shrinkH <= shrinkThreshold else { return false }
+        // 「已复制」圆岛固定 Ø32，相对翼 tip 可略矮。
+        if IslandChrome.isNotchRightOrbPanelSize(measured) { return true }
         // 新尺寸不比当前更矮（允许略浮点误差）→ 视为 tip 替换而非误缩。
         return measured.height + 1 >= current.height
     }

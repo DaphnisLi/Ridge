@@ -88,13 +88,17 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder, .meetingLead:
             return nil
-        case .clipboardCaptureHint,
-             .processEnded,
+        case .clipboardCaptureHint(let id, _, _):
+            // 「已复制」圆岛：入场约 0.9s + 定格 0.5s；其它剪贴板提示仍约 3s。
+            if id.hasPrefix("copy.") {
+                return IslandChrome.notchRightOrbAutoDismissNanoseconds
+            }
+            return 3_000_000_000
+        case .processEnded,
              .peripheralLowBattery,
              .peripheralFullCharge,
              .peripheralConnected,
              .aiUsageAlert:
-            // 与其它瞬时 tip 一致约 3s；「已复制」过短会在展开动画未完时就被 hoverEnd 收掉。
             return 3_000_000_000
         }
     }
@@ -121,9 +125,13 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 矮胶囊短条顶距（「已复制」等）。
-    /// 较高提示卡（RAM / 进程结束等）走普通通知顶距，岛壳仍为胶囊。
+    /// 矮胶囊短条顶距（遗留；「已复制」已改刘海右侧圆岛）。
     var usesShortBelowNotchChrome: Bool {
+        false
+    }
+
+    /// 刘海右侧 Ø32 圆形微岛（「已复制」方案 02）。
+    var usesNotchRightOrbChrome: Bool {
         switch self {
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")
@@ -194,7 +202,9 @@ final class IslandNoticeCenter: ObservableObject {
         //
         // 短胶囊必须在改 current 之前预备尺寸：SwiftUI 会立刻 Preference，
         // 若仍卡在上一通知尺寸会被误缩守卫拒绝，提示整段被顶出可视区。
-        if payload.usesShortBelowNotchChrome {
+        if payload.usesNotchRightOrbChrome {
+            IslandController.shared?.prepareNotchRightOrbLayout(reason: "present:\(payload.id)")
+        } else if payload.usesShortBelowNotchChrome {
             IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(payload.id)")
         } else if payload.usesNotchWingChrome {
             // 翼 tip 必须先抬到双翼宽度，否则右翼按钮落在 interactiveFrame 外，点击整窗穿透。
@@ -204,6 +214,7 @@ final class IslandNoticeCenter: ObservableObject {
         AppLog.warn("IslandNotice", "已投递瞬时通知", [
             "id": payload.id,
             "source": payload.sourceTag,
+            "orbTip": payload.usesNotchRightOrbChrome,
             "shortTip": payload.usesShortBelowNotchChrome,
             "wingTip": payload.usesNotchWingChrome,
             "rank": payload.preemptionRank

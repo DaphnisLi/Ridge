@@ -392,7 +392,7 @@ final class IslandController: NSObject {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
         if viewModel.isExpanded {
-            // 短提示替换（取色/OCR →「已复制」等）：必须允许缩宽，否则卡在上一尺寸，短条顶距把内容顶出可视区。
+            // 短提示替换（取色/OCR →「已复制」圆岛等）：必须允许缩宽，否则卡在上一翼尺寸看不见。
             if reason.contains("islandNotice") {
                 viewModel.allowPanelShrink(for: 0.8, reason: "expandAlready:\(reason)")
                 AppLog.warn("Island", "通知替换：已允许面板缩小", ["reason": reason])
@@ -543,6 +543,23 @@ final class IslandController: NSObject {
             "reason": reason,
             "w": Int(size.width),
             "h": Int(size.height)
+        ])
+    }
+
+    /// 「已复制」圆岛上岛前预备 Ø32：贴刘海右侧，先于换皮写入避免卡在翼/短条尺寸。
+    func prepareNotchRightOrbLayout(reason: String) {
+        let size = IslandChrome.preparedNotchRightOrbPanelSize()
+        viewModel.forcePanelSize(size, reason: reason)
+        if viewModel.isExpanded {
+            updateInteractiveFrame(expanded: true)
+        } else {
+            updateInteractiveFrame(expanded: true)
+        }
+        AppLog.warn("Island", "圆岛通知布局已预备", [
+            "reason": reason,
+            "w": Int(size.width),
+            "h": Int(size.height),
+            "offsetX": Int(IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth))
         ])
     }
 
@@ -1105,8 +1122,10 @@ final class IslandController: NSObject {
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight
         )
-        var pageBody = geometry.panelFrameOnScreen(size: viewModel.panelSize)
-        var retentionBody = geometry.panelFrameOnScreen(size: retentionSize)
+        let panelOffsetX = currentPanelHorizontalOffset(panel: viewModel.panelSize)
+        let retentionOffsetX = currentPanelHorizontalOffset(panel: retentionSize)
+        var pageBody = geometry.panelFrameOnScreen(size: viewModel.panelSize, horizontalOffset: panelOffsetX)
+        var retentionBody = geometry.panelFrameOnScreen(size: retentionSize, horizontalOffset: retentionOffsetX)
         if retentionSize != viewModel.panelSize, expanded {
             AppLog.warn("Island", "保展开改用稳定面板尺寸", [
                 "panelW": Int(viewModel.panelSize.width),
@@ -1553,9 +1572,10 @@ final class IslandController: NSObject {
         let isExpanded = expanded ?? viewModel.isExpanded
         // 展开 / 收起 / 待命一律以内容（或收起几何）写入的 panelSize 为准。
         let panel = viewModel.panelSize
-        // 面板在窗内水平居中、贴顶（AppKit 原点左下）。
+        let offsetX = currentPanelHorizontalOffset(panel: panel)
+        // 面板在窗内水平居中（圆岛再加右偏）、贴顶（AppKit 原点左下）。
         let interactive = CGRect(
-            x: (windowFrame.width - panel.width) / 2,
+            x: (windowFrame.width - panel.width) / 2 + offsetX,
             y: windowFrame.height - panel.height,
             width: panel.width,
             height: panel.height
@@ -1569,6 +1589,7 @@ final class IslandController: NSObject {
             "y": Int(interactive.origin.y),
             "w": Int(interactive.width),
             "h": Int(interactive.height),
+            "offsetX": Int(offsetX),
             "clickThrough": window.ignoresMouseEvents,
             "controlDeck": WidgetRuntime.shared.isControlDeckPage
         ]
@@ -1577,6 +1598,14 @@ final class IslandController: NSObject {
         } else {
             AppLog.debug("Overlay", "可点区域已更新", fields)
         }
+    }
+
+    /// 「已复制」圆岛相对刘海中心右偏；其它面板为 0。
+    private func currentPanelHorizontalOffset(panel: CGSize) -> CGFloat {
+        let orbActive = IslandNoticeCenter.shared.current?.usesNotchRightOrbChrome == true
+            || IslandChrome.isNotchRightOrbPanelSize(panel)
+        guard orbActive else { return 0 }
+        return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)
     }
 
     private func applyFullscreen(_ fullscreen: Bool) {
