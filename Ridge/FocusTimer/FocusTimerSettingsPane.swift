@@ -68,18 +68,16 @@ struct FocusTimerWidgetConfigSection: View {
             )
         ) { option in
             let tab = FocusTimerPreviewTab(rawValue: option.id) ?? .standby
-            if tab.isCompact {
-                // 待命黑岛与「下一场会议」同宽同高同 chrome。
-                WidgetSamplePreview.meetingMatchedCompactChrome(
-                    minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight
-                ) {
-                    FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: true)
-                }
-            } else {
-                FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: false)
-                    .padding(.horizontal, IslandChrome.contentHorizontal)
-                    .padding(.vertical, IslandChrome.contentBottom)
-            }
+            // 详情：待命/展开保持原先尺寸；库卡才用会议同款 290 chrome。
+            FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
+                .padding(
+                    .horizontal,
+                    tab.isCompact ? 8 : IslandChrome.contentHorizontal
+                )
+                .padding(
+                    .vertical,
+                    tab.isCompact ? 6 : IslandChrome.contentBottom
+                )
         }
     }
 
@@ -90,12 +88,13 @@ struct FocusTimerWidgetConfigSection: View {
             badge: tabBadge(tab),
             symbol: tabIcon(tab),
             tint: tabTint(tab),
-            maxIslandWidth: SettingsIslandPreviewWidth.tip,
-            hugsContent: tab.isCompact,
-            bottomRadius: tab.isCompact ? 18 : 24,
-            minStageHeight: tab.isCompact
-                ? SettingsIslandPreviewWidth.tipStageMinHeight
-                : 148,
+            // 详情宽与媒体统一；库卡另走 290。
+            maxIslandWidth: tab.isCompact
+                ? SettingsIslandPreviewWidth.standby
+                : SettingsIslandPreviewWidth.expanded,
+            hugsContent: false,
+            bottomRadius: tab.isCompact ? 20 : 24,
+            minStageHeight: tab.isCompact ? 120 : 148,
             compactShell: tab.isCompact
         )
     }

@@ -29,12 +29,10 @@ struct MediaWidgetConfigSection: View {
             Group {
                 switch tab {
                 case .playing:
-                    // 待命黑岛与「下一场会议」同宽同高同 chrome。
-                    WidgetSamplePreview.meetingMatchedCompactChrome(
-                        minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight
-                    ) {
-                        MediaCompactStandbyView.previewSample(animatedEqualizer: true)
-                    }
+                    // 详情待命：保持原先 380 舞台尺寸（库卡才用会议同款 290）。
+                    MediaCompactStandbyView.previewSample(animatedEqualizer: true)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
                 case .expanded:
                     MediaIslandCardView.previewSample(animatedEqualizer: false)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
@@ -52,14 +50,14 @@ struct MediaWidgetConfigSection: View {
             badge: tab.stageBadge,
             symbol: tab.symbol,
             tint: tab.tint,
-            maxIslandWidth: SettingsIslandPreviewWidth.tip,
-            // 待命 hugs（会议同款）；展开拉满 tip 上限后再缩到 290。
-            hugsContent: tab.isCompact,
-            bottomRadius: tab.isCompact ? 18 : 24,
+            // 详情宽与番茄统一；真岛仍用 NotchGeometry；库卡另走 290。
+            maxIslandWidth: tab.isCompact
+                ? SettingsIslandPreviewWidth.standby
+                : SettingsIslandPreviewWidth.expanded,
+            hugsContent: false,
+            bottomRadius: tab.isCompact ? 20 : 24,
             outlineStyle: .panel,
-            minStageHeight: tab.isCompact
-                ? SettingsIslandPreviewWidth.tipStageMinHeight
-                : 168,
+            minStageHeight: tab.isCompact ? 100 : 168,
             compactShell: tab.isCompact
         )
     }

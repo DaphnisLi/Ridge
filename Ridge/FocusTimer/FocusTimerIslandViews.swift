@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// 收起待命与媒体小岛对齐：左环直径 = 封面边长。
-/// 设置预览外框见 `WidgetSamplePreview.meetingMatchedCompactChrome`（与会议 tip 同 290×30）。
+/// 库卡待命外框见 `WidgetSamplePreview.meetingMatchedCompactChrome`（290×30）；详情页仍用本文件样张固有尺寸。
 enum FocusTimerCompactMetrics {
     /// 与 `MediaCompactStandbyView` 封面 22 一致，避免环偏大把岛撑高。
     static let progressRingDiameter: CGFloat = 22

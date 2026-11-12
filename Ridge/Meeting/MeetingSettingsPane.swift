@@ -112,12 +112,11 @@ struct MeetingWidgetConfigSection: View {
         ) { option in
             let urgency = MeetingLeadUrgency(rawValue: option.id) ?? .relaxed
             // 预览壳无 IslandChrome：舞台补左右/底，与真岛 notchWing 令牌一致。
-            WidgetSamplePreview.meetingMatchedCompactChrome(
-                minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight
-            ) {
-                MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
-            }
-            .id(urgency.rawValue)
+            MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)
+                .id(urgency.rawValue)
         }
     }
 

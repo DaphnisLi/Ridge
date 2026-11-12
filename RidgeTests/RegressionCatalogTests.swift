@@ -508,11 +508,11 @@ final class RegressionCatalogTests: XCTestCase {
 
     @MainActor
     func test_settingsPreviewIslandWidth_tipAndMediaFocusAligned() {
-        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 290)
+        // 详情 tip=360；库卡 library=290；媒体/番茄详情 standby/expanded=380。
+        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 360)
         XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
         XCTAssertEqual(SettingsIslandPreviewWidth.standby, SettingsIslandPreviewWidth.expanded)
         XCTAssertEqual(SettingsIslandPreviewWidth.standby, 380)
-        // 媒体/番茄待命与会议 tip 同 290×30 chrome；控制台满宽再缩；已复制不缩。
         XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
         XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.meeting"))
         XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.media"))
@@ -521,11 +521,15 @@ final class RegressionCatalogTests: XCTestCase {
             WidgetSamplePreview.libraryIslandWidth(for: "system.controlDeck.volume"),
             NotchGeometry.controlDeckPreferredWidth
         )
-        XCTAssertTrue(WidgetSamplePreview.hugsIslandContent(for: "builtin.media"))
-        XCTAssertTrue(WidgetSamplePreview.hugsIslandContent(for: "builtin.focusTimer"))
+        XCTAssertEqual(
+            WidgetSamplePreview.detailIslandWidth(for: "system.controlDeck.shelf"),
+            NotchGeometry.controlDeckPreferredWidth
+        )
+        XCTAssertNil(WidgetSamplePreview.detailIslandWidth(for: "builtin.media"))
+        // 库卡才缩到 290；详情舞台不套 library 缩放。
         XCTAssertTrue(WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "builtin.media"))
+        XCTAssertTrue(WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "system.controlDeck.battery"))
         XCTAssertFalse(WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "builtin.copiedNotice"))
-        // 真岛待命宽可与预览不同；本用例只锁预览令牌。
         XCTAssertNotEqual(NotchGeometry.mediaCompactWidth, NotchGeometry.focusTimerCompactWidth)
     }
 
@@ -782,10 +786,11 @@ final class RegressionCatalogTests: XCTestCase {
             NotchGeometry.focusTimerCompactWidth,
             "播放小岛曾用 300 明显偏窄，至少与番茄翼同宽或更宽"
         )
-        // 专注左环须与媒体封面同径；待命预览外框与会议 tip 对齐（290×30）。
+        // 专注左环须与媒体封面同径；库卡待命外框 290×30（详情另走 standby）。
         XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)
-        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 290)
+        XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
         XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
+        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 360)
     }
 
     /// media-compact-not-resident：媒体大面板默认关闭；悬停准入后 close 须再拒绝（勿用 open，避免测里拉起 MediaRemote）。

@@ -44,7 +44,7 @@ MeetingIslandPreviewShape / MediaIslandPreviewShape 再复制一份
 - **同款同内容**：同一 `widgetID` 在开关卡片与点进配置页的预览必须一致（仅 `compact` 尺寸不同）
 - **深色外观**：`WidgetIslandPreviewShell` 须 `.preferredColorScheme(.dark)`（真岛 `darkAqua`）；卡片/文字色用 sRGB 绝对值，禁止 `NSColor(calibratedWhite:)` 在浅色设置窗发灰
 - **展开顶距**：无刘海遮挡时用 `IslandChrome.previewExpandedVisibleTopInset`，勿照搬含盲区的 `expandedTopInset`
-- **预览黑岛宽**：库卡/详情黑岛一律同比到 `.library`（=290，与会议 tip `90×2+110` 对齐）；「已复制」圆岛除外；媒体/番茄排版用 `.standby` / `.expanded` 再缩；不改真岛 `NotchGeometry`
+- **预览黑岛宽**：仅库卡同比到 `.library`（=290）；详情页不缩——tip 用 `.tip`（360），媒体/番茄用 `.standby` / `.expanded`（380）；「已复制」圆岛除外；不改真岛 `NotchGeometry`
 - 控制台磁贴 id：`system.controlDeck.battery` / `volume` / `projects` / `shelf`
 
 ## 禁止

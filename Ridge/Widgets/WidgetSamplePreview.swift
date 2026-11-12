@@ -5,31 +5,31 @@ import SwiftUI
 
 /// 设置页黑岛预览宽度令牌（**仅预览**，不改真岛几何）。
 enum SettingsIslandPreviewWidth {
-    /// 库卡 / 详情黑岛统一目标宽（与会议 tip 预览 `90×2+110` 对齐）。
-    static let tip: CGFloat = 290
-    /// 同 `tip`；「已复制」圆岛除外，不套此宽。
-    static let library: CGFloat = tip
-    /// 会议 tip compact `barHeight`；媒体 / 专注待命预览内容高与此对齐。
+    /// 详情 tip 舞台目标宽（配置页里边；勿与库卡混用）。
+    static let tip: CGFloat = 360
+    /// **仅库卡**黑岛同比目标宽；详情页不套此缩放。
+    static let library: CGFloat = 290
+    /// 库卡 tip / 待命样张内容高（会议 tip compact `barHeight`）。
     static let tipBarHeight: CGFloat = 30
-    /// 库卡 tip / 待命样张 minHeight（与 `meetingSample` 一致）。
+    /// 库卡 tip / 待命样张 minHeight。
     static let tipPreviewMinHeight: CGFloat = 30
-    /// 详情 tip / 待命样张 minHeight。
+    /// 详情 tip 样张 minHeight。
     static let tipDetailMinHeight: CGFloat = 34
-    /// 详情 / 多形态舞台：tip 与待命灰区统一 minHeight（展开大面板可另设）。
+    /// 详情 tip 灰舞台 minHeight。
     static let tipStageMinHeight: CGFloat = 88
-    /// 媒体与番茄：展开面板排版宽（再同比缩到 `library`）；待命不再用此值。
+    /// 详情：媒体 / 番茄待命舞台宽。
     static let standby: CGFloat = 380
-    /// 媒体与番茄：展开面板排版宽（再同比缩到 `library`）。
+    /// 详情：媒体 / 番茄展开面板舞台宽。
     static let expanded: CGFloat = 380
 
-    /// 设置预览黑岛同比缩放到 `library`（290）；固有宽为 0 时不缩放。
+    /// 库卡黑岛同比缩放到 `library`（290）；固有宽为 0 时不缩放。详情页勿调用。
     static func libraryScale(nativeWidth: CGFloat) -> CGFloat {
         guard nativeWidth > 0 else { return 1 }
         return library / nativeWidth
     }
 }
 
-/// 库卡 / 详情舞台：黑岛同比缩到 `library`（290），灰舞台不缩。「已复制」勿用。
+/// **仅库卡**：黑岛同比缩到 `library`（290），灰舞台不缩。「已复制」勿用。
 private struct LibraryIslandPreviewScaleModifier: ViewModifier {
     var maxWidth: CGFloat = SettingsIslandPreviewWidth.library
     @State private var nativeSize: CGSize = .zero
@@ -94,8 +94,6 @@ struct SettingsIslandStageOption: Identifiable, Hashable {
     var compactShell: Bool = false
     /// 内容已自绘不透明岛底（电量等），壳层不再叠 `IslandOpaqueFillView`。
     var contentProvidesOpaqueShell: Bool = false
-    /// `false`：「已复制」圆岛保持固有 Ø，不缩到 290。
-    var scalesBlackIslandToLibrary: Bool = true
 }
 
 /// 设置页统一岛预览舞台：灰底仿真台 + 黑岛；多形态时显示选择题，仅一种时隐藏。
@@ -158,11 +156,8 @@ struct SettingsIslandStage<Content: View>: View {
             content(option)
         }
         // 固定预览宽：用 width 而非仅 maxWidth，避免 hugs 关掉后仍随内容忽宽忽窄。
+        // 详情舞台不缩到 library；库卡缩放只走 `WidgetSamplePreview.island`。
         .modifier(SettingsIslandPreviewWidthClamp(maxIslandWidth: option.maxIslandWidth, hugsContent: option.hugsContent))
-        .modifier(
-            // 详情 / 多形态：黑岛同比到 290；「已复制」圆岛不缩。
-            OptionalLibraryIslandPreviewScale(enabled: option.scalesBlackIslandToLibrary)
-        )
 
         return Group {
             if option.hugsContent {
@@ -238,7 +233,6 @@ extension SettingsIslandStage {
         hugsContent: Bool = false,
         minStageHeight: CGFloat? = nil,
         contentProvidesOpaqueShell: Bool = false,
-        scalesBlackIslandToLibrary: Bool = true,
         @ViewBuilder content: @escaping () -> Content
     ) {
         let option = SettingsIslandStageOption(
@@ -253,8 +247,7 @@ extension SettingsIslandStage {
             minStageHeight: minStageHeight
                 ?? (compact ? SettingsIslandPreviewWidth.tipStageMinHeight : 168),
             compactShell: compact,
-            contentProvidesOpaqueShell: contentProvidesOpaqueShell,
-            scalesBlackIslandToLibrary: scalesBlackIslandToLibrary
+            contentProvidesOpaqueShell: contentProvidesOpaqueShell
         )
         self.title = title
         self.options = [option]
@@ -263,7 +256,7 @@ extension SettingsIslandStage {
     }
 }
 
-/// 设置页「岛预览」外包：灰底舞台 + 假数据岛（单形态，无选择题）。
+/// 设置页「岛预览」外包：灰底舞台 + 假数据岛（单形态，无选择题）。**详情页不缩到库卡 290。**
 struct SettingsIslandPreviewCard: View {
     let widgetID: WidgetID
     var compact: Bool = false
@@ -273,14 +266,13 @@ struct SettingsIslandPreviewCard: View {
         SettingsIslandStage(
             title: title,
             compact: compact,
-            // 先按设计宽排版，再由舞台统一缩到 290（「已复制」除外）。
-            maxIslandWidth: WidgetSamplePreview.libraryIslandWidth(for: widgetID),
+            // 详情：控制台用真岛 preferred 宽；其余 hugs / 固有宽，不套 library 缩放。
+            maxIslandWidth: WidgetSamplePreview.detailIslandWidth(for: widgetID),
             hugsContent: WidgetSamplePreview.hugsIslandContent(for: widgetID),
             minStageHeight: compact
                 ? SettingsIslandPreviewWidth.tipStageMinHeight
                 : 168,
-            contentProvidesOpaqueShell: WidgetSamplePreview.contentProvidesOpaqueShell(for: widgetID),
-            scalesBlackIslandToLibrary: WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: widgetID)
+            contentProvidesOpaqueShell: WidgetSamplePreview.contentProvidesOpaqueShell(for: widgetID)
         ) {
             WidgetSamplePreview.content(for: widgetID, compact: compact)
         }
@@ -349,8 +341,7 @@ struct WidgetIslandPreviewShell<Content: View>: View {
 /// 新 widget：在 `content(for:compact:)` 加 case，调用方只调 `island(for:compact:)`。
 @MainActor
 enum WidgetSamplePreview {
-    /// 统一预览组件：壳 + 假数据内容。
-    /// 黑岛按设计宽排版后一律同比缩到 `library`（290），灰舞台不缩；「已复制」圆岛除外。
+    /// 库卡预览：壳 + 假数据；黑岛同比缩到 `library`（290），灰舞台不缩；「已复制」除外。
     @ViewBuilder
     static func island(for id: WidgetID, compact: Bool) -> some View {
         let fixedWidth = libraryIslandWidth(for: id)
@@ -367,12 +358,12 @@ enum WidgetSamplePreview {
         .modifier(OptionalLibraryIslandPreviewScale(enabled: scalesBlackIslandToLibraryWidth(for: id)))
     }
 
-    /// 「已复制」圆岛除外；媒体/番茄待命与 tip 同套 chrome+缩放到 290。
+    /// 库卡才缩到 290；「已复制」圆岛除外。详情页勿用此开关。
     static func scalesBlackIslandToLibraryWidth(for id: WidgetID) -> Bool {
         id != "builtin.copiedNotice"
     }
 
-    /// 预览排版宽。媒体/番茄待命与 tip 一样 hugs（内容 290×30 + chrome）；控制台满宽再缩。
+    /// 库卡排版宽：控制台满宽后再缩到 290；tip/媒体/番茄待命 hugs。
     static func libraryIslandWidth(for id: WidgetID) -> CGFloat? {
         switch id {
         case "system.controlDeck.volume",
@@ -384,7 +375,12 @@ enum WidgetSamplePreview {
         }
     }
 
-    /// 待命小岛预览：与「下一场会议」同宽同高同 chrome（再统一缩到 290）。
+    /// 详情页黑岛宽：控制台用 preferred；其余 `nil`（hugs / 固有）。
+    static func detailIslandWidth(for id: WidgetID) -> CGFloat? {
+        libraryIslandWidth(for: id)
+    }
+
+    /// **仅库卡**待命小岛：与会议 tip 同 290×30 chrome（再缩到 library 时已同宽）。
     @ViewBuilder
     static func meetingMatchedCompactChrome<Content: View>(
         minHeight: CGFloat = SettingsIslandPreviewWidth.tipPreviewMinHeight,
@@ -392,7 +388,7 @@ enum WidgetSamplePreview {
     ) -> some View {
         content()
             .frame(
-                width: SettingsIslandPreviewWidth.tip,
+                width: SettingsIslandPreviewWidth.library,
                 height: SettingsIslandPreviewWidth.tipBarHeight
             )
             .padding(.horizontal, IslandChrome.contentHorizontal)
@@ -484,14 +480,19 @@ enum WidgetSamplePreview {
         }
     }
 
+    @ViewBuilder
     private static func meetingSample(compact: Bool) -> some View {
-        meetingMatchedCompactChrome(
-            minHeight: compact
-                ? SettingsIslandPreviewWidth.tipPreviewMinHeight
-                : SettingsIslandPreviewWidth.tipDetailMinHeight
-        ) {
-            // 会议 tip 自身已是 tip×barHeight；此处只叠与媒体/专注相同的 chrome。
+        if compact {
+            // 库卡：290×30 与媒体/专注待命对齐。
+            meetingMatchedCompactChrome {
+                MeetingIslandCardView.previewSample(urgency: .relaxed, compact: true)
+            }
+        } else {
+            // 详情：保持 tip 固有宽 + chrome，不缩到库卡 290。
             MeetingIslandCardView.previewSample(urgency: .relaxed, compact: true)
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)
         }
     }
 
