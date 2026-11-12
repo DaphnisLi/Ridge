@@ -68,18 +68,18 @@ struct FocusTimerWidgetConfigSection: View {
             )
         ) { option in
             let tab = FocusTimerPreviewTab(rawValue: option.id) ?? .standby
-            // 与真岛一致：待命左右 8；展开态走 IslandChrome，黑岛贴合内容宽。
-            FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
-                .padding(
-                    .horizontal,
-                    tab.isCompact ? 8 : IslandChrome.contentHorizontal
-                )
-                .padding(
-                    .vertical,
-                    tab.isCompact
-                        ? FocusTimerCompactMetrics.previewVerticalPadding
-                        : IslandChrome.contentBottom
-                )
+            if tab.isCompact {
+                // 待命黑岛与「下一场会议」同宽同高同 chrome。
+                WidgetSamplePreview.meetingMatchedCompactChrome(
+                    minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight
+                ) {
+                    FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: true)
+                }
+            } else {
+                FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: false)
+                    .padding(.horizontal, IslandChrome.contentHorizontal)
+                    .padding(.vertical, IslandChrome.contentBottom)
+            }
         }
     }
 
@@ -90,13 +90,12 @@ struct FocusTimerWidgetConfigSection: View {
             badge: tabBadge(tab),
             symbol: tabIcon(tab),
             tint: tabTint(tab),
-            // 预览宽与媒体统一；真岛仍用 NotchGeometry.focusTimerCompactWidth。
-            maxIslandWidth: tab.isCompact
-                ? SettingsIslandPreviewWidth.standby
-                : SettingsIslandPreviewWidth.expanded,
-            hugsContent: false,
-            bottomRadius: tab.isCompact ? 20 : 24,
-            minStageHeight: tab.isCompact ? 120 : 148,
+            maxIslandWidth: SettingsIslandPreviewWidth.tip,
+            hugsContent: tab.isCompact,
+            bottomRadius: tab.isCompact ? 18 : 24,
+            minStageHeight: tab.isCompact
+                ? SettingsIslandPreviewWidth.tipStageMinHeight
+                : 148,
             compactShell: tab.isCompact
         )
     }

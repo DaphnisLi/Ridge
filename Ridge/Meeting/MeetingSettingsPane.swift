@@ -101,7 +101,7 @@ struct MeetingWidgetConfigSection: View {
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
                     bottomRadius: 18,
                     outlineStyle: .panel,
-                    minStageHeight: 88,
+                    minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
                 )
             },
@@ -112,11 +112,12 @@ struct MeetingWidgetConfigSection: View {
         ) { option in
             let urgency = MeetingLeadUrgency(rawValue: option.id) ?? .relaxed
             // 预览壳无 IslandChrome：舞台补左右/底，与真岛 notchWing 令牌一致。
-            MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
-                .padding(.horizontal, IslandChrome.contentHorizontal)
-                .padding(.bottom, IslandChrome.compactTipBottom)
-                .frame(minHeight: 34)
-                .id(urgency.rawValue)
+            WidgetSamplePreview.meetingMatchedCompactChrome(
+                minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight
+            ) {
+                MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
+            }
+            .id(urgency.rawValue)
         }
     }
 

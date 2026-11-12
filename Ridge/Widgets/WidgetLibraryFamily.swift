@@ -1,6 +1,38 @@
 import Foundation
 
-/// 小组件库三段分类：提示 → 实况 → 面板（设置页展示顺序）。
+/// 设置「小组件」库扁平展示顺序（不再分提示/实况/面板段）。
+/// 上岛闸门仍用 `WidgetLibraryFamily`；本枚举只定库卡先后。
+enum WidgetLibraryLayout {
+    /// 库页默认顺序：已复制第一；货架紧接专注计时之后；音量倒数第二；项目释放最后。
+    static let defaultFlatDisplayOrder: [WidgetID] = [
+        "builtin.copiedNotice",
+        "builtin.meeting",
+        "builtin.aiUsage",
+        "builtin.moveReminder",
+        "builtin.colorPick",
+        "builtin.ocrSelect",
+        "builtin.peripheralTip",
+        "builtin.media",
+        "builtin.focusTimer",
+        "system.controlDeck.shelf",
+        "system.controlDeck.battery",
+        "builtin.worldClock",
+        "builtin.stocks",
+        "system.controlDeck.volume",
+        "system.controlDeck.projects",
+    ]
+
+    /// 内容型默认序（不含控制台磁贴；写入 `WidgetSettings.order`）。
+    static var defaultContentOrder: [WidgetID] {
+        defaultFlatDisplayOrder.filter { !$0.hasPrefix("system.controlDeck.") }
+    }
+
+    static func rank(of widgetID: WidgetID) -> Int {
+        defaultFlatDisplayOrder.firstIndex(of: widgetID) ?? Int.max
+    }
+}
+
+/// 上岛闸门分类：提示 / 实况 / 面板（不再驱动设置库分段 UI）。
 enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
     /// 瞬时提示：触阈/事件冒一下。
     case tip
@@ -11,7 +43,7 @@ enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
-    /// 库页自上而下顺序。
+    /// 历史三段顺序（闸门/测试用；库页已扁平不再按此分段）。
     static let displayOrder: [WidgetLibraryFamily] = [.tip, .live, .panel]
 
     static func family(for widgetID: WidgetID) -> WidgetLibraryFamily? {

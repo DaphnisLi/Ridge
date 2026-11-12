@@ -480,23 +480,51 @@ final class RegressionCatalogTests: XCTestCase {
                 + IslandChrome.contentBottom
         )
         XCTAssertLessThan(detailH, 140)
+        // 库卡：黑岛统一同比到 290（灰舞台不缩）；「已复制」除外。
+        XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
+        XCTAssertEqual(SettingsIslandPreviewWidth.libraryScale(nativeWidth: 580), 0.5, accuracy: 0.001)
+        XCTAssertGreaterThan(
+            SettingsIslandPreviewWidth.libraryScale(nativeWidth: 200),
+            1,
+            "短于 290 的样张亦同比拉到 290"
+        )
+        let nativeW = BatteryDeckIslandPreview.nativePanelSize().width
+        let scale = BatteryDeckIslandPreview.libraryPreviewScale
+        XCTAssertLessThan(scale, 1, "双卡样张固有宽超过 library，库卡须缩小黑岛")
+        XCTAssertEqual(
+            nativeW * scale,
+            SettingsIslandPreviewWidth.library,
+            accuracy: 0.5
+        )
+        XCTAssertFalse(
+            WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "builtin.copiedNotice")
+        )
+        XCTAssertTrue(
+            WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "system.controlDeck.battery")
+        )
     }
 
     // MARK: - settings-preview-island-width（媒体 / 番茄预览黑岛宽统一；tip 必须 hugs）
 
     @MainActor
     func test_settingsPreviewIslandWidth_tipAndMediaFocusAligned() {
-        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 360)
-        XCTAssertEqual(SettingsIslandPreviewWidth.library, 360)
+        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 290)
+        XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
         XCTAssertEqual(SettingsIslandPreviewWidth.standby, SettingsIslandPreviewWidth.expanded)
         XCTAssertEqual(SettingsIslandPreviewWidth.standby, 380)
-        // 媒体 / 番茄库卡强制 360；tip 与圆岛「已复制」仍 hugs（左右 chrome 定死）。
+        // 媒体/番茄待命与会议 tip 同 290×30 chrome；控制台满宽再缩；已复制不缩。
+        XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
         XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.meeting"))
-        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.aiUsage"))
-        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.peripheralTip"))
-        XCTAssertEqual(WidgetSamplePreview.libraryIslandWidth(for: "builtin.media"), 360)
-        XCTAssertEqual(WidgetSamplePreview.libraryIslandWidth(for: "builtin.focusTimer"), 360)
-        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.copiedNotice"))
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.media"))
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.focusTimer"))
+        XCTAssertEqual(
+            WidgetSamplePreview.libraryIslandWidth(for: "system.controlDeck.volume"),
+            NotchGeometry.controlDeckPreferredWidth
+        )
+        XCTAssertTrue(WidgetSamplePreview.hugsIslandContent(for: "builtin.media"))
+        XCTAssertTrue(WidgetSamplePreview.hugsIslandContent(for: "builtin.focusTimer"))
+        XCTAssertTrue(WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "builtin.media"))
+        XCTAssertFalse(WidgetSamplePreview.scalesBlackIslandToLibraryWidth(for: "builtin.copiedNotice"))
         // 真岛待命宽可与预览不同；本用例只锁预览令牌。
         XCTAssertNotEqual(NotchGeometry.mediaCompactWidth, NotchGeometry.focusTimerCompactWidth)
     }
@@ -534,8 +562,11 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(IslandChrome.contentHorizontal, 14)
         XCTAssertEqual(IslandChrome.compactTipBottom, 4)
         // 媒体/番茄可固定预览宽，但高度须贴内容（stageCanvas 不得把 minStageHeight 作用在黑岛上）。
-        XCTAssertFalse(WidgetSamplePreview.hugsIslandContent(for: "builtin.focusTimer"))
-        XCTAssertEqual(WidgetSamplePreview.libraryIslandWidth(for: "builtin.focusTimer"), 360)
+        XCTAssertTrue(
+            WidgetSamplePreview.hugsIslandContent(for: "builtin.focusTimer"),
+            "专注待命预览与会议 tip 同 hugs"
+        )
+        XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: "builtin.focusTimer"))
     }
 
     // MARK: - settings-preview-island-appearance（预览深色 + 可见顶距；禁 disabled 降透明度）
@@ -611,10 +642,66 @@ final class RegressionCatalogTests: XCTestCase {
 
     // MARK: - widget library family（提示 → 实况 → 面板）
 
+    /// 提示 / 实况 / 面板库卡灰舞台与整卡高度一律一致。
+    func test_widgetLibraryCard_livePanelShareTipChrome() {
+        XCTAssertEqual(WidgetLibraryCardLayout.islandStageHeight, 106)
+        XCTAssertEqual(WidgetLibraryCardLayout.cardHeight, 196)
+        XCTAssertEqual(
+            WidgetLibraryCardLayout.islandStageHeight(for: .tip),
+            WidgetLibraryCardLayout.islandStageHeight(for: .live)
+        )
+        XCTAssertEqual(
+            WidgetLibraryCardLayout.islandStageHeight(for: .live),
+            WidgetLibraryCardLayout.islandStageHeight(for: .panel)
+        )
+        XCTAssertEqual(
+            WidgetLibraryCardLayout.cardHeight(for: .tip),
+            WidgetLibraryCardLayout.cardHeight(for: .panel)
+        )
+        XCTAssertEqual(SettingsIslandPreviewWidth.tipStageMinHeight, 88)
+        // 详情 tip/待命灰区与库卡令牌对齐，避免各页再写 96/100/120。
+        XCTAssertEqual(
+            SettingsIslandPreviewWidth.tipStageMinHeight,
+            88,
+            "详情 tip/待命 minStageHeight 须统一"
+        )
+    }
+
     func test_widgetLibraryFamily_displayOrderIsTipLivePanel() {
         XCTAssertEqual(
             WidgetLibraryFamily.displayOrder,
             [.tip, .live, .panel]
+        )
+    }
+
+    /// 库页扁平：已复制第一；货架紧接专注计时之后；音量倒数第二；项目最后。
+    func test_widgetLibraryLayout_flatDefaultOrder() {
+        let order = WidgetLibraryLayout.defaultFlatDisplayOrder
+        XCTAssertEqual(order.first, "builtin.copiedNotice")
+        let focus = order.firstIndex(of: "builtin.focusTimer")!
+        let shelf = order.firstIndex(of: "system.controlDeck.shelf")!
+        XCTAssertEqual(focus + 1, shelf)
+        let peripheral = order.firstIndex(of: "builtin.peripheralTip")!
+        let media = order.firstIndex(of: "builtin.media")!
+        XCTAssertEqual(peripheral + 1, media)
+        XCTAssertEqual(media + 1, focus)
+        XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
+        XCTAssertEqual(order.last, "system.controlDeck.projects")
+        XCTAssertEqual(
+            WidgetLibraryLayout.defaultContentOrder,
+            [
+                "builtin.copiedNotice",
+                "builtin.meeting",
+                "builtin.aiUsage",
+                "builtin.moveReminder",
+                "builtin.colorPick",
+                "builtin.ocrSelect",
+                "builtin.peripheralTip",
+                "builtin.media",
+                "builtin.focusTimer",
+                "builtin.worldClock",
+                "builtin.stocks",
+            ]
         )
     }
 
@@ -695,10 +782,10 @@ final class RegressionCatalogTests: XCTestCase {
             NotchGeometry.focusTimerCompactWidth,
             "播放小岛曾用 300 明显偏窄，至少与番茄翼同宽或更宽"
         )
-        // 专注左环须与媒体封面同径，预览上下距/下限同媒体，避免黑岛虚高。
+        // 专注左环须与媒体封面同径；待命预览外框与会议 tip 对齐（290×30）。
         XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)
-        XCTAssertEqual(FocusTimerCompactMetrics.previewVerticalPadding, 6)
-        XCTAssertEqual(FocusTimerCompactMetrics.previewMinHeight, 36)
+        XCTAssertEqual(SettingsIslandPreviewWidth.tip, 290)
+        XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
     }
 
     /// media-compact-not-resident：媒体大面板默认关闭；悬停准入后 close 须再拒绝（勿用 open，避免测里拉起 MediaRemote）。

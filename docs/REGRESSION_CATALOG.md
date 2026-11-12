@@ -158,9 +158,9 @@
 - **occurrences:** 1（2026-11-10 产品规则落地）  
 - **症状:** 提示类常驻分页；实况开启即占岛；无面板时悬停仍展开空岛  
 - **根因倾向:** `WidgetLibraryFamily` 仅用于设置分段，Runtime 未按 family 闸门；`enabledPanes` 含电量即进分页；hover 无条件 expand  
-- **防护:** tip 禁 `requestDisplay`；live 须 `LiveIslandGate.open`；panel 直接上岛；`allowsHoverExpand` 无面板/未点进实况时拒绝 hover  
-- **相关代码:** `LiveIslandGate`、`WidgetRuntime.buildVisiblePages` / `allowsHoverExpand`、`IslandController.pollPointer`  
-- **自动化:** `RegressionCatalogTests.test_widgetLibraryFamily_*`
+- **防护:** tip 禁 `requestDisplay`；live 须 `LiveIslandGate.open`；panel 直接上岛；`allowsHoverExpand` 无面板/未点进实况时拒绝 hover；**库页 UI 已扁平不分段**，闸门仍用 family；默认序见 `WidgetLibraryLayout`  
+- **相关代码:** `LiveIslandGate`、`WidgetRuntime.buildVisiblePages` / `allowsHoverExpand`、`IslandController.pollPointer`、`WidgetLibraryLayout`  
+- **自动化:** `RegressionCatalogTests.test_widgetLibraryFamily_*` + `test_widgetLibraryLayout_flatDefaultOrder`
 
 ### controldeck-init-battery-reentrancy — 控制台 init 重入启动崩
 
@@ -238,7 +238,16 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-12 | 库卡灰舞台三族统一 106；详情 tip/待命 `tipStageMinHeight` 88 |
+| 2026-11-12 | 媒体/专注待命预览与会议 tip 同 290×30 + chrome（`meetingMatchedCompactChrome`） |
+| 2026-11-12 | 媒体/番茄预览直接按 290 排（禁 scale），上下垫 8 / minH 42，避免字与岛高被压 |
+| 2026-11-12 | 预览黑岛目标宽改 290（「已复制」除外）；库卡+详情统一缩放 |
+| 2026-11-12 | 库卡+详情舞台黑岛一律同比缩到 360；媒体/番茄先 380、控制台先满宽再缩 |
+| 2026-11-12 | 库卡黑岛一律同比缩到 360（`LibraryIslandPreviewScaleModifier`），灰舞台不缩 |
+| 2026-11-12 | 电量库卡黑岛同比缩到 library 宽（`BatteryDeckIslandPreview.libraryPreviewScale`），灰舞台不缩 |
+| 2026-11-12 | 实况/面板库卡改提示同款灰舞台+底栏（`WidgetLibraryCardLayout`） |
 | 2026-11-12 | 专注待命环 22 + 预览边距对齐媒体小岛；`FocusTimerCompactMetrics`；stretch +1 |
+| 2026-11-12 | 小组件库取消提示/实况/面板分段；扁平默认序：已复制第一、货架紧接专注计时后，音量倒数第二、项目最后；`WidgetLibraryLayout` + 迁移 v4 |
 | 2026-11-12 | tip 预览恢复 hugs（禁强制 360）；番茄固定宽时高度仍 hugs，`minStageHeight` 只抬灰舞台；catalog `settings-preview-tip-forced-stretch` + stretch +1 |
 | 2026-11-12 | 「已复制」改刘海右侧 Ø32 圆岛（方案 02 流光向心）；`usesNotchRightOrbChrome` + 预备布局 |
 | 2026-11-12 | 电量预览暗淡：根因是样张 `Button.disabled` 降透明度 → 改 `allowsHitTesting`；catalog recurring |

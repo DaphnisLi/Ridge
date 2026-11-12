@@ -1,15 +1,13 @@
 import AppKit
 import SwiftUI
 
-/// 收起待命与媒体小岛对齐：左环直径 = 封面边长，预览上下距同媒体。
+/// 收起待命与媒体小岛对齐：左环直径 = 封面边长。
+/// 设置预览外框见 `WidgetSamplePreview.meetingMatchedCompactChrome`（与会议 tip 同 290×30）。
 enum FocusTimerCompactMetrics {
     /// 与 `MediaCompactStandbyView` 封面 22 一致，避免环偏大把岛撑高。
     static let progressRingDiameter: CGFloat = 22
     static let progressRingLineWidth: CGFloat = 2.5
     static let progressRingIconPointSize: CGFloat = 9
-    /// 设置预览（详情待命 + 库卡）与媒体小岛同款。
-    static let previewVerticalPadding: CGFloat = 6
-    static let previewMinHeight: CGFloat = 36
 }
 
 /// 番茄面板下限：选时 / 进行中 / 顺延走内容 `fixedSize` + IslandChrome；

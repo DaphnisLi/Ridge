@@ -7,7 +7,7 @@ final class WidgetSettings: ObservableObject {
     static let shared = WidgetSettings()
 
     enum Defaults {
-        static let order: [WidgetID] = []
+        static var order: [WidgetID] { WidgetLibraryLayout.defaultContentOrder }
         static let disabled: [WidgetID] = []
         static let pinned: [WidgetID] = []
     }
@@ -19,6 +19,8 @@ final class WidgetSettings: ObservableObject {
         /// 旧组合页键，仅启动时交给 ControlDeck 迁移后清理。
         static let comboPagesLegacy = "widget.comboPages.v1"
         static let pageGroupsLegacy = "widget.pageGroups.v1"
+        /// 库页扁平默认序（一次性迁移；升 v 号会再写一遍 canonical）。
+        static let flatLibraryOrderMigrated = "widget.libraryFlatOrder.v4"
     }
 
     /// 用户排序：越靠前 priority 越高。仅含 `showsInLibrary` 的 id。
@@ -115,11 +117,14 @@ final class WidgetSettings: ObservableObject {
         AppLog.info("Widget", "已恢复小组件默认设置")
     }
 
-    /// 与注册表对齐。
+    /// 与注册表对齐；缺失 id 按扁平默认序插入。
     func reconcile(with registry: WidgetRegistry) {
         let libraryIDs = registry.libraryManifests.map(\.id)
         let known = Set(libraryIDs)
         order = order.filter { known.contains($0) }
+        for id in WidgetLibraryLayout.defaultContentOrder where known.contains(id) && !order.contains(id) {
+            insertInCanonicalPosition(id)
+        }
         for id in libraryIDs where !order.contains(id) {
             order.append(id)
         }
@@ -132,6 +137,24 @@ final class WidgetSettings: ObservableObject {
         ])
     }
 
+    /// 按 `WidgetLibraryLayout.defaultContentOrder` 插入缺失项。
+    private func insertInCanonicalPosition(_ id: WidgetID) {
+        guard !order.contains(id) else { return }
+        let canonical = WidgetLibraryLayout.defaultContentOrder
+        guard let targetRank = canonical.firstIndex(of: id) else {
+            order.append(id)
+            return
+        }
+        for (index, existing) in order.enumerated() {
+            let existingRank = canonical.firstIndex(of: existing) ?? Int.max
+            if existingRank > targetRank {
+                order.insert(id, at: index)
+                return
+            }
+        }
+        order.append(id)
+    }
+
     private init() {
         let defaults = UserDefaults.standard
         if defaults.object(forKey: Key.order) == nil {
@@ -142,6 +165,20 @@ final class WidgetSettings: ObservableObject {
         }
         if defaults.object(forKey: Key.pinned) == nil {
             defaults.set(Defaults.pinned, forKey: Key.pinned)
+        }
+
+        // 取消三段分类：一次性写入扁平默认内容序（未知 id 仍接在末尾）。
+        if defaults.object(forKey: Key.flatLibraryOrderMigrated) == nil {
+            let previous = defaults.stringArray(forKey: Key.order) ?? []
+            let canonical = WidgetLibraryLayout.defaultContentOrder
+            let extras = previous.filter { !canonical.contains($0) }
+            let migrated = canonical + extras
+            defaults.set(migrated, forKey: Key.order)
+            defaults.set(true, forKey: Key.flatLibraryOrderMigrated)
+            AppLog.info("Widget", "已迁移扁平库默认排序", [
+                "count": migrated.count,
+                "first": migrated.first ?? ""
+            ])
         }
 
         let loadedOrder = defaults.stringArray(forKey: Key.order) ?? Defaults.order

@@ -24,9 +24,38 @@ struct WidgetsSettingsPane: View {
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: SettingsChrome.Spacing.pageHorizontal) {
-                    ForEach(WidgetLibraryFamily.displayOrder) { family in
-                        familySection(family)
+                VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
+                    let items = flatEntries
+                    if items.isEmpty {
+                        Text(L10n.Widgets.libraryEmpty)
+                            .font(SettingsChrome.Font.body)
+                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 16)
+                    } else {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
+                                GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
+                            ],
+                            spacing: SettingsChrome.Spacing.stack
+                        ) {
+                            ForEach(items) { entry in
+                                switch entry {
+                                case .deck(let module):
+                                    deckCardCell(module)
+                                case .content(let id):
+                                    if let manifest = registry.manifest(for: id) {
+                                        widgetCardCell(id: id, manifest: manifest)
+                                            .transition(.scale(scale: 0.96).combined(with: .opacity))
+                                    }
+                                }
+                            }
+                        }
+                        .animation(
+                            .spring(response: 0.32, dampingFraction: 0.86),
+                            value: items.map(\.id)
+                        )
                     }
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
@@ -46,9 +75,8 @@ struct WidgetsSettingsPane: View {
             IslandController.shared?.beginSettingsSessionCollapsed()
             consumePendingPreviewIfNeeded()
             AppLog.debug("Settings", "小组件库页已显示", [
-                "tip": entries(in: .tip).count,
-                "live": entries(in: .live).count,
-                "panel": entries(in: .panel).count
+                "count": flatEntries.count,
+                "first": flatEntries.first?.id ?? ""
             ])
         }
         .onChange(of: navigator.openToken) { _, _ in
@@ -56,52 +84,7 @@ struct WidgetsSettingsPane: View {
         }
     }
 
-    // MARK: - 三段：提示 → 实况 → 面板
-
-    private func familySection(_ family: WidgetLibraryFamily) -> some View {
-        let items = entries(in: family)
-        return VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
-            librarySectionHeader(
-                symbol: familyHeaderSymbol(family),
-                symbolTint: SettingsChrome.primary,
-                title: L10n.Widgets.familySectionTitle(family),
-                badge: "\(L10n.Widgets.familySectionBadge(family)) (\(items.count))",
-                aside: L10n.Widgets.familySectionAside(family)
-            )
-
-            if items.isEmpty {
-                Text(L10n.Widgets.libraryEmpty)
-                    .font(SettingsChrome.Font.body)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 16)
-            } else {
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
-                        GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
-                    ],
-                    spacing: SettingsChrome.Spacing.stack
-                ) {
-                    ForEach(items) { entry in
-                        switch entry {
-                        case .deck(let module):
-                            deckCardCell(module)
-                        case .content(let id):
-                            if let manifest = registry.manifest(for: id) {
-                                widgetCardCell(id: id, manifest: manifest, family: family)
-                                    .transition(.scale(scale: 0.96).combined(with: .opacity))
-                            }
-                        }
-                    }
-                }
-                .animation(
-                    .spring(response: 0.32, dampingFraction: 0.86),
-                    value: items.map(\.id)
-                )
-            }
-        }
-    }
+    // MARK: - 扁平库（不分段）
 
     private enum LibraryEntry: Identifiable, Hashable {
         case deck(ControlDeckPlannedModule)
@@ -117,26 +100,38 @@ struct WidgetsSettingsPane: View {
         }
     }
 
-    /// 段内条目：控制台磁贴按规划顺序；内容型按用户库序。
-    private func entries(in family: WidgetLibraryFamily) -> [LibraryEntry] {
-        var list: [LibraryEntry] = []
-        for module in liveDeckModules {
-            guard WidgetLibraryFamily.family(forDeckModuleID: module.id) == family else { continue }
-            list.append(.deck(module))
+    /// 内容型按用户库序；控制台磁贴按扁平默认序插入固定槽位。
+    private var flatEntries: [LibraryEntry] {
+        var result: [LibraryEntry] = contentLibraryOrder.map { .content($0) }
+        let decks = liveDeckModules.sorted {
+            WidgetLibraryLayout.rank(of: ControlDeckSettings.pageIDPrefix + "." + $0.id)
+                < WidgetLibraryLayout.rank(of: ControlDeckSettings.pageIDPrefix + "." + $1.id)
         }
-        for id in contentLibraryOrder {
-            guard WidgetLibraryFamily.family(for: id) == family else { continue }
-            list.append(.content(id))
+        for module in decks {
+            let pageID = ControlDeckSettings.pageIDPrefix + "." + module.id
+            let index = insertionIndex(forDeckPageID: pageID, among: result)
+            result.insert(.deck(module), at: index)
         }
-        return list
+        return result
     }
 
-    private func familyHeaderSymbol(_ family: WidgetLibraryFamily) -> String {
-        switch family {
-        case .tip: return "bell.fill"
-        case .live: return "dot.radiowaves.left.and.right"
-        case .panel: return "rectangle.bottomthird.inset.filled"
+    private func insertionIndex(forDeckPageID pageID: WidgetID, among entries: [LibraryEntry]) -> Int {
+        let deckRank = WidgetLibraryLayout.rank(of: pageID)
+        for (index, entry) in entries.enumerated() {
+            let entryRank: Int
+            switch entry {
+            case .content(let id):
+                entryRank = WidgetLibraryLayout.rank(of: id)
+            case .deck(let module):
+                entryRank = WidgetLibraryLayout.rank(
+                    of: ControlDeckSettings.pageIDPrefix + "." + module.id
+                )
+            }
+            if entryRank > deckRank {
+                return index
+            }
         }
+        return entries.count
     }
 
     @ViewBuilder
@@ -155,39 +150,6 @@ struct WidgetsSettingsPane: View {
             onOpen: { path.append(pageID) }
         )
         .background(WidgetCardScreenFrameReader(widgetID: pageID))
-    }
-
-    private func librarySectionHeader(
-        symbol: String,
-        symbolTint: Color,
-        title: String,
-        badge: String,
-        aside: String
-    ) -> some View {
-        HStack(alignment: .center, spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: symbol)
-                    .font(SettingsChrome.Font.iconTile)
-                    .foregroundStyle(symbolTint)
-                Text(title)
-                    .font(SettingsChrome.Font.sectionTitle)
-                    .foregroundStyle(SettingsChrome.onSurface)
-                Text(badge)
-                    .font(SettingsChrome.Font.chip)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(SettingsChrome.surfaceContainer)
-                    )
-            }
-            Spacer(minLength: 8)
-            Text(aside)
-                .font(SettingsChrome.Font.chip)
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                .multilineTextAlignment(.trailing)
-        }
     }
 
     private func deckSummary(for id: String) -> String {
@@ -229,14 +191,12 @@ struct WidgetsSettingsPane: View {
     @ViewBuilder
     private func widgetCardCell(
         id: WidgetID,
-        manifest: WidgetManifest,
-        family: WidgetLibraryFamily
+        manifest: WidgetManifest
     ) -> some View {
         WidgetLibraryCard(
             widgetID: id,
             title: manifest.displayName,
             summary: manifest.summary,
-            family: family,
             isEnabled: Binding(
                 get: { settings.isEnabled(id) },
                 set: { enabled in
@@ -249,17 +209,13 @@ struct WidgetsSettingsPane: View {
         .background(WidgetCardScreenFrameReader(widgetID: id))
         .onDrag {
             draggingID = id
-            AppLog.debug("Settings", "开始拖拽小组件卡", [
-                "id": id,
-                "family": family.rawValue
-            ])
+            AppLog.debug("Settings", "开始拖拽小组件卡", ["id": id])
             return NSItemProvider(object: id as NSString)
         } preview: {
             WidgetLibraryCard(
                 widgetID: id,
                 title: manifest.displayName,
                 summary: manifest.summary,
-                family: family,
                 isEnabled: .constant(settings.isEnabled(id)),
                 onOpen: {}
             )
@@ -271,7 +227,6 @@ struct WidgetsSettingsPane: View {
             of: [.text, .plainText, .utf8PlainText],
             delegate: WidgetCardReorderDropDelegate(
                 targetID: id,
-                family: family,
                 draggingID: $draggingID,
                 settings: settings
             )
@@ -295,10 +250,9 @@ struct WidgetsSettingsPane: View {
     }
 }
 
-/// 松手落在目标卡上时交换库顺序（仅同家族内容型之间）。
+/// 松手落在目标卡上时交换库顺序（扁平列表，内容型之间可任意换）。
 private struct WidgetCardReorderDropDelegate: DropDelegate {
     let targetID: WidgetID
-    let family: WidgetLibraryFamily
     @Binding var draggingID: WidgetID?
     let settings: WidgetSettings
 
@@ -312,16 +266,6 @@ private struct WidgetCardReorderDropDelegate: DropDelegate {
         let finishedID = draggingID
         draggingID = nil
         guard let finishedID, finishedID != targetID else { return false }
-        guard WidgetLibraryFamily.family(for: finishedID) == family,
-              WidgetLibraryFamily.family(for: targetID) == family
-        else {
-            AppLog.debug("Settings", "拖拽跨分类忽略", [
-                "id": finishedID,
-                "with": targetID,
-                "family": family.rawValue
-            ])
-            return false
-        }
         withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
             _ = settings.move(draggedID: finishedID, onto: targetID)
         }
@@ -329,8 +273,7 @@ private struct WidgetCardReorderDropDelegate: DropDelegate {
             IslandController.shared?.presentWidgetReordered(finishedID)
             AppLog.info("Settings", "拖拽交换完成", [
                 "id": finishedID,
-                "with": targetID,
-                "family": family.rawValue
+                "with": targetID
             ])
         }
         return true
@@ -427,58 +370,43 @@ private struct WidgetCardScreenFrameReader: NSViewRepresentable {
 
 // MARK: - 库卡片
 
+/// 库卡尺寸：提示 / 实况 / 面板同壳，灰舞台高度一律一致。
+enum WidgetLibraryCardLayout {
+    /// 灰舞台统一高（三族相同）。
+    static let islandStageHeight: CGFloat = 106
+    /// 整卡统一高（舞台 + 底栏 + 内边距）。
+    static let cardHeight: CGFloat = 196
+
+    // 兼容旧测试名 / 调用点。
+    static var tipIslandStageHeight: CGFloat { islandStageHeight }
+    static var tipCardHeight: CGFloat { cardHeight }
+    static var contentIslandStageHeight: CGFloat { islandStageHeight }
+    static var contentCardHeight: CGFloat { cardHeight }
+
+    static func islandStageHeight(for family: WidgetLibraryFamily?) -> CGFloat {
+        _ = family
+        return islandStageHeight
+    }
+
+    static func cardHeight(for family: WidgetLibraryFamily?) -> CGFloat {
+        _ = family
+        return cardHeight
+    }
+}
+
 private struct WidgetLibraryCard: View {
     let widgetID: WidgetID
     let title: String
     let summary: String
-    /// 提示族：矮卡 + 灰底居中舞台；黑岛内容仍走 `WidgetSamplePreview` 原样。
+    /// 提示 / 实况 / 面板共用灰底居中舞台 + 底栏；灰舞台高度三族一致。
     var family: WidgetLibraryFamily? = nil
     @Binding var isEnabled: Bool
     var onOpen: () -> Void
 
-    private enum CardLayout {
-        static let islandStageHeight: CGFloat = 176
-        static let cardHeight: CGFloat = 340
-        /// 提示稿：灰舞台约 106，整卡约 196。
-        static let tipIslandStageHeight: CGFloat = 106
-        static let tipCardHeight: CGFloat = 196
-    }
-
-    private var isTipCard: Bool { family == .tip }
-
-    private var category: String { L10n.Widgets.categoryBadge(for: widgetID) }
-    private var footerHint: String { L10n.Widgets.cardFooterHint(for: widgetID) }
-    private var footerSymbol: String { L10n.Widgets.cardFooterSymbol(for: widgetID) }
-
     var body: some View {
-        Group {
-            if isTipCard {
-                tipCardBody
-            } else {
-                standardCardBody
-            }
-        }
-        .padding(SettingsChrome.Spacing.cardInner)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(
-            height: isTipCard ? CardLayout.tipCardHeight : CardLayout.cardHeight,
-            alignment: .top
-        )
-        .background(SettingsChrome.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
-        )
-        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
-        .opacity(isEnabled ? 1 : 0.72)
-    }
-
-    /// 提示族：灰底仿真台居中放黑岛（岛内内容不改）；底栏标题说明 + 开关 / 配置。
-    private var tipCardBody: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button(action: onOpen) {
-                tipIslandStage
+                libraryIslandStage
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -516,14 +444,25 @@ private struct WidgetLibraryCard: View {
                 .accessibilityLabel(L10n.Widgets.configureLink)
             }
         }
+        .padding(SettingsChrome.Spacing.cardInner)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: WidgetLibraryCardLayout.cardHeight(for: family), alignment: .top)
+        .background(SettingsChrome.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
+                .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
+        )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
+        .opacity(isEnabled ? 1 : 0.72)
     }
 
-    /// 灰舞台居中：tip 库卡 hugs 固有宽；媒体/番茄由 `libraryIslandWidth` 定 360。
-    private var tipIslandStage: some View {
+    /// 灰舞台居中放黑岛（三族同壳）；黑岛统一缩到 290（「已复制」除外）。
+    private var libraryIslandStage: some View {
         WidgetSamplePreview.island(for: widgetID, compact: true)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .padding(.horizontal, 10)
-            .frame(height: CardLayout.tipIslandStageHeight)
+            .frame(height: WidgetLibraryCardLayout.islandStageHeight(for: family))
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(SettingsChrome.surfaceContainerLow)
@@ -533,94 +472,6 @@ private struct WidgetLibraryCard: View {
                     )
             )
             .clipped()
-    }
-
-    /// 实况 / 面板：原卡（岛区贴顶、分类徽章、脚注）。
-    private var standardCardBody: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Button(action: onOpen) {
-                WidgetSamplePreview.island(for: widgetID, compact: true)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .padding(.horizontal, 4)
-                    .padding(.top, 2)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .frame(maxWidth: .infinity)
-            .frame(height: CardLayout.islandStageHeight, alignment: .top)
-            .clipped()
-
-            Spacer(minLength: 8)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .center, spacing: 8) {
-                    Button(action: onOpen) {
-                        HStack(spacing: 8) {
-                            Text(title)
-                                .font(SettingsChrome.Font.sectionTitle)
-                                .foregroundStyle(SettingsChrome.onSurface)
-                                .lineLimit(1)
-                            Text(category)
-                                .font(SettingsChrome.Font.chip)
-                                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(SettingsChrome.surfaceContainer)
-                                )
-                        }
-                    }
-                    .buttonStyle(.plain)
-
-                    Spacer(minLength: 8)
-
-                    Toggle("", isOn: $isEnabled)
-                        .labelsHidden()
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                }
-
-                Button(action: onOpen) {
-                    Text(summary)
-                        .font(SettingsChrome.Font.body)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .lineLimit(2)
-                        .frame(maxWidth: .infinity, minHeight: 36, alignment: .topLeading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Button(action: onOpen) {
-                    HStack(alignment: .center, spacing: 8) {
-                        Label {
-                            Text(footerHint)
-                                .font(SettingsChrome.Font.chip)
-                                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                                .lineLimit(1)
-                        } icon: {
-                            Image(systemName: footerSymbol)
-                                .font(SettingsChrome.Font.iconInline)
-                                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        }
-                        .labelStyle(.titleAndIcon)
-
-                        Spacer(minLength: 8)
-
-                        HStack(spacing: 2) {
-                            Text(L10n.Widgets.configureLink)
-                                .font(SettingsChrome.Font.label)
-                            Image(systemName: "arrow.up.right")
-                                .font(SettingsChrome.Font.iconInline)
-                        }
-                        .foregroundStyle(SettingsChrome.primary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
     }
 }
 

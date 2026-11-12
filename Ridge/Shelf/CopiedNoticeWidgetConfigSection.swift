@@ -48,8 +48,9 @@ struct CopiedNoticeWidgetConfigSection: View {
                     hugsContent: true,
                     bottomRadius: IslandChrome.notchRightOrbDiameter / 2,
                     outlineStyle: .circle,
-                    minStageHeight: 96,
-                    compactShell: true
+                    minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
+                    compactShell: true,
+                    scalesBlackIslandToLibrary: false
                 )
             ],
             selection: .constant("copied")

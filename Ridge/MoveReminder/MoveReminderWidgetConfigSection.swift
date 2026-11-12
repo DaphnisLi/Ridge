@@ -53,7 +53,7 @@ struct MoveReminderWidgetConfigSection: View {
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
                     bottomRadius: 18,
                     outlineStyle: .panel,
-                    minStageHeight: 88,
+                    minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
                 )
             ],
