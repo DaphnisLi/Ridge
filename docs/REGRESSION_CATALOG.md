@@ -22,7 +22,7 @@
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 | ≥6 | 取色/框选后看不见；关货架不上岛；或展开未完即 hoverEnd 收掉 | `ClipboardCopiedNoticeGate`；`copy.*` keepExpanded；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
-| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥4 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；`test_islandFocusPolicy_*` |
+| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥5 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌 / 混音台滑条静音） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；`test_islandFocusPolicy_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 | `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
@@ -187,12 +187,12 @@
 ### island-focus-steal — 岛抢鼠标/键盘焦点
 
 - **recurring:** true  
-- **occurrences:** 4（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；**2026-11-12 媒体展开暂停/切歌 SwiftUI 首击无响应**）  
-- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体播放控件点了没反应  
-- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 SwiftUI 首击；会议 tip 可点区停在刘海/短条，右翼落在 `interactiveFrame` 外  
-- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl`；会议 tip / **媒体播放控件**用 AppKit 按钮；会议 tip present 前 `prepareMeetingWingNoticeLayout`  
-- **相关代码:** `IslandFocusPolicy`、`prepareMeetingWingNoticeLayout`、`MeetingLeadAppKitPillButton`、`MediaTransportAppKitButton`、`MeetingLeadSession`  
-- **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`
+- **occurrences:** 5（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；2026-11-12 媒体展开暂停/切歌；**2026-11-13 混音台滑条/静音/设备行 SwiftUI 无响应**）  
+- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体播放控件/混音台控件点了没反应  
+- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 SwiftUI 首击；横滑翻页 pan 抢走音量横向拖动；会议 tip 可点区停在刘海/短条  
+- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl` / `IslandDirectHitTarget`；会议 tip / 媒体播放 / **混音台滑条·静音·设备行**用 AppKit；翻页 pan 在控件上 `failed`  
+- **相关代码:** `IslandFocusPolicy`、`IslandDirectHitTarget`、`MixerVolumeTrackNSView`、`MixerMuteNSButton`、`MediaTransportAppKitButton`、`MeetingLeadAppKitPillButton`  
+- **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`、`test_controlDeckVolumeHeight_adaptsBelowMaxAndCapsAtMax`
 
 ### tip-outline-panel — 瞬时提示上直角下圆角
 
@@ -244,12 +244,23 @@
 - **相关代码:** `MediaNowPlayingWidget`、`MediaCompactPresence.isVisiblyShowingCompact`、`LiveIslandGate`、`IslandController`、`MediaSettingsPane`  
 - **自动化:** `RegressionCatalogTests.test_mediaCompactNotResident_gateClosedUntilOpen`
 
+### sound-app-volume-host-key — 按 App 音量对不上宿主进程
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-13：汽水音乐 / iPhone 镜像滑条无实际音量变化）  
+- **症状:** 混音台能列出正在播放的 App，拖滑条 / 静音听感不变  
+- **根因倾向:** UI 行按宿主 bundle 聚合，`applyRoute` 却用进程自身 `bundleID == key` 过滤；Helper 空匹配后静默 return；滚动区 `compositingGroup` 亦可能吞 AppKit 滑条命中  
+- **防护:** `SoundProcessMonitor.processObjectIDs(forHostKey:)` 与聚合同 key；混音台滚动关 compositing；关键路径 warn 落盘  
+- **相关代码:** `SoundSession.applyRoute`、`SoundProcessMonitor.hostKey`、`AlwaysVisibleScrollView.usesCompositingGroup`  
+- **自动化:** `RegressionCatalogTests.test_soundAppVolumeHostKey_helperBundleDoesNotEqualHostKey`
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-13 | 按 App 音量：宿主 key 匹配 Process Tap；混音台滚动关 compositing；catalog `sound-app-volume-host-key` |
 | 2026-11-12 | 库卡灰舞台三族统一 106；详情 tip/待命 `tipStageMinHeight` 88 |
 | 2026-11-12 | 媒体/专注待命预览与会议 tip 同 290×30 + chrome（`meetingMatchedCompactChrome`） |
 | 2026-11-12 | 媒体/番茄预览直接按 290 排（禁 scale），上下垫 8 / minH 42，避免字与岛高被压 |

@@ -91,40 +91,42 @@ enum ControlDeckContentSize {
         }
     }
 
+    /// 混音台面板最小高（含壳层）：单设备也要留足滑条/设备卡呼吸感。
+    static let volumePanelMinHeight: CGFloat = 230
+
     /// 混音台面板高：按左右栏内容估算，上限为原固定高 `controlDeckMinHeight`。
     static func volumePanelHeight(deviceCount: Int, appCount: Int) -> CGFloat {
         let maxPanel = NotchGeometry.controlDeckMinHeight
         let left = estimatedVolumeLeftHeight(deviceCount: deviceCount)
         let right = estimatedVolumeRightHeight(appCount: appCount)
         let needed = max(left, right)
-        // 过矮时仍保留一截可读高度。
-        let floored = max(needed, 148)
+        let floored = max(needed, volumePanelMinHeight)
         return min(maxPanel, floored)
     }
 
     /// 对齐 `SoundMixerDeckView` 左栏：主音量 + 整表设备（选中卡更高）。
     private static func estimatedVolumeLeftHeight(deviceCount: Int) -> CGFloat {
-        let padding: CGFloat = 24
-        let masterBlock: CGFloat = 34
-        let sectionHeader: CGFloat = 32
+        let padding: CGFloat = 28
+        let masterBlock: CGFloat = 48
+        let sectionHeader: CGFloat = 36
         guard deviceCount > 0 else {
-            return padding + masterBlock + sectionHeader + 22
+            return padding + masterBlock + sectionHeader + 28
         }
-        // 选中卡约 48，未选中行约 34；列表内共滚。
-        let list = 48 + CGFloat(max(0, deviceCount - 1)) * 34
+        // 选中卡约 52，未选中行约 36；列表内共滚。
+        let list = 52 + CGFloat(max(0, deviceCount - 1)) * 36
         return padding + masterBlock + sectionHeader + list
     }
 
     /// 对齐右栏：标题 + App 行（最多展示 8）。
     private static func estimatedVolumeRightHeight(appCount: Int) -> CGFloat {
-        let padding: CGFloat = 24
-        let header: CGFloat = 36
+        let padding: CGFloat = 28
+        let header: CGFloat = 40
         let shown = min(max(appCount, 0), 8)
         if shown == 0 {
-            return padding + header + 36
+            return padding + header + 44
         }
-        let listTop: CGFloat = 10
-        let row: CGFloat = 38
+        let listTop: CGFloat = 12
+        let row: CGFloat = 44
         return padding + header + listTop + CGFloat(shown) * row
     }
 }

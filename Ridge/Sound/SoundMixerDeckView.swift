@@ -1,3 +1,4 @@
+import AppKit
 import CoreAudio
 import SwiftUI
 
@@ -72,14 +73,14 @@ struct SoundMixerDeckView: View {
                             sound.setMasterVolume(next)
                         }
                     ),
-                    gradient: Gradient(colors: [
-                        Color(red: 0.23, green: 0.51, blue: 1.0),
-                        blueMid,
-                        accent
-                    ]),
-                    glow: accent.opacity(0.45)
+                    gradientColors: [
+                        NSColor(red: 0.23, green: 0.51, blue: 1.0, alpha: 1),
+                        NSColor(red: 0.510, green: 0.659, blue: 1.0, alpha: 1),
+                        NSColor(red: 0.678, green: 0.776, blue: 1.0, alpha: 1)
+                    ],
+                    glow: NSColor(red: 0.678, green: 0.776, blue: 1.0, alpha: 0.45)
                 )
-                .frame(height: 10)
+                .frame(height: 18)
             }
 
             Text(L10n.Sound.currentOutputDevice)
@@ -97,7 +98,7 @@ struct SoundMixerDeckView: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             } else {
                 // 选中 / 未选中同一列表一起滑，仅样式不同。
-                AlwaysVisibleScrollView(viewportFill: scrollViewportFill) {
+                AlwaysVisibleScrollView(viewportFill: scrollViewportFill, usesCompositingGroup: false) {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(orderedOutputs) { device in
                             if device.isDefault {
@@ -148,8 +149,10 @@ struct SoundMixerDeckView: View {
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .onTapGesture {
-            selectOutputDevice(device)
+        .overlay {
+            MixerAppKitTapOverlay {
+                selectOutputDevice(device)
+            }
         }
     }
 
@@ -204,8 +207,10 @@ struct SoundMixerDeckView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
         .contentShape(Rectangle())
-        .onTapGesture {
-            selectOutputDevice(device)
+        .overlay {
+            MixerAppKitTapOverlay {
+                selectOutputDevice(device)
+            }
         }
     }
 
@@ -282,7 +287,7 @@ struct SoundMixerDeckView: View {
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(.top, 12)
                 } else {
-                    AlwaysVisibleScrollView(viewportFill: scrollViewportFill) {
+                    AlwaysVisibleScrollView(viewportFill: scrollViewportFill, usesCompositingGroup: false) {
                         VStack(spacing: 10) {
                             ForEach(displayApps.prefix(8)) { app in
                                 appRow(app)
@@ -301,10 +306,19 @@ struct SoundMixerDeckView: View {
                     .foregroundStyle(.orange.opacity(0.95))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
-                    .onTapGesture {
-                        AppLog.info("Sound", "点击授权屏幕录制")
-                        sound.requestScreenCaptureAccess()
+                    .overlay {
+                        MixerAppKitTapOverlay {
+                            AppLog.warn("Sound", "点击授权屏幕录制")
+                            sound.requestScreenCaptureAccess()
+                        }
                     }
+                    .padding(.top, 6)
+            } else if let err = sound.lastError, !err.isEmpty {
+                Text(err)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.orange.opacity(0.95))
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 6)
             }
         }
@@ -315,7 +329,9 @@ struct SoundMixerDeckView: View {
 
     private func appRow(_ app: SoundAppRow) -> some View {
         let displayVolume = app.isMuted ? 0.0 : app.volume
-        let tint: Color = app.isMuted ? Color.red.opacity(0.75) : accent
+        let tintNS: NSColor = app.isMuted
+            ? NSColor(red: 1, green: 0.3, blue: 0.3, alpha: 0.75)
+            : NSColor(red: 0.678, green: 0.776, blue: 1.0, alpha: 1)
 
         return HStack(spacing: 8) {
             appIcon(app)
@@ -347,12 +363,15 @@ struct SoundMixerDeckView: View {
                         sound.setAppVolume(next, for: app.key)
                     }
                 ),
-                gradient: Gradient(colors: [tint.opacity(0.85), tint]),
-                glow: tint.opacity(0.25),
+                gradientColors: [
+                    tintNS.withAlphaComponent(0.85),
+                    tintNS
+                ],
+                glow: tintNS.withAlphaComponent(0.25),
                 trackHeight: 8
             )
             .frame(maxWidth: .infinity)
-            .frame(height: 14)
+            .frame(height: 18)
             .opacity(app.isPlaying || app.isMuted || app.volume < 0.999 ? 1 : 0.55)
 
             Text("\(percent(displayVolume))%")
@@ -360,25 +379,20 @@ struct SoundMixerDeckView: View {
                 .foregroundStyle(app.isMuted ? Color.red.opacity(0.85) : .white.opacity(0.80))
                 .frame(width: 32, alignment: .trailing)
 
-            Image(systemName: app.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                .font(.system(size: 11))
-                .foregroundStyle(app.isMuted ? Color.red.opacity(0.90) : .white.opacity(0.70))
-                .frame(width: 28, height: 28)
-                .contentShape(Rectangle())
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(app.isMuted ? Color.red.opacity(0.20) : Color.white.opacity(0.06))
-                )
-                .onTapGesture {
-                    guard !SoundMixerDebugMock.enabled else { return }
-                    AppLog.info("Sound", "点击 App 静音切换", [
-                        "key": app.key,
-                        "wasMuted": app.isMuted,
-                        "nextMuted": !app.isMuted
-                    ])
-                    sound.setAppMuted(!app.isMuted, for: app.key)
-                }
-                .help(app.isMuted ? L10n.Sound.unmuteApp : L10n.Sound.muteApp)
+            MixerMuteAppKitButton(
+                isMuted: app.isMuted,
+                accessibilityLabel: app.isMuted ? L10n.Sound.unmuteApp : L10n.Sound.muteApp
+            ) {
+                guard !SoundMixerDebugMock.enabled else { return }
+                AppLog.info("Sound", "点击 App 静音切换", [
+                    "key": app.key,
+                    "wasMuted": app.isMuted,
+                    "nextMuted": !app.isMuted
+                ])
+                sound.setAppMuted(!app.isMuted, for: app.key)
+            }
+            .frame(width: 28, height: 28)
+            .help(app.isMuted ? L10n.Sound.unmuteApp : L10n.Sound.muteApp)
         }
         .opacity(app.isMuted ? 0.78 : 1)
     }
@@ -462,49 +476,241 @@ struct SoundMixerDeckView: View {
     }
 }
 
-// MARK: - Custom track
+// MARK: - AppKit 控件（岛上 SwiftUI 首击 / 横滑翻页会吞掉 DragGesture）
 
-private struct MixerGradientTrack: View {
+/// 渐变音量条：自绘 NSView，直达 mouseDown，避免翻页 pan 抢走横向拖动。
+private struct MixerGradientTrack: NSViewRepresentable {
     @Binding var value: Double
-    var gradient: Gradient
-    var glow: Color
+    var gradientColors: [NSColor]
+    var glow: NSColor
     var trackHeight: CGFloat = 10
 
-    var body: some View {
-        GeometryReader { geo in
-            let w = max(geo.size.width, 1)
-            let clamped = min(1, max(0, value))
-            let fillW = w * clamped
-            let knob: CGFloat = trackHeight + 4
+    func makeCoordinator() -> Coordinator { Coordinator(value: $value) }
 
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.white.opacity(0.15))
-                    .frame(height: trackHeight)
+    func makeNSView(context: Context) -> MixerVolumeTrackNSView {
+        let view = MixerVolumeTrackNSView()
+        view.trackHeight = trackHeight
+        view.gradientColors = gradientColors
+        view.glowColor = glow
+        view.value = value
+        view.onChange = { context.coordinator.setValue($0) }
+        return view
+    }
 
-                Capsule()
-                    .fill(LinearGradient(gradient: gradient, startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(fillW, trackHeight / 2), height: trackHeight)
-                    .shadow(color: glow, radius: 6, y: 0)
-
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: knob, height: knob)
-                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(Color.black.opacity(0.15), lineWidth: 0.5)
-                    )
-                    .offset(x: max(0, min(w - knob, fillW - knob / 2)))
-            }
-            .frame(maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { drag in
-                        value = min(1, max(0, drag.location.x / w))
-                    }
-            )
+    func updateNSView(_ nsView: MixerVolumeTrackNSView, context: Context) {
+        context.coordinator.value = $value
+        nsView.trackHeight = trackHeight
+        nsView.gradientColors = gradientColors
+        nsView.glowColor = glow
+        // 拖动中勿用外部绑定回写，避免抖动打断拖拽。
+        if !nsView.isDragging, abs(nsView.value - value) > 0.0005 {
+            nsView.value = value
+            nsView.needsDisplay = true
         }
+        nsView.onChange = { context.coordinator.setValue($0) }
+    }
+
+    final class Coordinator {
+        var value: Binding<Double>
+        init(value: Binding<Double>) { self.value = value }
+        func setValue(_ next: Double) { value.wrappedValue = next }
+    }
+}
+
+private final class MixerVolumeTrackNSView: NSView, IslandDirectHitTarget {
+    var value: Double = 0
+    var trackHeight: CGFloat = 10
+    var gradientColors: [NSColor] = [.systemBlue, .cyan]
+    var glowColor: NSColor = .systemBlue.withAlphaComponent(0.4)
+    var onChange: ((Double) -> Void)?
+    private(set) var isDragging = false
+
+    override var isFlipped: Bool { true }
+    override var acceptsFirstResponder: Bool { true }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        bounds.contains(point) ? self : nil
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let w = max(bounds.width, 1)
+        let h = bounds.height
+        let trackH = min(trackHeight, h)
+        let trackY = (h - trackH) / 2
+        let trackRect = NSRect(x: 0, y: trackY, width: w, height: trackH)
+        let clamped = min(1, max(0, value))
+        let fillW = max(trackH / 2, w * clamped)
+        let knob = trackH + 4
+
+        NSColor.white.withAlphaComponent(0.15).setFill()
+        NSBezierPath(roundedRect: trackRect, xRadius: trackH / 2, yRadius: trackH / 2).fill()
+
+        let fillRect = NSRect(x: 0, y: trackY, width: fillW, height: trackH)
+        let fillPath = NSBezierPath(roundedRect: fillRect, xRadius: trackH / 2, yRadius: trackH / 2)
+        if let gradient = NSGradient(colors: gradientColors) {
+            gradient.draw(in: fillPath, angle: 0)
+        } else {
+            gradientColors.first?.setFill()
+            fillPath.fill()
+        }
+
+        let knobX = max(0, min(w - knob, fillW - knob / 2))
+        let knobRect = NSRect(x: knobX, y: (h - knob) / 2, width: knob, height: knob)
+        NSColor.black.withAlphaComponent(0.35).setFill()
+        NSBezierPath(ovalIn: knobRect.insetBy(dx: -0.5, dy: 0.5)).fill()
+        NSColor.white.setFill()
+        NSBezierPath(ovalIn: knobRect).fill()
+        NSColor.black.withAlphaComponent(0.15).setStroke()
+        let stroke = NSBezierPath(ovalIn: knobRect.insetBy(dx: 0.25, dy: 0.25))
+        stroke.lineWidth = 0.5
+        stroke.stroke()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        isDragging = true
+        IslandInteractionFocus.makeKeyOnly(window: window, reason: "mixerTrack.mouseDown")
+        AppLog.info("Sound", "混音台滑条按下", ["value": String(format: "%.2f", value)])
+        updateValue(from: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        updateValue(from: event)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        updateValue(from: event)
+        isDragging = false
+        AppLog.info("Sound", "混音台滑条松开", ["value": String(format: "%.2f", value)])
+    }
+
+    private func updateValue(from event: NSEvent) {
+        let local = convert(event.locationInWindow, from: nil)
+        let next = min(1, max(0, local.x / max(bounds.width, 1)))
+        guard abs(next - value) > 0.0005 else { return }
+        value = next
+        needsDisplay = true
+        onChange?(next)
+    }
+}
+
+/// 静音切换：NSButton，岛上首击可靠。
+private struct MixerMuteAppKitButton: NSViewRepresentable {
+    let isMuted: Bool
+    let accessibilityLabel: String
+    let action: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    func makeNSView(context: Context) -> MixerMuteNSButton {
+        let button = MixerMuteNSButton()
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.tap(_:))
+        button.apply(isMuted: isMuted, accessibilityLabel: accessibilityLabel)
+        return button
+    }
+
+    func updateNSView(_ button: MixerMuteNSButton, context: Context) {
+        context.coordinator.action = action
+        button.apply(isMuted: isMuted, accessibilityLabel: accessibilityLabel)
+    }
+
+    final class Coordinator: NSObject {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+        @objc func tap(_ sender: Any?) { action() }
+    }
+}
+
+private final class MixerMuteNSButton: NSButton {
+    init() {
+        super.init(frame: NSRect(x: 0, y: 0, width: 28, height: 28))
+        isBordered = false
+        setButtonType(.momentaryChange)
+        focusRingType = .none
+        wantsLayer = true
+        layer?.cornerRadius = 6
+        imagePosition = .imageOnly
+        imageScaling = .scaleProportionallyDown
+        (cell as? NSButtonCell)?.highlightsBy = []
+        (cell as? NSButtonCell)?.showsStateBy = []
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override var intrinsicContentSize: NSSize { NSSize(width: 28, height: 28) }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        bounds.contains(point) ? self : nil
+    }
+
+    func apply(isMuted: Bool, accessibilityLabel: String) {
+        let symbol = isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill"
+        let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
+        image = NSImage(systemSymbolName: symbol, accessibilityDescription: accessibilityLabel)?
+            .withSymbolConfiguration(config)
+        contentTintColor = isMuted
+            ? NSColor(red: 1, green: 0.35, blue: 0.35, alpha: 0.95)
+            : NSColor.white.withAlphaComponent(0.70)
+        layer?.backgroundColor = (isMuted
+            ? NSColor.red.withAlphaComponent(0.20)
+            : NSColor.white.withAlphaComponent(0.06)).cgColor
+        toolTip = accessibilityLabel
+        setAccessibilityLabel(accessibilityLabel)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        IslandInteractionFocus.makeKeyOnly(window: window, reason: "mixerMute.mouseDown")
+        super.mouseDown(with: event)
+    }
+}
+
+/// 透明点击热区：设备行 / 授权文案，避开 SwiftUI onTapGesture 首击失灵。
+private struct MixerAppKitTapOverlay: NSViewRepresentable {
+    let action: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    func makeNSView(context: Context) -> MixerTapNSView {
+        let view = MixerTapNSView()
+        view.onTap = { context.coordinator.action() }
+        return view
+    }
+
+    func updateNSView(_ nsView: MixerTapNSView, context: Context) {
+        context.coordinator.action = action
+        nsView.onTap = { context.coordinator.action() }
+    }
+
+    final class Coordinator {
+        var action: () -> Void
+        init(action: @escaping () -> Void) { self.action = action }
+    }
+}
+
+private final class MixerTapNSView: NSView, IslandDirectHitTarget {
+    var onTap: (() -> Void)?
+    private var downPoint: CGPoint?
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        bounds.contains(point) ? self : nil
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        IslandInteractionFocus.makeKeyOnly(window: window, reason: "mixerTap.mouseDown")
+        downPoint = convert(event.locationInWindow, from: nil)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        defer { downPoint = nil }
+        let up = convert(event.locationInWindow, from: nil)
+        guard bounds.contains(up) else { return }
+        if let downPoint, hypot(up.x - downPoint.x, up.y - downPoint.y) > 8 { return }
+        onTap?()
     }
 }

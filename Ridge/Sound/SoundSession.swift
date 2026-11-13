@@ -98,18 +98,26 @@ final class SoundSession: ObservableObject {
     }
 
     func setAppVolume(_ value: Double, for key: String) {
-        settings.setVolume(value, for: key)
+        let clamped = min(1, max(0, value))
+        settings.setVolume(clamped, for: key)
+        AppLog.warn("Sound", "设置 App 音量", [
+            "key": key,
+            "volume": String(format: "%.2f", clamped),
+            "tap": "\(tapAvailability)"
+        ])
         applyRoute(for: key)
         refreshApps(reason: "setVolume")
     }
 
     func setAppMuted(_ muted: Bool, for key: String) {
         settings.setMuted(muted, for: key)
-        if #available(macOS 14.2, *), let route = routes[key] as? SoundAppVolumeRoute {
-            route.isMuted = muted
-        } else {
-            applyRoute(for: key)
-        }
+        AppLog.warn("Sound", "设置 App 静音", [
+            "key": key,
+            "muted": muted,
+            "hasRoute": routes[key] != nil
+        ])
+        // 一律走 applyRoute：100% 直通时静音也要建 Tap；取消静音且音量满则拆除。
+        applyRoute(for: key)
         refreshApps(reason: "setMuted")
     }
 
@@ -265,6 +273,10 @@ final class SoundSession: ObservableObject {
         refreshTapAvailability()
         guard tapAvailability == .available else {
             lastError = L10n.Sound.tapUnavailableHint
+            AppLog.warn("Sound", "App 路由跳过：Tap 不可用", [
+                "key": key,
+                "tap": "\(tapAvailability)"
+            ])
             return
         }
 
@@ -274,7 +286,7 @@ final class SoundSession: ObservableObject {
         guard needs else {
             if #available(macOS 14.2, *), let route = routes.removeValue(forKey: key) as? SoundAppVolumeRoute {
                 route.stop()
-                AppLog.info("Sound", "恢复 App 直通（音量 100%）", ["key": key])
+                AppLog.warn("Sound", "恢复 App 直通（音量 100%）", ["key": key])
             } else {
                 routes.removeValue(forKey: key)
             }
@@ -283,15 +295,27 @@ final class SoundSession: ObservableObject {
 
         guard #available(macOS 14.2, *) else { return }
 
-        let processes = SoundProcessMonitor.snapshot().filter {
-            ($0.bundleID ?? "pid:\($0.pid)") == key && $0.isRunningOutput
+        // 必须用宿主 key 匹配（与 UI 行一致）；旧逻辑用进程自身 bundle，Helper 会空匹配导致滑条无效。
+        var objectIDs = SoundProcessMonitor.processObjectIDs(forHostKey: key, runningOutputOnly: true)
+        if objectIDs.isEmpty, let cached = apps.first(where: { $0.key == key })?.processObjectIDs, !cached.isEmpty {
+            objectIDs = cached
+            AppLog.warn("Sound", "App 路由改用行内缓存进程", [
+                "key": key,
+                "processes": objectIDs.count
+            ])
         }
-        let objectIDs = processes.map(\.objectID)
-        guard !objectIDs.isEmpty else { return }
+        guard !objectIDs.isEmpty else {
+            AppLog.warn("Sound", "App 路由无可用进程，滑条仅写入偏好", [
+                "key": key,
+                "volume": String(format: "%.2f", volume),
+                "muted": muted
+            ])
+            return
+        }
         guard let outputUID = outputDevices.first(where: \.isDefault)?.uid
                 ?? SoundDeviceService.outputDevices().first(where: \.isDefault)?.uid
         else {
-            AppLog.debug("Sound", "无默认输出，跳过 App 路由", ["key": key])
+            AppLog.warn("Sound", "无默认输出，跳过 App 路由", ["key": key])
             return
         }
 
@@ -301,6 +325,12 @@ final class SoundSession: ObservableObject {
                 try existing.updateOutputUID(outputUID)
                 existing.volume = Float(volume)
                 existing.isMuted = muted
+                AppLog.warn("Sound", "已更新 App 音量路由", [
+                    "key": key,
+                    "volume": String(format: "%.2f", volume),
+                    "muted": muted,
+                    "processes": objectIDs.count
+                ])
             } else {
                 let route = SoundAppVolumeRoute(
                     key: key,
@@ -311,13 +341,20 @@ final class SoundSession: ObservableObject {
                 route.isMuted = muted
                 try route.start()
                 routes[key] = route
+                AppLog.warn("Sound", "已启动 App 音量路由", [
+                    "key": key,
+                    "volume": String(format: "%.2f", volume),
+                    "muted": muted,
+                    "processes": objectIDs.count
+                ])
             }
             lastError = nil
         } catch {
             lastError = error.localizedDescription
             AppLog.error("Sound", "App 音量路由失败，已 fail-open", [
                 "key": key,
-                "error": error.localizedDescription
+                "error": error.localizedDescription,
+                "processes": objectIDs.count
             ])
             (routes[key] as? SoundAppVolumeRoute)?.stop()
             routes.removeValue(forKey: key)

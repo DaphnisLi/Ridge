@@ -107,8 +107,10 @@ struct IslandPageCornerDots: View {
 
     var body: some View {
         let total = runtime.pageIDs.count
-        // 瞬时通知不是正规分页，不显示角点。
-        if !runtime.isShowingEmpty, !runtime.isTransientNoticePage, total > 1 {
+        // 瞬时通知 / 媒体展开态不显示角点（媒体仍可左右滑翻页）。
+        let hideDots = runtime.isTransientNoticePage
+            || runtime.activeID == LiveIslandGate.mediaID
+        if !runtime.isShowingEmpty, !hideDots, total > 1 {
             HStack(spacing: 0) {
                 dots(count: leadingCount, side: "leading")
                 Spacer(minLength: 0)

@@ -7,6 +7,8 @@ import SwiftUI
 struct AlwaysVisibleScrollView<Content: View>: View {
     /// 视口实心底。半透明行在 `.clipped()` 边缘会透出岛黑底，滚动时首尾行会闪色；必须用不透明色垫住。
     var viewportFill: Color? = Color(nsColor: NSColor(calibratedWhite: 0.10, alpha: 1))
+    /// 电量卡等半透明层需要；混音台内含 AppKit 滑条时须关闭，否则 compositingGroup 会吞掉命中。
+    var usesCompositingGroup: Bool = true
     @ViewBuilder var content: () -> Content
     @StateObject private var model = ManualScrollModel()
 
@@ -20,19 +22,7 @@ struct AlwaysVisibleScrollView<Content: View>: View {
                         .fill(viewportFill)
                 }
 
-                content()
-                    .frame(width: viewport.width, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .background(
-                        GeometryReader { contentGeo in
-                            Color.clear.preference(
-                                key: ScrollContentHeightKey.self,
-                                value: contentGeo.size.height
-                            )
-                        }
-                    )
-                    // 先合成再裁切：避免半透明行底与前景（如对勾）滚动时分层，右侧背景「消失」。
-                    .compositingGroup()
+                scrollContent(viewportWidth: viewport.width)
                     .offset(y: -model.offset)
                     .frame(width: viewport.width, height: viewport.height, alignment: .topLeading)
                     .clipped()
@@ -61,6 +51,27 @@ struct AlwaysVisibleScrollView<Content: View>: View {
             .onPreferenceChange(ScrollContentHeightKey.self) { h in
                 model.setContentHeight(h)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func scrollContent(viewportWidth: CGFloat) -> some View {
+        let base = content()
+            .frame(width: viewportWidth, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .background(
+                GeometryReader { contentGeo in
+                    Color.clear.preference(
+                        key: ScrollContentHeightKey.self,
+                        value: contentGeo.size.height
+                    )
+                }
+            )
+        if usesCompositingGroup {
+            // 先合成再裁切：避免半透明行底与前景（如对勾）滚动时分层。
+            base.compositingGroup()
+        } else {
+            base
         }
     }
 }

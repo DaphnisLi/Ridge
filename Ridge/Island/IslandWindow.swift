@@ -100,11 +100,37 @@ final class IslandHitTestView: NSView {
     }
 }
 
+/// 岛上非 `NSControl`、但须直达 mouseDown 的自绘热区（混音台滑条 / 设备行等）。
+protocol IslandDirectHitTarget: AnyObject {}
+
 /// 横向翻页拖拽：位移不足或偏竖直时失败，避免抢走混音台按钮点击。
 final class HorizontalPagePanRecognizer: NSPanGestureRecognizer {
     private let recognizeDistance: CGFloat = 12
+    /// 落在 AppKit 控件上时禁止认成翻页，否则会抢走音量拖动 / 静音点击。
+    private var beganOnDirectControl = false
+
+    override func mouseDown(with event: NSEvent) {
+        beganOnDirectControl = false
+        if let view {
+            let local = view.convert(event.locationInWindow, from: nil)
+            var cursor: NSView? = view.hitTest(local)
+            while let cur = cursor {
+                if cur is NSControl || cur is IslandDirectHitTarget {
+                    beganOnDirectControl = true
+                    break
+                }
+                if cur === view { break }
+                cursor = cur.superview
+            }
+        }
+        super.mouseDown(with: event)
+    }
 
     override func mouseDragged(with event: NSEvent) {
+        if beganOnDirectControl {
+            state = .failed
+            return
+        }
         if state == .possible {
             guard let view else {
                 state = .failed
@@ -127,6 +153,7 @@ final class HorizontalPagePanRecognizer: NSPanGestureRecognizer {
         if state == .possible {
             state = .failed
         }
+        beganOnDirectControl = false
         super.mouseUp(with: event)
     }
 }
@@ -193,7 +220,8 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
         if let systemHit = super.hitTest(point) {
             var cursor: NSView? = systemHit
             while let cur = cursor, cur !== self {
-                if cur is NSControl {
+                // NSControl + 自绘热区（混音台滑条等）必须直达，否则 hosting 吞掉首击。
+                if cur is NSControl || cur is IslandDirectHitTarget {
                     return cur
                 }
                 cursor = cur.superview

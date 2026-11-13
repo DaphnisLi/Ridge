@@ -318,8 +318,9 @@ private struct IslandBody: View {
     }
 
     private var hidesPageDots: Bool {
-        // 瞬时通知不参与翻页点（含 AI 额度等走普通通知顶距的条）。
+        // 瞬时通知不参与翻页点；媒体展开态也不画角点（左右滑仍可翻页）。
         usesNotchWingTip || usesShortBelowNotchTip || usesNotchRightOrbTip || runtime.isTransientNoticePage
+            || runtime.activeID == LiveIslandGate.mediaID
     }
 
     private var showsMediaCompactStandby: Bool {

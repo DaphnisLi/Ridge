@@ -34,6 +34,20 @@ enum SoundProcessMonitor {
         }
     }
 
+    /// 与 `aggregatedRows` 同一套宿主 key（禁止只用进程自身 bundle，否则 Helper 对不上行）。
+    static func hostKey(for process: RawProcess) -> String {
+        let identity = SoundHostAppResolver.resolve(pid: process.pid, processBundleID: process.bundleID)
+        return identity.bundleID ?? process.bundleID ?? "pid:\(process.pid)"
+    }
+
+    /// 某宿主行对应的 Process Tap 目标；默认只要正在输出的进程。
+    static func processObjectIDs(forHostKey key: String, runningOutputOnly: Bool = true) -> [AudioObjectID] {
+        snapshot().compactMap { process in
+            if runningOutputOnly, !process.isRunningOutput { return nil }
+            return hostKey(for: process) == key ? process.objectID : nil
+        }
+    }
+
     /// 聚合成 UI 行；只关心输出播放 / 宽限期 / 已被接管的 App。
     static func aggregatedRows(
         volumes: [String: Double],
@@ -54,7 +68,7 @@ enum SoundProcessMonitor {
         for process in raw {
             let identity = SoundHostAppResolver.resolve(pid: process.pid, processBundleID: process.bundleID)
             // 按宿主聚合：同一 App 的 Helper / GPU / Renderer 合成一行。
-            let key = identity.bundleID ?? process.bundleID ?? "pid:\(process.pid)"
+            let key = hostKey(for: process)
             var bucket = buckets[key] ?? (
                 bundleID: identity.bundleID ?? process.bundleID,
                 name: identity.name,

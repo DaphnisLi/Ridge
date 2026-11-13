@@ -1099,9 +1099,20 @@ final class RegressionCatalogTests: XCTestCase {
         let maxPanel = NotchGeometry.controlDeckMinHeight
         let sparse = ControlDeckContentSize.volumePanelHeight(deviceCount: 1, appCount: 0)
         let dense = ControlDeckContentSize.volumePanelHeight(deviceCount: 5, appCount: 7)
-        XCTAssertLessThan(sparse, maxPanel, "内容少时应矮于原最大高度")
+        XCTAssertLessThanOrEqual(sparse, maxPanel, "内容少时不超过最大高度")
         XCTAssertEqual(dense, maxPanel, "内容多时不得超过原最大高度")
-        XCTAssertGreaterThanOrEqual(sparse, 148)
+        XCTAssertGreaterThanOrEqual(sparse, ControlDeckContentSize.volumePanelMinHeight)
+        XCTAssertEqual(ControlDeckContentSize.volumePanelMinHeight, 230)
+    }
+
+    /// 混音台 applyRoute 必须用宿主 key；进程自身 `.helper` bundle 对不上 UI 行。
+    func test_soundAppVolumeHostKey_helperBundleDoesNotEqualHostKey() {
+        let helper = "com.soda.music.helper"
+        let hosts = SoundHostAppResolver.parentBundleIDCandidates(helper)
+        XCTAssertTrue(hosts.contains("com.soda.music"), "Helper 应剥到宿主 bundle")
+        XCTAssertFalse(hosts.contains(helper))
+        // 旧逻辑 `process.bundleID == key` 在 key=宿主 时永远空匹配。
+        XCTAssertNotEqual(helper, "com.soda.music")
     }
 
     /// 电量岛：列数/行数随台数收缩；两台不得占满三列宽。
