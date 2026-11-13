@@ -159,13 +159,18 @@ enum IslandExpandedPanelPolicy {
         return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
     }
 
-    /// 因货架拖文件而展开后，鼠标松开且未刚完成投放 → 应强制收起（防未入舱却留着大岛 / 回头再开）。
+    /// 因货架拖文件而展开后，鼠标松开且未刚完成投放 → 是否强收。
+    /// 仅当指针已离开**展开态大面板保展开区**才强收；仍在大岛下半截松手不得收（否则「移到一半就收」）。
     static func shouldForceCollapseAfterShelfFileDragMouseUp(
         hadShelfFileDragExpand: Bool,
         dropCompletedRecently: Bool,
-        isExpanded: Bool
+        isExpanded: Bool,
+        pointerInExpandedRetention: Bool
     ) -> Bool {
-        hadShelfFileDragExpand && !dropCompletedRecently && isExpanded
+        hadShelfFileDragExpand
+            && !dropCompletedRecently
+            && isExpanded
+            && !pointerInExpandedRetention
     }
 
     /// 展开且面板已接近刘海尺寸时视为异常（热区会退化成「小岛」）。

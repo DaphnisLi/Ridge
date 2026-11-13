@@ -12,12 +12,15 @@ final class ShelfSettings: ObservableObject {
         static let magneticDropCapture = "shelf.magneticDropCapture.v1"
     }
 
+    /// 产品默认：磁吸拖放开启。
+    static let magneticDropCaptureDefaultEnabled = true
+
     /// 磁吸双舱：开启时拖文件进接近区弹出暂存 / 隔空传送；关闭后无双舱与隔空，但仍用同一拖文件接近区入普通货架。
-    @Published var magneticDropCaptureEnabled: Bool {
+    @Published var magneticDropCaptureEnabled: Bool = ShelfSettings.magneticDropCaptureDefaultEnabled {
         didSet {
             guard magneticDropCaptureEnabled != oldValue else { return }
             UserDefaults.standard.set(magneticDropCaptureEnabled, forKey: Key.magneticDropCapture)
-            AppLog.info("Shelf", "磁吸拖放已更新", ["enabled": magneticDropCaptureEnabled])
+            AppLog.warn("Shelf", "磁吸拖放已更新", ["enabled": magneticDropCaptureEnabled])
             if !magneticDropCaptureEnabled {
                 ShelfDropSession.shared.setActive(false, reason: "magneticDisabled")
             }
@@ -27,7 +30,9 @@ final class ShelfSettings: ObservableObject {
     private init() {
         let defaults = UserDefaults.standard
         if defaults.object(forKey: Key.magneticDropCapture) == nil {
-            magneticDropCaptureEnabled = true
+            magneticDropCaptureEnabled = Self.magneticDropCaptureDefaultEnabled
+            defaults.set(Self.magneticDropCaptureDefaultEnabled, forKey: Key.magneticDropCapture)
+            AppLog.warn("Shelf", "磁吸拖放已写入默认开启")
         } else {
             magneticDropCaptureEnabled = defaults.bool(forKey: Key.magneticDropCapture)
         }
@@ -40,8 +45,10 @@ final class ShelfSettings: ObservableObject {
     }
 
     func restoreMagneticDropDefaults() {
-        magneticDropCaptureEnabled = true
-        AppLog.info("Shelf", "磁吸拖放已恢复默认", ["enabled": true])
+        magneticDropCaptureEnabled = Self.magneticDropCaptureDefaultEnabled
+        AppLog.warn("Shelf", "磁吸拖放已恢复默认", [
+            "enabled": Self.magneticDropCaptureDefaultEnabled
+        ])
     }
 
     /// 把旧货架嵌套开关迁到 `builtin.copiedNotice`（只跑一次）。

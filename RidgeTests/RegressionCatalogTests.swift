@@ -253,7 +253,45 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
-    /// 未入舱松手：须强收；冷却内普通悬停不得再开；拖文件接近区仍可。
+    /// 展开大岛保展开不得被拖文件接近区（仅 3×刘海高）截短——下半截必须仍命中。
+    func test_islandHoverRetention_expandedStayOpenNotClippedByFileDragApproach() {
+        let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
+        let screenMaxY: CGFloat = 1000
+        let panel = CGRect(x: 170, y: screenMaxY - 300, width: 660, height: 300)
+        let approach = IslandExpandedPanelPolicy.fileDragApproachFrame(notchFrame: notch)
+        let midLower = CGPoint(x: panel.midX, y: panel.minY + panel.height * 0.25)
+
+        XCTAssertFalse(
+            approach.contains(midLower),
+            "大岛下半截本就在拖文件接近区外——接近区不可代替展开保展开"
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.retentionContainsMidLowerPoint(
+                notchFrame: notch,
+                panelFrame: panel,
+                expanded: true
+            ),
+            "展开态大岛下半截必须仍在保展开区"
+        )
+        let expandedFrame = IslandExpandedPanelPolicy.retentionFrame(
+            notchFrame: notch,
+            panelFrame: panel,
+            expanded: true
+        )
+        XCTAssertTrue(expandedFrame.contains(midLower))
+        // 收起态不得用大面板（普通移入只认刘海）。
+        let collapsedFrame = IslandExpandedPanelPolicy.retentionFrame(
+            notchFrame: notch,
+            panelFrame: panel,
+            expanded: false
+        )
+        XCTAssertFalse(
+            collapsedFrame.contains(midLower),
+            "收起态不得把大岛框当成悬停展开区"
+        )
+    }
+
+    /// 未入舱松手：仅离开大岛才强收；仍在大岛下半截松手不得收；冷却内普通悬停不得再开。
     func test_shelfFileDragCancel_forceCollapseAndSuppressHoverReopen() {
         let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
         let inNotch = CGPoint(x: notch.midX, y: notch.midY)
@@ -269,15 +307,26 @@ final class RegressionCatalogTests: XCTestCase {
             IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
                 hadShelfFileDragExpand: true,
                 dropCompletedRecently: false,
-                isExpanded: true
+                isExpanded: true,
+                pointerInExpandedRetention: false
             ),
-            "未入舱松手且因拖文件展开过 → 强收"
+            "已离开展开大岛 → 强收"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
+                hadShelfFileDragExpand: true,
+                dropCompletedRecently: false,
+                isExpanded: true,
+                pointerInExpandedRetention: true
+            ),
+            "仍在大岛保展开区内松手不得强收（防移到一半就收）"
         )
         XCTAssertFalse(
             IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
                 hadShelfFileDragExpand: true,
                 dropCompletedRecently: true,
-                isExpanded: true
+                isExpanded: true,
+                pointerInExpandedRetention: false
             ),
             "刚成功入舱不得当取消强收"
         )
@@ -285,7 +334,8 @@ final class RegressionCatalogTests: XCTestCase {
             IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
                 hadShelfFileDragExpand: false,
                 dropCompletedRecently: false,
-                isExpanded: true
+                isExpanded: true,
+                pointerInExpandedRetention: false
             ),
             "非货架拖文件展开不得误强收"
         )
@@ -452,6 +502,10 @@ final class RegressionCatalogTests: XCTestCase {
 
     @MainActor
     func test_shelfMagneticDropCapture_defaultsOnAndRestore() {
+        XCTAssertTrue(
+            ShelfSettings.magneticDropCaptureDefaultEnabled,
+            "磁吸拖放产品默认必须为开"
+        )
         let settings = ShelfSettings.shared
         let previous = settings.magneticDropCaptureEnabled
         defer {
@@ -465,6 +519,10 @@ final class RegressionCatalogTests: XCTestCase {
 
         settings.restoreMagneticDropDefaults()
         XCTAssertTrue(settings.magneticDropCaptureEnabled)
+        XCTAssertEqual(
+            settings.magneticDropCaptureEnabled,
+            ShelfSettings.magneticDropCaptureDefaultEnabled
+        )
     }
 
     /// 投放完成后 isTargeted 滞后不得再点亮双舱（「用完又冒一次」）。
