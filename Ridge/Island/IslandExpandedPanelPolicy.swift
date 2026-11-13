@@ -3,11 +3,12 @@ import Foundation
 
 /// 展开态面板尺寸与悬停保展开的**唯一策略入口**。
 ///
-/// # 不变量（违反即回归「大岛拖一下就收」）
+/// # 不变量（违反即回归「大岛拖一下就收」/「移入刘海外就展开」）
 /// 1. 展开态保展开热区必须跟**当前可见大面板**走，禁止退回刘海小框。
-/// 2. 展开态内容 Preference 可以变大，但**禁止**在非翻页窗口内大幅缩小（拖动/滚动会误报矮框）。
-/// 3. 左键在岛上按下后的拖动，松开前不得因热区抖动收岛。
-/// 4. 控制台列表纵滑（无左键按下）后短时内不得 `collapse(hoverEnd)`——滚到一半指针微移会误判离开。
+/// 2. 收起态悬停展开仅刘海；控制台外扩接近区只在拖文件时用。
+/// 3. 展开态内容 Preference 可以变大，但**禁止**在非翻页窗口内大幅缩小（拖动/滚动会误报矮框）。
+/// 4. 左键在岛上按下后的拖动，松开前不得因热区抖动收岛。
+/// 5. 控制台列表纵滑（无左键按下）后短时内不得 `collapse(hoverEnd)`——滚到一半指针微移会误判离开。
 ///
 /// 改 `IslandController` 悬停 / `IslandViewModel.panelSize` / Preference 上报前必读
 /// `.cursor/rules/island-hover-retention.mdc`，并跑 `RidgeTests`。
@@ -61,9 +62,9 @@ enum IslandExpandedPanelPolicy {
         return measured.height + 1 >= current.height
     }
 
-    /// 展开态保展开矩形：面板框外扩 ∪ 刘海。
-    /// 收起态：当前可见小岛（`panelFrame`）∪ 刘海——播放/番茄小岛宽于刘海时，翼上也须能悬停展开，禁止只用 notch。
-    /// 下边多留一点：纵滑 / 滚到面板下沿时不易误判离开。
+    /// 展开态保展开矩形：面板框外扩 ∪ 刘海（下边多留，纵滑不易误收）。
+    /// 收起态悬停「识别 / 展开」：仅刘海。大接近区只给拖文件（见 `fileDragApproachFrame`），
+    /// 禁止把控制台外扩热区或宽于刘海的播放/番茄翼当成普通移入展开区。
     static func retentionFrame(
         notchFrame: CGRect,
         panelFrame: CGRect,
@@ -72,10 +73,10 @@ enum IslandExpandedPanelPolicy {
         panelPad: CGFloat = 16,
         panelBottomExtra: CGFloat = 20
     ) -> CGRect {
-        let notchHit = notchFrame.insetBy(dx: -notchPad, dy: -2)
+        let notchHit = hoverExpandFrame(notchFrame: notchFrame, notchPad: notchPad)
         if !expanded {
-            let compactHit = panelFrame.insetBy(dx: -2, dy: -2)
-            return compactHit.union(notchHit)
+            _ = panelFrame // 收起态悬停展开不跟可见小岛走；可点区仍由 interactive 含翼。
+            return notchHit
         }
         let padded = panelFrame.insetBy(dx: -panelPad, dy: -panelPad)
         let withBottom = CGRect(
@@ -85,6 +86,86 @@ enum IslandExpandedPanelPolicy {
             height: padded.height + panelBottomExtra
         )
         return withBottom.union(notchHit)
+    }
+
+    /// 非拖文件时收起态悬停展开 / 识别热区：刘海（略外扩防贴边抖）。
+    static func hoverExpandFrame(
+        notchFrame: CGRect,
+        notchPad: CGFloat = 4
+    ) -> CGRect {
+        notchFrame.insetBy(dx: -notchPad, dy: -2)
+    }
+
+    /// 拖文件接近区相对刘海左右外扩（pt）。宽度跟刘海，默认 0。
+    static let fileDragApproachHorizontalOutset: CGFloat = 0
+    /// 接近区总高度至少为刘海高的倍数（含刘海本身）。
+    static let fileDragApproachMinHeightInNotches: CGFloat = 3
+
+    /// 拖文件接近区是否启用：只看货架开 + 正在拖文件，**与磁吸开关无关**。
+    static func isFileDragApproachEnabled(shelfEnabled: Bool, isFileDrag: Bool) -> Bool {
+        shelfEnabled && isFileDrag
+    }
+
+    /// 双舱 / 隔空传送：须磁吸开 + 货架开 + 拖文件。
+    static func isMagneticStagingEnabled(
+        shelfEnabled: Bool,
+        magneticEnabled: Bool,
+        isFileDrag: Bool
+    ) -> Bool {
+        shelfEnabled && magneticEnabled && isFileDrag
+    }
+
+    /// 拖文件接近区（仅 `fileDrag`）：宽≈刘海，高≥3 倍刘海（向下延伸，躲开调度中心）。
+    /// 几何与磁吸开关无关；禁止用控制台 660×300 当地基。
+    static func fileDragApproachFrame(
+        notchFrame: CGRect,
+        horizontalOutset: CGFloat = fileDragApproachHorizontalOutset,
+        minHeightInNotches: CGFloat = fileDragApproachMinHeightInNotches
+    ) -> CGRect {
+        let notchH = max(notchFrame.height, 1)
+        let targetH = max(notchH * minHeightInNotches, notchH)
+        let bottomOutset = max(0, targetH - notchH)
+        var zone = notchFrame.insetBy(dx: -horizontalOutset, dy: 0)
+        zone.origin.y -= bottomOutset
+        zone.size.height += bottomOutset
+        return zone
+    }
+
+    /// 接近区相对刘海底边向下的外扩量（便于测试 / 日志）。
+    static func fileDragApproachBottomOutset(notchHeight: CGFloat) -> CGFloat {
+        let h = max(notchHeight, 1)
+        return max(0, h * fileDragApproachMinHeightInNotches - h)
+    }
+
+    /// 拖文件会话结束后短暂禁止「普通悬停再展开」，避免未入舱松手后岛立刻又弹开。
+    static let postFileDragHoverSuppress: TimeInterval = 0.55
+
+    /// 收起态是否应因指针位置展开。
+    /// - 拖文件：接近区或刘海均可。
+    /// - 普通移入：仅刘海；接近区 / 播放翼外侧不算。
+    /// - `hoverExpandSuppressed`：未入舱松手后的冷却，挡住回头再开。
+    static func shouldExpandCollapsedForPointer(
+        mouse: CGPoint,
+        notchFrame: CGRect,
+        isFileDrag: Bool,
+        fileDragApproachContainsMouse: Bool,
+        hoverExpandSuppressed: Bool = false
+    ) -> Bool {
+        if isFileDrag {
+            if fileDragApproachContainsMouse { return true }
+            return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
+        }
+        if hoverExpandSuppressed { return false }
+        return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
+    }
+
+    /// 因货架拖文件而展开后，鼠标松开且未刚完成投放 → 应强制收起（防未入舱却留着大岛 / 回头再开）。
+    static func shouldForceCollapseAfterShelfFileDragMouseUp(
+        hadShelfFileDragExpand: Bool,
+        dropCompletedRecently: Bool,
+        isExpanded: Bool
+    ) -> Bool {
+        hadShelfFileDragExpand && !dropCompletedRecently && isExpanded
     }
 
     /// 展开且面板已接近刘海尺寸时视为异常（热区会退化成「小岛」）。

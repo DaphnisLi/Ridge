@@ -259,7 +259,7 @@ struct ShelfDropStagingView: View {
         }
 
         group.notify(queue: .main) {
-            ShelfDropSession.shared.endAfterDrop(reason: "airDropComplete")
+            ShelfDropSession.shared.endAfterDrop(reason: "airDropComplete", markCompleted: true)
             IslandController.shared?.noteShelfDropFinished(reason: "airDropComplete")
             guard !urls.isEmpty else {
                 AppLog.warn("Shelf", "隔空传送：无有效文件 URL")

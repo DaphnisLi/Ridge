@@ -38,6 +38,12 @@ final class IslandController: NSObject {
     private var isShelfFileDragPinned = false
     /// SwiftUI 货架 `.onDrop(isTargeted:)` 命中中。
     private var isShelfDropTargeted = false
+    /// 上一轮轮询是否正在拖文件（边沿检测松手）。
+    private var wasFileDragInProgress = false
+    /// 本轮展开是否由货架拖文件（接近 / 投放）引起；未入舱松手后要强收。
+    private var islandExpandedForShelfFileDrag = false
+    /// 未入舱松手后短暂禁止普通悬停展开，避免回头再开。
+    private var suppressHoverExpandUntil = Date.distantPast
     /// 拖文件接近货架时临时抬高层级，便于抢到投放命中。
     private var isShelfDragElevated = false
     /// OCR 全屏遮罩为 screenSaver 级；引导 tip 须抬到其上方才看得见，且保持穿透。
@@ -809,11 +815,22 @@ final class IslandController: NSObject {
         let overInteractive = hit.interactive
         let overRetention = hit.retention
         let fileDrag = Self.isFileDragInProgress()
+        // 拖文件松手边沿：未入舱则强收 + 冷却，防止大岛留着 / 回头再开。
+        if wasFileDragInProgress, !fileDrag {
+            handleShelfFileDragMouseUp(mouse: mouse, geometry: geometry)
+        }
+        wasFileDragInProgress = fileDrag
         let shelfEnabled = ControlDeckSettings.shared.isModuleEnabled("shelf")
-        // 磁吸拖放：靠近控制台展开框即吸住；关闭后仅岛内感知区可入舱，且不进双舱（无隔空传送）。
+        // 拖文件接近区与「磁吸拖放」开关无关：开/关都是刘海宽 × ≥3 刘海高。
+        // 开关只控制双舱 / 隔空传送；关闭时仍用同一接近区展开，但只走普通货架投放。
         let magnetic = ShelfSettings.shared.magneticDropCaptureEnabled
-        let approach = shelfEnabled && magnetic && fileDrag
+        let approachArmed = IslandExpandedPanelPolicy.isFileDragApproachEnabled(
+            shelfEnabled: shelfEnabled,
+            isFileDrag: fileDrag
+        )
+        let approach = approachArmed
             && pointerIsInShelfDropApproachZone(mouse: mouse, geometry: geometry)
+        let hoverExpandSuppressed = Date() < suppressHoverExpandUntil
 
         // 左键从岛上按下后拖出：在松开前不收岛（翻页手势 / ScrollView / 滑条都算）。
         let leftDown = NSEvent.pressedMouseButtons & (1 << 0) != 0
@@ -865,10 +882,13 @@ final class IslandController: NSObject {
                 ])
             }
         }
-        // 双舱须「正在拖文件」（左键按下）。松手后 isTargeted 常滞后，
+        // 双舱须磁吸开 + 正在拖文件。松手后 isTargeted 常滞后，
         // 若仍用 wantShelfHold（含裸 targeted）会在 dropComplete 退出后再点亮一次。
-        let wantMagneticStaging = magnetic && shelfEnabled && fileDrag
-            && (overRetention || isShelfDropTargeted || approach)
+        let wantMagneticStaging = IslandExpandedPanelPolicy.isMagneticStagingEnabled(
+            shelfEnabled: shelfEnabled,
+            magneticEnabled: magnetic,
+            isFileDrag: fileDrag
+        ) && (overRetention || isShelfDropTargeted || approach)
         ShelfDropSession.shared.setActive(
             wantMagneticStaging,
             reason: wantMagneticStaging
@@ -901,6 +921,7 @@ final class IslandController: NSObject {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             if !viewModel.isExpanded {
+                islandExpandedForShelfFileDrag = true
                 expand(reason: approach && !overRetention ? "shelfDropApproach" : "shelfDrop")
             } else if IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
                 panel: viewModel.panelSize,
@@ -925,14 +946,31 @@ final class IslandController: NSObject {
             return
         }
 
-        if overRetention == isPointerOverIsland { return }
-        isPointerOverIsland = overRetention
+        // 收起态悬停展开：仅刘海；拖文件接近区只在 fileDrag 时由上面 shelfHold 处理。
+        let wantCollapsedHoverExpand = !viewModel.isExpanded
+            && IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: mouse,
+                notchFrame: geometry.notchFrame,
+                isFileDrag: false,
+                fileDragApproachContainsMouse: false,
+                hoverExpandSuppressed: hoverExpandSuppressed
+            )
+        let overHoverExpand = viewModel.isExpanded ? overRetention : wantCollapsedHoverExpand
 
-        if overRetention {
+        if overHoverExpand == isPointerOverIsland { return }
+        isPointerOverIsland = overHoverExpand
+
+        if overHoverExpand {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             // 无面板/已点进实况上岛时，禁止仅靠移入展开（瞬时提示可程序 expand，悬停仅保展开）。
             if viewModel.isExpanded {
+                return
+            }
+            if hoverExpandSuppressed {
+                AppLog.warn("Island", "拖文件松手冷却中，忽略悬停展开", [
+                    "remainMs": Int(suppressHoverExpandUntil.timeIntervalSinceNow * 1000)
+                ])
                 return
             }
             // 仅当收起态正显示播放小岛（无会议 tip 等盖住）时，悬停才开媒体大面板。
@@ -1011,6 +1049,7 @@ final class IslandController: NSObject {
                 ShelfDropSession.shared.setActive(false, reason: "magneticOffDropTargeted")
             }
             if !viewModel.isExpanded {
+                islandExpandedForShelfFileDrag = true
                 expand(reason: "shelfDropTargeted")
             }
             setClickThrough(false, reason: "shelfDropTargeted")
@@ -1025,12 +1064,53 @@ final class IslandController: NSObject {
         let wasPinned = isShelfFileDragPinned
         isShelfDropTargeted = false
         isShelfFileDragPinned = false
+        if reason == "dropComplete" || reason == "airDropComplete" {
+            islandExpandedForShelfFileDrag = false
+        }
         setShelfDragWindowElevation(false)
         AppLog.warn("Island", "货架投放结束，清除钉住", [
             "reason": reason,
             "wasTargeted": wasTargeted,
             "wasPinned": wasPinned
         ])
+    }
+
+    /// 拖文件左键松开：未入舱则强收岛 + 冷却，避免大岛留着或回头再开。
+    private func handleShelfFileDragMouseUp(mouse: NSPoint, geometry: NotchGeometry) {
+        let hadExpand = islandExpandedForShelfFileDrag
+            || isShelfFileDragPinned
+            || ShelfDropSession.shared.isActive
+        let dropDone = ShelfDropSession.shared.dropCompletedRecently()
+        let forceCollapse = IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
+            hadShelfFileDragExpand: hadExpand,
+            dropCompletedRecently: dropDone,
+            isExpanded: viewModel.isExpanded
+        )
+
+        ShelfDropSession.shared.endAfterDrop(reason: dropDone ? "fileDragMouseUpAfterDrop" : "fileDragCanceled")
+        noteShelfDropFinished(reason: dropDone ? "fileDragMouseUpAfterDrop" : "fileDragCanceled")
+        islandExpandedForShelfFileDrag = false
+
+        // 未入舱松手：短暂禁止普通悬停展开（拖文件接近区仍可用）。
+        if !dropDone, hadExpand {
+            suppressHoverExpandUntil = Date().addingTimeInterval(
+                IslandExpandedPanelPolicy.postFileDragHoverSuppress
+            )
+            isPointerOverIsland = false
+            AppLog.warn("Island", "拖文件未入舱松手，已开悬停冷却", [
+                "suppressMs": Int(IslandExpandedPanelPolicy.postFileDragHoverSuppress * 1000),
+                "forceCollapse": forceCollapse,
+                "inNotch": IslandExpandedPanelPolicy.hoverExpandFrame(
+                    notchFrame: geometry.notchFrame
+                ).contains(mouse)
+            ])
+        }
+
+        if forceCollapse {
+            collapseWorkItem?.cancel()
+            collapseWorkItem = nil
+            collapse(reason: "fileDragCanceled")
+        }
     }
 
     /// 正在拖文件：须同时满足左键按下 + 拖放剪贴板带 fileURL。
@@ -1042,16 +1122,12 @@ final class IslandController: NSObject {
         return types.contains(.fileURL) || types.contains(NSPasteboard.PasteboardType("public.file-url"))
     }
 
-    /// 拖文件磁吸区：控制台展开框再向下 / 左右扩一圈。
-    /// 指针进入此区即展开货架，避免为命中刘海而顶到屏幕最上沿触发调度中心。
+    /// 拖文件磁吸区：刘海外扩一圈（仅 fileDrag 路径调用）。
+    /// 普通鼠标移入不得用此区——收起态悬停展开只认刘海。
     private func pointerIsInShelfDropApproachZone(mouse: NSPoint, geometry: NotchGeometry) -> Bool {
-        let width = CGFloat(IslandSettings.shared.expandedWidth)
-        var zone = geometry.expandedFrameOnScreen(width: width, layout: .controlDeck)
-        // 下扩：从面板下方就能吸住；左右略扩方便斜着拖入。
-        zone = zone.insetBy(dx: -36, dy: 0)
-        zone.origin.y -= 72
-        zone.size.height += 72
-        return zone.contains(mouse)
+        IslandExpandedPanelPolicy.fileDragApproachFrame(
+            notchFrame: geometry.notchFrame
+        ).contains(mouse)
     }
 
     private func setShelfDragWindowElevation(_ elevated: Bool) {
@@ -1196,7 +1272,8 @@ final class IslandController: NSObject {
         let retention: Bool
     }
 
-    /// 刘海始终算命中；收起态跟可见小岛 `panelSize`（播放/番茄可能宽于刘海）；展开态跟大面板走。
+    /// 可点：收起态可见小岛 ∪ 刘海（播放两翼仍可点）；展开态跟大面板。
+    /// 悬停识别 / 保展开：收起态仅刘海；展开态大面板外扩；拖文件接近区另算。
     private func pointerIslandHit(
         mouse: NSPoint,
         geometry: NotchGeometry,
@@ -1234,10 +1311,10 @@ final class IslandController: NSObject {
             panelFrame: retentionBody,
             expanded: expanded
         )
-        // 收起态可点区 = 可见小岛 ∪ 刘海（勿只用 notch，否则播放小岛两翼悬停无效）。
+        // 收起态可点区仍含可见小岛两翼；悬停展开热区见 retention（仅刘海）。
         let interactiveFrame = pageBody
             .insetBy(dx: -2, dy: -2)
-            .union(geometry.notchFrame.insetBy(dx: -4, dy: -2))
+            .union(IslandExpandedPanelPolicy.hoverExpandFrame(notchFrame: geometry.notchFrame))
 
         return IslandPointerHit(
             interactive: interactiveFrame.contains(mouse),

@@ -19,7 +19,7 @@ struct IslandContentView: View {
         controlDeck.isModuleEnabled("shelf")
     }
 
-    /// 整岛双舱（暂存 / 隔空传送）仅在货架开且磁吸拖放开时出现。
+    /// 整岛双舱（暂存 / 隔空传送）仅磁吸开时出现；拖文件接近区开/关相同，关磁吸仍可普通入舱。
     private var shelfMagneticStagingActive: Bool {
         shelfDropEnabled
             && shelfSettings.magneticDropCaptureEnabled

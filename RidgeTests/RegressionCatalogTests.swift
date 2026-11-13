@@ -164,9 +164,9 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(vm.panelSize.height, 200)
     }
 
-    func test_islandHoverRetention_collapsedMediaCompactWingsAreInRetention() {
+    /// 收起态普通移入：仅刘海可悬停展开；播放/番茄翼与控制台下方大区不算。
+    func test_islandHoverExpand_collapsedOnlyNotchCountsWithoutFileDrag() {
         let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
-        // 与刘海同高贴顶（底边齐平）；宽于刘海的两翼仍须在保展开区。
         let compact = CGRect(x: 311, y: 968, width: 380, height: 32)
         let frame = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: notch,
@@ -174,7 +174,171 @@ final class RegressionCatalogTests: XCTestCase {
             expanded: false
         )
         let leftWing = CGPoint(x: compact.minX + 12, y: compact.midY)
-        XCTAssertTrue(frame.contains(leftWing), "收起态播放小岛两翼须可悬停展开，不能只用刘海")
+        let belowNotch = CGPoint(x: notch.midX, y: notch.minY - 40)
+        let inNotch = CGPoint(x: notch.midX, y: notch.midY)
+
+        XCTAssertFalse(frame.contains(leftWing), "非拖文件时翼外不得悬停展开")
+        XCTAssertFalse(frame.contains(belowNotch), "非拖文件时刘海下方大区不得识别")
+        XCTAssertTrue(frame.contains(inNotch), "移入刘海须识别")
+
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: belowNotch,
+                notchFrame: notch,
+                isFileDrag: false,
+                fileDragApproachContainsMouse: true
+            ),
+            "即使落在接近区，非拖文件也不得展开"
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: inNotch,
+                notchFrame: notch,
+                isFileDrag: false,
+                fileDragApproachContainsMouse: false
+            )
+        )
+    }
+
+    /// 拖文件：宽≈刘海、高≥3 倍刘海；不得用整块控制台；普通移入仍只用刘海。
+    func test_islandHoverExpand_fileDragApproachZoneOnlyWhenDraggingFiles() {
+        let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
+        let approach = IslandExpandedPanelPolicy.fileDragApproachFrame(notchFrame: notch)
+        let bottomExtra = IslandExpandedPanelPolicy.fileDragApproachBottomOutset(
+            notchHeight: notch.height
+        )
+        let midApproach = CGPoint(x: notch.midX, y: notch.minY - bottomExtra / 2)
+        let nearBottomOfApproach = CGPoint(x: notch.midX, y: approach.minY + 4)
+        let farBelow = CGPoint(x: notch.midX, y: approach.minY - 40)
+        let farSide = CGPoint(x: notch.minX - 40, y: notch.midY)
+
+        XCTAssertEqual(approach.width, notch.width, accuracy: 0.5, "拖文件接近区宽度须跟刘海")
+        XCTAssertEqual(
+            approach.height,
+            notch.height * IslandExpandedPanelPolicy.fileDragApproachMinHeightInNotches,
+            accuracy: 0.5,
+            "拖文件接近区高度须至少 3 个刘海高"
+        )
+        XCTAssertGreaterThanOrEqual(
+            IslandExpandedPanelPolicy.fileDragApproachMinHeightInNotches,
+            3,
+            "高度倍数不得再压回低于 3"
+        )
+        XCTAssertTrue(approach.contains(midApproach), "拖文件须能从刘海下方吸住")
+        XCTAssertTrue(approach.contains(nearBottomOfApproach), "接近区底部内侧须可命中")
+        XCTAssertFalse(approach.contains(farBelow), "接近区不得再向下无限延伸")
+        XCTAssertFalse(approach.contains(farSide), "接近区左右不得宽于刘海")
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.hoverExpandFrame(notchFrame: notch).contains(midApproach),
+            "普通刘海热区不含下方外扩带"
+        )
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: midApproach,
+                notchFrame: notch,
+                isFileDrag: true,
+                fileDragApproachContainsMouse: approach.contains(midApproach)
+            ),
+            "拖文件时接近区可展开"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: midApproach,
+                notchFrame: notch,
+                isFileDrag: false,
+                fileDragApproachContainsMouse: approach.contains(midApproach)
+            ),
+            "非拖文件时接近区不可展开"
+        )
+    }
+
+    /// 未入舱松手：须强收；冷却内普通悬停不得再开；拖文件接近区仍可。
+    func test_shelfFileDragCancel_forceCollapseAndSuppressHoverReopen() {
+        let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
+        let inNotch = CGPoint(x: notch.midX, y: notch.midY)
+        let approach = IslandExpandedPanelPolicy.fileDragApproachFrame(notchFrame: notch)
+        let inApproach = CGPoint(
+            x: notch.midX,
+            y: notch.minY - IslandExpandedPanelPolicy.fileDragApproachBottomOutset(
+                notchHeight: notch.height
+            ) / 2
+        )
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
+                hadShelfFileDragExpand: true,
+                dropCompletedRecently: false,
+                isExpanded: true
+            ),
+            "未入舱松手且因拖文件展开过 → 强收"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
+                hadShelfFileDragExpand: true,
+                dropCompletedRecently: true,
+                isExpanded: true
+            ),
+            "刚成功入舱不得当取消强收"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceCollapseAfterShelfFileDragMouseUp(
+                hadShelfFileDragExpand: false,
+                dropCompletedRecently: false,
+                isExpanded: true
+            ),
+            "非货架拖文件展开不得误强收"
+        )
+
+        // 冷却内：刘海内普通移入也不得展开（回头再开）。
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: inNotch,
+                notchFrame: notch,
+                isFileDrag: false,
+                fileDragApproachContainsMouse: false,
+                hoverExpandSuppressed: true
+            ),
+            "松手冷却内禁止普通悬停展开"
+        )
+        // 冷却不影响下一次真正拖文件。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: inApproach,
+                notchFrame: notch,
+                isFileDrag: true,
+                fileDragApproachContainsMouse: approach.contains(inApproach),
+                hoverExpandSuppressed: true
+            ),
+            "冷却中仍允许拖文件接近区展开"
+        )
+        // 冷却结束后刘海移入恢复。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+                mouse: inNotch,
+                notchFrame: notch,
+                isFileDrag: false,
+                fileDragApproachContainsMouse: false,
+                hoverExpandSuppressed: false
+            )
+        )
+        XCTAssertGreaterThan(IslandExpandedPanelPolicy.postFileDragHoverSuppress, 0.3)
+    }
+
+    @MainActor
+    func test_shelfFileDragCancel_sessionSuppressBlocksStagingReactivate() {
+        let session = ShelfDropSession.shared
+        session.resetForTests()
+        defer { session.resetForTests() }
+
+        session.setActive(true, reason: "testApproach")
+        XCTAssertTrue(session.isActive)
+        // 未入舱取消：不开 markCompleted。
+        session.endAfterDrop(reason: "fileDragCanceled", markCompleted: false)
+        XCTAssertFalse(session.isActive)
+        XCTAssertFalse(session.dropCompletedRecently())
+        session.setActive(true, reason: "approach")
+        XCTAssertFalse(session.isActive, "取消后冷却内不得再进双舱")
     }
 
     func test_islandHoverRetention_rejectsAccidentalShrinkToNotch() {
@@ -244,6 +408,48 @@ final class RegressionCatalogTests: XCTestCase {
     }
 
     /// 磁吸拖放默认开；关闭后恢复默认须回到开（双舱 / 接近区仅开时启用）。
+    /// 磁吸开关不改变拖文件接近区；只改变是否进双舱。
+    func test_shelfMagneticDrop_approachZoneIndependentOfToggle() {
+        let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
+        let approach = IslandExpandedPanelPolicy.fileDragApproachFrame(notchFrame: notch)
+        XCTAssertEqual(approach.width, notch.width, accuracy: 0.5)
+        XCTAssertEqual(
+            approach.height,
+            notch.height * IslandExpandedPanelPolicy.fileDragApproachMinHeightInNotches,
+            accuracy: 0.5
+        )
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isFileDragApproachEnabled(shelfEnabled: true, isFileDrag: true)
+        )
+        // 磁吸关：接近区仍启用。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isFileDragApproachEnabled(shelfEnabled: true, isFileDrag: true),
+            "磁吸关也须保留拖文件接近区"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isMagneticStagingEnabled(
+                shelfEnabled: true,
+                magneticEnabled: false,
+                isFileDrag: true
+            ),
+            "磁吸关不得进双舱"
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isMagneticStagingEnabled(
+                shelfEnabled: true,
+                magneticEnabled: true,
+                isFileDrag: true
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isFileDragApproachEnabled(shelfEnabled: true, isFileDrag: false)
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isFileDragApproachEnabled(shelfEnabled: false, isFileDrag: true)
+        )
+    }
+
     @MainActor
     func test_shelfMagneticDropCapture_defaultsOnAndRestore() {
         let settings = ShelfSettings.shared

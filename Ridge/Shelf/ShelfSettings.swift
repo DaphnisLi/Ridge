@@ -12,7 +12,7 @@ final class ShelfSettings: ObservableObject {
         static let magneticDropCapture = "shelf.magneticDropCapture.v1"
     }
 
-    /// 扩大拖放感应：靠近岛即弹出双舱（暂存 / 隔空传送）。关闭后须拖入岛内感知区，且无隔空传送。
+    /// 磁吸双舱：开启时拖文件进接近区弹出暂存 / 隔空传送；关闭后无双舱与隔空，但仍用同一拖文件接近区入普通货架。
     @Published var magneticDropCaptureEnabled: Bool {
         didSet {
             guard magneticDropCaptureEnabled != oldValue else { return }

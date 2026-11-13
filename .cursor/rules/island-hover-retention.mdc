@@ -11,12 +11,14 @@ alwaysApply: false
 ## 不变量（必须始终成立）
 
 1. **展开态保展开热区 = 当前可见大面板（可外扩）∪ 刘海**，禁止只用 `notchFrame`。
-2. **收起态命中 / 保展开 = 当前可见小岛 `panelSize` ∪ 刘海**（播放/番茄小岛常宽于刘海）；禁止收起态只用 `notchFrame`，否则两翼悬停无法展开大岛。
-3. **展开态 `panelSize` 禁止被 Preference 瞬间缩回接近刘海**（拖动、滚动、临时 layout 会误报）。仅翻页 / 刚 expand / 明确布局重置窗口内允许缩小。
-4. **左键在岛上按下后的拖动**：松开前不得 `scheduleCollapse` / `collapse(hoverEnd)`（含 ScrollView、滑条，不限翻页 pan）。
-5. **控制台列表纵滑**（触控板/滚轮，常无左键）：`noteContentScrollActivity` 后宽限内不得 `collapse(hoverEnd)`——滚一半误收属本类回归。
-6. 策略逻辑只进 `IslandExpandedPanelPolicy`；悬停收起路径必须走 `pointerIslandHit` + 上述策略，**禁止**再抄一套按刘海判断离开。
-7. **展开后 Preference 未到 / 面板仍接近刘海时**：`retentionPanelSize` 必须走 `resolvedRetentionPanelSize`（稳定大面板优先，否则 `expandedRetentionFloor`），禁止热区停在刘海高导致「下移一半就收」。控制台 / 媒体 expand 须立刻写入下限尺寸。
+2. **收起态悬停展开 / 识别 = 仅刘海**（`hoverExpandFrame`）。拖文件接近区（`fileDragApproachFrame`）**只**在拖文件时用：宽≈刘海、高≥3 倍刘海（向下延伸），几何**与磁吸开关无关**（开关只控双舱/隔空）；**禁止**按控制台 660×300 当地基；禁止普通移入也认接近区或播放/番茄翼外侧。
+3. **未入舱松手**：若因货架拖文件而展开过，须 `fileDragCanceled` 强收，并开 `postFileDragHoverSuppress`，禁止立刻普通悬停再开。
+4. **收起态可点区**仍可为可见小岛 ∪ 刘海（两翼可点），与悬停展开热区分离。
+5. **展开态 `panelSize` 禁止被 Preference 瞬间缩回接近刘海**（拖动、滚动、临时 layout 会误报）。仅翻页 / 刚 expand / 明确布局重置窗口内允许缩小。
+6. **左键在岛上按下后的拖动**：松开前不得 `scheduleCollapse` / `collapse(hoverEnd)`（含 ScrollView、滑条，不限翻页 pan）。
+7. **控制台列表纵滑**（触控板/滚轮，常无左键）：`noteContentScrollActivity` 后宽限内不得 `collapse(hoverEnd)`——滚一半误收属本类回归。
+8. 策略逻辑只进 `IslandExpandedPanelPolicy`；悬停收起路径必须走 `pointerIslandHit` + 上述策略，**禁止**再抄一套按刘海判断离开。
+9. **展开后 Preference 未到 / 面板仍接近刘海时**：`retentionPanelSize` 必须走 `resolvedRetentionPanelSize`（稳定大面板优先，否则 `expandedRetentionFloor`），禁止热区停在刘海高导致「下移一半就收」。控制台 / 媒体 expand 须立刻写入下限尺寸。
 
 权威代码：
 

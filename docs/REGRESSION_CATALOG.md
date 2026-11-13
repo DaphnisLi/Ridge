@@ -17,7 +17,7 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥7 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；收起小岛两翼不认悬停 | `resolvedRetentionPanelSize` + 展开地板；ViewModel/中下点用例；控制台 expand 先抬高 |
+| `island-hover-retention` | 岛悬停热区退化 | ≥8 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区** | 收起悬停仅刘海；拖文件才用接近区；展开地板 + 中下点用例 |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 | ≥6 | 取色/框选后看不见；关货架不上岛；或展开未完即 hoverEnd 收掉 | `ClipboardCopiedNoticeGate`；`copy.*` keepExpanded；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
@@ -25,7 +25,7 @@
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥4 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；`test_islandFocusPolicy_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
-| `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | 1→盯防 | 投放后双舱再闪一下 | `endAfterDrop` 冷却；双舱须 `fileDrag`；`test_shelfMagneticStagingDouble_*` |
+| `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
 
 ---
 
@@ -34,13 +34,13 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 7+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；**2026-11-13 展开后下移一半仍收——自动化未挡住**）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**播放小岛两翼划入无反应**  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；收起态只用 notch；**展开瞬间 `allowShrink` 写入矮 Preference 且 `lastStable` 仍为 0 → 热区跟着矮框走**  
-- **防护:** `resolvedRetentionPanelSize`（稳定大面板优先；展开仍刘海尺寸则抬 `expandedRetentionFloor`）；`scrollHold`；收起态 panel∪刘海；**控制台/媒体 expand 立刻写入下限**  
-- **自动化:** `test_islandHoverRetention_*`（含 ViewModel 地板、稳定面板压过误报矮框、中下点命中）+ `IslandExpandedPanelPolicyTests.testExpandedRetentionFloorKeepsMidLowerPoint`  
-- **曾缺口（已补 2026-11-13）:** 旧用例只喂正确大框；现强制模拟 Preference 未到 / 误报矮框 / `lastStable=0`，断言 retention 不得停在刘海且中下点命中。  
-- **日志锚点:** `指针离开保展开区，安排收起`；`控制台展开面板尺寸已套用`；`保展开改用稳定面板尺寸`；`忽略展开态面板误缩`
+- **occurrences:** 8+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；2026-11-13 展开后下移一半仍收；**2026-11-13 非拖文件也认过大接近区**）  
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**  
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；**收起态悬停跟宽小岛/接近区走**；展开瞬间矮 Preference  
+- **防护:** 收起悬停展开 **仅刘海**（`hoverExpandFrame`）；`fileDragApproachFrame` **仅**拖文件；展开态仍用大面板保展开 + `expandedRetentionFloor`；`scrollHold`  
+- **自动化:** `test_islandHoverRetention_*` + `test_islandHoverExpand_collapsedOnlyNotchCountsWithoutFileDrag` + `test_islandHoverExpand_fileDragApproachZoneOnlyWhenDraggingFiles`  
+- **曾缺口（已补 2026-11-13）:** Preference 未到 / 误报矮框；非拖文件误用大接近区。  
+- **日志锚点:** `指针离开保展开区，安排收起`；`货架拖入：钉住展开`（须 `fileDrag=true`）；`保展开改用稳定面板尺寸`
 
 ### island-chrome-double-padding — 岛边距叠两层
 
@@ -90,14 +90,14 @@
 - **相关代码:** `BatteryDeckView.deviceCard`、`BatteryDeckIslandPreview`、`WidgetIslandPreviewShell`  
 - **自动化:** `RegressionCatalogTests.test_settingsPreviewIslandAppearance_*`
 
-### shelf-magnetic-staging-double — 磁吸双舱投放后又冒一次
+### shelf-magnetic-staging-double — 磁吸双舱 / 拖文件松手后又开
 
-- **recurring:** false（首次；易再发，已上自动化）  
-- **occurrences:** 1（2026-11-13：暂存/隔空传送用完后双舱再闪）  
-- **症状:** 拖文件出现「释放即可暂存入舱 / 隔空传送」双舱，松手入舱或唤起隔空后，界面先正常再突然再出一次双舱  
-- **根因倾向:** ① `dropComplete`/`airDropComplete` 把 `ShelfDropSession` 置 false 后，SwiftUI `isTargeted` 仍短暂为 true；② 指针轮询用 `wantShelfHold`（含裸 `isShelfDropTargeted`）再次 `setActive(true)`；③ 关键路径原为 `AppLog.info`，不落盘，难查  
-- **防护:** `endAfterDrop` 开 ~0.55s 冷却；双舱进入须 `fileDrag`（左键按下）；`noteShelfDropFinished` 清钉住；进入/退出改 `warn` 落盘  
-- **自动化:** `test_shelfMagneticStagingDouble_postDropSuppressBlocksReactivate`
+- **recurring:** true  
+- **occurrences:** 2+（2026-11-13：投放后双舱再闪；**同日未入舱松手后岛回头再开**）  
+- **症状:** 拖文件出双舱后入舱/隔空完成再闪一次；或拖近展开后**未放暂存区就松手**，岛收起后又自动打开  
+- **根因倾向:** ① `isTargeted` 滞后再 `setActive(true)`；② 拖文件 `shelfDropApproach` 展开后松手仍 `retention=true`（大面板）不收；③ 松手后普通悬停立刻再 expand  
+- **防护:** `endAfterDrop` 冷却；双舱须 `fileDrag`；**未入舱松手 `fileDragCanceled` 强收 + `postFileDragHoverSuppress`**；收起悬停仅刘海，接近区仅拖文件  
+- **自动化:** `test_shelfMagneticStagingDouble_*`、`test_shelfFileDragCancel_*`、`test_islandHoverExpand_*`
 
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
@@ -260,6 +260,11 @@
 | 2026-11-12 | 实况/面板库卡改提示同款灰舞台+底栏（`WidgetLibraryCardLayout`） |
 | 2026-11-12 | 专注待命环 22 + 预览边距对齐媒体小岛；`FocusTimerCompactMetrics`；stretch +1 |
 | 2026-11-12 | 媒体展开：立刻套用 `MediaExpandedContentSize` 抬高可点区；播放钮 AppKit 锁正圆（曾椭圆+底栏点空） |
+| 2026-11-13 | 磁吸开关不改拖文件接近区（宽=刘海、高≥3×刘海）；只关双舱/隔空；文案同步 |
+| 2026-11-13 | 拖文件接近区：宽=刘海、高≥3×刘海高（向下）；普通移入仍仅刘海 |
+| 2026-11-13 | 未入舱松手强收 + 悬停冷却，防拖文件后回头再开；严格 `test_shelfFileDragCancel_*` |
+| 2026-11-13 | 拖文件接近区改为刘海外扩，不再用控制台 660×300 当地基 |
+| 2026-11-13 | 收起态悬停展开仅刘海；控制台大接近区只在拖文件时生效；`test_islandHoverExpand_*` |
 | 2026-11-13 | 磁吸双舱「用完又冒一次」：`endAfterDrop` 冷却 + 双舱须 fileDrag；关键路径改 warn 落盘 |
 | 2026-11-13 | 悬停热区：`resolvedRetentionPanelSize` + 展开地板；控制台 expand 先抬高；严格 ViewModel/中下点测试 |
 | 2026-11-13 | 收起岛高改等于刘海高（`compactPanelHeight`），底边与刘海齐平；禁再 max(…, 38) 掉底 |
