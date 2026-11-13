@@ -8,8 +8,10 @@
 |---|---|
 | 收录时机 | 修完或用户明确指出后写入；同一根因再出现 → `occurrences` +1 |
 | **重复出现** | `occurrences ≥ 2`，须标 `recurring: true`，并列入下方「重复出现问题」表 |
-| 自动化 | 后续 XCTest / UI 用例优先覆盖 `recurring: true`；用例 id 建议对齐 `id` 字段 |
-| 权威规则 | 维护流程见 `.cursor/rules/regression-catalog.mdc` |
+| 自动化（强制） | **仅** `recurring: true`：须有 `RidgeTests` 锚定用例；改完代码跑 `./scripts/test-recurring.sh` |
+| 自动化（不强制） | `occurrences == 1`：**不必**写测、**不必**每次改代码后跑 |
+| Manifest | `RidgeTests/RecurringRegressionManifest.swift` 与下表 id 同步；覆盖闸门见 `RecurringRegressionCoverageTests` |
+| 权威规则 | `.cursor/rules/regression-catalog.mdc` |
 
 ---
 
@@ -260,6 +262,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-13 | recurring 全量闸门：`RecurringRegressionManifest` + `scripts/test-recurring.sh`；occurrences=1 不强制测 |
 | 2026-11-13 | 按 App 音量：宿主 key 匹配 Process Tap；混音台滚动关 compositing；catalog `sound-app-volume-host-key` |
 | 2026-11-12 | 库卡灰舞台三族统一 106；详情 tip/待命 `tipStageMinHeight` 88 |
 | 2026-11-12 | 媒体/专注待命预览与会议 tip 同 290×30 + chrome（`meetingMatchedCompactChrome`） |

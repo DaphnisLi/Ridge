@@ -128,6 +128,7 @@
 		A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5894114050B192E21DBC168B /* IslandContentView.swift */; };
 		A80FF15758CE0883F2BC42A9 /* MeetingLeadTipSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4EE5CAC7104768CA58308B5 /* MeetingLeadTipSelector.swift */; };
 		A889A198A328AD2670E8BA7D /* MeetingSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */; };
+		A9731342DE1337447E612B20 /* RecurringRegressionManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = D21CE498DE2A53DF7D0A1A01 /* RecurringRegressionManifest.swift */; };
 		AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A050E8B86C4C1A0EECE7EDB /* EmptyIslandWidget.swift */; };
 		AB381B4B47D62E0AD24F5D92 /* WidgetHostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */; };
 		AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81BB2FAF48572CDD36E2974F /* IslandWidget.swift */; };
@@ -160,6 +161,7 @@
 		D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
 		DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */; };
+		E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */; };
 		E32D4090FC3C65B56B5F3870 /* FocusTimerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */; };
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
@@ -265,6 +267,7 @@
 		4C0C31143233D22C2EF32D30 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseSession.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
+		50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRegressionCoverageTests.swift; sourceTree = "<group>"; };
 		51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockIslandViews.swift; sourceTree = "<group>"; };
 		526499772CB67C8D450F310C /* LiveIslandGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveIslandGate.swift; sourceTree = "<group>"; };
 		52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerWidget.swift; sourceTree = "<group>"; };
@@ -362,6 +365,7 @@
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
 		D1B1815ACA35688D69984BD8 /* ColorPickSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickSettings.swift; sourceTree = "<group>"; };
+		D21CE498DE2A53DF7D0A1A01 /* RecurringRegressionManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRegressionManifest.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
 		D3F050FDCC7DB305B51616C6 /* WidgetHostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHostView.swift; sourceTree = "<group>"; };
 		D45B8C898B0311F98C15DF30 /* AIUsageIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageIslandViews.swift; sourceTree = "<group>"; };
@@ -593,6 +597,8 @@
 			isa = PBXGroup;
 			children = (
 				60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */,
+				50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */,
+				D21CE498DE2A53DF7D0A1A01 /* RecurringRegressionManifest.swift */,
 				EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */,
 			);
 			path = RidgeTests;
@@ -1073,6 +1079,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */,
+				E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */,
+				A9731342DE1337447E612B20 /* RecurringRegressionManifest.swift in Sources */,
 				40ABDD7A5CE9807D8C686150 /* RegressionCatalogTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

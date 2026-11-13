@@ -14,8 +14,8 @@ alwaysApply: true
 
 ## 何时做
 
-- 改了 `Ridge/**`、`project.yml`、会进包的资源 → 必须执行下方脚本（脚本落地后）
-- 纯文档 / 仅 `.cursor/rules` → 不必重启 App
+- 改了 `Ridge/**`、`project.yml`、会进包的资源 → **先**跑 `./scripts/test-recurring.sh`（见 `regression-catalog.mdc`），通过后再执行下方 relaunch
+- 纯文档 / 仅 `.cursor/rules` → 不必重启 App；若只改了测试/catalog，仍建议跑 recurring 套件
 - 编译失败 → 修好或说明，不要打开旧包
 
 ## 怎么做
