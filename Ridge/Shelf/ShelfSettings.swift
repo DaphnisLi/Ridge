@@ -9,15 +9,39 @@ final class ShelfSettings: ObservableObject {
     private enum Key {
         static let showCopiedNoticeLegacy = "shelf.showCopiedNotice.v1"
         static let copiedNoticeMigrated = "shelf.copiedNotice.migratedToWidget.v1"
+        static let magneticDropCapture = "shelf.magneticDropCapture.v1"
+    }
+
+    /// 扩大拖放感应：靠近岛即弹出双舱（暂存 / 隔空传送）。关闭后须拖入岛内感知区，且无隔空传送。
+    @Published var magneticDropCaptureEnabled: Bool {
+        didSet {
+            guard magneticDropCaptureEnabled != oldValue else { return }
+            UserDefaults.standard.set(magneticDropCaptureEnabled, forKey: Key.magneticDropCapture)
+            AppLog.info("Shelf", "磁吸拖放已更新", ["enabled": magneticDropCaptureEnabled])
+            if !magneticDropCaptureEnabled {
+                ShelfDropSession.shared.setActive(false, reason: "magneticDisabled")
+            }
+        }
     }
 
     private init() {
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: Key.magneticDropCapture) == nil {
+            magneticDropCaptureEnabled = true
+        } else {
+            magneticDropCaptureEnabled = defaults.bool(forKey: Key.magneticDropCapture)
+        }
         migrateCopiedNoticeWidgetGateIfNeeded()
     }
 
     /// 复制成功是否上岛：读小组件库 `builtin.copiedNotice` 开关。
     var showCopiedNotice: Bool {
         ClipboardCopiedNoticeGate.isTipEnabled
+    }
+
+    func restoreMagneticDropDefaults() {
+        magneticDropCaptureEnabled = true
+        AppLog.info("Shelf", "磁吸拖放已恢复默认", ["enabled": true])
     }
 
     /// 把旧货架嵌套开关迁到 `builtin.copiedNotice`（只跑一次）。

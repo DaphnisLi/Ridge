@@ -14,16 +14,22 @@ struct NotchGeometry: Equatable {
     var notchHeight: CGFloat { notchFrame.height }
     var notchCenterX: CGFloat { notchFrame.midX }
 
-    /// 常驻态相对刘海略缩小，避免溢出菜单栏左右。
+    /// 常驻态宽度相对刘海略缩，避免溢出菜单栏左右；高度不用此倍率。
     static let compactScale: CGFloat = 0.96
-    /// 收起态「小岛」统一高度（番茄 / 正在播放等）；宽度可按内容略不同。
-    static let compactIslandHeight: CGFloat = 38
+    /// 无真刘海时的预览 / 测试参考高（≈典型 `safeAreaInsets.top`）。
+    /// 真机收起高度必须用 `compactPanelHeight(notchHeight:)`，与刘海同高、底边齐平。
+    static let compactIslandHeight: CGFloat = 32
     /// 番茄倒计时收起待命（左右翼）最小宽度；加宽让「专注中」与倒计时贴两边。
     static let focusTimerCompactWidth: CGFloat = 348
     static var focusTimerCompactHeight: CGFloat { compactIslandHeight }
     /// 正在播放常驻小岛：左封面歌名、右律动条+时长（略宽于番茄，避免歌名挤）。
     static let mediaCompactWidth: CGFloat = 380
     static var mediaCompactHeight: CGFloat { compactIslandHeight }
+
+    /// 收起态面板高：与刘海同高。窗体贴顶时底边与刘海底齐平，禁止再抬高「掉出」刘海。
+    static func compactPanelHeight(notchHeight: CGFloat) -> CGFloat {
+        pixelAlign(max(notchHeight, 1))
+    }
     /// 以下常量为各内容模块的**画布参考**（控制台等 GeometryReader 页自报尺寸用），
     /// 不再由壳层按 ExpandedLayout 写死可见面板宽高；展开面板由内容测量 + IslandChrome 撑开。
     static let fixedExpandedHeightMultiplier: CGFloat = 6
@@ -42,7 +48,7 @@ struct NotchGeometry: Equatable {
     var compactSize: CGSize {
         CGSize(
             width: notchWidth * Self.compactScale,
-            height: notchHeight * Self.compactScale
+            height: Self.compactPanelHeight(notchHeight: notchHeight)
         )
     }
 

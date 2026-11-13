@@ -11,6 +11,14 @@ final class RegressionCatalogTests: XCTestCase {
     func test_islandHoverRetention_lowerHalfOfLargePanelStaysInRetention() {
         let notch = CGRect(x: 400, y: 900, width: 180, height: 32)
         let panel = CGRect(x: 200, y: 700, width: 660, height: 300)
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.retentionContainsMidLowerPoint(
+                notchFrame: notch,
+                panelFrame: panel,
+                expanded: true
+            ),
+            "大岛下半截必须仍在保展开区"
+        )
         let frame = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: notch,
             panelFrame: panel,
@@ -20,9 +28,146 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(frame.contains(midLower), "大岛下半截必须仍在保展开区")
     }
 
+    /// Preference 未到 / 误报刘海尺寸时：保展开须抬到下限，中下点仍命中（「移动一半就收」）。
+    func test_islandHoverRetention_expandedFloorKeepsMidLowerWhenPanelStillNotchSized() {
+        let notchSize = CGSize(width: 179, height: 32)
+        let notchFrame = CGRect(x: 400, y: 968, width: notchSize.width, height: notchSize.height)
+        let compactPanel = CGSize(width: notchSize.width, height: notchSize.height)
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+                panel: compactPanel,
+                notch: notchSize,
+                isExpanded: true
+            )
+        )
+
+        let resolved = IslandExpandedPanelPolicy.resolvedRetentionPanelSize(
+            panel: compactPanel,
+            stable: .zero,
+            notch: notchSize,
+            isExpanded: true
+        )
+        let floor = IslandExpandedPanelPolicy.expandedRetentionFloor(notch: notchSize)
+        XCTAssertGreaterThanOrEqual(resolved.height, floor.height)
+        XCTAssertGreaterThanOrEqual(resolved.width, floor.width)
+        XCTAssertGreaterThan(
+            resolved.height,
+            notchSize.height + 80,
+            "展开保展开高须明显高于刘海，否则下移一半必出热区"
+        )
+
+        // 贴顶大面板框（与 NotchGeometry.centeredTopFrame 同构）。
+        let screenMaxY: CGFloat = 1000
+        let panelFrame = CGRect(
+            x: notchFrame.midX - resolved.width / 2,
+            y: screenMaxY - resolved.height,
+            width: resolved.width,
+            height: resolved.height
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.retentionContainsMidLowerPoint(
+                notchFrame: notchFrame,
+                panelFrame: panelFrame,
+                expanded: true
+            ),
+            "抬高后的保展开框中下点必须命中"
+        )
+    }
+
+    /// 已有稳定大面板后 Preference 误报矮框：保展开仍用大面板，中下点命中。
+    func test_islandHoverRetention_stablePanelWinsOverShortPreferenceReport() {
+        let notchSize = CGSize(width: 179, height: 32)
+        let notchFrame = CGRect(x: 400, y: 968, width: notchSize.width, height: notchSize.height)
+        let stable = CGSize(width: 660, height: 300)
+        let poisoned = CGSize(width: 458, height: 80)
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldPreferStableRetention(
+                panel: poisoned,
+                stable: stable,
+                notch: notchSize,
+                isExpanded: true
+            )
+        )
+        let resolved = IslandExpandedPanelPolicy.resolvedRetentionPanelSize(
+            panel: poisoned,
+            stable: stable,
+            notch: notchSize,
+            isExpanded: true
+        )
+        XCTAssertEqual(resolved.width, stable.width, accuracy: 0.5)
+        XCTAssertEqual(resolved.height, stable.height, accuracy: 0.5)
+
+        let screenMaxY: CGFloat = 1000
+        let panelFrame = CGRect(
+            x: notchFrame.midX - resolved.width / 2,
+            y: screenMaxY - resolved.height,
+            width: resolved.width,
+            height: resolved.height
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.retentionContainsMidLowerPoint(
+                notchFrame: notchFrame,
+                panelFrame: panelFrame,
+                expanded: true
+            )
+        )
+    }
+
+    /// ViewModel 状态机：展开后 Preference 仍报刘海 → retentionPanelSize 不得停在刘海高。
+    @MainActor
+    func test_islandHoverRetention_viewModelRetentionFloorsWhilePreferencePending() {
+        let vm = IslandViewModel()
+        vm.notchWidth = 179
+        vm.notchHeight = 32
+        vm.maxExpandedWidth = 2000
+        vm.panelSize = CGSize(width: 179, height: 32)
+
+        vm.expand()
+        XCTAssertTrue(vm.isExpanded)
+
+        // 模拟 Preference 尚未抬高：仍接近刘海。
+        let retention = vm.retentionPanelSize(notchWidth: 179, notchHeight: 32)
+        XCTAssertGreaterThan(
+            retention.height,
+            32 + 80,
+            "展开后 Preference 未到时保展开高不得停在刘海"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+                panel: retention,
+                notch: CGSize(width: 179, height: 32),
+                isExpanded: true
+            ),
+            "retention 尺寸不得再被判定为展开态异常矮框"
+        )
+    }
+
+    /// ViewModel：写入大面板后再误报矮框，retention 仍用稳定大尺寸。
+    @MainActor
+    func test_islandHoverRetention_viewModelKeepsStableAfterPoisonedShrink() {
+        let vm = IslandViewModel()
+        vm.notchWidth = 179
+        vm.notchHeight = 32
+        vm.maxExpandedWidth = 2000
+        vm.expand()
+        vm.applyMeasuredPanelSize(CGSize(width: 660, height: 300))
+        XCTAssertEqual(vm.panelSize.height, 300, accuracy: 0.5)
+
+        // 关闭缩小窗口后 Preference 误报矮框须被拒绝或 retention 仍用稳定值。
+        vm.allowPanelShrink(for: -1, reason: "testCloseShrinkWindow")
+        vm.applyMeasuredPanelSize(CGSize(width: 179, height: 32))
+        // 误缩应被拒绝，panel 仍 300；即便写入成功 retention 也须稳定。
+        let retention = vm.retentionPanelSize(notchWidth: 179, notchHeight: 32)
+        XCTAssertGreaterThanOrEqual(retention.height, 200)
+        XCTAssertGreaterThanOrEqual(vm.panelSize.height, 200)
+    }
+
     func test_islandHoverRetention_collapsedMediaCompactWingsAreInRetention() {
         let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
-        let compact = CGRect(x: 311, y: 962, width: 380, height: 38)
+        // 与刘海同高贴顶（底边齐平）；宽于刘海的两翼仍须在保展开区。
+        let compact = CGRect(x: 311, y: 968, width: 380, height: 32)
         let frame = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: notch,
             panelFrame: compact,
@@ -84,6 +229,58 @@ final class RegressionCatalogTests: XCTestCase {
             ShelfSettings.shared.showCopiedNotice,
             ClipboardCopiedNoticeGate.isTipEnabled
         )
+    }
+
+    /// 展开动画默认须为「标准」档，与分段控件一致。
+    func test_islandAnimationSpeed_defaultsToStandardPreset() {
+        XCTAssertEqual(
+            IslandSettings.Defaults.animationSpeed,
+            IslandAnimationSpeedPreset.standard.rawValue,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(IslandAnimationSpeedPreset.standard.rawValue, 1.5, accuracy: 0.001)
+        XCTAssertEqual(IslandAnimationSpeedPreset.smooth.rawValue, 0.8, accuracy: 0.001)
+        XCTAssertEqual(IslandAnimationSpeedPreset.snap.rawValue, 2.0, accuracy: 0.001)
+    }
+
+    /// 磁吸拖放默认开；关闭后恢复默认须回到开（双舱 / 接近区仅开时启用）。
+    @MainActor
+    func test_shelfMagneticDropCapture_defaultsOnAndRestore() {
+        let settings = ShelfSettings.shared
+        let previous = settings.magneticDropCaptureEnabled
+        defer {
+            settings.magneticDropCaptureEnabled = previous
+            ShelfDropSession.shared.resetForTests()
+        }
+
+        settings.magneticDropCaptureEnabled = false
+        XCTAssertFalse(settings.magneticDropCaptureEnabled)
+        XCTAssertFalse(ShelfDropSession.shared.isActive)
+
+        settings.restoreMagneticDropDefaults()
+        XCTAssertTrue(settings.magneticDropCaptureEnabled)
+    }
+
+    /// 投放完成后 isTargeted 滞后不得再点亮双舱（「用完又冒一次」）。
+    @MainActor
+    func test_shelfMagneticStagingDouble_postDropSuppressBlocksReactivate() {
+        let session = ShelfDropSession.shared
+        session.resetForTests()
+        defer { session.resetForTests() }
+
+        session.setActive(true, reason: "testApproach")
+        XCTAssertTrue(session.isActive)
+
+        session.endAfterDrop(reason: "dropComplete")
+        XCTAssertFalse(session.isActive)
+        XCTAssertTrue(session.isReactivateSuppressed)
+        XCTAssertGreaterThan(ShelfDropSession.postDropSuppress, 0.3)
+
+        // 模拟松手后 SwiftUI isTargeted / 轮询再次请求进入。
+        session.setActive(true, reason: "dropTargeted")
+        XCTAssertFalse(session.isActive, "冷却期内不得再次进入双舱")
+        session.setActive(true, reason: "approach")
+        XCTAssertFalse(session.isActive)
     }
 
     /// 取色 / 框选翼引导 →「已复制」圆岛：缩宽必须可应用，否则卡在翼尺寸看不见提示。
@@ -432,6 +629,19 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(IslandFocusPolicy.shouldResignKeyWhenEnablingClickThrough)
     }
 
+    /// 媒体/会议操作钮须抬高可点下限；矮框会导致「矫枉后点不中」。
+    func test_islandFocusSteal_mediaAndControlDeckFloorsAreTallEnoughToClick() {
+        let media = MediaExpandedContentSize.panelSize()
+        XCTAssertGreaterThan(media.height, NotchGeometry.compactIslandHeight + 80)
+        XCTAssertGreaterThanOrEqual(MediaExpandedContentSize.minContentHeight, 140)
+        XCTAssertEqual(NotchGeometry.controlDeckMinHeight, 300)
+        XCTAssertEqual(NotchGeometry.controlDeckPreferredWidth, 660)
+        // 控制台展开地板须高于保展开下限，否则仍可能「移一半就收」。
+        let floor = IslandExpandedPanelPolicy.expandedRetentionFloor(
+            notch: CGSize(width: 179, height: 32)
+        )
+        XCTAssertGreaterThanOrEqual(NotchGeometry.controlDeckMinHeight, floor.height)
+    }
 
     // MARK: - settings-preview-live-data（股票样张条数）
 
@@ -439,6 +649,22 @@ final class RegressionCatalogTests: XCTestCase {
         // 库卡/详情必须假数据固定两卡，禁止实时行情空态。
         let sample = StockIslandView.previewSnapshots()
         XCTAssertEqual(sample.count, 2, "股票设置预览样张必须固定 2 条")
+    }
+
+    /// 设置预览入口须走假数据分支，禁止库卡/详情依赖实时空源。
+    @MainActor
+    func test_settingsPreviewLiveData_widgetSamplePreviewUsesFakeSamples() {
+        XCTAssertEqual(BatteryDeckView.sampleDevices.count, 2)
+        XCTAssertFalse(BatteryDeckView.sampleDevices.isEmpty)
+        // 媒体 / 会议 / 番茄预览样张可构造且非空标题。
+        let media = MediaIslandCardView.previewSample(animatedEqualizer: false)
+        XCTAssertFalse(media.title.isEmpty)
+        let meeting = MeetingIslandCardView.previewSample(urgency: .relaxed, compact: true)
+        XCTAssertFalse(meeting.title.isEmpty)
+        XCTAssertTrue(WidgetSamplePreview.hugsIslandContent(for: "system.controlDeck.battery"))
+        XCTAssertTrue(WidgetSamplePreview.contentProvidesOpaqueShell(for: "system.controlDeck.battery"))
+        // 股票固定两卡（与上条一致，防止只测 snapshot 漏入口）。
+        XCTAssertEqual(StockIslandView.previewSnapshots().count, 2)
     }
 
     // MARK: - library-island-stage-stretch（电量预览勿按双行留黑空）
@@ -592,6 +818,14 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(BatteryDeckView.sampleDevices.count, 2)
         XCTAssertTrue(
             WidgetSamplePreview.contentProvidesOpaqueShell(for: "system.controlDeck.battery")
+        )
+        // 电量预览自带岛底；库卡缩放后宽须落到 library，避免发闷大黑岛。
+        let native = BatteryDeckIslandPreview.nativePanelSize()
+        XCTAssertGreaterThan(native.width, SettingsIslandPreviewWidth.library)
+        XCTAssertEqual(
+            native.width * BatteryDeckIslandPreview.libraryPreviewScale,
+            SettingsIslandPreviewWidth.library,
+            accuracy: 0.5
         )
     }
 
@@ -789,6 +1023,31 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(MediaExpandedContentSize.minContentHeight, 140)
     }
 
+    /// 媒体设置预览：收起贴真岛定高；展开顶用可见 inset（>0），底=contentBottom。
+    func test_mediaPreviewChrome_matchesLiveIslandInsets() {
+        XCTAssertEqual(MediaPreviewChrome.compactHorizontal, 10)
+        XCTAssertEqual(
+            MediaPreviewChrome.compactContentHeight,
+            max(0, NotchGeometry.mediaCompactHeight - 4),
+            accuracy: 0.5
+        )
+        XCTAssertEqual(
+            MediaPreviewChrome.expandedTop,
+            IslandChrome.previewExpandedVisibleTopInset(),
+            accuracy: 0.5
+        )
+        XCTAssertGreaterThan(MediaPreviewChrome.expandedTop, 0)
+        XCTAssertEqual(MediaPreviewChrome.expandedBottom, IslandChrome.contentBottom)
+        XCTAssertEqual(MediaPreviewChrome.expandedHorizontal, IslandChrome.contentHorizontal)
+        // 真岛面板下限仍只含底距（运行时顶 0）；预览顶距另走 MediaPreviewChrome.expandedTop。
+        let panel = MediaExpandedContentSize.panelSize()
+        XCTAssertEqual(
+            panel.height,
+            MediaExpandedContentSize.minContentHeight + IslandChrome.contentBottom,
+            accuracy: 0.5
+        )
+    }
+
     /// 收起态小岛：高度统一，正在播放宽度不得窄于番茄翼。
     func test_compactIsland_sharedHeightAndMediaWidth() {
         XCTAssertEqual(NotchGeometry.focusTimerCompactHeight, NotchGeometry.compactIslandHeight)
@@ -803,6 +1062,22 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
         XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
         XCTAssertEqual(SettingsIslandPreviewWidth.tip, 360)
+    }
+
+    /// 收起高度必须等于刘海高：贴顶时底边齐平，禁止固定 38 抬高掉出刘海。
+    func test_compactIsland_heightMatchesNotchBottomAlignment() {
+        for notchH: CGFloat in [30, 32, 33, 37] {
+            let h = NotchGeometry.compactPanelHeight(notchHeight: notchH)
+            XCTAssertEqual(h, notchH, accuracy: 0.5, "notchH=\(notchH)")
+            XCTAssertLessThanOrEqual(h, notchH + 0.5)
+        }
+        // 预览 fallback 不得高于常见刘海，否则设置样张也会「掉底」。
+        XCTAssertLessThanOrEqual(NotchGeometry.compactIslandHeight, 34)
+        XCTAssertEqual(
+            MediaPreviewChrome.compactContentHeight,
+            max(0, NotchGeometry.compactPanelHeight(notchHeight: NotchGeometry.compactIslandHeight) - 4),
+            accuracy: 0.5
+        )
     }
 
     /// media-compact-not-resident：媒体大面板默认关闭；悬停准入后 close 须再拒绝（勿用 open，避免测里拉起 MediaRemote）。

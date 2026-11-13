@@ -22,21 +22,6 @@ struct IslandSettingsPane: View {
         }
     }
 
-    private enum SpeedPreset: Double, CaseIterable {
-        /// 越大越快（response = 基线 / 倍率）。
-        case smooth = 0.8
-        case standard = 1.5
-        case snap = 2.0
-
-        var title: String {
-            switch self {
-            case .smooth: return L10n.Settings.speedSmooth
-            case .standard: return L10n.Settings.speedStandard
-            case .snap: return L10n.Settings.speedSnap
-            }
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -246,8 +231,8 @@ struct IslandSettingsPane: View {
 
     // MARK: - Motion / Haptic
 
-    private var matchedSpeedPreset: SpeedPreset? {
-        SpeedPreset.allCases.first { abs($0.rawValue - settings.animationSpeed) < 0.05 }
+    private var matchedSpeedPreset: IslandAnimationSpeedPreset? {
+        IslandAnimationSpeedPreset.allCases.first { abs($0.rawValue - settings.animationSpeed) < 0.05 }
     }
 
     private var speedTagText: String {
@@ -290,14 +275,17 @@ struct IslandSettingsPane: View {
                 }
 
                 SettingsSegmentedControl(
-                    items: SpeedPreset.allCases.map { preset in
+                    items: IslandAnimationSpeedPreset.allCases.map { preset in
                         .init(
-                            id: "\(preset.rawValue)",
+                            id: preset.id,
                             title: "\(preset.title) (\(String(format: "%.1f×", preset.rawValue)))",
                             selected: matchedSpeedPreset == preset
                         ) {
                             settings.animationSpeed = preset.rawValue
-                            AppLog.info("Settings", "动画速度预设", ["speed": preset.rawValue])
+                            AppLog.info("Settings", "动画速度预设", [
+                                "speed": preset.rawValue,
+                                "preset": preset.title
+                            ])
                         }
                     }
                 )

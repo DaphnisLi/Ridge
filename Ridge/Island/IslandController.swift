@@ -402,6 +402,7 @@ final class IslandController: NSObject {
             } else if shelfDropExpand {
                 applyShelfDropPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             } else {
+                applyControlDeckExpandedPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
                 applyMediaExpandedPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             }
             updateInteractiveFrame(expanded: true)
@@ -431,7 +432,8 @@ final class IslandController: NSObject {
         if shelfDropExpand {
             applyShelfDropPanelSizeIfNeeded(reason: "expand:\(reason)")
         } else {
-            // 媒体：立刻抬高可点区，否则 Preference 未到时底栏暂停/切歌落在 interactiveFrame 外。
+            // 控制台 / 媒体：立刻抬高可点区与保展开，否则 Preference 未到时下半截一移就收 / 按钮点空。
+            applyControlDeckExpandedPanelSizeIfNeeded(reason: "expand:\(reason)")
             applyMediaExpandedPanelSizeIfNeeded(reason: "expand:\(reason)")
         }
         // 不依赖 Combine 时序：展开后立刻把可点区扩到面板，否则仍是刘海 171×30，控制台点全落空。
@@ -467,6 +469,30 @@ final class IslandController: NSObject {
             "h": Int(size.height),
             "panelW": Int(viewModel.panelSize.width),
             "panelH": Int(viewModel.panelSize.height)
+        ])
+    }
+
+    /// 控制台展开：先写入下限面板，避免 Preference 未到时保展开仍停在刘海、下移一半就收。
+    private func applyControlDeckExpandedPanelSizeIfNeeded(reason: String) {
+        guard WidgetRuntime.shared.isControlDeckPage else { return }
+        guard viewModel.isExpanded || reason.hasPrefix("expand:") else { return }
+        let size = CGSize(
+            width: NotchGeometry.controlDeckPreferredWidth,
+            height: NotchGeometry.controlDeckMinHeight
+        )
+        let next = CGSize(
+            width: max(viewModel.panelSize.width, size.width),
+            height: max(viewModel.panelSize.height, size.height)
+        )
+        viewModel.applyMeasuredPanelSize(next)
+        updateInteractiveFrame(expanded: true)
+        AppLog.info("Island", "控制台展开面板尺寸已套用", [
+            "reason": reason,
+            "w": Int(next.width),
+            "h": Int(next.height),
+            "floorW": Int(size.width),
+            "floorH": Int(size.height),
+            "page": WidgetRuntime.shared.activeID ?? "nil"
         ])
     }
 
@@ -784,9 +810,9 @@ final class IslandController: NSObject {
         let overRetention = hit.retention
         let fileDrag = Self.isFileDragInProgress()
         let shelfEnabled = ControlDeckSettings.shared.isModuleEnabled("shelf")
-        // 用「控制台展开框」作磁吸区：拖文件靠近时提前展开，不必顶到屏幕最上沿
-        // （顶边会触发系统调度中心 / 空间切换，优先级高于第三方窗）。
-        let approach = shelfEnabled && fileDrag
+        // 磁吸拖放：靠近控制台展开框即吸住；关闭后仅岛内感知区可入舱，且不进双舱（无隔空传送）。
+        let magnetic = ShelfSettings.shared.magneticDropCaptureEnabled
+        let approach = shelfEnabled && magnetic && fileDrag
             && pointerIsInShelfDropApproachZone(mouse: mouse, geometry: geometry)
 
         // 左键从岛上按下后拖出：在松开前不收岛（翻页手势 / ScrollView / 滑条都算）。
@@ -812,7 +838,7 @@ final class IslandController: NSObject {
             lastScrollAt: lastContentScrollAt
         )
 
-        // 仅在「接近 / 在岛上 / 投放区命中」且拖文件进行中时钉住；驶出即解除。
+        // 钉住展开：磁吸开=接近区或岛上；磁吸关=仅岛上 / 投放命中（须拖入感知区）。
         let wantShelfHold = shelfEnabled
             && (overRetention || isShelfDropTargeted || approach)
             && (fileDrag || isShelfDropTargeted)
@@ -820,28 +846,34 @@ final class IslandController: NSObject {
             isShelfFileDragPinned = wantShelfHold
             if wantShelfHold {
                 ControlDeckSettings.shared.focusShelfForDrop()
-                AppLog.info("Island", "货架拖入：钉住展开", [
+                AppLog.warn("Island", "货架拖入：钉住展开", [
                     "interactive": overInteractive,
                     "retention": overRetention,
                     "targeted": isShelfDropTargeted,
-                    "approach": approach
+                    "approach": approach,
+                    "magnetic": magnetic,
+                    "fileDrag": fileDrag
                 ])
             } else {
-                AppLog.info("Island", "货架拖入：解除钉住", [
+                AppLog.warn("Island", "货架拖入：解除钉住", [
                     "interactive": overInteractive,
                     "retention": overRetention,
                     "targeted": isShelfDropTargeted,
                     "fileDrag": fileDrag,
-                    "approach": approach
+                    "approach": approach,
+                    "magnetic": magnetic
                 ])
             }
         }
-        // 接近 / 命中岛时整岛切到暂存区；离开拖拽后恢复原页。
+        // 双舱须「正在拖文件」（左键按下）。松手后 isTargeted 常滞后，
+        // 若仍用 wantShelfHold（含裸 targeted）会在 dropComplete 退出后再点亮一次。
+        let wantMagneticStaging = magnetic && shelfEnabled && fileDrag
+            && (overRetention || isShelfDropTargeted || approach)
         ShelfDropSession.shared.setActive(
-            wantShelfHold,
-            reason: wantShelfHold
+            wantMagneticStaging,
+            reason: wantMagneticStaging
                 ? (isShelfDropTargeted ? "dropTargeted" : (approach ? "approach" : "over"))
-                : "dragEnded"
+                : (wantShelfHold ? "magneticOffOrMouseUp" : "dragEnded")
         )
         setShelfDragWindowElevation(wantShelfHold)
 
@@ -958,13 +990,26 @@ final class IslandController: NSObject {
     func setShelfDropTargeted(_ targeted: Bool) {
         guard isShelfDropTargeted != targeted else { return }
         isShelfDropTargeted = targeted
-        AppLog.info("Island", "货架投放区命中", ["targeted": targeted])
+        let magnetic = ShelfSettings.shared.magneticDropCaptureEnabled
+        let fileDrag = Self.isFileDragInProgress()
+        AppLog.warn("Island", "货架投放区命中", [
+            "targeted": targeted,
+            "magnetic": magnetic,
+            "fileDrag": fileDrag
+        ])
         if targeted {
             isShelfFileDragPinned = true
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             ControlDeckSettings.shared.focusShelfForDrop()
-            ShelfDropSession.shared.setActive(true, reason: "dropTargeted")
+            // 双舱仅磁吸 + 仍在拖文件；裸 targeted（松手滞后）不得再点亮。
+            if magnetic, fileDrag {
+                ShelfDropSession.shared.setActive(true, reason: "dropTargeted")
+            } else if !fileDrag {
+                ShelfDropSession.shared.setActive(false, reason: "targetedWithoutFileDrag")
+            } else {
+                ShelfDropSession.shared.setActive(false, reason: "magneticOffDropTargeted")
+            }
             if !viewModel.isExpanded {
                 expand(reason: "shelfDropTargeted")
             }
@@ -972,6 +1017,20 @@ final class IslandController: NSObject {
         } else if !isShelfFileDragPinned {
             ShelfDropSession.shared.setActive(false, reason: "dropUntargeted")
         }
+    }
+
+    /// 投放完成：清钉住 / 命中，避免异步 ingest 结束后 SwiftUI targeted 残影再次吸住。
+    func noteShelfDropFinished(reason: String) {
+        let wasTargeted = isShelfDropTargeted
+        let wasPinned = isShelfFileDragPinned
+        isShelfDropTargeted = false
+        isShelfFileDragPinned = false
+        setShelfDragWindowElevation(false)
+        AppLog.warn("Island", "货架投放结束，清除钉住", [
+            "reason": reason,
+            "wasTargeted": wasTargeted,
+            "wasPinned": wasPinned
+        ])
     }
 
     /// 正在拖文件：须同时满足左键按下 + 拖放剪贴板带 fileURL。

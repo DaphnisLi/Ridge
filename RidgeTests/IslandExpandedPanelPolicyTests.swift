@@ -15,6 +15,36 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
         )
     }
 
+    /// 展开态面板仍为刘海尺寸时，resolvedRetention 须抬到下限且中下点命中。
+    func testExpandedRetentionFloorKeepsMidLowerPoint() {
+        let notch = CGSize(width: 180, height: 32)
+        let compact = notch
+        let resolved = IslandExpandedPanelPolicy.resolvedRetentionPanelSize(
+            panel: compact,
+            stable: .zero,
+            notch: notch,
+            isExpanded: true
+        )
+        let floor = IslandExpandedPanelPolicy.expandedRetentionFloor(notch: notch)
+        XCTAssertEqual(resolved.height, floor.height, accuracy: 0.5)
+        XCTAssertEqual(resolved.width, floor.width, accuracy: 0.5)
+
+        let notchFrame = CGRect(x: 400, y: 968, width: 180, height: 32)
+        let panelFrame = CGRect(
+            x: 400 + 90 - resolved.width / 2,
+            y: 1000 - resolved.height,
+            width: resolved.width,
+            height: resolved.height
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.retentionContainsMidLowerPoint(
+                notchFrame: notchFrame,
+                panelFrame: panelFrame,
+                expanded: true
+            )
+        )
+    }
+
     func testAllowsShrinkDuringLayoutResetWindow() {
         let current = CGSize(width: 660, height: 300)
         let next = CGSize(width: 388, height: 80)
@@ -115,7 +145,8 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
     /// 收起态播放/番茄小岛宽于刘海：两翼也须在命中区内（悬停展开大面板）。
     func testRetentionUsesCompactIslandNotOnlyNotchWhenCollapsed() {
         let notch = CGRect(x: 411, y: 968, width: 180, height: 32)
-        let mediaCompact = CGRect(x: 311, y: 962, width: 380, height: 38)
+        // 收起小岛与刘海同高、贴顶底齐平（勿再用 height 38 掉出刘海）。
+        let mediaCompact = CGRect(x: 311, y: 968, width: 380, height: 32)
         let frame = IslandExpandedPanelPolicy.retentionFrame(
             notchFrame: notch,
             panelFrame: mediaCompact,

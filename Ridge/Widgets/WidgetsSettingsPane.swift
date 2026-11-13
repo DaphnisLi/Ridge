@@ -511,6 +511,7 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.ocrSelect"
             || widgetID == "builtin.peripheralTip"
             || widgetID == "builtin.copiedNotice"
+            || widgetID == ControlDeckSettings.pageIDPrefix + ".shelf"
     }
 
     var body: some View {
@@ -557,6 +558,8 @@ private struct WidgetPreviewPane: View {
             PeripheralTipWidgetConfigSection()
         } else if widgetID == "builtin.copiedNotice" {
             CopiedNoticeWidgetConfigSection()
+        } else if widgetID == ControlDeckSettings.pageIDPrefix + ".shelf" {
+            ShelfWidgetConfigSection()
         }
     }
 

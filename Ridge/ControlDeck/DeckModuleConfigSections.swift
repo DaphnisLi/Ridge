@@ -3,14 +3,40 @@ import SwiftUI
 
 /// 货架模块预览配置（「已复制」提示已独立为 `builtin.copiedNotice`）。
 struct ShelfWidgetConfigSection: View {
+    @ObservedObject private var shelfSettings = ShelfSettings.shared
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SettingsIslandPreviewCard(
-                widgetID: ControlDeckSettings.pageIDPrefix + ".shelf"
-            )
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
+                    SettingsIslandPreviewCard(
+                        widgetID: ControlDeckSettings.pageIDPrefix + ".shelf"
+                    )
+                    SettingsCard {
+                        SettingsSwitchRow(
+                            title: L10n.Shelf.magneticDropToggle,
+                            subtitle: L10n.Shelf.magneticDropToggleSubtitle,
+                            isOn: $shelfSettings.magneticDropCaptureEnabled
+                        )
+                    }
+                }
+                .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollIndicators(.hidden)
+
+            SettingsRestoreDefaultsFooter {
+                shelfSettings.restoreMagneticDropDefaults()
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(SettingsChrome.pageBackground)
         .onAppear {
-            AppLog.debug("ControlDeck", "货架配置预览已显示")
+            AppLog.debug("ControlDeck", "货架配置预览已显示", [
+                "magneticDrop": shelfSettings.magneticDropCaptureEnabled
+            ])
         }
     }
 }

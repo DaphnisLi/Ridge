@@ -15,6 +15,22 @@ enum MediaExpandedContentSize {
     }
 }
 
+/// 设置预览边距：收起贴真岛；展开顶距用「可见」inset（预览无刘海盲区，勿照搬真岛顶 0）。
+enum MediaPreviewChrome {
+    /// 收起态左右内边距（与真岛 `padding(.horizontal, 10)` 相同）。
+    static let compactHorizontal: CGFloat = 10
+    /// 收起态内容框高（预览用参考刘海高）；真机由 IslandContentView 按实时刘海算。
+    static var compactContentHeight: CGFloat {
+        max(0, NotchGeometry.compactPanelHeight(notchHeight: NotchGeometry.compactIslandHeight) - 4)
+    }
+    /// 展开态预览顶距：无硬件遮挡，留一小段可见空隙；禁止用 0（顶贴黑边），也禁止照搬含盲区的 `expandedTopInset`。
+    static var expandedTop: CGFloat {
+        IslandChrome.previewExpandedVisibleTopInset()
+    }
+    static var expandedBottom: CGFloat { IslandChrome.contentBottom }
+    static var expandedHorizontal: CGFloat { IslandChrome.contentHorizontal }
+}
+
 /// 媒体岛卡：设置预览与岛上真机共用。
 /// 顶行与刘海同高：左封面、右律动；其下歌名左 / 作者右同一行。
 struct MediaIslandCardView: View {

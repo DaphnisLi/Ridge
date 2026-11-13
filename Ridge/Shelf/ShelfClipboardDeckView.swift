@@ -573,9 +573,10 @@ struct ShelfClipboardDeckView: View {
 
         group.notify(queue: .main) {
             let n = shelf.add(urls: urls, source: "drop")
-            IslandController.shared?.setShelfDropTargeted(false)
-            ShelfDropSession.shared.setActive(false, reason: "dropComplete")
-            AppLog.info("Shelf", "拖入完成", ["added": n, "urls": urls.count])
+            // 先开冷却再清钉住，挡住 isTargeted 滞后导致的二次双舱。
+            ShelfDropSession.shared.endAfterDrop(reason: "dropComplete")
+            IslandController.shared?.noteShelfDropFinished(reason: "dropComplete")
+            AppLog.warn("Shelf", "拖入完成", ["added": n, "urls": urls.count])
         }
         return claimed
     }

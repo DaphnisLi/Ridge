@@ -23,14 +23,32 @@ enum IslandDisplayStyle: String, CaseIterable, Identifiable {
     }
 }
 
+/// 展开动画速度预设；倍率越大弹簧越快（response = 基线 / 倍率）。
+enum IslandAnimationSpeedPreset: Double, CaseIterable, Identifiable {
+    case smooth = 0.8
+    case standard = 1.5
+    case snap = 2.0
+
+    var id: String { "\(rawValue)" }
+
+    var title: String {
+        switch self {
+        case .smooth: return L10n.Settings.speedSmooth
+        case .standard: return L10n.Settings.speedStandard
+        case .snap: return L10n.Settings.speedSnap
+        }
+    }
+}
+
 /// 灵动岛窗口相关本地设置。
 @MainActor
 final class IslandSettings: ObservableObject {
     static let shared = IslandSettings()
 
     enum Defaults {
-        /// 越大越快；1.5× 配合更短的弹簧基线，展开/收起更干脆。
-        static let animationSpeed = 1.5
+        /// 默认「标准」档；与设置页分段控件一致。
+        static let animationSpeed = IslandAnimationSpeedPreset.standard.rawValue
+        /// 全屏时禁用灵动岛；默认关闭。
         static let hideInFullscreen = false
         static let hapticIntensity = IslandHapticIntensity.medium
         /// 稿面「默认」档：24 pt。
@@ -58,15 +76,21 @@ final class IslandSettings: ObservableObject {
         static let theme = "island.theme"
         /// 旧版倍率 key，仅用于迁移。
         static let expandedWidthScaleLegacy = "island.expandedWidthScale"
-        /// 一次性：全屏禁用改为默认关。
+        /// 一次性：全屏禁用曾改为默认关（历史）。
         static let hideFullscreenDefaultOff = "island.hideFullscreenDefaultOff.v1"
+        /// 一次性：全屏禁用曾改为默认开（历史）。
+        static let hideFullscreenDefaultOn = "island.hideFullscreenDefaultOn.v2"
+        /// 一次性：全屏禁用改回默认关。
+        static let hideFullscreenDefaultOffAgain = "island.hideFullscreenDefaultOff.v3"
         /// 一次性：默认动画从 1.0×/0.35s 提到 1.5×/更快基线。
         static let snappierMotionDefault = "island.snappierMotionDefault.v1"
         /// 一次性：旧预设「干脆=0.6 / 顺滑=1.6」与倍率含义反了，按档位映射到新预设。
         static let snappierMotionPresets = "island.snappierMotionPresets.v2"
+        /// 一次性：展开速度默认改为「标准」档（覆盖曾停在疾速 2.0× 的安装）。
+        static let standardMotionDefault = "island.standardMotionDefault.v1"
     }
 
-    /// 动画速度倍率：越大越快。范围 0.5…2.0；默认 1.5×。
+    /// 动画速度倍率：越大越快。范围 0.5…2.0；默认「标准」1.5×。
     @Published var animationSpeed: Double {
         didSet { UserDefaults.standard.set(animationSpeed, forKey: Key.animationSpeed) }
     }
@@ -138,6 +162,16 @@ final class IslandSettings: ObservableObject {
         if defaults.object(forKey: Key.hideFullscreenDefaultOff) == nil {
             defaults.set(Defaults.hideInFullscreen, forKey: Key.hideInFullscreen)
             defaults.set(true, forKey: Key.hideFullscreenDefaultOff)
+        }
+        // 历史：曾短暂改为默认开。
+        if defaults.object(forKey: Key.hideFullscreenDefaultOn) == nil {
+            defaults.set(true, forKey: Key.hideFullscreenDefaultOn)
+        }
+        // 产品改回默认关：一次性写入 false（覆盖 v2 默认开；用户之后仍可手动开）。
+        if defaults.object(forKey: Key.hideFullscreenDefaultOffAgain) == nil {
+            defaults.set(false, forKey: Key.hideInFullscreen)
+            defaults.set(true, forKey: Key.hideFullscreenDefaultOffAgain)
+            AppLog.info("Settings", "全屏禁用已迁移为默认关")
         } else if defaults.object(forKey: Key.hideInFullscreen) == nil {
             defaults.set(Defaults.hideInFullscreen, forKey: Key.hideInFullscreen)
         }
@@ -194,13 +228,13 @@ final class IslandSettings: ObservableObject {
         if defaults.object(forKey: Key.snappierMotionPresets) == nil {
             let previous = loadedSpeed
             if abs(loadedSpeed - 0.6) < 0.05 {
-                loadedSpeed = 2.0 // 旧「干脆」→ 新干脆
+                loadedSpeed = IslandAnimationSpeedPreset.snap.rawValue
                 migratedSpeed = true
             } else if abs(loadedSpeed - 1.0) < 0.05 {
                 loadedSpeed = Defaults.animationSpeed
                 migratedSpeed = true
             } else if abs(loadedSpeed - 1.6) < 0.05 {
-                loadedSpeed = 0.8 // 旧「顺滑」→ 新顺滑
+                loadedSpeed = IslandAnimationSpeedPreset.smooth.rawValue
                 migratedSpeed = true
             }
             defaults.set(true, forKey: Key.snappierMotionPresets)
@@ -211,6 +245,18 @@ final class IslandSettings: ObservableObject {
                     "to": loadedSpeed
                 ])
             }
+        }
+        // 产品默认改为「标准」：一次性写入（覆盖曾停在疾速等非标准档；之后仍可手动改）。
+        if defaults.object(forKey: Key.standardMotionDefault) == nil {
+            let previous = loadedSpeed
+            loadedSpeed = Defaults.animationSpeed
+            defaults.set(loadedSpeed, forKey: Key.animationSpeed)
+            defaults.set(true, forKey: Key.standardMotionDefault)
+            migratedSpeed = true
+            AppLog.info("Settings", "展开速度已迁移为默认标准", [
+                "from": previous,
+                "to": loadedSpeed
+            ])
         }
         animationSpeed = min(max(loadedSpeed, 0.5), 2.0)
         hideInFullscreen = defaults.bool(forKey: Key.hideInFullscreen)

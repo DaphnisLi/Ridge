@@ -98,6 +98,57 @@ enum IslandExpandedPanelPolicy {
         return panel.width <= notch.width + slop && panel.height <= notch.height + slop
     }
 
+    /// Preference 未到 / 误报矮框时，展开态保展开不得矮于此下限（否则下半截一移就收）。
+    /// 宽约媒体/番茄下限，高须明显超过刘海，覆盖「移动一半」的指针位置。
+    static func expandedRetentionFloor(notch: CGSize) -> CGSize {
+        CGSize(
+            width: max(notch.width + 120, 320),
+            height: max(notch.height + 120, 160)
+        )
+    }
+
+    /// 解析展开态保展开用的面板尺寸（稳定大面板优先，其次当前面板，矮框则抬到下限）。
+    static func resolvedRetentionPanelSize(
+        panel: CGSize,
+        stable: CGSize,
+        notch: CGSize,
+        isExpanded: Bool
+    ) -> CGSize {
+        if shouldPreferStableRetention(
+            panel: panel,
+            stable: stable,
+            notch: notch,
+            isExpanded: isExpanded
+        ) {
+            return stable
+        }
+        guard isExpanded else { return panel }
+        if isCollapsedSizedWhileExpanded(panel: panel, notch: notch, isExpanded: true) {
+            let floor = expandedRetentionFloor(notch: notch)
+            return CGSize(
+                width: max(panel.width, floor.width),
+                height: max(panel.height, floor.height)
+            )
+        }
+        // 已高于刘海但仍明显矮于稳定大面板时，上面 shouldPrefer 已处理；这里直接用当前面板。
+        return panel
+    }
+
+    /// 大面板竖直中下点是否仍在保展开区内（「移动一半就收」回归锚点）。
+    static func retentionContainsMidLowerPoint(
+        notchFrame: CGRect,
+        panelFrame: CGRect,
+        expanded: Bool
+    ) -> Bool {
+        let frame = retentionFrame(
+            notchFrame: notchFrame,
+            panelFrame: panelFrame,
+            expanded: expanded
+        )
+        let midLower = CGPoint(x: panelFrame.midX, y: panelFrame.minY + panelFrame.height * 0.25)
+        return frame.contains(midLower)
+    }
+
     /// 「已复制」/ AI 额度等瞬时短条：可见面板可以变矮，但绝不能当成稳定大面板写入 `lastStable`。
     static func isTransientShortPanel(
         _ panel: CGSize,

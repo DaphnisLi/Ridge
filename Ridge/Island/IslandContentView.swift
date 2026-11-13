@@ -8,6 +8,7 @@ struct IslandContentView: View {
     @ObservedObject var runtime: WidgetRuntime
     @ObservedObject private var controlDeck = ControlDeckSettings.shared
     @ObservedObject private var shelfDropSession = ShelfDropSession.shared
+    @ObservedObject private var shelfSettings = ShelfSettings.shared
     @ObservedObject private var focusTimer = FocusTimerSession.shared
     @ObservedObject private var nowPlaying = NowPlayingService.shared
     @ObservedObject private var widgetSettings = WidgetSettings.shared
@@ -18,21 +19,28 @@ struct IslandContentView: View {
         controlDeck.isModuleEnabled("shelf")
     }
 
+    /// 整岛双舱（暂存 / 隔空传送）仅在货架开且磁吸拖放开时出现。
+    private var shelfMagneticStagingActive: Bool {
+        shelfDropEnabled
+            && shelfSettings.magneticDropCaptureEnabled
+            && shelfDropSession.isActive
+    }
+
     /// 播放中常驻小岛（番茄优先占用左右翼；大面板仅点按后出现）。
     private var showsMediaCompactStandby: Bool {
         MediaCompactPresence.isActive
     }
 
     private var compactSize: CGSize {
+        // 高度一律等于刘海：贴顶时底边齐平，禁止 max(…, 38) 再抬高掉出刘海。
+        let height = NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
         // 番茄计时中：收起态加宽，左右翼展示待命倒计时（对齐 Live Activity）。
         if focusTimer.showsCompactStandby {
             return CGSize(
                 width: NotchGeometry.pixelAlign(
                     max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.focusTimerCompactWidth)
                 ),
-                height: NotchGeometry.pixelAlign(
-                    max(viewModel.notchHeight * NotchGeometry.compactScale, NotchGeometry.focusTimerCompactHeight)
-                )
+                height: height
             )
         }
         if showsMediaCompactStandby {
@@ -40,14 +48,12 @@ struct IslandContentView: View {
                 width: NotchGeometry.pixelAlign(
                     max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.mediaCompactWidth)
                 ),
-                height: NotchGeometry.pixelAlign(
-                    max(viewModel.notchHeight * NotchGeometry.compactScale, NotchGeometry.mediaCompactHeight)
-                )
+                height: height
             )
         }
         return CGSize(
             width: NotchGeometry.pixelAlign(viewModel.notchWidth * NotchGeometry.compactScale),
-            height: NotchGeometry.pixelAlign(viewModel.notchHeight * NotchGeometry.compactScale)
+            height: height
         )
     }
 
@@ -62,7 +68,7 @@ struct IslandContentView: View {
     /// 可见面板尺寸：收起用刘海/待命；展开用内容测量结果（viewModel.panelSize）。
     private var bodySize: CGSize {
         if viewModel.isExpanded {
-            if shelfDropEnabled, shelfDropSession.isActive {
+            if shelfMagneticStagingActive {
                 return shelfDropPanelSize
             }
             let measured = viewModel.panelSize
@@ -122,8 +128,8 @@ struct IslandContentView: View {
                     .frame(width: bodySize.width, height: bodySize.height)
                 }
 
-                if shelfDropEnabled, viewModel.isExpanded, shelfDropSession.isActive {
-                    // 拖入中：整岛切成暂存区 UI，松手 / 离开后恢复。
+                if viewModel.isExpanded, shelfMagneticStagingActive {
+                    // 磁吸拖放：整岛切成双舱（暂存 / 隔空传送）；关闭磁吸后不进此态。
                     // 必须自报控制台画布尺寸——切掉 IslandBody 后 Preference 会停在刘海，吸住又立刻收。
                     ShelfDropStagingView(highlighted: true, fillsIsland: true)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
@@ -240,12 +246,10 @@ struct IslandContentView: View {
             IslandController.shared?.setShelfDropTargeted(active)
             if active {
                 ControlDeckSettings.shared.focusShelfForDrop()
-                ShelfDropSession.shared.setActive(true, reason: "dropTargeted")
-            } else if !active {
-                // 离开投放区：若控制器侧也未钉住拖入，则退出暂存态。
-                if IslandController.shared?.isShelfDragSessionActive != true {
-                    ShelfDropSession.shared.setActive(false, reason: "dropUntargeted")
-                }
+                // 进入双舱由 IslandController 轮询（须 fileDrag）；此处不再单独 setActive(true)，
+                // 避免松手后 isTargeted 残影绕过 fileDrag 检查再闪一次。
+            } else if IslandController.shared?.isShelfDragSessionActive != true {
+                ShelfDropSession.shared.setActive(false, reason: "dropUntargeted")
             }
         }
         .onChange(of: shelfDropEnabled) { _, enabled in
@@ -253,6 +257,12 @@ struct IslandContentView: View {
                 shelfDropTargeted = false
                 IslandController.shared?.setShelfDropTargeted(false)
                 ShelfDropSession.shared.setActive(false, reason: "shelfDisabled")
+            }
+        }
+        .onChange(of: shelfSettings.magneticDropCaptureEnabled) { _, enabled in
+            if !enabled {
+                ShelfDropSession.shared.setActive(false, reason: "magneticDisabled")
+                AppLog.info("Shelf", "磁吸拖放已关闭，退出双舱态")
             }
         }
         .onChange(of: bodySize) { _, size in
@@ -316,6 +326,11 @@ private struct IslandBody: View {
         MediaCompactPresence.isActive
     }
 
+    /// 收起态内容框高：略小于岛高，上下各留约 2pt 黑边。
+    private var compactContentHeight: CGFloat {
+        max(0, NotchGeometry.compactPanelHeight(notchHeight: notchHeight) - 4)
+    }
+
     var body: some View {
         Group {
             if isExpanded {
@@ -349,10 +364,7 @@ private struct IslandBody: View {
                     .padding(.horizontal, 8)
                     .frame(
                         width: NotchGeometry.focusTimerCompactWidth,
-                        height: max(
-                            0,
-                            NotchGeometry.focusTimerCompactHeight - 4
-                        )
+                        height: compactContentHeight
                     )
                     .allowsHitTesting(false)
             } else if showsMediaCompactStandby, let snap = nowPlaying.snapshot {
@@ -365,7 +377,7 @@ private struct IslandBody: View {
                 .padding(.horizontal, 10)
                 .frame(
                     width: NotchGeometry.mediaCompactWidth,
-                    height: max(0, NotchGeometry.mediaCompactHeight - 4)
+                    height: compactContentHeight
                 )
                 // 悬停展开由 IslandController；点按保留给辅助功能。
                 .contentShape(Rectangle())

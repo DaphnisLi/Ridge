@@ -26,17 +26,15 @@ final class IslandViewModel: ObservableObject {
     var isExpanded: Bool { appearance == .expanded }
 
     /// 展开态悬停热区用的面板尺寸：禁止退回接近刘海 / 瞬时短条的小框。
+    /// Preference 未到时若仍停在刘海尺寸，抬到 `expandedRetentionFloor`，避免下半截一移就收。
     func retentionPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
         let notch = CGSize(width: notchWidth, height: notchHeight)
-        if IslandExpandedPanelPolicy.shouldPreferStableRetention(
+        return IslandExpandedPanelPolicy.resolvedRetentionPanelSize(
             panel: panelSize,
             stable: lastStableExpandedPanelSize,
             notch: notch,
             isExpanded: isExpanded
-        ) {
-            return lastStableExpandedPanelSize
-        }
-        return panelSize
+        )
     }
 
     func toggle() {

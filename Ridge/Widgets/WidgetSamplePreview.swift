@@ -504,11 +504,11 @@ enum WidgetSamplePreview {
                 MediaCompactStandbyView.previewSample(animatedEqualizer: false)
             }
         } else {
+            // 详情展开走 MediaWidgetConfigSection；兜底同 MediaPreviewChrome（顶可见 inset）。
             MediaIslandCardView.previewSample()
-                .padding(.horizontal, 12)
-                .padding(.vertical, 14)
-                .frame(maxWidth: 540)
-                .frame(minHeight: 160)
+                .padding(.horizontal, MediaPreviewChrome.expandedHorizontal)
+                .padding(.top, MediaPreviewChrome.expandedTop)
+                .padding(.bottom, MediaPreviewChrome.expandedBottom)
         }
     }
 

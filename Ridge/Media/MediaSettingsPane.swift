@@ -29,14 +29,16 @@ struct MediaWidgetConfigSection: View {
             Group {
                 switch tab {
                 case .playing:
-                    // 详情待命：保持原先 380 舞台尺寸（库卡才用会议同款 290）。
+                    // 与 IslandContentView 收起态同构：左右 10、定高 mediaCompact−4，禁再垫 vertical。
                     MediaCompactStandbyView.previewSample(animatedEqualizer: true)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, MediaPreviewChrome.compactHorizontal)
+                        .frame(height: MediaPreviewChrome.compactContentHeight)
                 case .expanded:
+                    // 预览无刘海：顶用可见 inset；勿 .vertical 对称垫，也勿照搬真岛顶 0。
                     MediaIslandCardView.previewSample(animatedEqualizer: false)
-                        .padding(.horizontal, IslandChrome.contentHorizontal)
-                        .padding(.vertical, IslandChrome.contentBottom)
+                        .padding(.horizontal, MediaPreviewChrome.expandedHorizontal)
+                        .padding(.top, MediaPreviewChrome.expandedTop)
+                        .padding(.bottom, MediaPreviewChrome.expandedBottom)
                 }
             }
             .id(tab.rawValue)

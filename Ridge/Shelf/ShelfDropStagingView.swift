@@ -259,8 +259,8 @@ struct ShelfDropStagingView: View {
         }
 
         group.notify(queue: .main) {
-            IslandController.shared?.setShelfDropTargeted(false)
-            ShelfDropSession.shared.setActive(false, reason: "airDropComplete")
+            ShelfDropSession.shared.endAfterDrop(reason: "airDropComplete")
+            IslandController.shared?.noteShelfDropFinished(reason: "airDropComplete")
             guard !urls.isEmpty else {
                 AppLog.warn("Shelf", "隔空传送：无有效文件 URL")
                 return
@@ -278,7 +278,7 @@ struct ShelfDropStagingView: View {
                 NSApp.setActivationPolicy(.regular)
             }
             NSApp.activate(ignoringOtherApps: true)
-            AppLog.info("Shelf", "隔空传送：唤起系统面板", ["urls": urls.count])
+            AppLog.warn("Shelf", "隔空传送：唤起系统面板", ["urls": urls.count])
             service.perform(withItems: urls)
         }
         return claimed
