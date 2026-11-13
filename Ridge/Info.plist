@@ -38,5 +38,13 @@
 	<string>Ridge 需要控制「系统设置」以打开蓝牙面板，便于管理外设连接。</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Ridge 需要蓝牙权限以读取附近 iPhone / iPad、已连接耳机与键鼠等设备的电量，并在控制台中显示。</string>
+	<key>SUFeedURL</key>
+	<string>https://daphnis.app/ridge/appcast.xml</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUPublicEDKey</key>
+	<string></string>
 </dict>
 </plist>

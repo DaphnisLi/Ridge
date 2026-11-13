@@ -32,6 +32,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AIUsageSession.shared.start()
         // 久坐起身：HID 空闲累计；触阈时走瞬时通知（须用户点稍后 / 今天不再才收）。
         MoveReminderSession.shared.start()
+        LoginItemService.shared.refresh()
+        UpdateService.shared.start()
+        // 首次启动引导：下一拍再出，避免与岛初始化抢主线程。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            OnboardingController.shared.presentIfNeeded()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

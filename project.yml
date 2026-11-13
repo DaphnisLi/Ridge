@@ -26,6 +26,10 @@ targets:
       - path: Ridge
         excludes:
           - "**/.DS_Store"
+          - "Resources/Legal"
+      - path: Ridge/Resources/Legal
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.daphnis.Ridge
@@ -46,6 +50,7 @@ targets:
       - sdk: IOBluetooth.framework
       - sdk: CoreBluetooth.framework
       - sdk: IOKit.framework
+      - sdk: ServiceManagement.framework
       - package: MediaRemoteAdapter
         product: MediaRemoteAdapter
         embed: true
@@ -57,6 +62,7 @@ targets:
         com.apple.security.personal-information.calendars: true
         # 外设卡片打开系统蓝牙设置（AppleScript 揭面板）
         com.apple.security.automation.apple-events: true
+
   RidgeTests:
     type: bundle.unit-test
     platform: macOS

@@ -136,22 +136,60 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         let settings = NSMenuItem(
             title: L10n.Common.settings,
             action: #selector(openSettings),
-            keyEquivalent: ""
+            keyEquivalent: ","
         )
         settings.target = self
         menu.addItem(settings)
 
         menu.addItem(.separator())
 
+        let about = NSMenuItem(
+            title: L10n.Common.about,
+            action: #selector(openAbout),
+            keyEquivalent: ""
+        )
+        about.target = self
+        menu.addItem(about)
+
+        let updates = NSMenuItem(
+            title: L10n.Common.checkForUpdates,
+            action: #selector(checkForUpdates),
+            keyEquivalent: ""
+        )
+        updates.target = self
+        menu.addItem(updates)
+
+        let feedback = NSMenuItem(
+            title: L10n.Common.sendFeedback,
+            action: #selector(sendFeedback),
+            keyEquivalent: ""
+        )
+        feedback.target = self
+        menu.addItem(feedback)
+
+        menu.addItem(.separator())
+
         let quit = NSMenuItem(
             title: L10n.Common.quitApp,
             action: #selector(quit),
-            keyEquivalent: ""
+            keyEquivalent: "q"
         )
         quit.target = self
         menu.addItem(quit)
 
         return menu
+    }
+
+    @objc private func openAbout() {
+        SettingsNavigator.shared.open(.about)
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateService.shared.checkForUpdates(userInitiated: true)
+    }
+
+    @objc private func sendFeedback() {
+        _ = FeedbackService.openMail(includeDiagnostics: true)
     }
 
     @objc private func openSettings() {
@@ -314,12 +352,9 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     /// 按当前侧栏页同步岛预览态（复用隐藏窗时 onAppear 不一定再跑）。
     private func syncIslandPreviewForCurrentSection() {
         switch SettingsNavigator.shared.section {
-        case .island:
+        case .island, .widgets, .general, .privacy, .about:
             ResourceMonitorSession.shared.setSettingsVisible(false)
             // 各设置页均用页内预览，打开时不钉住展开真岛。
-            IslandController.shared?.beginSettingsSessionCollapsed()
-        case .widgets:
-            ResourceMonitorSession.shared.setSettingsVisible(false)
             IslandController.shared?.beginSettingsSessionCollapsed()
         case .resourceMonitor:
             ResourceMonitorSession.shared.setSettingsVisible(true)

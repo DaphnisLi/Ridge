@@ -20,6 +20,9 @@ enum L10n {
         static var authorize: String { tr("common.authorize", "授权") }
         static var authorized: String { tr("common.authorized", "已授权") }
         static var minuteUnit: String { tr("common.minute_unit", "分") }
+        static var about: String { tr("common.about", "关于 Ridge") }
+        static var checkForUpdates: String { tr("common.check_for_updates", "检查更新…") }
+        static var sendFeedback: String { tr("common.send_feedback", "发送反馈…") }
     }
 
     // MARK: - Settings shell
@@ -29,6 +32,9 @@ enum L10n {
         static var controlDeck: String { tr("settings.section.control_deck", "控制台") }
         static var widgets: String { tr("settings.section.widgets", "小组件") }
         static var resourceMonitor: String { tr("settings.section.resource_monitor", "RAM 监控与进程树") }
+        static var general: String { tr("settings.section.general", "通用") }
+        static var privacy: String { tr("settings.section.privacy", "权限与隐私") }
+        static var about: String { tr("settings.section.about", "关于") }
 
         static var islandPageTitle: String { tr("settings.island.page_title", "灵动岛设置") }
         static var islandPageSubtitle: String {
@@ -106,6 +112,103 @@ enum L10n {
         static var themeLumenPark: String { tr("settings.theme.lumen_park", "林荫微光") }
         static var themeGraphite: String { tr("settings.theme.graphite", "中性灰") }
         static var themeTide: String { tr("settings.theme.tide", "深海潮汐") }
+    }
+
+    // MARK: - General / About / Privacy hub / Onboarding
+
+    enum General {
+        static var launchSection: String { tr("general.launch_section", "启动") }
+        static var launchAtLogin: String { tr("general.launch_at_login", "开机时启动 Ridge") }
+        static var launchAtLoginSubtitle: String {
+            tr("general.launch_at_login_subtitle", "登录 Mac 后自动打开；也可在系统「登录项」中管理")
+        }
+        static var openLoginItems: String { tr("general.open_login_items", "打开系统登录项…") }
+        static var updatesSection: String { tr("general.updates_section", "更新") }
+        static var autoCheckUpdates: String { tr("general.auto_check_updates", "自动检查更新") }
+        static var autoCheckUpdatesSubtitle: String {
+            tr("general.auto_check_updates_subtitle", "有新版本时提示；官网分发版使用 Sparkle")
+        }
+        static var checkForUpdatesNow: String { tr("general.check_for_updates_now", "立即检查更新") }
+    }
+
+    enum About {
+        static func versionFormat(_ version: String) -> String {
+            String(format: tr("about.version_format", "版本 %@"), version)
+        }
+        static var legalSection: String { tr("about.legal_section", "法律信息") }
+        static var privacyPolicy: String { tr("about.privacy_policy", "隐私政策") }
+        static var termsOfUse: String { tr("about.terms_of_use", "用户协议") }
+        static var supportSection: String { tr("about.support_section", "支持") }
+        static var sendFeedback: String { tr("about.send_feedback", "发送反馈…") }
+        static var attachDiagnostics: String { tr("about.attach_diagnostics", "反馈时附带诊断信息") }
+        static var attachDiagnosticsSubtitle: String {
+            tr("about.attach_diagnostics_subtitle", "包含版本、路径与权限摘要，不含密码与令牌")
+        }
+        static var copyDiagnostics: String { tr("about.copy_diagnostics", "复制诊断信息") }
+        static var diagnosticsCopied: String { tr("about.diagnostics_copied", "诊断信息已复制到剪贴板") }
+        static var checkForUpdates: String { tr("about.check_for_updates", "检查更新…") }
+        static var openWebsite: String { tr("about.open_website", "访问官网") }
+        static var actionFailed: String { tr("about.action_failed", "操作未能完成，请稍后重试") }
+        static var upToDate: String { tr("about.up_to_date", "当前已是最新版本") }
+        static var updateFailedHint: String {
+            tr("about.update_failed_hint", "暂时无法检查更新，已打开发版页")
+        }
+        static var updateFallbackHint: String {
+            tr("about.update_fallback_hint", "更新源未配置或不可用，已打开发版页")
+        }
+    }
+
+    enum PrivacyHub {
+        static var intro: String {
+            tr(
+                "privacy_hub.intro",
+                "下列权限仅在你启用相关功能时使用。可随时在系统设置中撤回。"
+            )
+        }
+        static var permissionsSection: String { tr("privacy_hub.permissions_section", "权限状态") }
+        static var calendar: String { tr("privacy_hub.calendar", "日历") }
+        static var screenCapture: String { tr("privacy_hub.screen_capture", "屏幕录制（按 App 音量）") }
+        static var inputMonitoring: String { tr("privacy_hub.input_monitoring", "输入监控（击键统计）") }
+        static var bluetooth: String { tr("privacy_hub.bluetooth", "蓝牙（外设电量）") }
+        static var notAuthorized: String { tr("privacy_hub.not_authorized", "未授权") }
+        static var notDetermined: String { tr("privacy_hub.not_determined", "尚未请求") }
+        static var denied: String { tr("privacy_hub.denied", "已拒绝") }
+        static var manageInSystem: String { tr("privacy_hub.manage_in_system", "在系统中管理") }
+    }
+
+    enum Onboarding {
+        static var windowTitle: String { tr("onboarding.window_title", "欢迎使用 Ridge") }
+        static var skip: String { tr("onboarding.skip", "跳过") }
+        static var next: String { tr("onboarding.next", "继续") }
+        static var done: String { tr("onboarding.done", "开始使用") }
+        static var stepIslandTitle: String { tr("onboarding.island_title", "贴合刘海的灵动岛") }
+        static var stepIslandBody: String {
+            tr(
+                "onboarding.island_body",
+                "将指针移到屏幕顶部刘海区域即可展开。媒体、会议、控制台等以小组件形式上岛。"
+            )
+        }
+        static var stepPermissionsTitle: String { tr("onboarding.permissions_title", "按需授权") }
+        static var stepPermissionsBody: String {
+            tr(
+                "onboarding.permissions_body",
+                "日历、屏幕录制、蓝牙等权限仅在使用对应功能时需要。可在「权限与隐私」中查看状态。"
+            )
+        }
+        static var stepLaunchTitle: String { tr("onboarding.launch_title", "开机自启") }
+        static var stepLaunchBody: String {
+            tr(
+                "onboarding.launch_body",
+                "建议开启登录时启动，以便随时使用灵动岛。之后仍可在「通用」或系统登录项中更改。"
+            )
+        }
+        static var stepWidgetsTitle: String { tr("onboarding.widgets_title", "配置小组件") }
+        static var stepWidgetsBody: String {
+            tr(
+                "onboarding.widgets_body",
+                "在设置「小组件」中开关与排序功能。接下来将打开小组件库。"
+            )
+        }
     }
 
     // MARK: - Widgets library

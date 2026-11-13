@@ -18,9 +18,11 @@
 		0CC9D4C674F88D02017216DF /* ResourceMonitorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */; };
 		0D2E218106F72CDB2BFFDF29 /* ColorPickWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950406D41F5DF51309C3C939 /* ColorPickWidgetConfigSection.swift */; };
 		0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE07D38BD81E9B818E5ADA17 /* CursorSafeStorage.swift */; };
+		0D9AC236173DA2FCF6173725 /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E70E6D43E5E4875FB4FBBE0 /* FeedbackService.swift */; };
 		0FBB3671C2041665989E9FD0 /* ProjectReleaseDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */; };
 		116B41390F574AB23AF93FAF /* BatterySession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2DAC872E498304E243C7C7 /* BatterySession.swift */; };
 		11EF5958F4F4BADDA2B6521B /* OCRSelectTipIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */; };
+		125A99601F4340E549E6C82B /* AppIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0D5C6F4586A20CFA8FC4A1 /* AppIdentity.swift */; };
 		13E3955C0A42DF5B0AF75847 /* ResourceMonitorModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320447A0767D17981EE0BC19 /* ResourceMonitorModels.swift */; };
 		144F875A907F7F99A93DBFF0 /* SoundMixerDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */; };
 		17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */; };
@@ -39,10 +41,12 @@
 		2B8ABD3D0956F772C071FCA9 /* StockYahooClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2EC5167644AA47B11298CB /* StockYahooClient.swift */; };
 		2C788BA6744639A237447AD0 /* FocusTimerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95222AB63D89FF5FA90D6EA9 /* FocusTimerModels.swift */; };
 		2D0ACB6972E7E69F1F96A9B2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C0C31143233D22C2EF32D30 /* IOKit.framework */; };
+		2E38DE11FA974BC2FAD59FA7 /* DiagnosticsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87802C0729680940D587DA92 /* DiagnosticsExporter.swift */; };
 		3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */; };
 		31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */; };
 		3224FD5F78ADC744FF364248 /* StockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7794C7F4789BBAAB698182 /* StockModels.swift */; };
 		33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */; };
+		36AB046618885204AD5B5B6B /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1742ACEEC5D563B0420C7326 /* LoginItemService.swift */; };
 		3777FAB8F28FB13D3C4C7875 /* StockSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA67CE1C61B9353C800FECA4 /* StockSession.swift */; };
 		37F9D7A65AF14899BADE4DB4 /* BatteryAlertOptionsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 558B9A44A2735B1372BD91DC /* BatteryAlertOptionsCard.swift */; };
 		383E5DAC9149BC38CF6A1B61 /* ShelfCaptureTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43CB06E38B2E8A64D7177574 /* ShelfCaptureTools.swift */; };
@@ -65,6 +69,7 @@
 		4A5AA554DC8AAEF759AABFC7 /* ProjectShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */; };
 		4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E07CBB405FFB485642B9C0 /* ProjectProcessSupport.swift */; };
 		4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */; };
+		4B6C16A2E8BAC0DB6D4CD203 /* PrivacyPermissionsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = E68934D91AB982898495233F /* PrivacyPermissionsPane.swift */; };
 		4C580F64F8E8186EF71D9678 /* MoveReminderAvoidProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B971DE7978B73EEA55C59DC /* MoveReminderAvoidProbe.swift */; };
 		4CC44F1C1DB2CC0B1A4A7DC4 /* WorldClockIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */; };
 		4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */; };
@@ -84,6 +89,7 @@
 		685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */; };
 		6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */; };
 		6997AB6FDC5F0AD503C2BB9C /* MoveReminderWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */; };
+		6B3D5638200AE7BC1BA2D440 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8AA2150E33A86F1034724E /* UpdateService.swift */; };
 		6B766A59FB1C1C8952C3F595 /* WorldClockCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */; };
 		6C3175BFD0949B4AEEE41FD1 /* BatterySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880C963E64D0E720AFA4F20F /* BatterySettings.swift */; };
 		6D8426491761656D2B1B75D2 /* ClipboardCopiedNoticeGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03E693DCD67F11AE5B3A00C9 /* ClipboardCopiedNoticeGate.swift */; };
@@ -101,6 +107,7 @@
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
 		7ED3B71BADBC51AE48AAFEB5 /* MeetingLeadSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1CE8183C9AB3757E2A5B69 /* MeetingLeadSession.swift */; };
 		7F846C42B4CA458D1D993C1E /* ColorPickWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */; };
+		80838D06CA8BCA48EECE4768 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A211ECE1AF39EDFCFE74A8D /* ServiceManagement.framework */; };
 		80AB1DE4B230D2BF015DD611 /* ResourceFocusPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */; };
 		85A757A1A9A9C38CB46C6D3B /* SoundSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BFC96E41744375F5D6F2529 /* SoundSession.swift */; };
 		85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */; };
@@ -121,6 +128,7 @@
 		98C8EA076814CA437DFDD3DC /* SettingsUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6887EE1DEDE357B154C52B12 /* SettingsUI.swift */; };
 		991EEB9BF00F942F3D5BE346 /* ShelfSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3F3C289C20C8FE9C5C25ED /* ShelfSettings.swift */; };
 		9AF1E3C18D777D77A5B4B465 /* RidgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1266F73AC4146FF0C01385 /* RidgeApp.swift */; };
+		9B26C663744628D461A931A4 /* Legal in Resources */ = {isa = PBXBuildFile; fileRef = B9E71E8C9C4E7B9E09E7C5D8 /* Legal */; };
 		9C726E71C4AE6AF7CC2959AC /* ScreenRegionOCRController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8238AE010AEFFF72F8F2351 /* ScreenRegionOCRController.swift */; };
 		9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */; };
 		9CD825B58E7198BE54B0D16F /* StockNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5DC410A52187315FA80E61 /* StockNetwork.swift */; };
@@ -142,6 +150,7 @@
 		B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 381BB46A02D1F24D68CC4117 /* PeripheralTipWidgetConfigSection.swift */; };
 		B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */; };
 		B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */; };
+		BB0A9DF8C27CC8790787FF25 /* GeneralSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8615C58E4BE6EED80BEDE67 /* GeneralSettingsPane.swift */; };
 		BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */; };
 		BF7C3BB88AC273565B1B17BC /* CopiedNoticeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */; };
 		BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; };
@@ -161,6 +170,8 @@
 		D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
 		DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */; };
+		DD63777274D1A37B6A707A60 /* AppShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2893E8199FB7A4116AF2E288 /* AppShellTests.swift */; };
+		DE01462175BA9E4E3293C0F6 /* OnboardingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E739BE14AAE020C039073346 /* OnboardingController.swift */; };
 		E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */; };
 		E32D4090FC3C65B56B5F3870 /* FocusTimerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */; };
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
@@ -176,12 +187,14 @@
 		E8169D4F5591ECA57D3E0638 /* OCRSelectSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2ED8E8814C24BCB80AA5347 /* OCRSelectSettings.swift */; };
 		E86CFE0FA7133009ACF2445E /* IslandOpaqueFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */; };
 		EB81F75E843FCBC6CA5BB137 /* MoveReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */; };
+		EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */; };
 		EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */; };
 		F0263A1227C125DC1629107D /* FocusTimerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */; };
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
 		F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11948404DA855E5880642096 /* WidgetRuntime.swift */; };
 		F57A8E3B6E53EEEF4BE83B6E /* IslandNoticeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */; };
 		F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C8B0291D49B709283472D /* WidgetGrid.swift */; };
+		F826FAAB19DA3A5042681D75 /* AboutSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882A1231A7741992CA7A5361 /* AboutSettingsPane.swift */; };
 		F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 088CFC576E84896E553FC0DD /* WidgetRegistry.swift */; };
 		FBF5908F3A964F8598572BA1 /* WidgetsSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */; };
 		FC0247F925DDFD25398F70B7 /* ClipboardCopiedIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */; };
@@ -223,6 +236,7 @@
 		1073E52F82BA9EE649BA7890 /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
 		11948404DA855E5880642096 /* WidgetRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRuntime.swift; sourceTree = "<group>"; };
 		11ACC1E6A8FDF457FF84CD5E /* BatteryDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryDeckView.swift; sourceTree = "<group>"; };
+		1742ACEEC5D563B0420C7326 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		1795489812D91800F557AA88 /* ControlDeckSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettingsPane.swift; sourceTree = "<group>"; };
 		1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectModels.swift; sourceTree = "<group>"; };
 		18EF3AEE99B8B6C747B2D038 /* ResourceMonitorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettings.swift; sourceTree = "<group>"; };
@@ -237,9 +251,11 @@
 		219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBluetoothProbe.swift; sourceTree = "<group>"; };
 		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
+		2893E8199FB7A4116AF2E288 /* AppShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellTests.swift; sourceTree = "<group>"; };
 		29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceChipInfo.swift; sourceTree = "<group>"; };
 		2C4DBEF20D01E4C7C73A0E7B /* SoundMixerDebugMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDebugMock.swift; sourceTree = "<group>"; };
 		2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySystemProfilerProbe.swift; sourceTree = "<group>"; };
+		2C8AA2150E33A86F1034724E /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		2D5047AA5E636C0BAB3B1CD1 /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
 		2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFlyAnimator.swift; sourceTree = "<group>"; };
 		2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceKeystrokeMonitor.swift; sourceTree = "<group>"; };
@@ -253,6 +269,7 @@
 		381BB46A02D1F24D68CC4117 /* PeripheralTipWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeripheralTipWidgetConfigSection.swift; sourceTree = "<group>"; };
 		3B8D1BF39CF24DE533DA6BD2 /* ControlDeckSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckSettings.swift; sourceTree = "<group>"; };
 		3C760E298216B7217C9F78B9 /* PeripheralTipWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeripheralTipWidget.swift; sourceTree = "<group>"; };
+		3E70E6D43E5E4875FB4FBBE0 /* FeedbackService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackService.swift; sourceTree = "<group>"; };
 		41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandHaptics.swift; sourceTree = "<group>"; };
 		4217F19C518B65CC66EB2A07 /* ShelfDropStagingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropStagingView.swift; sourceTree = "<group>"; };
 		435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderSettings.swift; sourceTree = "<group>"; };
@@ -288,6 +305,7 @@
 		6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSession.swift; sourceTree = "<group>"; };
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
+		6A211ECE1AF39EDFCFE74A8D /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
 		6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidget.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLibraryFamily.swift; sourceTree = "<group>"; };
@@ -308,7 +326,9 @@
 		84CAAD888892D784B7830797 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
 		85DB713B5E38759909A00339 /* IslandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTheme.swift; sourceTree = "<group>"; };
 		864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaIslandCardView.swift; sourceTree = "<group>"; };
+		87802C0729680940D587DA92 /* DiagnosticsExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsExporter.swift; sourceTree = "<group>"; };
 		880C963E64D0E720AFA4F20F /* BatterySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySettings.swift; sourceTree = "<group>"; };
+		882A1231A7741992CA7A5361 /* AboutSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsPane.swift; sourceTree = "<group>"; };
 		888652166B6E000A14995BED /* IslandNoticeCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandNoticeCenter.swift; sourceTree = "<group>"; };
 		8919AB617974C1727F52BE9A /* MoveReminderSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderSession.swift; sourceTree = "<group>"; };
 		8A050E8B86C4C1A0EECE7EDB /* EmptyIslandWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyIslandWidget.swift; sourceTree = "<group>"; };
@@ -317,6 +337,7 @@
 		8B37885E316757E08B49442F /* BatteryHIDProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryHIDProbe.swift; sourceTree = "<group>"; };
 		8B7B868652010E80E7A1FACC /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
 		8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCompactStandbyView.swift; sourceTree = "<group>"; };
+		8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentOpener.swift; sourceTree = "<group>"; };
 		93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryWidgetConfigSection.swift; sourceTree = "<group>"; };
 		933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectShell.swift; sourceTree = "<group>"; };
 		934E98AD23B05402F47D544B /* MoveReminderWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderWidgetConfigSection.swift; sourceTree = "<group>"; };
@@ -352,6 +373,7 @@
 		B77E3EA2C8F95610EAE42A18 /* MediaNowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaNowPlayingWidget.swift; sourceTree = "<group>"; };
 		B7BEF1DC686BCD1E1373EA7C /* RidgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RidgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerTitleBackfillCard.swift; sourceTree = "<group>"; };
+		B9E71E8C9C4E7B9E09E7C5D8 /* Legal */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Legal; path = Ridge/Resources/Legal; sourceTree = SOURCE_ROOT; };
 		BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSession.swift; sourceTree = "<group>"; };
 		BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAudioProperty.swift; sourceTree = "<group>"; };
 		BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSettingsPane.swift; sourceTree = "<group>"; };
@@ -361,6 +383,7 @@
 		BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlDeckIslandView.swift; sourceTree = "<group>"; };
 		C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		C4EE5CAC7104768CA58308B5 /* MeetingLeadTipSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLeadTipSelector.swift; sourceTree = "<group>"; };
+		C8615C58E4BE6EED80BEDE67 /* GeneralSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsPane.swift; sourceTree = "<group>"; };
 		CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidget.swift; sourceTree = "<group>"; };
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
@@ -385,10 +408,13 @@
 		E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropSession.swift; sourceTree = "<group>"; };
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
 		E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardCopiedIslandView.swift; sourceTree = "<group>"; };
+		E68934D91AB982898495233F /* PrivacyPermissionsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPermissionsPane.swift; sourceTree = "<group>"; };
 		E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettings.swift; sourceTree = "<group>"; };
+		E739BE14AAE020C039073346 /* OnboardingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingController.swift; sourceTree = "<group>"; };
 		E76D4C9AC130438848E5DD30 /* AIUsageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettings.swift; sourceTree = "<group>"; };
 		E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettingsPane.swift; sourceTree = "<group>"; };
 		EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegressionCatalogTests.swift; sourceTree = "<group>"; };
+		EE0D5C6F4586A20CFA8FC4A1 /* AppIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
 		F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettingsPane.swift; sourceTree = "<group>"; };
 		F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAppAggregator.swift; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
@@ -406,6 +432,7 @@
 				214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */,
 				D206341C8F877895151A8C55 /* CoreBluetooth.framework in Frameworks */,
 				2D0ACB6972E7E69F1F96A9B2 /* IOKit.framework in Frameworks */,
+				80838D06CA8BCA48EECE4768 /* ServiceManagement.framework in Frameworks */,
 				BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -540,6 +567,7 @@
 				DA834DE1F318CC8D0A4243D8 /* MoveReminder */,
 				F32FC4174A3CC38AF90B8D79 /* Projects */,
 				17D82C287105B8F6FFC1BED0 /* ResourceMonitor */,
+				5A052B6E6F2F28C825CF42D7 /* Resources */,
 				D2C332D1C56253B5EAA5B089 /* Settings */,
 				B669A13D9D57BA96F3DABB25 /* Shelf */,
 				6475114B0F370C8ABCCC842F /* Sound */,
@@ -565,6 +593,14 @@
 				BF9440A1561EBF0B6F5050F7 /* SettingsHotKeyRecorder.swift */,
 			);
 			path = Capture;
+			sourceTree = "<group>";
+		};
+		5A052B6E6F2F28C825CF42D7 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B9E71E8C9C4E7B9E09E7C5D8 /* Legal */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		61864BFFC78D89E10A875476 /* Logging */ = {
@@ -596,6 +632,7 @@
 		666488D98D3FE080D58450C3 /* RidgeTests */ = {
 			isa = PBXGroup;
 			children = (
+				2893E8199FB7A4116AF2E288 /* AppShellTests.swift */,
 				60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */,
 				50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */,
 				D21CE498DE2A53DF7D0A1A01 /* RecurringRegressionManifest.swift */,
@@ -715,6 +752,7 @@
 				5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */,
 				5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */,
 				4C0C31143233D22C2EF32D30 /* IOKit.framework */,
+				6A211ECE1AF39EDFCFE74A8D /* ServiceManagement.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -723,7 +761,14 @@
 			isa = PBXGroup;
 			children = (
 				192C1ADB09373C04A0A6E9F4 /* AppDelegate.swift */,
+				EE0D5C6F4586A20CFA8FC4A1 /* AppIdentity.swift */,
+				87802C0729680940D587DA92 /* DiagnosticsExporter.swift */,
+				3E70E6D43E5E4875FB4FBBE0 /* FeedbackService.swift */,
+				8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */,
+				1742ACEEC5D563B0420C7326 /* LoginItemService.swift */,
+				E739BE14AAE020C039073346 /* OnboardingController.swift */,
 				8A1266F73AC4146FF0C01385 /* RidgeApp.swift */,
+				2C8AA2150E33A86F1034724E /* UpdateService.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -731,8 +776,11 @@
 		D2C332D1C56253B5EAA5B089 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				882A1231A7741992CA7A5361 /* AboutSettingsPane.swift */,
+				C8615C58E4BE6EED80BEDE67 /* GeneralSettingsPane.swift */,
 				7694C35719C53E4F238252E3 /* IslandSettings.swift */,
 				54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */,
+				E68934D91AB982898495233F /* PrivacyPermissionsPane.swift */,
 				77D0B9C84F7346F4A021B1F2 /* SettingsNavigator.swift */,
 				8B7B868652010E80E7A1FACC /* SettingsRootView.swift */,
 				6887EE1DEDE357B154C52B12 /* SettingsUI.swift */,
@@ -893,6 +941,7 @@
 			files = (
 				E683FAF97EBD4CB2E7C952AB /* Assets.xcassets in Resources */,
 				31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */,
+				9B26C663744628D461A931A4 /* Legal in Resources */,
 				85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -910,8 +959,10 @@
 				5816657FA1E8280B1D18CDF8 /* AIUsageSettings.swift in Sources */,
 				FE62A60B69C3177462605788 /* AIUsageSettingsPane.swift in Sources */,
 				AC07E517A89D828DEFFB5DCD /* AIUsageWidget.swift in Sources */,
+				F826FAAB19DA3A5042681D75 /* AboutSettingsPane.swift in Sources */,
 				7321D80063E0CCA14B7539E6 /* AlwaysVisibleScrollView.swift in Sources */,
 				B9646BFAF16CD6E447A350B9 /* AppDelegate.swift in Sources */,
+				125A99601F4340E549E6C82B /* AppIdentity.swift in Sources */,
 				90D890B66F172EDA7F680261 /* AppLog.swift in Sources */,
 				37F9D7A65AF14899BADE4DB4 /* BatteryAlertOptionsCard.swift in Sources */,
 				3ED590A3F12B0419A63D83EF /* BatteryBluetoothProbe.swift in Sources */,
@@ -943,8 +994,10 @@
 				0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */,
 				681A4ADFAC6C48A79B81E4DA /* CursorUsageClient.swift in Sources */,
 				CDC499FAA1266C841E226F08 /* DeckModuleConfigSections.swift in Sources */,
+				2E38DE11FA974BC2FAD59FA7 /* DiagnosticsExporter.swift in Sources */,
 				CD7D91F13CEA69DC0430B3CB /* DisplayMonitor.swift in Sources */,
 				AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */,
+				0D9AC236173DA2FCF6173725 /* FeedbackService.swift in Sources */,
 				D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */,
 				2C788BA6744639A237447AD0 /* FocusTimerModels.swift in Sources */,
 				E32D4090FC3C65B56B5F3870 /* FocusTimerSession.swift in Sources */,
@@ -953,6 +1006,7 @@
 				B1E5D50DB91D355DCD3D6DA6 /* FocusTimerTitleBackfillCard.swift in Sources */,
 				6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */,
 				AD48555AF9CBD336D5D8E49C /* FullscreenMonitor.swift in Sources */,
+				BB0A9DF8C27CC8790787FF25 /* GeneralSettingsPane.swift in Sources */,
 				46543EB57A64C3055AEE5217 /* GlobalHotKeyCenter.swift in Sources */,
 				27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */,
 				3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */,
@@ -972,7 +1026,9 @@
 				AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */,
 				DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */,
 				6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */,
+				EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */,
 				7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */,
+				36AB046618885204AD5B5B6B /* LoginItemService.swift in Sources */,
 				DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */,
 				17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */,
 				72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */,
@@ -999,8 +1055,10 @@
 				11EF5958F4F4BADDA2B6521B /* OCRSelectTipIslandView.swift in Sources */,
 				3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */,
 				9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */,
+				DE01462175BA9E4E3293C0F6 /* OnboardingController.swift in Sources */,
 				195729684A43B3A82BA65EAC /* PeripheralTipWidget.swift in Sources */,
 				B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */,
+				4B6C16A2E8BAC0DB6D4CD203 /* PrivacyPermissionsPane.swift in Sources */,
 				76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */,
 				EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */,
 				4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */,
@@ -1054,6 +1112,7 @@
 				231E54EE1B0F800754620952 /* StockWidget.swift in Sources */,
 				3B885B352D572690D45AEF54 /* StockWidgetConfigSection.swift in Sources */,
 				2B8ABD3D0956F772C071FCA9 /* StockYahooClient.swift in Sources */,
+				6B3D5638200AE7BC1BA2D440 /* UpdateService.swift in Sources */,
 				62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */,
 				CC8899C4D4192755214DF267 /* WidgetFlyAnimator.swift in Sources */,
 				F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */,
@@ -1078,6 +1137,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD63777274D1A37B6A707A60 /* AppShellTests.swift in Sources */,
 				33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */,
 				E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */,
 				A9731342DE1337447E612B20 /* RecurringRegressionManifest.swift in Sources */,

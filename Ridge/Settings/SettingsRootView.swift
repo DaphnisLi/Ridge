@@ -114,6 +114,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
     case island
     case widgets
     case resourceMonitor
+    case general
+    case privacy
+    case about
 
     var id: String { rawValue }
 
@@ -122,6 +125,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .island: return L10n.Settings.island
         case .widgets: return L10n.Settings.widgets
         case .resourceMonitor: return L10n.Settings.resourceMonitor
+        case .general: return L10n.Settings.general
+        case .privacy: return L10n.Settings.privacy
+        case .about: return L10n.Settings.about
         }
     }
 
@@ -130,6 +136,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .island: return "capsule.fill"
         case .widgets: return "square.grid.2x2.fill"
         case .resourceMonitor: return "chart.bar.fill"
+        case .general: return "gearshape"
+        case .privacy: return "hand.raised.fill"
+        case .about: return "info.circle"
         }
     }
 
@@ -159,6 +168,12 @@ struct SettingsRootView: View {
                     WidgetsSettingsPane(settings: widgetSettings)
                 case .resourceMonitor:
                     ResourceMonitorSettingsPane()
+                case .general:
+                    GeneralSettingsPane()
+                case .privacy:
+                    PrivacyPermissionsPane()
+                case .about:
+                    AboutSettingsPane()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
