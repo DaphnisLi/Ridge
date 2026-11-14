@@ -260,19 +260,52 @@ enum L10n {
         static var windowTitle: String { tr("onboarding.window_title", "欢迎使用 Ridge") }
         static var skip: String { tr("onboarding.skip", "跳过") }
         static var next: String { tr("onboarding.next", "继续") }
+        static var back: String { tr("onboarding.back", "上一步") }
         static var done: String { tr("onboarding.done", "开始使用") }
-        static var stepIslandTitle: String { tr("onboarding.island_title", "贴合刘海的灵动岛") }
+        static var grantNextPermission: String { tr("onboarding.grant_next", "授权下一项") }
+        static var openSystemSettingsAgain: String {
+            tr("onboarding.open_system_settings_again", "打开系统设置")
+        }
+        static var stepIslandTitle: String { tr("onboarding.island_title", "认识灵动岛") }
         static var stepIslandBody: String {
             tr(
                 "onboarding.island_body",
-                "将指针移到屏幕顶部刘海区域即可展开。媒体、会议、控制台等以小组件形式上岛。"
+                "把指针移到屏幕顶部刘海区域，岛会展开。可先看下方演示了解用法。"
             )
         }
-        static var stepPermissionsTitle: String { tr("onboarding.permissions_title", "按需授权") }
+        static var videoPlaceholder: String {
+            tr("onboarding.video_placeholder", "演示视频稍后加入")
+        }
+        static var stepPickTitle: String { tr("onboarding.pick_title", "推荐开启") }
+        static var stepPickBody: String {
+            tr(
+                "onboarding.pick_body",
+                "这些是常用能力，默认已勾选。可按需调整，下一步仅为勾选项申请权限。"
+            )
+        }
+        static var stepPermissionsTitle: String { tr("onboarding.permissions_title", "授权所需权限") }
         static var stepPermissionsBody: String {
             tr(
                 "onboarding.permissions_body",
-                "日历、屏幕录制、蓝牙等权限仅在使用对应功能时需要。可在「权限与隐私」中查看状态。"
+                "日历、屏幕录制、蓝牙等权限仅在使用对应功能时需要。"
+            )
+        }
+        static var stepPermissionsResumeBody: String {
+            tr(
+                "onboarding.permissions_resume_body",
+                "按队列逐项授权。若系统要求关闭 App，重新打开 Ridge 会回到这里继续。"
+            )
+        }
+        static var permissionsAllDone: String {
+            tr("onboarding.permissions_all_done", "所需权限已就绪")
+        }
+        static var awaitingRelaunchBadge: String {
+            tr("onboarding.awaiting_relaunch_badge", "待重开")
+        }
+        static var awaitingRelaunchHint: String {
+            tr(
+                "onboarding.awaiting_relaunch_hint",
+                "请在系统设置中打开开关后重新打开 Ridge；将自动回到本页继续下一项。"
             )
         }
         static var stepLaunchTitle: String { tr("onboarding.launch_title", "开机自启") }
@@ -1498,6 +1531,16 @@ enum L10n {
         static var widgetSummary: String {
             tr("color_pick.widget_summary", "快捷键唤起取色，色值写入剪贴板")
         }
+        static var librarySummaryPrefix: String {
+            tr("color_pick.library_summary_prefix", "使用快捷键")
+        }
+        static var librarySummaryTrailing: String {
+            tr("color_pick.library_summary_trailing", "色值写入剪贴板")
+        }
+        /// 纯文本兜底（无障碍等）；库卡 UI 用 `CaptureHotKeySummaryLabel` 强调快捷键。
+        static func librarySummary(chord: String) -> String {
+            "\(librarySummaryPrefix)\(chord) · \(librarySummaryTrailing)"
+        }
         static var hotKeyTitle: String { tr("color_pick.hotkey_title", "唤醒快捷键") }
         static var hotKeySubtitle: String {
             tr("color_pick.hotkey_subtitle", "全局生效；需至少包含 ⌘ / ⌥ / ⌃ / ⇧ 之一")
@@ -1517,6 +1560,16 @@ enum L10n {
         static var widgetName: String { tr("ocr_select.widget_name", "框选文字提取") }
         static var widgetSummary: String {
             tr("ocr_select.widget_summary", "快捷键唤起框选，识别屏幕文字并复制")
+        }
+        static var librarySummaryPrefix: String {
+            tr("ocr_select.library_summary_prefix", "使用快捷键")
+        }
+        static var librarySummaryTrailing: String {
+            tr("ocr_select.library_summary_trailing", "识别屏幕文字并复制")
+        }
+        /// 纯文本兜底；库卡 UI 用 `CaptureHotKeySummaryLabel` 强调快捷键。
+        static func librarySummary(chord: String) -> String {
+            "\(librarySummaryPrefix)\(chord) · \(librarySummaryTrailing)"
         }
         static var previewStageTitle: String { tr("ocr_select.preview_stage_title", "框选") }
         static var previewStageBadge: String { tr("ocr_select.preview_stage_badge", "引导") }

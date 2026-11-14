@@ -445,6 +445,9 @@ private struct WidgetLibraryCard: View {
     @Binding var isEnabled: Bool
     var onOpen: () -> Void
 
+    @ObservedObject private var colorPickSettings = ColorPickSettings.shared
+    @ObservedObject private var ocrSelectSettings = OCRSelectSettings.shared
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button(action: onOpen) {
@@ -460,9 +463,7 @@ private struct WidgetLibraryCard: View {
                             .font(SettingsChrome.Font.sectionTitle)
                             .foregroundStyle(SettingsChrome.onSurface)
                             .lineLimit(1)
-                        Text(summary)
-                            .font(SettingsChrome.Font.caption)
-                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        librarySummaryRow
                             .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -497,6 +498,26 @@ private struct WidgetLibraryCard: View {
         )
         .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
         .opacity(isEnabled ? 1 : 0.72)
+    }
+
+    @ViewBuilder
+    private var librarySummaryRow: some View {
+        switch widgetID {
+        case "builtin.colorPick":
+            CaptureHotKeySummaryLabel(
+                kind: .colorPick,
+                chord: colorPickSettings.hotKey.displayString
+            )
+        case "builtin.ocrSelect":
+            CaptureHotKeySummaryLabel(
+                kind: .ocrSelect,
+                chord: ocrSelectSettings.hotKey.displayString
+            )
+        default:
+            Text(summary)
+                .font(SettingsChrome.Font.caption)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+        }
     }
 
     /// 灰舞台居中放黑岛（三族同壳）；黑岛统一缩到 290（「已复制」除外）。

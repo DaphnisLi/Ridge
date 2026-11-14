@@ -6,11 +6,54 @@ import Foundation
 /// 小组件 / 控制台磁贴开关打开时：按能力校验并申请系统权限（每次开启都走一遍）。
 /// 无对应权限需求的 id 直接跳过；已授权则只记日志不重复打扰。
 enum WidgetPermissionGate {
-    enum Need: String, CaseIterable {
+    enum Need: String, CaseIterable, Codable {
         case calendar
         case screenCapture
         case bluetooth
         case inputMonitoring
+    }
+
+    /// 单次申请结果：引导第 3 步据此决定是否进入「等待重开」。
+    enum EnsureOutcome: Equatable {
+        case satisfied
+        case stillNeeded
+        /// 已打开系统设置；用户勾选后可能需重开 App。
+        case awaitingSystemSettingsRelaunch
+    }
+
+    @MainActor
+    static func isSatisfied(_ need: Need) -> Bool {
+        switch need {
+        case .calendar:
+            MeetingCalendarService.shared.refreshAuthStatus()
+            return MeetingCalendarService.shared.authStatus == .authorized
+        case .screenCapture:
+            return CGPreflightScreenCaptureAccess()
+        case .bluetooth:
+            return CBManager.authorization == .allowedAlways
+        case .inputMonitoring:
+            return ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess
+        }
+    }
+
+    @MainActor
+    static func title(for need: Need) -> String {
+        switch need {
+        case .calendar: return L10n.PrivacyHub.calendarTitle
+        case .screenCapture: return L10n.PrivacyHub.screenCaptureTitle
+        case .bluetooth: return L10n.PrivacyHub.bluetoothTitle
+        case .inputMonitoring: return L10n.PrivacyHub.inputMonitoringTitle
+        }
+    }
+
+    @MainActor
+    static func subtitle(for need: Need) -> String {
+        switch need {
+        case .calendar: return L10n.PrivacyHub.calendarSubtitle
+        case .screenCapture: return L10n.PrivacyHub.screenCaptureSubtitle
+        case .bluetooth: return L10n.PrivacyHub.bluetoothSubtitle
+        case .inputMonitoring: return L10n.PrivacyHub.inputMonitoringSubtitle
+        }
     }
 
     /// 库内小组件 id（含 `system.controlDeck.*` 页 id）。
@@ -78,84 +121,98 @@ enum WidgetPermissionGate {
 
     @MainActor
     private static func ensure(_ need: Need, reason: String) async {
+        _ = await ensureOne(need, reason: reason)
+    }
+
+    /// 引导逐项申请；返回是否已满足 / 仍缺 / 需去系统设置后重开。
+    @MainActor
+    @discardableResult
+    static func ensureOne(_ need: Need, reason: String) async -> EnsureOutcome {
+        if isSatisfied(need) {
+            // 已授权时仍做一次轻量接通（如击键 tap / 混音 Tap）。
+            switch need {
+            case .screenCapture:
+                SoundSession.shared.requestScreenCaptureAccess()
+            case .bluetooth:
+                BatterySession.shared.start()
+            case .inputMonitoring:
+                ResourceKeystrokeMonitor.shared.start()
+                ResourceMonitorSession.shared.refreshInputMonitoringStatus()
+            case .calendar:
+                MeetingCalendarService.shared.start()
+            }
+            return .satisfied
+        }
         switch need {
         case .calendar:
-            await ensureCalendar(reason: reason)
+            return await ensureCalendar(reason: reason)
         case .screenCapture:
-            ensureScreenCapture(reason: reason)
+            return ensureScreenCapture(reason: reason)
         case .bluetooth:
-            ensureBluetooth(reason: reason)
+            return ensureBluetooth(reason: reason)
         case .inputMonitoring:
-            ensureInputMonitoringAccess(reason: reason)
+            return ensureInputMonitoringAccess(reason: reason)
         }
     }
 
     @MainActor
-    private static func ensureCalendar(reason: String) async {
+    private static func ensureCalendar(reason: String) async -> EnsureOutcome {
         let calendar = MeetingCalendarService.shared
         calendar.refreshAuthStatus()
-        if calendar.authStatus == .authorized {
-            AppLog.debug("PrivacyHub", "日历已授权，跳过申请", ["reason": reason])
-            return
-        }
         AppLog.info("PrivacyHub", "申请日历权限", ["reason": reason, "status": "\(calendar.authStatus)"])
         let granted = await calendar.requestAccess()
         AppLog.info("PrivacyHub", "日历权限结果", ["reason": reason, "granted": granted])
+        return granted || isSatisfied(.calendar) ? .satisfied : .stillNeeded
     }
 
     @MainActor
-    private static func ensureScreenCapture(reason: String) {
-        if CGPreflightScreenCaptureAccess() {
-            AppLog.debug("PrivacyHub", "屏幕录制已授权，刷新 Tap 状态", ["reason": reason])
-            SoundSession.shared.requestScreenCaptureAccess()
-            return
-        }
+    private static func ensureScreenCapture(reason: String) -> EnsureOutcome {
         AppLog.info("PrivacyHub", "申请屏幕录制权限", ["reason": reason])
         NSApp.activate(ignoringOtherApps: true)
         SoundSession.shared.requestScreenCaptureAccess()
-        let granted = CGPreflightScreenCaptureAccess()
-        AppLog.info("PrivacyHub", "屏幕录制权限结果", ["reason": reason, "granted": granted])
-        if !granted {
-            SystemPrivacyOpener.open(anchor: "Privacy_ScreenCapture")
+        if isSatisfied(.screenCapture) {
+            AppLog.info("PrivacyHub", "屏幕录制权限结果", ["reason": reason, "granted": true])
+            return .satisfied
         }
+        SystemPrivacyOpener.open(anchor: "Privacy_ScreenCapture")
+        AppLog.info("PrivacyHub", "屏幕录制未当场授权，已打开系统设置", ["reason": reason])
+        return .awaitingSystemSettingsRelaunch
     }
 
     @MainActor
-    private static func ensureBluetooth(reason: String) {
+    private static func ensureBluetooth(reason: String) -> EnsureOutcome {
         switch CBManager.authorization {
-        case .allowedAlways:
-            AppLog.debug("PrivacyHub", "蓝牙已授权，跳过申请", ["reason": reason])
-            BatterySession.shared.start()
-            return
         case .denied, .restricted:
             AppLog.warn("PrivacyHub", "蓝牙已拒绝，打开系统设置", [
                 "reason": reason,
                 "auth": bluetoothAuthLabel()
             ])
             SystemPrivacyOpener.open(anchor: "Privacy_Bluetooth")
-            return
+            return .awaitingSystemSettingsRelaunch
         default:
             AppLog.info("PrivacyHub", "申请蓝牙权限（拉起电量监视）", [
                 "reason": reason,
                 "auth": bluetoothAuthLabel()
             ])
-            // 创建 CBCentralManager 会触发系统授权；已开模块也会复用此路径。
             BatterySession.shared.start()
+            if isSatisfied(.bluetooth) {
+                return .satisfied
+            }
+            // 系统弹窗可能稍后才出结果；未立刻授权则视为仍缺，用户可再点。
+            return .stillNeeded
         }
     }
 
     @MainActor
-    private static func ensureInputMonitoringAccess(reason: String) {
-        if ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess {
-            AppLog.debug("PrivacyHub", "输入监控已授权，拉起击键监听", ["reason": reason])
-            ResourceKeystrokeMonitor.shared.start()
-            ResourceMonitorSession.shared.refreshInputMonitoringStatus()
-            return
-        }
+    private static func ensureInputMonitoringAccess(reason: String) -> EnsureOutcome {
         AppLog.info("PrivacyHub", "申请输入监控权限", ["reason": reason])
         let granted = ResourceKeystrokeMonitor.shared.requestInputMonitoringAccess()
         ResourceMonitorSession.shared.refreshInputMonitoringStatus()
         AppLog.info("PrivacyHub", "输入监控权限结果", ["reason": reason, "granted": granted])
+        if granted || isSatisfied(.inputMonitoring) {
+            return .satisfied
+        }
+        return .awaitingSystemSettingsRelaunch
     }
 
     private static func bluetoothAuthLabel() -> String {

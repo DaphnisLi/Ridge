@@ -32,6 +32,7 @@
 		1A5DDC7CD5AFE9DFE1664F76 /* ShelfClipboardDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4CAB41E7B11D54DDF370DD3 /* ShelfClipboardDeckView.swift */; };
 		1A9E3C68653272B3A87E5B74 /* BatteryHIDProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B37885E316757E08B49442F /* BatteryHIDProbe.swift */; };
 		1B559574B3122F5B1DE00207 /* ResourceKeystrokeMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */; };
+		1B5B88CE15A140AB5FE43035 /* CaptureHotKeySummaryLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FE493B8006D7D7FD4162B96 /* CaptureHotKeySummaryLabel.swift */; };
 		1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */; };
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
 		231E54EE1B0F800754620952 /* StockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F00F4B122F586E980C2B2F /* StockWidget.swift */; };
@@ -78,6 +79,7 @@
 		506AEFE51A96DEF1D6BF3308 /* ProjectSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440C96AEB669FCE08EA4DC22 /* ProjectSettings.swift */; };
 		513CAB175428D3C3573A7911 /* BatterySystemProfilerProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */; };
 		529931F2CDA102243049C1AA /* SoundAppVolumeRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */; };
+		567D6175D02B968E56D3BA29 /* OnboardingProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */; };
 		5816657FA1E8280B1D18CDF8 /* AIUsageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76D4C9AC130438848E5DD30 /* AIUsageSettings.swift */; };
 		5A5FAF628460840B773CAA96 /* ControlDeckSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1795489812D91800F557AA88 /* ControlDeckSettingsPane.swift */; };
 		5B179643451CD3B2B0612E4A /* SoundSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CAAD888892D784B7830797 /* SoundSettings.swift */; };
@@ -321,6 +323,7 @@
 		6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLibraryFamily.swift; sourceTree = "<group>"; };
 		6ECE154103BEFEDA8D48A4DD /* BatteryDeckIslandPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryDeckIslandPreview.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
+		6FE493B8006D7D7FD4162B96 /* CaptureHotKeySummaryLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureHotKeySummaryLabel.swift; sourceTree = "<group>"; };
 		713C1AA8A96EE5D91D96C981 /* WorldClockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSession.swift; sourceTree = "<group>"; };
 		71DA293E2CF70ED57DB5513E /* WorldClockCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockCatalog.swift; sourceTree = "<group>"; };
 		75F00F4B122F586E980C2B2F /* StockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockWidget.swift; sourceTree = "<group>"; };
@@ -430,6 +433,7 @@
 		F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettingsPane.swift; sourceTree = "<group>"; };
 		F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAppAggregator.swift; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgress.swift; sourceTree = "<group>"; };
 		FABA8516BFF2A318D78C2E62 /* CursorUsageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorUsageClient.swift; sourceTree = "<group>"; };
 		FC83119BD730DB321ACA5530 /* StockWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockWidgetConfigSection.swift; sourceTree = "<group>"; };
 		FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickTipIslandView.swift; sourceTree = "<group>"; };
@@ -595,6 +599,7 @@
 			isa = PBXGroup;
 			children = (
 				3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */,
+				6FE493B8006D7D7FD4162B96 /* CaptureHotKeySummaryLabel.swift */,
 				D1B1815ACA35688D69984BD8 /* ColorPickSettings.swift */,
 				01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */,
 				950406D41F5DF51309C3C939 /* ColorPickWidgetConfigSection.swift */,
@@ -783,6 +788,7 @@
 				8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */,
 				1742ACEEC5D563B0420C7326 /* LoginItemService.swift */,
 				E739BE14AAE020C039073346 /* OnboardingController.swift */,
+				FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */,
 				8A1266F73AC4146FF0C01385 /* RidgeApp.swift */,
 				B2AC3AA0CEB857437EF53DCE /* SystemPrivacyOpener.swift */,
 				2C8AA2150E33A86F1034724E /* UpdateService.swift */,
@@ -995,6 +1001,7 @@
 				513CAB175428D3C3573A7911 /* BatterySystemProfilerProbe.swift in Sources */,
 				89BAB936D8EA48DE26DE3055 /* BatteryWidgetConfigSection.swift in Sources */,
 				BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */,
+				1B5B88CE15A140AB5FE43035 /* CaptureHotKeySummaryLabel.swift in Sources */,
 				FC0247F925DDFD25398F70B7 /* ClipboardCopiedIslandView.swift in Sources */,
 				6D8426491761656D2B1B75D2 /* ClipboardCopiedNoticeGate.swift in Sources */,
 				B5B1FAE96DDBA3E90849BB8A /* ClipboardHistoryStore.swift in Sources */,
@@ -1074,6 +1081,7 @@
 				3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */,
 				9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */,
 				DE01462175BA9E4E3293C0F6 /* OnboardingController.swift in Sources */,
+				567D6175D02B968E56D3BA29 /* OnboardingProgress.swift in Sources */,
 				195729684A43B3A82BA65EAC /* PeripheralTipWidget.swift in Sources */,
 				B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */,
 				76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */,

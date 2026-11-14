@@ -9143,6 +9143,29 @@
         }
       }
     },
+    "color_pick.library_summary_prefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用快捷键"
+          }
+        }
+      }
+    },
+    "color_pick.library_summary_trailing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "色值写入剪贴板"
+          }
+        }
+      }
+    },
+
     "color_pick.hotkey_title": {
       "extractionState": "manual",
       "localizations": {
@@ -9209,6 +9232,29 @@
         }
       }
     },
+    "ocr_select.library_summary_prefix": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用快捷键"
+          }
+        }
+      }
+    },
+    "ocr_select.library_summary_trailing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别屏幕文字并复制"
+          }
+        }
+      }
+    },
+
     "ocr_select.preview_stage_title": {
       "extractionState": "manual",
       "localizations": {
@@ -9737,5 +9783,137 @@
       }
     }
   },
-  "version": "1.0"
+  "version": "1.0",
+    "onboarding.back": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一步"
+          }
+        }
+      }
+    },
+    "onboarding.grant_next": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权下一项"
+          }
+        }
+      }
+    },
+    "onboarding.open_system_settings_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开系统设置"
+          }
+        }
+      }
+    },
+    "onboarding.video_placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "演示视频稍后加入"
+          }
+        }
+      }
+    },
+    "onboarding.island_try_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请把指针移到刘海区域试一下，展开后即可继续"
+          }
+        }
+      }
+    },
+    "onboarding.island_tried_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已检测到展开，可以继续"
+          }
+        }
+      }
+    },
+    "onboarding.pick_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐开启"
+          }
+        }
+      }
+    },
+    "onboarding.pick_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些是常用能力，默认已勾选。可按需调整，下一步仅为勾选项申请权限。"
+          }
+        }
+      }
+    },
+    "onboarding.permissions_resume_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按队列逐项授权。若系统要求关闭 App，重新打开 Ridge 会回到这里继续。"
+          }
+        }
+      }
+    },
+    "onboarding.permissions_all_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所需权限已就绪"
+          }
+        }
+      }
+    },
+    "onboarding.awaiting_relaunch_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待重开"
+          }
+        }
+      }
+    },
+    "onboarding.awaiting_relaunch_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在系统设置中打开开关后重新打开 Ridge；将自动回到本页继续下一项。"
+          }
+        }
+      }
+    }
 }
