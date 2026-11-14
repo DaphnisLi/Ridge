@@ -25,6 +25,19 @@ enum ProjectRuntimeSampler {
         let projectName: String?
     }
 
+    /// 供 `ProjectRootDiscovery` 复用私有采集能力。
+    static func loadProcessesForDiscovery() -> [(pid: Int32, ppid: Int32, command: String)] {
+        loadProcesses().map { (pid: $0.pid, ppid: $0.ppid, command: $0.command) }
+    }
+
+    static func loadListenSocketsForDiscovery() -> [(pid: Int32, port: Int)] {
+        loadListenSockets().map { (pid: $0.pid, port: $0.port) }
+    }
+
+    static func loadCWDsForDiscovery(for pids: [Int32]) -> [Int32: String] {
+        loadCWDs(for: pids)
+    }
+
     static func sample(projects: [ScannedProject], roots: [String] = []) -> [ProjectRuntimeGroup] {
         let started = Date()
         let processes = loadProcesses()

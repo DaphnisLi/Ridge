@@ -98,6 +98,7 @@ struct ProjectsWidgetConfigSection: View {
     @ObservedObject private var projectSettings = ProjectSettings.shared
     @ObservedObject private var session = ProjectReleaseSession.shared
     @State private var hoveredRoot: String?
+    @State private var reindexNote: String?
 
     private var activeRootCount: Int {
         projectSettings.roots.reduce(0) { count, root in
@@ -145,15 +146,23 @@ struct ProjectsWidgetConfigSection: View {
                         .font(SettingsChrome.Font.body)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let reindexNote, !reindexNote.isEmpty {
+                        Text(reindexNote)
+                            .font(SettingsChrome.Font.caption)
+                            .foregroundStyle(SettingsChrome.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 Spacer(minLength: 8)
                 HStack(spacing: 8) {
                     Button {
-                        session.refresh(reason: "userRescan")
-                        AppLog.info("Projects", "设置页重新索引项目目录")
+                        Task { await runReindex() }
                     } label: {
-                        Label(L10n.Projects.reindexRoots, systemImage: "arrow.triangle.2.circlepath")
-                            .font(SettingsChrome.Font.chipSelected)
+                        Label(
+                            session.isRefreshing ? L10n.Projects.reindexRunning : L10n.Projects.reindexRoots,
+                            systemImage: "arrow.triangle.2.circlepath"
+                        )
+                        .font(SettingsChrome.Font.chipSelected)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -175,6 +184,22 @@ struct ProjectsWidgetConfigSection: View {
 
             rootsList
         }
+    }
+
+    @MainActor
+    private func runReindex() async {
+        reindexNote = L10n.Projects.reindexRunning
+        let result = await session.reindexFromRuntime()
+        reindexNote = L10n.Projects.reindexDone(
+            added: result.addedRoots,
+            roots: result.roots,
+            projects: result.projects
+        )
+        AppLog.warn("Projects", "设置页重新索引已反馈", [
+            "added": result.addedRoots,
+            "roots": result.roots,
+            "projects": result.projects
+        ])
     }
 
     private var rootsList: some View {

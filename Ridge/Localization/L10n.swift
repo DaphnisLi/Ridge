@@ -1421,14 +1421,37 @@ enum L10n {
         static var rootsIntro: String {
             tr(
                 "projects.settings.roots_intro",
-                "设置本地工程代码根目录，Ridge 会自动识别其中的项目结构，并汇总关联的编译进程、端口与本地容器。"
+                "点「重新索引」只在当前用户家目录下发现你的工程工作区（跳过 Flutter SDK 等）；也可手动添加。"
             )
         }
         static var rootsEmpty: String {
-            tr("projects.settings.roots_empty", "尚未添加目录。添加后才会扫描其中的项目。")
+            tr(
+                "projects.settings.roots_empty",
+                "暂无扫描目录。点「重新索引」发现你的工作区，或手动添加。"
+            )
         }
         static var addRoot: String { tr("projects.settings.add_root", "添加目录…") }
         static var reindexRoots: String { tr("projects.settings.reindex_roots", "重新索引") }
+        static var reindexRunning: String {
+            tr("projects.settings.reindex_running", "正在索引…")
+        }
+        static func reindexDone(added: Int, roots: Int, projects: Int) -> String {
+            if roots == 0 {
+                return tr(
+                    "projects.settings.reindex_done_empty",
+                    "未发现可识别工程。可手动添加代码所在的父目录。"
+                )
+            }
+            return String(
+                format: tr(
+                    "projects.settings.reindex_done_format",
+                    "索引完成：新增 %d 个目录，共 %d 个目录 · %d 个工程"
+                ),
+                added,
+                roots,
+                projects
+            )
+        }
         static var revealInFinder: String {
             tr("projects.settings.reveal_in_finder", "在访达中定位")
         }

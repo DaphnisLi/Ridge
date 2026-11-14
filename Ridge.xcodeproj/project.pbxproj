@@ -36,6 +36,7 @@
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
 		231E54EE1B0F800754620952 /* StockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F00F4B122F586E980C2B2F /* StockWidget.swift */; };
 		27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45BDD3FD3EEAF28093A962D7 /* HotKeyChord.swift */; };
+		27BFC264B4A738F590680B85 /* ProjectScanRootTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A7D77738F10EB67B95471 /* ProjectScanRootTests.swift */; };
 		2983F53A047FAB854C63FCA7 /* MoveReminderSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8919AB617974C1727F52BE9A /* MoveReminderSession.swift */; };
 		29D4E1400C224BE84938BFCD /* WorldClockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B69BAA7793215EAC5EDFC0E /* WorldClockModels.swift */; };
 		2B8ABD3D0956F772C071FCA9 /* StockYahooClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2EC5167644AA47B11298CB /* StockYahooClient.swift */; };
@@ -191,6 +192,7 @@
 		EB81F75E843FCBC6CA5BB137 /* MoveReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */; };
 		EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */; };
 		EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */; };
+		EEF7DF550F3FA61D805FD69A /* ProjectRootDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECEE2ABCF93C94266282B12 /* ProjectRootDiscovery.swift */; };
 		F0263A1227C125DC1629107D /* FocusTimerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */; };
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
 		F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11948404DA855E5880642096 /* WidgetRuntime.swift */; };
@@ -255,6 +257,7 @@
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
 		2893E8199FB7A4116AF2E288 /* AppShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellTests.swift; sourceTree = "<group>"; };
 		29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceChipInfo.swift; sourceTree = "<group>"; };
+		2C3A7D77738F10EB67B95471 /* ProjectScanRootTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectScanRootTests.swift; sourceTree = "<group>"; };
 		2C4DBEF20D01E4C7C73A0E7B /* SoundMixerDebugMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDebugMock.swift; sourceTree = "<group>"; };
 		2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySystemProfilerProbe.swift; sourceTree = "<group>"; };
 		2C8AA2150E33A86F1034724E /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
@@ -285,6 +288,7 @@
 		4BFC96E41744375F5D6F2529 /* SoundSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSession.swift; sourceTree = "<group>"; };
 		4C0C31143233D22C2EF32D30 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectReleaseSession.swift; sourceTree = "<group>"; };
+		4ECEE2ABCF93C94266282B12 /* ProjectRootDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRootDiscovery.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRegressionCoverageTests.swift; sourceTree = "<group>"; };
 		51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockIslandViews.swift; sourceTree = "<group>"; };
@@ -640,6 +644,7 @@
 				2893E8199FB7A4116AF2E288 /* AppShellTests.swift */,
 				60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */,
 				56E612CBA14254D2023C2AFF /* KeystrokePeakHourTests.swift */,
+				2C3A7D77738F10EB67B95471 /* ProjectScanRootTests.swift */,
 				50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */,
 				D21CE498DE2A53DF7D0A1A01 /* RecurringRegressionManifest.swift */,
 				EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */,
@@ -849,6 +854,7 @@
 				A1E07CBB405FFB485642B9C0 /* ProjectProcessSupport.swift */,
 				A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */,
 				4C7F4AEA88349402F7538BE7 /* ProjectReleaseSession.swift */,
+				4ECEE2ABCF93C94266282B12 /* ProjectRootDiscovery.swift */,
 				E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */,
 				440C96AEB669FCE08EA4DC22 /* ProjectSettings.swift */,
 				933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */,
@@ -1069,6 +1075,7 @@
 				4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */,
 				0FBB3671C2041665989E9FD0 /* ProjectReleaseDeckView.swift in Sources */,
 				3936513DBBA9C04D204678B8 /* ProjectReleaseSession.swift in Sources */,
+				EEF7DF550F3FA61D805FD69A /* ProjectRootDiscovery.swift in Sources */,
 				7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */,
 				506AEFE51A96DEF1D6BF3308 /* ProjectSettings.swift in Sources */,
 				4A5AA554DC8AAEF759AABFC7 /* ProjectShell.swift in Sources */,
@@ -1147,6 +1154,7 @@
 				DD63777274D1A37B6A707A60 /* AppShellTests.swift in Sources */,
 				33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */,
 				A460C629F56E217E5B978DA1 /* KeystrokePeakHourTests.swift in Sources */,
+				27BFC264B4A738F590680B85 /* ProjectScanRootTests.swift in Sources */,
 				E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */,
 				A9731342DE1337447E612B20 /* RecurringRegressionManifest.swift in Sources */,
 				40ABDD7A5CE9807D8C686150 /* RegressionCatalogTests.swift in Sources */,

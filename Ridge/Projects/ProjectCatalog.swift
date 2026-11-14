@@ -18,6 +18,13 @@ enum ProjectCatalog {
         ("composer.json", "php")
     ]
 
+    struct ScanRootHit: Sendable {
+        /// 工程绝对路径。
+        let projectPath: String
+        /// 建议写入设置的扫描根（工程父目录，tilde 形式）。
+        let root: String
+    }
+
     static func scan(roots: [String]) -> [ScannedProject] {
         var found: [String: ScannedProject] = [:]
         let fm = FileManager.default
@@ -39,6 +46,35 @@ enum ProjectCatalog {
             "names": list.prefix(8).map(\.name).joined(separator: ",")
         ])
         return list
+    }
+
+    /// 从工作目录向上找最近工程，再取其父目录作为扫描根（不把整个家目录当根）。
+    static func scanRoot(forWorkingDirectory cwd: String) -> ScanRootHit? {
+        let home = NSHomeDirectory()
+        var path = (cwd as NSString).standardizingPath
+        guard path.hasPrefix(home + "/") || path == home else { return nil }
+
+        var projectPath: String?
+        while path.count > home.count {
+            if identify(at: path) != nil {
+                projectPath = path
+                break
+            }
+            let parent = (path as NSString).deletingLastPathComponent
+            if parent == path { break }
+            path = parent
+        }
+        guard let project = projectPath else { return nil }
+
+        let parent = (project as NSString).deletingLastPathComponent
+        let rootAbsolute: String
+        if parent == home || parent == "/" || parent.isEmpty {
+            rootAbsolute = project
+        } else {
+            rootAbsolute = parent
+        }
+        let tilde = rootAbsolute.replacingOccurrences(of: home, with: "~")
+        return ScanRootHit(projectPath: project, root: tilde)
     }
 
     private static let skipDirectoryNames: Set<String> = [
@@ -69,6 +105,11 @@ enum ProjectCatalog {
             guard fm.fileExists(atPath: child, isDirectory: &isDir), isDir.boolValue else { continue }
             scanDirectory(child, depth: depth + 1, maxDepth: maxDepth, into: &found)
         }
+    }
+
+    /// 供根目录发现复用：判断某路径是否为可识别工程。
+    static func identifyPublic(at path: String) -> ScannedProject? {
+        identify(at: path)
     }
 
     private static func identify(at path: String) -> ScannedProject? {

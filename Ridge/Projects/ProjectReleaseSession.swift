@@ -84,6 +84,53 @@ final class ProjectReleaseSession: ObservableObject {
         AppLog.info("Projects", "项目释放会话已停止")
     }
 
+    /// 设置页「重新索引」：先按运行中进程发现扫描根，再重扫工程。
+    @discardableResult
+    func reindexFromRuntime() async -> (addedRoots: Int, roots: Int, projects: Int) {
+        if isRefreshing {
+            pendingRefreshReason = "userRescan"
+            AppLog.warn("Projects", "重新索引已排队（当前刷新未完成）")
+            return (0, settings.roots.count, projects.count)
+        }
+        isRefreshing = true
+        AppLog.warn("Projects", "开始重新索引（仅当前用户家目录工作区）")
+        let discovery = await Task.detached(priority: .userInitiated) {
+            ProjectRootDiscovery.discover()
+        }.value
+        // 整体替换，避免上次误扫的 Flutter SDK / Volumes 别名残留。
+        let added = settings.replaceDiscoveredRoots(discovery.roots)
+        let roots = settings.roots
+        let scanResult = await Task.detached(priority: .userInitiated) { () -> (projects: [ScannedProject], groups: [ProjectRuntimeGroup], catalogMs: Int, sampleMs: Int) in
+            let scanStarted = Date()
+            let scanned = ProjectCatalog.scan(roots: roots)
+            let catalogMs = Int(Date().timeIntervalSince(scanStarted) * 1000)
+            let sampleStarted = Date()
+            let sampled = ProjectRuntimeSampler.sample(projects: scanned, roots: roots)
+            let sampleMs = Int(Date().timeIntervalSince(sampleStarted) * 1000)
+            return (scanned, sampled, catalogMs, sampleMs)
+        }.value
+        projects = scanResult.projects
+        groups = scanResult.groups
+        refreshWatchMemory(from: scanResult.groups)
+        lastCatalogScanAt = Date()
+        isRefreshing = false
+        lastError = nil
+        AppLog.warn("Projects", "重新索引完成", [
+            "addedRoots": added,
+            "roots": roots.count,
+            "projects": scanResult.projects.count,
+            "groups": scanResult.groups.count,
+            "catalogMs": scanResult.catalogMs,
+            "sampleMs": scanResult.sampleMs,
+            "paths": roots.joined(separator: ",")
+        ])
+        if let pending = pendingRefreshReason {
+            pendingRefreshReason = nil
+            refresh(reason: pending)
+        }
+        return (added, roots.count, scanResult.projects.count)
+    }
+
     func refresh(reason: String) {
         if isRefreshing {
             // 释放后采样不可丢；与进行中的 poll 冲突时排队，结束后立刻再采。
