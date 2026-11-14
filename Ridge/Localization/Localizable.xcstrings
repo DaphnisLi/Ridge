@@ -3088,7 +3088,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "添加目录"
+            "value": "添加目录…"
           }
         }
       }
@@ -3110,7 +3110,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "填写代码所在的父文件夹，例如 ~/project。Ridge 会识别其中的项目，并汇总相关进程与容器。"
+            "value": "设置本地工程代码根目录，Ridge 会自动识别其中的项目结构，并汇总关联的编译进程、端口与本地容器。"
           }
         }
       }
@@ -4650,7 +4650,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "混音台在控制台页展示。按 App 音量需 macOS 14.2+ 与屏幕录制权限（不会录制画面）。"
+            "value": "按 App 音量需 macOS 14.2+ 与屏幕录制权限。"
           }
         }
       }
@@ -4705,7 +4705,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "按 App 独立音量需要 macOS 14.2 或更高版本。"
+            "value": "按 App 音量需要 macOS 14.2 或更高版本。"
           }
         }
       }
@@ -4727,7 +4727,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "记住每 App 音量（重启后恢复）"
+            "value": "记住每 App 音量"
           }
         }
       }
@@ -5574,7 +5574,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "用于按 App 独立调节音量（不会录制画面）"
+            "value": "用于按 App 调音量，不会录制画面"
           }
         }
       }
@@ -7246,7 +7246,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "消耗峰值与夜间配额重置即时弹窗预警"
+            "value": "剩余额度触阈时在岛上提示"
           }
         }
       }
@@ -7268,7 +7268,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "小组件库开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭库卡则不弹。"
+            "value": "开启后后台读取额度；触达阈值时岛上提示约 3 秒。"
           }
         }
       }
@@ -7279,7 +7279,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "三阶触发百分比阈值精准配置"
+            "value": "触发阈值"
           }
         }
       }
@@ -7290,7 +7290,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "触达充裕 / 警戒 / 截流任一设定值时，灵动岛弹出对应形态胶囊约 3 秒（非常驻页）"
+            "value": "剩余百分比触达任一档时，岛上提示约 3 秒"
           }
         }
       }
@@ -7301,7 +7301,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "层级校验通过"
+            "value": "层级有效"
           }
         }
       }
@@ -7312,7 +7312,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "充裕态参考阈值"
+            "value": "充裕"
           }
         }
       }
@@ -7323,7 +7323,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "警戒态触发阈值"
+            "value": "警戒"
           }
         }
       }
@@ -7334,7 +7334,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "截流态触发阈值"
+            "value": "截流"
           }
         }
       }
@@ -7345,7 +7345,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "本地 AI 运行环境与模型多维配额"
+            "value": "Cursor 额度"
           }
         }
       }
@@ -7466,7 +7466,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "套餐内金额度"
+            "value": "套餐额度"
           }
         }
       }
@@ -7488,7 +7488,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cursor / 月度订阅与弹性按需"
+            "value": "订阅周期与按需用量"
           }
         }
       }
@@ -7730,7 +7730,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "AI 额度梯级预警感知提醒"
+            "value": "AI 额度提醒"
           }
         }
       }
@@ -7741,7 +7741,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已感知 %d/%d 核心主力通道"
+            "value": "已接入 %d/%d"
           }
         }
       }
@@ -7752,7 +7752,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "层级校验通过: 充裕 > 警戒 > 截流"
+            "value": "充裕 > 警戒 > 截流"
           }
         }
       }
@@ -7763,7 +7763,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "充裕态触发阈值 (Stage 01)"
+            "value": "充裕"
           }
         }
       }
@@ -7774,7 +7774,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "警戒态触发阈值 (Stage 02)"
+            "value": "警戒"
           }
         }
       }
@@ -7785,7 +7785,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "危机 / 截流阈值 (Stage 03)"
+            "value": "截流"
           }
         }
       }
@@ -7796,7 +7796,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "合法范围 50% ~ 80%"
+            "value": "50%–80%"
           }
         }
       }
@@ -7807,7 +7807,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "合法范围 20% ~ 45%"
+            "value": "20%–45%"
           }
         }
       }
@@ -7818,7 +7818,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "合法范围 5% ~ 15%"
+            "value": "5%–15%"
           }
         }
       }
@@ -7840,7 +7840,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "套餐内金额度（订阅周期）"
+            "value": "套餐额度"
           }
         }
       }
@@ -7851,7 +7851,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "仅套餐额度有重置 · 按需无重置"
+            "value": "套餐会重置 · 按需不会"
           }
         }
       }
@@ -7862,7 +7862,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "按需已花金额（金额，不是额度，无百分比）"
+            "value": "按需花费"
           }
         }
       }
@@ -7873,7 +7873,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "按需无重置"
+            "value": "无重置"
           }
         }
       }
@@ -7884,7 +7884,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "已结算金额"
+            "value": "已花费"
           }
         }
       }
@@ -7895,7 +7895,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "无重置时刻 / 随月度账单结算"
+            "value": "随月度账单结算"
           }
         }
       }
@@ -7906,7 +7906,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "限额占用 %.1f%%"
+            "value": "占用 %.1f%%"
           }
         }
       }
@@ -7917,7 +7917,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "剩余可支配 $%.2f"
+            "value": "剩余 $%.2f"
           }
         }
       }
@@ -7928,7 +7928,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "软限制度 $%.2f"
+            "value": "上限 $%.2f"
           }
         }
       }
@@ -8962,7 +8962,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "波形为当日 5 分钟收盘价连线：左侧为开盘后首个有效点，右侧为最新一根 K 线；大号现价取实时报价，可能与终点略有差异。完整波形仅 Yahoo 分时可提供，其它备用源只更新价格。"
+            "value": "波形为当日 5 分钟收盘价；现价取实时报价，可能与终点略有差异。完整分时仅 Yahoo 可用，其它源只更新价格。"
           }
         }
       }
@@ -8973,7 +8973,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "当前数据来源"
+            "value": "数据源："
           }
         }
       }
@@ -9028,7 +9028,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yahoo 分时"
+            "value": "Yahoo Finance 分时"
           }
         }
       }
@@ -9039,7 +9039,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yahoo 报价"
+            "value": "Yahoo Finance 报价"
           }
         }
       }
@@ -9083,7 +9083,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "当前数据来源：%@"
+            "value": "数据源：%@"
           }
         }
       }
@@ -9568,6 +9568,137 @@
           "stringUnit": {
             "state": "translated",
             "value": "复制成功时刘海右侧圆岛提示"
+          }
+        }
+      }
+    },
+    "projects.settings.reindex_roots": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新索引"
+          }
+        }
+      }
+    },
+    "projects.settings.reveal_in_finder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在访达中定位"
+          }
+        }
+      }
+    },
+    "projects.settings.remove_root_a11y": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除此目录"
+          }
+        }
+      }
+    },
+    "projects.settings.active_roots_badge_format": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 个生效目录"
+          }
+        }
+      }
+    },
+    "projects.settings.root_detected_format": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已检测到 %d 个工程"
+          }
+        }
+      }
+    },
+    "projects.settings.root_detected_running_format": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已检测到 %d 个工程 · %d 个关联进程正在运行"
+          }
+        }
+      }
+    },
+    "projects.settings.root_detected_kinds_format": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已检测到 %d 个 %@"
+          }
+        }
+      }
+    },
+    "projects.settings.root_missing": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目录不存在或无法访问"
+          }
+        }
+      }
+    },
+    "projects.settings.root_no_projects": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚未检测到可识别的工程"
+          }
+        }
+      }
+    },
+    "projects.settings.kind_xcode": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode"
+          }
+        }
+      }
+    },
+    "projects.settings.kind_node_rust": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Node / Rust 模块"
+          }
+        }
+      }
+    },
+    "projects.settings.kind_generic": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用仓库"
+          }
+        }
+      }
+    },
+    "sound.remember_volumes_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重启后自动恢复上次设定"
           }
         }
       }

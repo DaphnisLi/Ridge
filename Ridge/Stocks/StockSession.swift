@@ -263,19 +263,29 @@ final class StockSession: ObservableObject {
 
     /// 固钉区展示用：汇总当前命中的数据源（随刷新变化）。
     var dataSourceSummaryText: String {
+        L10n.Stocks.dataSourceSummary(dataSourceShortName)
+    }
+
+    /// 胶囊芯片用：仅来源名（不含「数据源：」前缀）。
+    var dataSourceShortName: String {
         let providers = snapshots.compactMap(\.provider)
         if providers.isEmpty {
             if snapshots.contains(where: { $0.isStale }) {
-                return L10n.Stocks.dataSourceSummary(L10n.Stocks.dataSourceCached)
+                return L10n.Stocks.dataSourceCached
             }
-            return L10n.Stocks.dataSourceSummary(L10n.Stocks.dataSourceUnknown)
+            return L10n.Stocks.dataSourceUnknown
         }
         let unique = Array(Set(providers)).sorted { $0.rawValue < $1.rawValue }
         if unique.count == 1, let only = unique.first {
-            return L10n.Stocks.dataSourceSummary(L10n.Stocks.providerName(only))
+            return L10n.Stocks.providerName(only)
         }
         let names = unique.map(L10n.Stocks.providerName).joined(separator: "、")
-        return L10n.Stocks.dataSourceSummary("\(L10n.Stocks.dataSourceMixed)（\(names)）")
+        return "\(L10n.Stocks.dataSourceMixed)（\(names)）"
+    }
+
+    /// 有实时源时为 true（绿点）；仅缓存 / 暂无为 false。
+    var dataSourceIsLive: Bool {
+        snapshots.contains { $0.provider != nil }
     }
 
     /// 任一标的处于 REGULAR 则用用户设定间隔；否则 5 分钟。

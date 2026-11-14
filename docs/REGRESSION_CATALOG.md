@@ -256,12 +256,34 @@
 - **相关代码:** `SoundSession.applyRoute`、`SoundProcessMonitor.hostKey`、`AlwaysVisibleScrollView.usesCompositingGroup`  
 - **自动化:** `RegressionCatalogTests.test_soundAppVolumeHostKey_helperBundleDoesNotEqualHostKey`
 
+### keystroke-peak-hour-not-max — 击键峰值不是当天最多时段
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-14：专注洞察「峰值时段」与直觉不符 / 重启后丢）  
+- **症状:** 峰值不是当日小时桶击键最多的整点；或重启后峰值空白/错位  
+- **根因倾向:** ① 误用非「当日各小时计数取 max」的语义；② `todayHourlyKeystrokes` 未持久化，进程重启桶清空  
+- **防护:** `ResourceActivityStore.peakHour(from:)` 取 count>0 的 max（并列较早小时）；桶随日聚合 `persist`/`load`；峰值变化打 `击键峰值时段已更新`  
+- **相关代码:** `ResourceActivityStore.addKeystrokes` / `peakKeystrokeHourRange` / `persist`  
+- **自动化（可选）:** `KeystrokePeakHourTests`（max / 首击即峰 / 后时段反超 / 并列取早 / 空或 0 为 nil）
+
+### move-reminder-hard-to-trigger — 久坐提示长期看不到
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-14：用户反馈从未见久坐 tip；当日日志无 MoveReminder 行）  
+- **症状:** 久坐起身从不 / 极少上岛；落盘日志也查不到累计过程  
+- **根因倾向:** ① 须连续在场满 `activeTrigger`（默认 30m），且 HID 空闲一超过 `leaveReset`（默认 5m）就清零——读文档停手也会重置；② App 重启累计归零（开发日频繁 relaunch 尤其明显）；③ 会话关键路径用 `info`，而 `AppLog` 仅 warn/error 落盘，排障看不见  
+- **防护:** 启动 / 离开清零 / 每 5 分钟进度 / 触阈投递 / 关闭组件 一律 `warn` 落盘；设置文案已说明「键鼠持续交互」  
+- **相关代码:** `MoveReminderSession.tick` / `MoveReminderIdleProbe`  
+- **自动化建议:** 可选：模拟 idle≥leave 须清零、accum≥trigger 须 present
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-14 | 久坐关键路径改 warn 落盘（启动/离开/进度/投递）；catalog `move-reminder-hard-to-trigger` |
+| 2026-11-14 | 击键峰值按当日小时桶 max；桶持久化；`KeystrokePeakHourTests`；catalog `keystroke-peak-hour-not-max` |
 | 2026-11-13 | recurring 全量闸门：`RecurringRegressionManifest` + `scripts/test-recurring.sh`；occurrences=1 不强制测 |
 | 2026-11-13 | 按 App 音量：宿主 key 匹配 Process Tap；混音台滚动关 compositing；catalog `sound-app-volume-host-key` |
 | 2026-11-12 | 库卡灰舞台三族统一 106；详情 tip/待命 `tipStageMinHeight` 88 |

@@ -20,7 +20,8 @@ enum DiagnosticsExporter {
             "calendar: \(cal)",
             "screenCapture: \(screen)",
             "inputMonitoring: \(input)",
-            "logDir: \(NSHomeDirectory())/Library/Logs/Ridge",
+            "logDir: \(AppLog.logsDirectory.path)",
+            "todayLog: \(AppLog.todayLogURL().path)",
             "appSupport: \(FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Ridge").path ?? "?")"
         ]
         return lines.joined(separator: "\n")

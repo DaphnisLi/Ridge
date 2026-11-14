@@ -20,9 +20,9 @@ enum L10n {
         static var authorize: String { tr("common.authorize", "授权") }
         static var authorized: String { tr("common.authorized", "已授权") }
         static var minuteUnit: String { tr("common.minute_unit", "分") }
-        static var about: String { tr("common.about", "关于 Ridge") }
-        static var checkForUpdates: String { tr("common.check_for_updates", "检查更新…") }
-        static var sendFeedback: String { tr("common.send_feedback", "发送反馈…") }
+        static var about: String { tr("common.about", "Ridge") }
+        static var checkForUpdates: String { tr("common.check_for_updates", "检查更新") }
+        static var sendFeedback: String { tr("common.send_feedback", "发送反馈") }
     }
 
     // MARK: - Settings shell
@@ -33,9 +33,10 @@ enum L10n {
         static var widgets: String { tr("settings.section.widgets", "小组件") }
         static var resourceMonitor: String { tr("settings.section.resource_monitor", "RAM 监控与进程树") }
         static var focusInsights: String { tr("settings.section.focus_insights", "专注与击键") }
-        static var general: String { tr("settings.section.general", "通用") }
-        static var privacy: String { tr("settings.section.privacy", "权限与隐私") }
-        static var about: String { tr("settings.section.about", "关于") }
+        static var general: String { tr("settings.section.general", "通用设置") }
+        static var about: String { tr("settings.section.about", "关于与支持") }
+        static var sidebarFeatures: String { tr("settings.sidebar.features", "功能") }
+        static var sidebarPreferences: String { tr("settings.sidebar.preferences", "设置") }
 
         static var islandPageTitle: String { tr("settings.island.page_title", "灵动岛设置") }
         static var islandPageSubtitle: String {
@@ -118,12 +119,21 @@ enum L10n {
     // MARK: - General / About / Privacy hub / Onboarding
 
     enum General {
+        static var preferenceBadge: String { tr("general.preference_badge", "偏好设置") }
+        static var pageTitle: String { tr("general.page_title", "通用设置与权限") }
+        static var pageSubtitle: String {
+            tr("general.page_subtitle", "管理开机自启与小组件所需系统权限。")
+        }
         static var launchSection: String { tr("general.launch_section", "启动") }
-        static var launchAtLogin: String { tr("general.launch_at_login", "开机时启动 Ridge") }
+        static var launchAtLogin: String { tr("general.launch_at_login", "开机时自动启动 Ridge") }
         static var launchAtLoginSubtitle: String {
-            tr("general.launch_at_login_subtitle", "登录 Mac 后自动打开；也可在系统「登录项」中管理")
+            tr("general.launch_at_login_subtitle", "登录系统后自动在后台静默运行")
         }
         static var openLoginItems: String { tr("general.open_login_items", "打开系统登录项…") }
+        static var permissionsSection: String { tr("general.permissions_section", "系统权限状态") }
+        static func permissionsReadyCount(_ ready: Int, _ total: Int) -> String {
+            String(format: tr("general.permissions_ready_format", "%d / %d 已就绪"), ready, total)
+        }
         static var updatesSection: String { tr("general.updates_section", "更新") }
         static var autoCheckUpdates: String { tr("general.auto_check_updates", "自动检查更新") }
         static var autoCheckUpdatesSubtitle: String {
@@ -133,13 +143,55 @@ enum L10n {
     }
 
     enum About {
+        static var pageTitle: String { tr("about.page_title", "关于 Ridge") }
         static func versionFormat(_ version: String) -> String {
             String(format: tr("about.version_format", "版本 %@"), version)
         }
-        static var legalSection: String { tr("about.legal_section", "法律信息") }
-        static var privacyPolicy: String { tr("about.privacy_policy", "隐私政策") }
-        static var termsOfUse: String { tr("about.terms_of_use", "用户协议") }
-        static var supportSection: String { tr("about.support_section", "支持") }
+        static func versionBadge(_ version: String) -> String {
+            String(format: tr("about.version_badge_format", "v%@"), version)
+        }
+        static var editionBadge: String { tr("about.edition_badge", "桌面版") }
+        static var tagline: String {
+            tr("about.tagline", "Mac 灵动岛与硬件交互枢纽")
+        }
+        static var architectureHint: String {
+            tr(
+                "about.architecture_hint",
+                "原生 macOS 应用 · Universal Binary（Apple Silicon / Intel）"
+            )
+        }
+        static var autoCheckUpdates: String { tr("about.auto_check_updates", "自动检查更新") }
+        static var autoCheckUpdatesSubtitle: String {
+            tr("about.auto_check_updates_subtitle", "有新版本时静默提示")
+        }
+        static var checkForUpdatesButton: String { tr("about.check_for_updates_button", "检查更新…") }
+        static func upToDateStatus(_ version: String) -> String {
+            String(format: tr("about.up_to_date_status_format", "当前已是最新版本（%@）"), version)
+        }
+        static var legalSection: String { tr("about.legal_section", "法律与合规承诺") }
+        static var privacyPolicy: String { tr("about.privacy_policy", "隐私保护政策") }
+        static var privacyPolicySubtitle: String {
+            tr(
+                "about.privacy_policy_subtitle",
+                "日历、外设与进程等数据均在本机处理，不上传遥测。"
+            )
+        }
+        static var termsOfUse: String { tr("about.terms_of_use", "用户使用许可协议") }
+        static var termsOfUseSubtitle: String {
+            tr(
+                "about.terms_of_use_subtitle",
+                "关于软件许可、使用范围与免责声明。"
+            )
+        }
+        static var supportSection: String { tr("about.support_section", "诊断报告与开发者支持") }
+        static var sendSuggestion: String { tr("about.send_suggestion", "提交功能建议") }
+        static var sendSuggestionSubtitle: String {
+            tr("about.send_suggestion_subtitle", "分享你的功能想法与改进灵感")
+        }
+        static var reportBug: String { tr("about.report_bug", "报告 Bug 与异常") }
+        static var reportBugSubtitle: String {
+            tr("about.report_bug_subtitle", "描述问题并自动附带当天日志与诊断摘要")
+        }
         static var sendFeedback: String { tr("about.send_feedback", "发送反馈…") }
         static var attachDiagnostics: String { tr("about.attach_diagnostics", "反馈时附带诊断信息") }
         static var attachDiagnosticsSubtitle: String {
@@ -166,11 +218,45 @@ enum L10n {
                 "下列权限仅在你启用相关功能时使用。可随时在系统设置中撤回。"
             )
         }
+        static var pageSubtitle: String {
+            tr(
+                "privacy_hub.page_subtitle",
+                "了解 Ridge 如何处理数据；系统权限状态请在「通用设置」中查看与授权。"
+            )
+        }
+        static var openGeneralPermissions: String {
+            tr("privacy_hub.open_general_permissions", "前往通用设置查看权限状态")
+        }
         static var permissionsSection: String { tr("privacy_hub.permissions_section", "权限状态") }
         static var calendar: String { tr("privacy_hub.calendar", "日历") }
+        static var calendarTitle: String { tr("privacy_hub.calendar_title", "日历访问权限") }
+        static var calendarSubtitle: String {
+            tr("privacy_hub.calendar_subtitle", "用于展示下一场会议并一键入会")
+        }
         static var screenCapture: String { tr("privacy_hub.screen_capture", "屏幕录制（按 App 音量）") }
+        static var screenCaptureTitle: String { tr("privacy_hub.screen_capture_title", "屏幕录制与音频") }
+        static var screenCaptureSubtitle: String {
+            tr("privacy_hub.screen_capture_subtitle", "用于应用音量调节与全局屏幕取色")
+        }
         static var inputMonitoring: String { tr("privacy_hub.input_monitoring", "输入监控（击键统计）") }
+        static var inputMonitoringTitle: String { tr("privacy_hub.input_monitoring_title", "输入监控") }
+        static var inputMonitoringSubtitle: String {
+            tr("privacy_hub.input_monitoring_subtitle", "用于按键敲击频率统计与全局快捷键感知")
+        }
         static var bluetooth: String { tr("privacy_hub.bluetooth", "蓝牙（外设电量）") }
+        static var bluetoothTitle: String { tr("privacy_hub.bluetooth_title", "蓝牙与外设") }
+        static var bluetoothSubtitle: String {
+            tr("privacy_hub.bluetooth_subtitle", "用于在灵动岛实时显示蓝牙外设电量")
+        }
+        static var accessibilityTitle: String { tr("privacy_hub.accessibility_title", "辅助功能") }
+        static var accessibilitySubtitle: String {
+            tr(
+                "privacy_hub.accessibility_subtitle",
+                "用于适配屏幕物理刘海边缘与全屏窗口避让"
+            )
+        }
+        static var pendingBadge: String { tr("privacy_hub.pending_badge", "待授权") }
+        static var goAuthorize: String { tr("privacy_hub.go_authorize", "前往授权") }
         static var notAuthorized: String { tr("privacy_hub.not_authorized", "未授权") }
         static var notDetermined: String { tr("privacy_hub.not_determined", "尚未请求") }
         static var denied: String { tr("privacy_hub.denied", "已拒绝") }
@@ -402,7 +488,10 @@ enum L10n {
         static var muteApp: String { tr("sound.mute_app", "静音此 App") }
         static var unmuteApp: String { tr("sound.unmute_app", "恢复声音") }
         static var rememberVolumes: String {
-            tr("sound.remember_volumes", "记住每 App 音量（重启后恢复）")
+            tr("sound.remember_volumes", "记住每 App 音量")
+        }
+        static var rememberVolumesSubtitle: String {
+            tr("sound.remember_volumes_subtitle", "重启后自动恢复上次设定")
         }
         static var resetAppVolumes: String { tr("sound.reset_app_volumes", "重置 App 音量") }
         static var grantScreenCapture: String {
@@ -414,14 +503,14 @@ enum L10n {
         static var screenCaptureAccessDesc: String {
             tr(
                 "sound.screen_capture_access_desc",
-                "用于按 App 独立调节音量（不会录制画面）"
+                "用于按 App 调音量，不会录制画面"
             )
         }
         static var screenCaptureAllow: String {
             tr("sound.screen_capture_allow", "授权屏幕录制")
         }
         static var needsMacOS142Body: String {
-            tr("sound.needs_macos142_body", "按 App 独立音量需要 macOS 14.2 或更高版本。")
+            tr("sound.needs_macos142_body", "按 App 音量需要 macOS 14.2 或更高版本。")
         }
         static var tapUnavailableHint: String {
             tr("sound.tap_unavailable_hint", "按 App 音量暂不可用，请检查系统版本与屏幕录制权限")
@@ -430,7 +519,7 @@ enum L10n {
         static var mixerPrefsIntro: String {
             tr(
                 "sound.mixer.prefs_intro",
-                "混音台在控制台页展示。按 App 音量需 macOS 14.2+ 与屏幕录制权限（不会录制画面）。"
+                "按 App 音量需 macOS 14.2+ 与屏幕录制权限。"
             )
         }
         static var moduleLive: String { tr("sound.module_live", "已启用") }
@@ -768,11 +857,11 @@ enum L10n {
         static var sparklineExplainer: String {
             tr(
                 "stocks.sparkline.explainer",
-                "波形为当日 5 分钟收盘价连线：左侧为开盘后首个有效点，右侧为最新一根 K 线；大号现价取实时报价，可能与终点略有差异。完整波形仅 Yahoo 分时可提供，其它备用源只更新价格。"
+                "波形为当日 5 分钟收盘价；现价取实时报价，可能与终点略有差异。完整分时仅 Yahoo 可用，其它源只更新价格。"
             )
         }
 
-        static var dataSourceLabel: String { tr("stocks.source.label", "当前数据来源") }
+        static var dataSourceLabel: String { tr("stocks.source.label", "数据源：") }
         static var dataSourceUnknown: String { tr("stocks.source.unknown", "暂无") }
         static var dataSourceMixed: String { tr("stocks.source.mixed", "混合") }
         static var dataSourceCached: String { tr("stocks.source.cached", "本地缓存") }
@@ -783,9 +872,9 @@ enum L10n {
         static func providerName(_ provider: StockQuoteProvider) -> String {
             switch provider {
             case .yahooChart:
-                return tr("stocks.source.yahoo_chart", "Yahoo 分时")
+                return tr("stocks.source.yahoo_chart", "Yahoo Finance 分时")
             case .yahooQuote:
-                return tr("stocks.source.yahoo_quote", "Yahoo 报价")
+                return tr("stocks.source.yahoo_quote", "Yahoo Finance 报价")
             case .stooq:
                 return tr("stocks.source.stooq", "Stooq")
             case .sina:
@@ -797,7 +886,7 @@ enum L10n {
 
         static func dataSourceSummary(_ text: String) -> String {
             String(
-                format: tr("stocks.source.summary_format", "当前数据来源：%@"),
+                format: tr("stocks.source.summary_format", "数据源：%@"),
                 locale: .current,
                 text
             )
@@ -811,69 +900,69 @@ enum L10n {
         static var widgetSummary: String {
             tr(
                 "ai_usage.widget.summary",
-                "消耗峰值与夜间配额重置即时弹窗预警"
+                "剩余额度触阈时在岛上提示"
             )
         }
         static var bannerTitle: String {
-            tr("ai_usage.banner.title", "AI 额度梯级预警感知提醒")
+            tr("ai_usage.banner.title", "AI 额度提醒")
         }
         static var sensingSubtitle: String {
             tr(
                 "ai_usage.sensing.subtitle",
-                "小组件库开启后后台感知配额；剩余百分比触达充裕 / 警戒 / 截流任一阈值时，灵动岛瞬时提示约 3 秒。关闭库卡则不弹。"
+                "开启后后台读取额度；触达阈值时岛上提示约 3 秒。"
             )
         }
         static func sensedChannels(_ ready: Int, _ total: Int) -> String {
             String(
-                format: tr("ai_usage.sensed_channels_format", "已感知 %d/%d 核心主力通道"),
+                format: tr("ai_usage.sensed_channels_format", "已接入 %d/%d"),
                 ready,
                 total
             )
         }
         static var thresholdsTitle: String {
-            tr("ai_usage.thresholds.title", "三阶触发百分比阈值精准配置")
+            tr("ai_usage.thresholds.title", "触发阈值")
         }
         static var thresholdsSubtitle: String {
             tr(
                 "ai_usage.thresholds.subtitle",
-                "触达充裕 / 警戒 / 截流任一设定值时，灵动岛弹出对应形态胶囊约 3 秒（非常驻页）"
+                "剩余百分比触达任一档时，岛上提示约 3 秒"
             )
         }
         static var thresholdsValid: String {
-            tr("ai_usage.thresholds.valid", "层级校验通过")
+            tr("ai_usage.thresholds.valid", "层级有效")
         }
         static var thresholdsValidHierarchy: String {
-            tr("ai_usage.thresholds.valid_hierarchy", "层级校验通过: 充裕 > 警戒 > 截流")
+            tr("ai_usage.thresholds.valid_hierarchy", "充裕 > 警戒 > 截流")
         }
         static var thresholdAbundant: String {
-            tr("ai_usage.threshold.abundant", "充裕态参考阈值")
+            tr("ai_usage.threshold.abundant", "充裕")
         }
         static var thresholdWarning: String {
-            tr("ai_usage.threshold.warning", "警戒态触发阈值")
+            tr("ai_usage.threshold.warning", "警戒")
         }
         static var thresholdCritical: String {
-            tr("ai_usage.threshold.critical", "截流态触发阈值")
+            tr("ai_usage.threshold.critical", "截流")
         }
         static var thresholdAbundantStage: String {
-            tr("ai_usage.threshold.abundant_stage", "充裕态触发阈值 (Stage 01)")
+            tr("ai_usage.threshold.abundant_stage", "充裕")
         }
         static var thresholdWarningStage: String {
-            tr("ai_usage.threshold.warning_stage", "警戒态触发阈值 (Stage 02)")
+            tr("ai_usage.threshold.warning_stage", "警戒")
         }
         static var thresholdCriticalStage: String {
-            tr("ai_usage.threshold.critical_stage", "危机 / 截流阈值 (Stage 03)")
+            tr("ai_usage.threshold.critical_stage", "截流")
         }
         static var thresholdRangeAbundant: String {
-            tr("ai_usage.threshold.range_abundant", "合法范围 50% ~ 80%")
+            tr("ai_usage.threshold.range_abundant", "50%–80%")
         }
         static var thresholdRangeWarning: String {
-            tr("ai_usage.threshold.range_warning", "合法范围 20% ~ 45%")
+            tr("ai_usage.threshold.range_warning", "20%–45%")
         }
         static var thresholdRangeCritical: String {
-            tr("ai_usage.threshold.range_critical", "合法范围 5% ~ 15%")
+            tr("ai_usage.threshold.range_critical", "5%–15%")
         }
         static var providersTitle: String {
-            tr("ai_usage.providers.title", "本地 AI 运行环境与模型多维配额")
+            tr("ai_usage.providers.title", "Cursor 额度")
         }
         static var syncAction: String { tr("ai_usage.sync", "同步") }
         static var providerCursor: String { tr("ai_usage.provider.cursor", "Cursor") }
@@ -893,36 +982,36 @@ enum L10n {
         static var stageUnknown: String { tr("ai_usage.stage.unknown", "未知") }
         static var remainingLabel: String { tr("ai_usage.remaining", "剩余") }
         static var windowPlanTotal: String {
-            tr("ai_usage.window.plan_total", "套餐内金额度")
+            tr("ai_usage.window.plan_total", "套餐额度")
         }
         static var windowPlanTotalCycle: String {
-            tr("ai_usage.window.plan_total_cycle", "套餐内金额度（订阅周期）")
+            tr("ai_usage.window.plan_total_cycle", "套餐额度")
         }
         static var windowPlanAuto: String {
             tr("ai_usage.window.plan_auto", "Auto 额度")
         }
         static var expandedSubtitle: String {
-            tr("ai_usage.expanded.subtitle", "Cursor / 月度订阅与弹性按需")
+            tr("ai_usage.expanded.subtitle", "订阅周期与按需用量")
         }
         static var cursorQuotaHint: String {
-            tr("ai_usage.cursor.quota_hint", "仅套餐额度有重置 · 按需无重置")
+            tr("ai_usage.cursor.quota_hint", "套餐会重置 · 按需不会")
         }
         static var onDemandTitle: String {
-            tr("ai_usage.ondemand.title", "按需已花金额（金额，不是额度，无百分比）")
+            tr("ai_usage.ondemand.title", "按需花费")
         }
-        static var onDemandNoReset: String { tr("ai_usage.ondemand.no_reset", "按需无重置") }
-        static var onDemandSettled: String { tr("ai_usage.ondemand.settled", "已结算金额") }
+        static var onDemandNoReset: String { tr("ai_usage.ondemand.no_reset", "无重置") }
+        static var onDemandSettled: String { tr("ai_usage.ondemand.settled", "已花费") }
         static var onDemandBillingNote: String {
-            tr("ai_usage.ondemand.billing_note", "无重置时刻 / 随月度账单结算")
+            tr("ai_usage.ondemand.billing_note", "随月度账单结算")
         }
         static func onDemandOccupancy(_ percent: Double) -> String {
-            String(format: tr("ai_usage.ondemand.occupancy_format", "限额占用 %.1f%%"), percent)
+            String(format: tr("ai_usage.ondemand.occupancy_format", "占用 %.1f%%"), percent)
         }
         static func onDemandRemaining(_ usd: Double) -> String {
-            String(format: tr("ai_usage.ondemand.remaining_format", "剩余可支配 $%.2f"), usd)
+            String(format: tr("ai_usage.ondemand.remaining_format", "剩余 $%.2f"), usd)
         }
         static func onDemandSoftLimit(_ usd: Double) -> String {
-            String(format: tr("ai_usage.ondemand.soft_limit_format", "软限制度 $%.2f"), usd)
+            String(format: tr("ai_usage.ondemand.soft_limit_format", "上限 $%.2f"), usd)
         }
         static var resetUnknown: String { tr("ai_usage.reset.unknown", "重置时间未知") }
         static var resetSoon: String { tr("ai_usage.reset.soon", "即将重置") }
@@ -1332,13 +1421,52 @@ enum L10n {
         static var rootsIntro: String {
             tr(
                 "projects.settings.roots_intro",
-                "填写代码所在的父文件夹，例如 ~/project。Ridge 会识别其中的项目，并汇总相关进程与容器。"
+                "设置本地工程代码根目录，Ridge 会自动识别其中的项目结构，并汇总关联的编译进程、端口与本地容器。"
             )
         }
         static var rootsEmpty: String {
             tr("projects.settings.roots_empty", "尚未添加目录。添加后才会扫描其中的项目。")
         }
-        static var addRoot: String { tr("projects.settings.add_root", "添加目录") }
+        static var addRoot: String { tr("projects.settings.add_root", "添加目录…") }
+        static var reindexRoots: String { tr("projects.settings.reindex_roots", "重新索引") }
+        static var revealInFinder: String {
+            tr("projects.settings.reveal_in_finder", "在访达中定位")
+        }
+        static var removeRootA11y: String {
+            tr("projects.settings.remove_root_a11y", "移除此目录")
+        }
+        static func activeRootsBadge(_ count: Int) -> String {
+            String(format: tr("projects.settings.active_roots_badge_format", "%d 个生效目录"), count)
+        }
+        static func rootDetected(_ projects: Int) -> String {
+            String(format: tr("projects.settings.root_detected_format", "已检测到 %d 个工程"), projects)
+        }
+        static func rootDetectedWithRunning(_ projects: Int, _ processes: Int) -> String {
+            String(
+                format: tr(
+                    "projects.settings.root_detected_running_format",
+                    "已检测到 %d 个工程 · %d 个关联进程正在运行"
+                ),
+                projects,
+                processes
+            )
+        }
+        static func rootDetectedKinds(_ projects: Int, _ kindsLabel: String) -> String {
+            String(
+                format: tr("projects.settings.root_detected_kinds_format", "已检测到 %d 个 %@"),
+                projects,
+                kindsLabel
+            )
+        }
+        static var rootMissing: String {
+            tr("projects.settings.root_missing", "目录不存在或无法访问")
+        }
+        static var rootNoProjects: String {
+            tr("projects.settings.root_no_projects", "尚未检测到可识别的工程")
+        }
+        static var kindXcode: String { tr("projects.settings.kind_xcode", "Xcode") }
+        static var kindNodeRust: String { tr("projects.settings.kind_node_rust", "Node / Rust 模块") }
+        static var kindGenericRepos: String { tr("projects.settings.kind_generic", "通用仓库") }
     }
 
     // MARK: - HotKey / Capture widgets

@@ -44,6 +44,7 @@ final class ResourceMonitorSession: ObservableObject {
     private var lastYearRefresh: Date = .distantPast
     /// 高压已触发但进程树尚未就绪，等重采样后再投递告警。
     private var awaitingTopForAlert = false
+    private var keystrokeObserver: NSObjectProtocol?
 
     private init() {}
 
@@ -59,6 +60,7 @@ final class ResourceMonitorSession: ObservableObject {
             }
         }
         RunLoop.main.add(lightTimer!, forMode: .common)
+        observeKeystrokePeakUpdates()
         refreshInputMonitoringStatus()
         lightTick()
         scheduleHeavy(force: true)
@@ -88,6 +90,10 @@ final class ResourceMonitorSession: ObservableObject {
         lightTimer = nil
         heavyTask?.cancel()
         heavyTask = nil
+        if let keystrokeObserver {
+            NotificationCenter.default.removeObserver(keystrokeObserver)
+            self.keystrokeObserver = nil
+        }
         ResourceFocusTracker.shared.stop()
         ResourceKeystrokeMonitor.shared.stop()
         started = false
@@ -158,6 +164,19 @@ final class ResourceMonitorSession: ObservableObject {
         if settingsVisible {
             refreshActivityUI()
             refreshInputMonitoringStatus()
+        }
+    }
+
+    private func observeKeystrokePeakUpdates() {
+        if keystrokeObserver != nil { return }
+        keystrokeObserver = NotificationCenter.default.addObserver(
+            forName: .ridgeResourceKeystrokesDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshActivityUI()
+            }
         }
     }
 

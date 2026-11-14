@@ -25,6 +25,10 @@ final class MoveReminderSession: ObservableObject {
     private var lastTickAt: Date?
     private var lastAvoidReason = "none"
     private var noticeObserver: AnyCancellable?
+    /// 上次落盘进度档（分钟），避免 tick 刷屏。
+    private var lastLoggedProgressMinute = -1
+    /// 禁用态只打一次，重新启用后再报。
+    private var loggedDisabled = false
 
     private init() {}
 
@@ -46,8 +50,16 @@ final class MoveReminderSession: ObservableObject {
             }
         }
         RunLoop.main.add(timer!, forMode: .common)
+        AppLog.warn("MoveReminder", "久坐提醒会话已启动", [
+            "enabled": WidgetSettings.shared.isEnabled("builtin.moveReminder"),
+            "activeMin": settings.activeTriggerMinutes,
+            "leaveMin": settings.leaveResetMinutes,
+            "restMin": settings.suggestedRestMinutes,
+            "smartAvoid": settings.smartAvoidEnabled,
+            "muted": settings.isMutedNow(),
+            "snoozed": settings.isSnoozedNow()
+        ])
         tick(reason: "start")
-        AppLog.info("MoveReminder", "久坐提醒会话已启动")
     }
 
     private func handleNoticeCenterChange(_ payload: IslandNoticePayload?) {
@@ -86,10 +98,18 @@ final class MoveReminderSession: ObservableObject {
 
     private func tick(reason: String) {
         guard WidgetSettings.shared.isEnabled("builtin.moveReminder") else {
+            if !loggedDisabled {
+                loggedDisabled = true
+                AppLog.warn("MoveReminder", "组件已关闭，跳过累计", ["reason": reason])
+            }
             resetAccumulation(reason: "disabled")
             dismissNoticeIfNeeded(reason: "disabled")
             lastTickAt = Date()
             return
+        }
+        if loggedDisabled {
+            loggedDisabled = false
+            AppLog.warn("MoveReminder", "组件已重新开启，恢复累计")
         }
 
         let now = Date()
@@ -99,10 +119,10 @@ final class MoveReminderSession: ObservableObject {
         // 离开：闲置过阈值 → 清零（并收起未处理的提醒）。
         if idle >= settings.leaveResetSeconds {
             if accumulatedSeconds > 0 || presentingNoticeID != nil {
-                AppLog.info("MoveReminder", "判定已离开，计时清零", [
+                AppLog.warn("MoveReminder", "判定已离开，计时清零", [
                     "idleSec": Int(idle),
-                    "threshold": settings.leaveResetMinutes,
-                    "hadAccum": Int(accumulatedSeconds),
+                    "thresholdMin": settings.leaveResetMinutes,
+                    "hadAccumSec": Int(accumulatedSeconds),
                     "reason": reason
                 ])
             }
@@ -117,7 +137,9 @@ final class MoveReminderSession: ObservableObject {
             isPausedForAvoid = avoid.shouldPause
             lastAvoidReason = avoid.reason
             if avoid.shouldPause {
-                AppLog.info("MoveReminder", "智能避让暂停累计", ["reason": avoid.reason])
+                AppLog.warn("MoveReminder", "智能避让暂停累计", ["reason": avoid.reason])
+            } else {
+                AppLog.warn("MoveReminder", "智能避让已解除", ["reason": avoid.reason])
             }
         }
 
@@ -126,6 +148,16 @@ final class MoveReminderSession: ObservableObject {
 
         // 提醒展示中 / 静音 / 稍后 / 避让：不累计，但保持「在场」状态（不清零）。
         if presentingNoticeID != nil || muted || snoozed || avoid.shouldPause {
+            if reason == "start" || reason == "resume" {
+                AppLog.warn("MoveReminder", "当前不累计", [
+                    "presenting": presentingNoticeID != nil,
+                    "muted": muted,
+                    "snoozed": snoozed,
+                    "avoid": avoid.reason,
+                    "accumSec": Int(accumulatedSeconds),
+                    "idleSec": Int(idle)
+                ])
+            }
             lastTickAt = now
             return
         }
@@ -136,6 +168,7 @@ final class MoveReminderSession: ObservableObject {
         // 单次 tick 上限，避免系统休眠醒来后暴涨。
         let capped = min(delta, 30)
         accumulatedSeconds += capped
+        logProgressIfNeeded(idleSec: idle)
 
         if accumulatedSeconds >= settings.activeTriggerSeconds {
             presentAlertIfNeeded()
@@ -145,7 +178,14 @@ final class MoveReminderSession: ObservableObject {
     private func presentAlertIfNeeded() {
         guard presentingNoticeID == nil else { return }
         guard WidgetSettings.shared.isEnabled("builtin.moveReminder") else { return }
-        guard !settings.isMutedNow(), !settings.isSnoozedNow() else { return }
+        guard !settings.isMutedNow(), !settings.isSnoozedNow() else {
+            AppLog.warn("MoveReminder", "已触阈但静音/稍后中，暂不投递", [
+                "muted": settings.isMutedNow(),
+                "snoozed": settings.isSnoozedNow(),
+                "accumSec": Int(accumulatedSeconds)
+            ])
+            return
+        }
 
         let notice = Notice(
             id: "moveReminder.\(settings.activeTriggerMinutes).\(Int(Date().timeIntervalSince1970))",
@@ -155,21 +195,35 @@ final class MoveReminderSession: ObservableObject {
         presentingNoticeID = notice.id
         IslandNoticeCenter.shared.present(.moveReminder(notice))
         fireHapticIfNeeded()
-        AppLog.info("MoveReminder", "已投递久坐起身提醒", [
+        AppLog.warn("MoveReminder", "已投递久坐起身提醒", [
             "activeMinutes": notice.activeMinutes,
             "restMinutes": notice.restMinutes,
             "accumSec": Int(accumulatedSeconds)
         ])
     }
 
+    private func logProgressIfNeeded(idleSec: TimeInterval) {
+        let minute = Int(accumulatedSeconds) / 60
+        // 每满 5 分钟落一档，便于对照「为何一直没提示」。
+        guard minute > 0, minute % 5 == 0, minute != lastLoggedProgressMinute else { return }
+        lastLoggedProgressMinute = minute
+        AppLog.warn("MoveReminder", "累计进度", [
+            "accumMin": minute,
+            "triggerMin": settings.activeTriggerMinutes,
+            "idleSec": Int(idleSec),
+            "leaveMin": settings.leaveResetMinutes
+        ])
+    }
+
     private func resetAccumulation(reason: String) {
         if accumulatedSeconds > 0 {
-            AppLog.debug("MoveReminder", "累计已清零", [
+            AppLog.warn("MoveReminder", "累计已清零", [
                 "reason": reason,
-                "was": Int(accumulatedSeconds)
+                "wasSec": Int(accumulatedSeconds)
             ])
         }
         accumulatedSeconds = 0
+        lastLoggedProgressMinute = -1
         lastTickAt = Date()
     }
 
@@ -177,7 +231,7 @@ final class MoveReminderSession: ObservableObject {
         guard let id = presentingNoticeID else { return }
         presentingNoticeID = nil
         IslandNoticeCenter.shared.dismiss(id: id)
-        AppLog.debug("MoveReminder", "已撤回久坐通知", ["reason": reason, "id": id])
+        AppLog.warn("MoveReminder", "已撤回久坐通知", ["reason": reason, "id": id])
     }
 
     private func fireHapticIfNeeded() {

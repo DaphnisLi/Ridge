@@ -147,7 +147,6 @@ struct MoveReminderWidgetConfigSection: View {
                     isOn: $settings.hapticEnabled
                 )
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
                 SettingsSwitchRow(
                     title: L10n.MoveReminder.smartAvoidTitle,
                     subtitle: L10n.MoveReminder.smartAvoidSubtitle,

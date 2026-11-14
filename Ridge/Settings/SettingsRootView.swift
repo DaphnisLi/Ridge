@@ -58,6 +58,8 @@ enum SettingsChrome {
         static let metricEmphasis = SwiftUI.Font.system(size: 22, weight: .bold, design: .rounded)
         /// `SettingsPaneSection` 标题。
         static let sectionTitle = SwiftUI.Font.system(size: 15, weight: .semibold)
+        /// 卡内主标题（项目扫描目录等面板头）。
+        static let panelTitle = SwiftUI.Font.system(size: 17, weight: .bold)
         /// 表单行主文案（开关行等）。
         static let rowTitle = SwiftUI.Font.system(size: 13, weight: .regular)
         /// Bento 卡标题 / 滑条标签。
@@ -113,12 +115,13 @@ enum SettingsChrome {
 }
 
 enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
+    /// 功能：上方。
     case island
     case widgets
     case resourceMonitor
     case focusInsights
+    /// 设置：下方。
     case general
-    case privacy
     case about
 
     var id: String { rawValue }
@@ -130,7 +133,6 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .resourceMonitor: return L10n.Settings.resourceMonitor
         case .focusInsights: return L10n.Settings.focusInsights
         case .general: return L10n.Settings.general
-        case .privacy: return L10n.Settings.privacy
         case .about: return L10n.Settings.about
         }
     }
@@ -142,11 +144,33 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .resourceMonitor: return "chart.bar.fill"
         case .focusInsights: return "keyboard"
         case .general: return "gearshape"
-        case .privacy: return "hand.raised.fill"
         case .about: return "info.circle"
         }
     }
 
+    /// 侧栏分区：功能在上、设置在下。
+    enum SidebarGroup: String, CaseIterable, Identifiable {
+        case features
+        case preferences
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .features: return L10n.Settings.sidebarFeatures
+            case .preferences: return L10n.Settings.sidebarPreferences
+            }
+        }
+
+        var sections: [SettingsSection] {
+            switch self {
+            case .features:
+                return [.island, .widgets, .resourceMonitor, .focusInsights]
+            case .preferences:
+                return [.general, .about]
+            }
+        }
+    }
 }
 
 struct SettingsRootView: View {
@@ -157,9 +181,13 @@ struct SettingsRootView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $navigator.section) {
-                ForEach(SettingsSection.allCases) { section in
-                    Label(section.title, systemImage: section.systemImage)
-                        .tag(section)
+                ForEach(SettingsSection.SidebarGroup.allCases) { group in
+                    Section(group.title) {
+                        ForEach(group.sections) { section in
+                            Label(section.title, systemImage: section.systemImage)
+                                .tag(section)
+                        }
+                    }
                 }
             }
             .listStyle(.sidebar)
@@ -177,8 +205,6 @@ struct SettingsRootView: View {
                     ResourceFocusInsightsPane()
                 case .general:
                     GeneralSettingsPane()
-                case .privacy:
-                    PrivacyPermissionsPane()
                 case .about:
                     AboutSettingsPane()
                 }

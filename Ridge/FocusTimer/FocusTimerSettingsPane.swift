@@ -376,7 +376,7 @@ struct FocusTimerWidgetConfigSection: View {
                 )
             }
 
-            SettingsHairline()
+            SettingsHairline.flush
 
             if records.isEmpty {
                 historyEmptyState(style: style, tint: tint)

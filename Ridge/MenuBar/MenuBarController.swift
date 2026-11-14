@@ -167,8 +167,6 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         feedback.target = self
         menu.addItem(feedback)
 
-        menu.addItem(.separator())
-
         let quit = NSMenuItem(
             title: L10n.Common.quitApp,
             action: #selector(quit),
@@ -352,7 +350,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
     /// 按当前侧栏页同步岛预览态（复用隐藏窗时 onAppear 不一定再跑）。
     private func syncIslandPreviewForCurrentSection() {
         switch SettingsNavigator.shared.section {
-        case .island, .widgets, .general, .privacy, .about:
+        case .island, .widgets, .general, .about:
             ResourceMonitorSession.shared.setSettingsVisible(false)
             // 各设置页均用页内预览，打开时不钉住展开真岛。
             IslandController.shared?.beginSettingsSessionCollapsed()

@@ -40,4 +40,8 @@ final class SettingsNavigator: ObservableObject {
 
 extension Notification.Name {
     static let ridgeOpenSettings = Notification.Name("app.daphnis.Ridge.openSettings")
+    /// 今日击键桶有更新（峰值时段可能变化）。
+    static let ridgeResourceKeystrokesDidChange = Notification.Name(
+        "app.daphnis.Ridge.resourceKeystrokesDidChange"
+    )
 }

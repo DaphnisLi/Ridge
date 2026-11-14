@@ -14,7 +14,6 @@ struct BatteryAlertOptionsCard: View {
                 )
 
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
 
                 SettingsSwitchRow(
                     title: L10n.PeripheralTip.fullToggle,
@@ -23,7 +22,6 @@ struct BatteryAlertOptionsCard: View {
                 )
 
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
 
                 SettingsSwitchRow(
                     title: L10n.PeripheralTip.lowToggle,

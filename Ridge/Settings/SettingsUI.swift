@@ -274,12 +274,24 @@ struct SettingsSegmentedControl: View {
     }
 }
 
-/// 卡内细分割线。
+/// 卡内细分割线：默认左右缩进 `cardPadding`，与正文左右对齐；右可贴齐控件列。
+/// 父视图已加卡内边距时用 `SettingsHairline.flush`，避免双重缩进。
 struct SettingsHairline: View {
+    var leadingInset: CGFloat = SettingsChrome.Spacing.cardPadding
+    var trailingInset: CGFloat = SettingsChrome.Spacing.cardPadding
+
+    /// 父级已 padding，分割线左右贴齐内容区。
+    static var flush: SettingsHairline {
+        SettingsHairline(leadingInset: 0, trailingInset: 0)
+    }
+
     var body: some View {
         Rectangle()
             .fill(Color.black.opacity(0.05))
+            .frame(maxWidth: .infinity)
             .frame(height: 1)
+            .padding(.leading, leadingInset)
+            .padding(.trailing, trailingInset)
     }
 }
 

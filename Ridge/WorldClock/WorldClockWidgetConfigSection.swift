@@ -448,7 +448,6 @@ struct WorldClockWidgetConfigSection: View {
                 .padding(.vertical, 8)
 
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
 
                 SettingsSwitchRow(
                     title: L10n.WorldClock.dayNightTitle,
@@ -456,7 +455,6 @@ struct WorldClockWidgetConfigSection: View {
                     isOn: $settings.showDayNightIcons
                 )
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
                 SettingsSwitchRow(
                     title: L10n.WorldClock.offsetTitle,
                     subtitle: L10n.WorldClock.offsetSubtitle,

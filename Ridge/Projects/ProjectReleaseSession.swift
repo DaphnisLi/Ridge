@@ -104,6 +104,7 @@ final class ProjectReleaseSession: ObservableObject {
             reason == "start"
             || reason == "rootsChanged"
             || reason == "alreadyStarted"
+            || reason == "userRescan"
         let shouldRescanCatalog =
             forceCatalog
             || cachedProjects.isEmpty

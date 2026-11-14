@@ -54,37 +54,52 @@ struct StockWidgetConfigSection: View {
 
     // MARK: - Watchlist
 
+    private var dataSourceChip: some View {
+        HStack(spacing: 6) {
+            Text(L10n.Stocks.dataSourceLabel)
+                .font(SettingsChrome.Font.caption)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+            Circle()
+                .fill(session.dataSourceIsLive ? SettingsChrome.secondary : SettingsChrome.onSurfaceVariant.opacity(0.45))
+                .frame(width: 6, height: 6)
+            Text(session.dataSourceShortName)
+                .font(SettingsChrome.Font.chipSelected)
+                .foregroundStyle(SettingsChrome.onSurface)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(
+            Capsule(style: .continuous)
+                .fill(SettingsChrome.surfaceContainer)
+        )
+        .help(L10n.Stocks.dataSourceHint)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(L10n.Stocks.dataSourceLabel)\(session.dataSourceShortName)")
+    }
+
     private var watchlistCard: some View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        HStack(spacing: 8) {
-                            Image(systemName: "rectangle.split.3x1")
-                                .font(SettingsChrome.Font.iconTile)
-                                .foregroundStyle(SettingsChrome.primary)
-                                .frame(width: 28, height: 28)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                        .fill(SettingsChrome.primary.opacity(0.12))
-                                )
-                            Text(L10n.Stocks.watchlistTitle(settings.pins.count, StockSettings.maxPins))
-                                .font(SettingsChrome.Font.sectionTitle)
-                                .foregroundStyle(SettingsChrome.onSurface)
-                        }
-                        Spacer(minLength: 8)
-                        Text(L10n.Stocks.dragHint)
-                            .font(SettingsChrome.Font.caption)
-                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(session.dataSourceSummaryText)
-                            .font(SettingsChrome.Font.caption)
+                HStack(spacing: 10) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "rectangle.split.3x1")
+                            .font(SettingsChrome.Font.iconTile)
                             .foregroundStyle(SettingsChrome.primary)
-                        Text(L10n.Stocks.dataSourceHint)
-                            .font(SettingsChrome.Font.footnote)
-                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                            .frame(width: 28, height: 28)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(SettingsChrome.primary.opacity(0.12))
+                            )
+                        Text(L10n.Stocks.watchlistTitle(settings.pins.count, StockSettings.maxPins))
+                            .font(SettingsChrome.Font.sectionTitle)
+                            .foregroundStyle(SettingsChrome.onSurface)
                     }
+                    dataSourceChip
+                    Spacer(minLength: 8)
+                    Text(L10n.Stocks.dragHint)
+                        .font(SettingsChrome.Font.caption)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -409,7 +424,6 @@ struct StockWidgetConfigSection: View {
                 .padding(.vertical, 8)
 
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.Stocks.formatTitle)
@@ -448,7 +462,6 @@ struct StockWidgetConfigSection: View {
                 .padding(.vertical, 8)
 
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
 
                 SettingsSwitchRow(
                     title: L10n.Stocks.sparklineTitle,

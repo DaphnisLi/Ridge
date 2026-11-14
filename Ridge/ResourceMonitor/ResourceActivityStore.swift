@@ -22,6 +22,9 @@ final class ResourceActivityStore {
         var days: [ResourceDayAggregate]
         var timelineDayKey: String?
         var timelineSegments: [ResourceFocusTimelineSegment]?
+        /// 与 `timelineDayKey` 同日的整点击键桶（键为 `"0"`…`"23"`，兼容 JSON 对象）。
+        var hourlyKeystrokesDayKey: String?
+        var hourlyKeystrokes: [String: Int]?
     }
 
     private let fileURL: URL
@@ -98,6 +101,7 @@ final class ResourceActivityStore {
         today.keystrokes += count
         byDay[today.dayKey] = today
         let hour = Calendar.current.component(.hour, from: Date())
+        let beforePeak = Self.peakHour(from: todayHourlyKeystrokes)?.startHour
         todayHourlyKeystrokes[hour, default: 0] += count
         if let bid = focusBundleID {
             var stats = todayAppStats[bid] ?? AppFocusStats(name: focusName ?? bid)
@@ -105,13 +109,27 @@ final class ResourceActivityStore {
             todayAppStats[bid] = stats
         }
         scheduleSave()
+        let afterPeak = Self.peakHour(from: todayHourlyKeystrokes)?.startHour
+        if beforePeak != afterPeak {
+            AppLog.info("ResourceMonitor", "击键峰值时段已更新", [
+                "hour": afterPeak ?? -1,
+                "count": todayHourlyKeystrokes[afterPeak ?? hour] ?? 0,
+                "dayTotal": today.keystrokes
+            ])
+        }
+        NotificationCenter.default.post(name: .ridgeResourceKeystrokesDidChange, object: nil)
     }
 
     /// 今日击键最多的整点时段 `[start, end)`；并列取较早时段。无击键则 nil。
     func peakKeystrokeHourRange() -> (startHour: Int, endHour: Int)? {
         rolloverIfNeeded()
-        guard let best = todayHourlyKeystrokes
-            .filter({ $0.value > 0 })
+        return Self.peakHour(from: todayHourlyKeystrokes)
+    }
+
+    /// 纯函数：哪个整点小时击键最多（次数 > 0）；并列取更早的小时。
+    nonisolated static func peakHour(from hourly: [Int: Int]) -> (startHour: Int, endHour: Int)? {
+        guard let best = hourly
+            .filter({ (0...23).contains($0.key) && $0.value > 0 })
             .max(by: { lhs, rhs in
                 if lhs.value != rhs.value { return lhs.value < rhs.value }
                 return lhs.key > rhs.key
@@ -119,7 +137,7 @@ final class ResourceActivityStore {
         else { return nil }
         let start = best.key
         let end = (start + 1) % 24
-        return (start, end)
+        return (startHour: start, endHour: end)
     }
 
     func noteAppSwitch(bundleID: String, name: String) {
@@ -467,6 +485,14 @@ final class ResourceActivityStore {
             } else {
                 todayTimelineSegments = []
             }
+            if payload.hourlyKeystrokesDayKey == today, let raw = payload.hourlyKeystrokes {
+                todayHourlyKeystrokes = Dictionary(uniqueKeysWithValues: raw.compactMap { key, value in
+                    guard let hour = Int(key), (0...23).contains(hour), value > 0 else { return nil }
+                    return (hour, value)
+                })
+            } else {
+                todayHourlyKeystrokes = [:]
+            }
         } else if let legacy = try? JSONDecoder().decode([ResourceDayAggregate].self, from: data) {
             byDay = Dictionary(uniqueKeysWithValues: legacy.map { ($0.dayKey, $0) })
             firstUseDayKey = byDay.keys.min() ?? ""
@@ -483,18 +509,23 @@ final class ResourceActivityStore {
     private func persist() {
         pruneOtherYears()
         ensureFirstUseDay()
+        let today = dayKey()
+        let hourlyPayload = Dictionary(uniqueKeysWithValues: todayHourlyKeystrokes.map { (String($0.key), $0.value) })
         let payload = DiskPayload(
             firstUseDayKey: firstUseDayKey,
             days: Array(byDay.values).sorted { $0.dayKey < $1.dayKey },
-            timelineDayKey: dayKey(),
-            timelineSegments: todayTimelineSegments
+            timelineDayKey: today,
+            timelineSegments: todayTimelineSegments,
+            hourlyKeystrokesDayKey: today,
+            hourlyKeystrokes: hourlyPayload
         )
         guard let data = try? JSONEncoder().encode(payload) else { return }
         try? data.write(to: fileURL, options: .atomic)
         AppLog.debug("ResourceMonitor", "活动日聚合已写入", [
             "days": payload.days.count,
             "firstUse": firstUseDayKey,
-            "timeline": todayTimelineSegments.count
+            "timeline": todayTimelineSegments.count,
+            "hourlyBuckets": todayHourlyKeystrokes.count
         ])
     }
 

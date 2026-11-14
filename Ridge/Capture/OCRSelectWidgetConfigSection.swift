@@ -73,7 +73,6 @@ struct OCRSelectWidgetConfigSection: View {
                 .padding(.vertical, 8)
 
                 SettingsHairline()
-                    .padding(.horizontal, SettingsChrome.Spacing.cardPadding)
 
                 SettingsSwitchRow(
                     title: L10n.OCRSelect.saveToHistoryTitle,

@@ -73,4 +73,10 @@ final class SoundSettings: ObservableObject {
         UserDefaults.standard.removeObject(forKey: Key.appMuted)
         AppLog.info("Sound", "已重置全部 App 音量偏好")
     }
+
+    func restoreDefaults() {
+        rememberVolumes = true
+        resetAllAppVolumes()
+        AppLog.info("Sound", "已恢复混音台默认设置", ["rememberVolumes": true])
+    }
 }

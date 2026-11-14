@@ -176,7 +176,7 @@ struct IslandSettingsPane: View {
             }
             .padding(.top, 8)
             .overlay(alignment: .top) {
-                SettingsHairline()
+                SettingsHairline.flush
             }
         }
     }
@@ -335,7 +335,7 @@ struct IslandSettingsPane: View {
             }
             .padding(.top, 6)
             .overlay(alignment: .top) {
-                SettingsHairline()
+                SettingsHairline.flush
             }
         }
     }
