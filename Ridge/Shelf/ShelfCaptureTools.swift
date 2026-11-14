@@ -281,15 +281,14 @@ final class ShelfCaptureTools {
         case .success(let text):
             let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.isEmpty {
-                AppLog.warn("ShelfCapture", "OCR 无文字")
-                IslandNoticeCenter.shared.present(
-                    .clipboardCaptureHint(
-                        id: "ocr.empty",
-                        text: L10n.Shelf.ocrEmpty,
-                        symbol: "text.viewfinder"
-                    )
-                )
-                shouldDismissTip = false
+                // 空选区 / 无文字：静默收起引导，不上岛失败条（易在误点时打扰）。
+                AppLog.warn("ShelfCapture", "OCR 无文字，已静默收起", [
+                    "hovering": IslandController.shared?.isHoveringIsland == true
+                ])
+                if IslandController.shared?.isHoveringIsland != true {
+                    IslandController.shared?.collapse(reason: "shelfOCREmpty")
+                }
+                shouldDismissTip = true
             } else {
                 let preview = String(trimmed.prefix(28))
                 let board = NSPasteboard.general

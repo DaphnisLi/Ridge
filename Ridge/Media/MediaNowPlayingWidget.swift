@@ -165,26 +165,29 @@ enum MediaCompactPresence {
         isActive && IslandNoticeCenter.shared.current == nil
     }
 
-    /// 准入大面板并展开（悬停小岛 / 辅助点按）。
+    /// 准入大面板并展开（悬停小岛 / 点按 / 按住刘海）。
+    /// - Returns: 已处理（开了媒体或已在媒体页）；调用方勿再裸 `expand` 以免落到空态。
+    @discardableResult
     @MainActor
-    static func openExpandedPanel(reason: String) {
+    static func openExpandedPanel(reason: String) -> Bool {
         guard isVisiblyShowingCompact else {
             AppLog.debug("Media", "展开大面板跳过：当前不是播放小岛", [
                 "reason": reason,
                 "active": isActive,
                 "notice": IslandNoticeCenter.shared.current?.id ?? ""
             ])
-            return
+            return false
         }
         guard !LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID) else {
             IslandController.shared?.expand(reason: "mediaAlreadyOpen:\(reason)")
-            return
+            return true
         }
-        AppLog.info("Media", "播放小岛触发，展开控制面板", [
+        AppLog.warn("Media", "播放小岛触发，展开控制面板", [
             "reason": reason,
             "title": String((NowPlayingService.shared.snapshot?.title ?? "").prefix(24))
         ])
         LiveIslandGate.shared.open(LiveIslandGate.mediaID, reason: reason)
+        return true
     }
 }
 

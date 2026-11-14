@@ -246,6 +246,26 @@
 - **相关代码:** `MediaNowPlayingWidget`、`MediaCompactPresence.isVisiblyShowingCompact`、`LiveIslandGate`、`IslandController`、`MediaSettingsPane`  
 - **自动化:** `RegressionCatalogTests.test_mediaCompactNotResident_gateClosedUntilOpen`
 
+### media-click-opens-empty — 播放中点刘海落到空态
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-14：播放中点刘海左翼出现「尚未添加小组件」）  
+- **症状:** 正在播放小岛可见时，点击/按住刘海或两翼展开成空态页，而不是媒体控制面板  
+- **根因倾向:** 收起态可点两翼；左键按下走 `dragHold` 裸 `expand`，早于 `MediaCompactPresence.openExpandedPanel`；无面板争夺时 `activeID=system.empty`  
+- **防护:** `dragHold`/`scrollHold`/`hover` 先尝试开媒体；`shouldExpandForPointerInteraction` 禁止纯空态指针展开；关键路径 warn  
+- **相关代码:** `IslandController`、`MediaCompactPresence.openExpandedPanel`  
+- **自动化:** 不强制（occurrences=1）
+
+### ocr-empty-notice-noise — OCR 无文字不应上岛报错
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-14：框选无字冒「选区内未识别到文字」打扰）  
+- **症状:** OCR 空结果投递 `ocr.empty` 瞬时条，误点/空选区也会占岛  
+- **根因倾向:** `finishOCR` 空串分支 `present(.clipboardCaptureHint)`  
+- **防护:** 无文字时静默 dismiss tip + 非悬停则 collapse；仅日志 `OCR 无文字，已静默收起`  
+- **相关代码:** `ShelfCaptureTools.finishOCR`  
+- **自动化:** 不强制（occurrences=1）
+
 ### sound-app-volume-host-key — 按 App 音量对不上宿主进程
 
 - **recurring:** false  
@@ -318,6 +338,8 @@
 | 2026-11-12 | 电量预览暗淡：根因是样张 `Button.disabled` 降透明度 → 改 `allowsHitTesting`；catalog recurring |
 | 2026-11-12 | 电量预览：锁深色 + sRGB 卡片色；去掉样张分页角点；顶距用可见 inset；catalog `settings-preview-island-appearance` |
 | 2026-11-11 | 电量岛宽高随台数自适应（最多 3×2，超出纵滑）；两台不再留右侧黑空 |
+| 2026-11-14 | OCR 无文字静默收起，不上岛「选区内未识别到文字」；catalog `ocr-empty-notice-noise` |
+| 2026-11-14 | 播放中点刘海勿落空态：`dragHold` 先开媒体；catalog `media-click-opens-empty` |
 | 2026-11-11 | 媒体：播放小岛常驻、点按展开大面板；预览去掉「收起待命」；catalog `media-compact-not-resident` |
 | 2026-11-11 | 外设低电/满电/接入合并为 `builtin.peripheralTip`；「已复制」独立 `builtin.copiedNotice`；删除 liveInvite 残留 |
 | 2026-11-08 | 初版：收录悬停热区、边距叠层、预览真数据为重复出现；录入复制提示缺失等 |

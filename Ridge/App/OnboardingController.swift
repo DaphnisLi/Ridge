@@ -73,7 +73,8 @@ final class OnboardingController: NSObject, NSWindowDelegate {
         AppLog.warn("Onboarding", "引导窗已显示")
     }
 
-    private static let windowContentSize = NSSize(width: 760, height: 640)
+    /// 第一页演示片约 1284×776，内容区需给足高度才能完整 fit。
+    private static let windowContentSize = NSSize(width: 760, height: 720)
 
     /// 首次引导默认开在主屏（刘海所在屏）正中；无主屏时退回鼠标所在屏。
     private static func targetScreen() -> NSScreen? {
@@ -162,7 +163,7 @@ private struct OnboardingFlowView: View {
 
             footer
         }
-        .frame(width: 760, height: 640)
+        .frame(width: 760, height: 720)
         .background(SettingsChrome.pageBackground)
         .preferredColorScheme(.light)
         .onAppear {
@@ -361,25 +362,7 @@ private struct OnboardingIslandStep: View {
                 .foregroundStyle(SettingsChrome.onSurfaceVariant)
                 .fixedSize(horizontal: false, vertical: true)
 
-            // 视频占位：稍后替换为真实演示片。
-            ZStack {
-                RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                    .fill(SettingsChrome.surfaceContainer)
-                VStack(spacing: 10) {
-                    Image(systemName: "play.rectangle.fill")
-                        .font(.system(size: 36, weight: .medium))
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant.opacity(0.55))
-                    Text(L10n.Onboarding.videoPlaceholder)
-                        .font(SettingsChrome.Font.caption)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 220)
-            .overlay(
-                RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                    .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
-            )
+            OnboardingDemoVideoView()
 
             Spacer(minLength: 0)
         }

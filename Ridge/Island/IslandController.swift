@@ -394,6 +394,18 @@ final class IslandController: NSObject {
         }
     }
 
+    /// 指针交互是否允许展开：有面板/已点进实况，或瞬时通知保展开；纯空态禁止（避免点出「尚未添加」）。
+    private func shouldExpandForPointerInteraction(reason: String) -> Bool {
+        if WidgetRuntime.shared.allowsHoverExpand {
+            return true
+        }
+        if WidgetRuntime.shared.isShowingEmpty {
+            AppLog.debug("Island", "空态禁止指针展开", ["reason": reason])
+            return false
+        }
+        return false
+    }
+
     func expand(reason: String) {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
@@ -945,7 +957,22 @@ final class IslandController: NSObject {
             collapseWorkItem = nil
             isPointerOverIsland = true
             if !viewModel.isExpanded {
-                expand(reason: dragHold ? "dragHold" : "scrollHold")
+                let holdReason = dragHold ? "dragHold" : "scrollHold"
+                let mediaReason = dragHold ? "compactDragHold" : "compactScrollHold"
+                // 播放小岛可点两翼：左键按下也算 dragHold，必须先开媒体，禁止裸 expand 落到空态。
+                if MediaCompactPresence.openExpandedPanel(reason: mediaReason) {
+                    return
+                }
+                if shouldExpandForPointerInteraction(reason: holdReason) {
+                    expand(reason: holdReason)
+                } else {
+                    AppLog.warn("Island", "按住展开已跳过：当前无面板可展示", [
+                        "reason": holdReason,
+                        "empty": WidgetRuntime.shared.isShowingEmpty,
+                        "page": WidgetRuntime.shared.activeID ?? "nil",
+                        "mediaActive": MediaCompactPresence.isActive
+                    ])
+                }
             }
             return
         }
@@ -979,16 +1006,16 @@ final class IslandController: NSObject {
             }
             // 仅当收起态正显示播放小岛（无会议 tip 等盖住）时，悬停才开媒体大面板。
             // 会议等更高优先级 tip 展开中时上面已 return，不会走到这里。
-            if MediaCompactPresence.isVisiblyShowingCompact {
-                MediaCompactPresence.openExpandedPanel(reason: "compactHover")
+            if MediaCompactPresence.openExpandedPanel(reason: "compactHover") {
                 return
             }
-            if WidgetRuntime.shared.allowsHoverExpand {
+            if shouldExpandForPointerInteraction(reason: "hover") {
                 expand(reason: "hover")
             } else {
                 AppLog.debug("Island", "无面板上岛，忽略悬停展开", [
                     "page": WidgetRuntime.shared.activeID ?? "nil",
                     "pages": WidgetRuntime.shared.pageIDs.count,
+                    "empty": WidgetRuntime.shared.isShowingEmpty,
                     "notice": IslandNoticeCenter.shared.current?.id ?? ""
                 ])
             }

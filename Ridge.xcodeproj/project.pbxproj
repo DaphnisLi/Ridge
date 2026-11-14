@@ -20,6 +20,7 @@
 		0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE07D38BD81E9B818E5ADA17 /* CursorSafeStorage.swift */; };
 		0D9AC236173DA2FCF6173725 /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E70E6D43E5E4875FB4FBBE0 /* FeedbackService.swift */; };
 		0FBB3671C2041665989E9FD0 /* ProjectReleaseDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */; };
+		0FE86EFE95B06DA31554FAD6 /* Onboarding in Resources */ = {isa = PBXBuildFile; fileRef = 210A737567D7541750F62787 /* Onboarding */; };
 		116B41390F574AB23AF93FAF /* BatterySession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2DAC872E498304E243C7C7 /* BatterySession.swift */; };
 		11EF5958F4F4BADDA2B6521B /* OCRSelectTipIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3743084E29001480FDB18EB2 /* OCRSelectTipIslandView.swift */; };
 		125A99601F4340E549E6C82B /* AppIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE0D5C6F4586A20CFA8FC4A1 /* AppIdentity.swift */; };
@@ -88,6 +89,7 @@
 		5F8170AFD69C5D0FB0C3FEDF /* MediaSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */; };
 		62A499099B867E2E68889CDC /* WidgetContextImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5529411C8C28075B164C4D5A /* WidgetContextImpl.swift */; };
 		6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50603770034DE47EEF814877 /* L10n.swift */; };
+		67EAB4820D13734234D7FF57 /* OnboardingDemoVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 858D15B24A7D8F4C7436BEB3 /* OnboardingDemoVideoView.swift */; };
 		681A4ADFAC6C48A79B81E4DA /* CursorUsageClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FABA8516BFF2A318D78C2E62 /* CursorUsageClient.swift */; };
 		685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */; };
 		6897813444CD7B55D707469E /* FocusTimerWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */; };
@@ -257,6 +259,7 @@
 		1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSettings.swift; sourceTree = "<group>"; };
 		20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedNoticeSettings.swift; sourceTree = "<group>"; };
 		20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenMonitor.swift; sourceTree = "<group>"; };
+		210A737567D7541750F62787 /* Onboarding */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Onboarding; path = Ridge/Resources/Onboarding; sourceTree = SOURCE_ROOT; };
 		219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBluetoothProbe.swift; sourceTree = "<group>"; };
 		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
@@ -337,6 +340,7 @@
 		81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAppVolumeRoute.swift; sourceTree = "<group>"; };
 		81FA823E3DD358069BCD1369 /* BatteryListeningModeBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BatteryListeningModeBridge.m; sourceTree = "<group>"; };
 		84CAAD888892D784B7830797 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
+		858D15B24A7D8F4C7436BEB3 /* OnboardingDemoVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDemoVideoView.swift; sourceTree = "<group>"; };
 		85DB713B5E38759909A00339 /* IslandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTheme.swift; sourceTree = "<group>"; };
 		864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaIslandCardView.swift; sourceTree = "<group>"; };
 		87802C0729680940D587DA92 /* DiagnosticsExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsExporter.swift; sourceTree = "<group>"; };
@@ -617,6 +621,7 @@
 			isa = PBXGroup;
 			children = (
 				B9E71E8C9C4E7B9E09E7C5D8 /* Legal */,
+				210A737567D7541750F62787 /* Onboarding */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -788,6 +793,7 @@
 				8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */,
 				1742ACEEC5D563B0420C7326 /* LoginItemService.swift */,
 				E739BE14AAE020C039073346 /* OnboardingController.swift */,
+				858D15B24A7D8F4C7436BEB3 /* OnboardingDemoVideoView.swift */,
 				FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */,
 				8A1266F73AC4146FF0C01385 /* RidgeApp.swift */,
 				B2AC3AA0CEB857437EF53DCE /* SystemPrivacyOpener.swift */,
@@ -967,6 +973,7 @@
 				31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */,
 				9B26C663744628D461A931A4 /* Legal in Resources */,
 				85CE7DB86C06246FCAFDC350 /* Localizable.xcstrings in Resources */,
+				0FE86EFE95B06DA31554FAD6 /* Onboarding in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1081,6 +1088,7 @@
 				3C5DF6C0B1E5A66F97C12279 /* OCRSelectWidget.swift in Sources */,
 				9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */,
 				DE01462175BA9E4E3293C0F6 /* OnboardingController.swift in Sources */,
+				67EAB4820D13734234D7FF57 /* OnboardingDemoVideoView.swift in Sources */,
 				567D6175D02B968E56D3BA29 /* OnboardingProgress.swift in Sources */,
 				195729684A43B3A82BA65EAC /* PeripheralTipWidget.swift in Sources */,
 				B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */,

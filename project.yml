@@ -27,7 +27,11 @@ targets:
         excludes:
           - "**/.DS_Store"
           - "Resources/Legal"
+          - "Resources/Onboarding"
       - path: Ridge/Resources/Legal
+        type: folder
+        buildPhase: resources
+      - path: Ridge/Resources/Onboarding
         type: folder
         buildPhase: resources
     settings:
