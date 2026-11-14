@@ -143,14 +143,6 @@ final class MenuBarController: NSObject, NSWindowDelegate {
 
         menu.addItem(.separator())
 
-        let about = NSMenuItem(
-            title: L10n.Common.about,
-            action: #selector(openAbout),
-            keyEquivalent: ""
-        )
-        about.target = self
-        menu.addItem(about)
-
         let updates = NSMenuItem(
             title: L10n.Common.checkForUpdates,
             action: #selector(checkForUpdates),
@@ -176,10 +168,6 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         menu.addItem(quit)
 
         return menu
-    }
-
-    @objc private func openAbout() {
-        SettingsNavigator.shared.open(.about)
     }
 
     @objc private func checkForUpdates() {

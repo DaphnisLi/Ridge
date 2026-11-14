@@ -13,7 +13,7 @@ enum L10n {
         static var delete: String { tr("common.delete", "删除") }
         static var preview: String { tr("common.preview", "预览") }
         static var settings: String { tr("common.settings", "设置") }
-        static var quitApp: String { tr("common.quit_app", "退出 Ridge") }
+        static var quitApp: String { tr("common.quit_app", "退出") }
         static var openSystemSettings: String { tr("common.open_system_settings", "打开系统设置") }
         static var requesting: String { tr("common.requesting", "请求中…") }
         static var comingSoon: String { tr("common.coming_soon", "即将推出") }
@@ -1421,13 +1421,13 @@ enum L10n {
         static var rootsIntro: String {
             tr(
                 "projects.settings.roots_intro",
-                "点「重新索引」只在当前用户家目录下发现你的工程工作区（跳过 Flutter SDK 等）；也可手动添加。"
+                "点「重新索引」可自动发现本机工程目录，也可手动添加。"
             )
         }
         static var rootsEmpty: String {
             tr(
                 "projects.settings.roots_empty",
-                "暂无扫描目录。点「重新索引」发现你的工作区，或手动添加。"
+                "暂无扫描目录。可点「重新索引」或手动添加。"
             )
         }
         static var addRoot: String { tr("projects.settings.add_root", "添加目录…") }

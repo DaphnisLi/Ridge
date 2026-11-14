@@ -744,7 +744,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "退出 Ridge"
+            "value": "退出"
           }
         }
       }
@@ -3099,7 +3099,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "暂无扫描目录。点「重新索引」发现你的工作区，或手动添加。"
+            "value": "暂无扫描目录。可点「重新索引」或手动添加。"
           }
         }
       }
@@ -3110,7 +3110,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点「重新索引」只在当前用户家目录下发现你的工程工作区（跳过 Flutter SDK 等）；也可手动添加。"
+            "value": "点「重新索引」可自动发现本机工程目录，也可手动添加。"
           }
         }
       }

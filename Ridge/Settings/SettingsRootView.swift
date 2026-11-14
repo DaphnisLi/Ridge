@@ -6,6 +6,8 @@ enum SettingsChrome {
     /// 设置窗默认 / 最小内容尺寸（菜单栏与 App「设置…」共用，禁止另开一套）。
     static let windowDefaultSize = NSSize(width: 1200, height: 620)
     static let windowMinSize = NSSize(width: 1080, height: 520)
+    /// 侧栏贴底「设置」区高度（分区标题 + 通用 / 关于两行）。
+    static let sidebarPinnedFooterHeight: CGFloat = 112
 
     // MARK: Color
 
@@ -118,9 +120,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
     /// 功能：上方。
     case island
     case widgets
-    case resourceMonitor
     case focusInsights
-    /// 设置：下方。
+    case resourceMonitor
+    /// 设置（含关于）：贴侧栏底。
     case general
     case about
 
@@ -148,7 +150,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// 侧栏分区：功能在上、设置在下。
+    /// 侧栏分区：功能在上；设置（含关于）贴底。
     enum SidebarGroup: String, CaseIterable, Identifiable {
         case features
         case preferences
@@ -165,7 +167,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         var sections: [SettingsSection] {
             switch self {
             case .features:
-                return [.island, .widgets, .resourceMonitor, .focusInsights]
+                return [.island, .widgets, .focusInsights, .resourceMonitor]
             case .preferences:
                 return [.general, .about]
             }
@@ -181,16 +183,18 @@ struct SettingsRootView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $navigator.section) {
-                ForEach(SettingsSection.SidebarGroup.allCases) { group in
-                    Section(group.title) {
-                        ForEach(group.sections) { section in
-                            Label(section.title, systemImage: section.systemImage)
-                                .tag(section)
-                        }
-                    }
-                }
+                sidebarSection(.features)
             }
             .listStyle(.sidebar)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                // 贴侧栏底：固定高度，避免第二份 List 被上层撑没。
+                List(selection: $navigator.section) {
+                    sidebarSection(.preferences)
+                }
+                .listStyle(.sidebar)
+                .scrollDisabled(true)
+                .frame(height: SettingsChrome.sidebarPinnedFooterHeight)
+            }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
         } detail: {
             Group {
@@ -223,5 +227,15 @@ struct SettingsRootView: View {
             idealWidth: SettingsChrome.windowDefaultSize.width,
             idealHeight: SettingsChrome.windowDefaultSize.height
         )
+    }
+
+    @ViewBuilder
+    private func sidebarSection(_ group: SettingsSection.SidebarGroup) -> some View {
+        Section(group.title) {
+            ForEach(group.sections) { section in
+                Label(section.title, systemImage: section.systemImage)
+                    .tag(section)
+            }
+        }
     }
 }
