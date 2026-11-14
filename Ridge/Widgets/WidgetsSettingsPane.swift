@@ -25,37 +25,26 @@ struct WidgetsSettingsPane: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
-                    let items = flatEntries
-                    if items.isEmpty {
+                    let general = generalEntries
+                    let developers = developerEntries
+                    if general.isEmpty && developers.isEmpty {
                         Text(L10n.Widgets.libraryEmpty)
                             .font(SettingsChrome.Font.body)
                             .foregroundStyle(SettingsChrome.onSurfaceVariant)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 16)
                     } else {
-                        LazyVGrid(
-                            columns: [
-                                GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
-                                GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
-                            ],
-                            spacing: SettingsChrome.Spacing.stack
-                        ) {
-                            ForEach(items) { entry in
-                                switch entry {
-                                case .deck(let module):
-                                    deckCardCell(module)
-                                case .content(let id):
-                                    if let manifest = registry.manifest(for: id) {
-                                        widgetCardCell(id: id, manifest: manifest)
-                                            .transition(.scale(scale: 0.96).combined(with: .opacity))
-                                    }
-                                }
-                            }
+                        if !general.isEmpty {
+                            libraryGrid(entries: general)
                         }
-                        .animation(
-                            .spring(response: 0.32, dampingFraction: 0.86),
-                            value: items.map(\.id)
-                        )
+                        if !developers.isEmpty {
+                            Text(L10n.Widgets.developerSectionTitle)
+                                .font(SettingsChrome.Font.sectionTitle)
+                                .foregroundStyle(SettingsChrome.onSurface)
+                                .padding(.top, general.isEmpty ? 0 : 8)
+                                .accessibilityAddTraits(.isHeader)
+                            libraryGrid(entries: developers)
+                        }
                     }
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
@@ -75,8 +64,9 @@ struct WidgetsSettingsPane: View {
             IslandController.shared?.beginSettingsSessionCollapsed()
             consumePendingPreviewIfNeeded()
             AppLog.debug("Settings", "小组件库页已显示", [
-                "count": flatEntries.count,
-                "first": flatEntries.first?.id ?? ""
+                "general": generalEntries.count,
+                "developer": developerEntries.count,
+                "first": generalEntries.first?.id ?? developerEntries.first?.id ?? ""
             ])
         }
         .onChange(of: navigator.openToken) { _, _ in
@@ -84,7 +74,7 @@ struct WidgetsSettingsPane: View {
         }
     }
 
-    // MARK: - 扁平库（不分段）
+    // MARK: - 库分段（通用 + 底部开发者）
 
     private enum LibraryEntry: Identifiable, Hashable {
         case deck(ControlDeckPlannedModule)
@@ -98,6 +88,22 @@ struct WidgetsSettingsPane: View {
                 return widgetID
             }
         }
+
+        var isDeveloper: Bool {
+            WidgetLibraryLayout.isDeveloperWidget(id)
+        }
+    }
+
+    private var generalEntries: [LibraryEntry] {
+        flatEntries.filter { !$0.isDeveloper }
+    }
+
+    private var developerEntries: [LibraryEntry] {
+        flatEntries
+            .filter(\.isDeveloper)
+            .sorted {
+                WidgetLibraryLayout.rank(of: $0.id) < WidgetLibraryLayout.rank(of: $1.id)
+            }
     }
 
     /// 内容型按用户库序；控制台磁贴按扁平默认序插入固定槽位。
@@ -113,6 +119,33 @@ struct WidgetsSettingsPane: View {
             result.insert(.deck(module), at: index)
         }
         return result
+    }
+
+    @ViewBuilder
+    private func libraryGrid(entries: [LibraryEntry]) -> some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack),
+                GridItem(.flexible(), spacing: SettingsChrome.Spacing.stack)
+            ],
+            spacing: SettingsChrome.Spacing.stack
+        ) {
+            ForEach(entries) { entry in
+                switch entry {
+                case .deck(let module):
+                    deckCardCell(module)
+                case .content(let id):
+                    if let manifest = registry.manifest(for: id) {
+                        widgetCardCell(id: id, manifest: manifest)
+                            .transition(.scale(scale: 0.96).combined(with: .opacity))
+                    }
+                }
+            }
+        }
+        .animation(
+            .spring(response: 0.32, dampingFraction: 0.86),
+            value: entries.map(\.id)
+        )
     }
 
     private func insertionIndex(forDeckPageID pageID: WidgetID, among entries: [LibraryEntry]) -> Int {
@@ -250,7 +283,7 @@ struct WidgetsSettingsPane: View {
     }
 }
 
-/// 松手落在目标卡上时交换库顺序（扁平列表，内容型之间可任意换）。
+/// 松手落在目标卡上时交换库顺序；开发者与通用分区互不跨拖。
 private struct WidgetCardReorderDropDelegate: DropDelegate {
     let targetID: WidgetID
     @Binding var draggingID: WidgetID?
@@ -266,6 +299,15 @@ private struct WidgetCardReorderDropDelegate: DropDelegate {
         let finishedID = draggingID
         draggingID = nil
         guard let finishedID, finishedID != targetID else { return false }
+        let dragDev = WidgetLibraryLayout.isDeveloperWidget(finishedID)
+        let targetDev = WidgetLibraryLayout.isDeveloperWidget(targetID)
+        guard dragDev == targetDev else {
+            AppLog.debug("Settings", "拒绝跨分区拖拽小组件", [
+                "id": finishedID,
+                "with": targetID
+            ])
+            return false
+        }
         withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
             _ = settings.move(draggedID: finishedID, onto: targetID)
         }

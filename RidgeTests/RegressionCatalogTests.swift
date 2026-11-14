@@ -1187,7 +1187,7 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
-    /// 库页扁平：已复制第一；货架紧接专注计时之后；音量倒数第二；项目最后。
+    /// 库页扁平默认序不变；开发者卡仅 UI 沉底分区。
     func test_widgetLibraryLayout_flatDefaultOrder() {
         let order = WidgetLibraryLayout.defaultFlatDisplayOrder
         XCTAssertEqual(order.first, "builtin.copiedNotice")
@@ -1200,6 +1200,10 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(media + 1, focus)
         XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
         XCTAssertEqual(order.last, "system.controlDeck.projects")
+        XCTAssertEqual(order[2], "builtin.aiUsage")
+        XCTAssertTrue(WidgetLibraryLayout.isDeveloperWidget("builtin.aiUsage"))
+        XCTAssertTrue(WidgetLibraryLayout.isDeveloperWidget("system.controlDeck.projects"))
+        XCTAssertFalse(WidgetLibraryLayout.isDeveloperWidget("builtin.meeting"))
         XCTAssertEqual(
             WidgetLibraryLayout.defaultContentOrder,
             [

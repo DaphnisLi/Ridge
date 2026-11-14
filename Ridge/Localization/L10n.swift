@@ -32,6 +32,7 @@ enum L10n {
         static var controlDeck: String { tr("settings.section.control_deck", "控制台") }
         static var widgets: String { tr("settings.section.widgets", "小组件") }
         static var resourceMonitor: String { tr("settings.section.resource_monitor", "RAM 监控与进程树") }
+        static var focusInsights: String { tr("settings.section.focus_insights", "专注与击键") }
         static var general: String { tr("settings.section.general", "通用") }
         static var privacy: String { tr("settings.section.privacy", "权限与隐私") }
         static var about: String { tr("settings.section.about", "关于") }
@@ -217,10 +218,13 @@ enum L10n {
         static var libraryIntro: String {
             tr(
                 "widgets.library.intro",
-                "按提示、实况、面板分类。打开开关后可在灵动岛展示；同分类内可拖卡片交换顺序。点击卡片进入预览与设置。"
+                "打开开关后可在灵动岛展示；通用库内可拖卡片交换顺序。点击卡片进入预览与设置。"
             )
         }
         static var libraryTitle: String { tr("widgets.library.title", "小组件库") }
+        static var developerSectionTitle: String {
+            tr("widgets.developer.section_title", "开发者小组件")
+        }
         static var configureLink: String {
             tr("widgets.configure_link", "配置参数与交互")
         }
@@ -261,7 +265,7 @@ enum L10n {
             case "system.controlDeck.volume":
                 return tr("widgets.category.volume", "音频通道")
             case "system.controlDeck.projects":
-                return tr("widgets.category.projects", "开发监控")
+                return tr("widgets.category.projects", "开发者")
             case "system.controlDeck.battery":
                 return tr("widgets.category.battery", "蓝牙设备")
             case "builtin.meeting":
@@ -271,7 +275,7 @@ enum L10n {
             case "builtin.focusTimer":
                 return tr("widgets.category.focus_timer", "效率工具")
             case "builtin.aiUsage":
-                return tr("widgets.category.ai_usage", "API 监测")
+                return tr("widgets.category.ai_usage", "开发者")
             case "builtin.moveReminder":
                 return tr("widgets.category.move_reminder", "健康提醒")
             case "builtin.worldClock":

@@ -17,6 +17,8 @@ enum SettingsChrome {
     static let surfaceContainerLow = Color(red: 0.961, green: 0.961, blue: 0.969)
     /// surface-container `#efeff2`
     static let surfaceContainer = Color(red: 0.937, green: 0.937, blue: 0.949)
+    /// surface-container-highest（进程树 / 专注排行嵌套底）
+    static let surfaceContainerHighest = Color(red: 0.894, green: 0.886, blue: 0.894)
     /// on-surface `#1d1d1f`
     static let onSurface = Color(red: 0.114, green: 0.114, blue: 0.122)
     /// on-surface-variant `#6e6e73`
@@ -114,6 +116,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
     case island
     case widgets
     case resourceMonitor
+    case focusInsights
     case general
     case privacy
     case about
@@ -125,6 +128,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .island: return L10n.Settings.island
         case .widgets: return L10n.Settings.widgets
         case .resourceMonitor: return L10n.Settings.resourceMonitor
+        case .focusInsights: return L10n.Settings.focusInsights
         case .general: return L10n.Settings.general
         case .privacy: return L10n.Settings.privacy
         case .about: return L10n.Settings.about
@@ -136,6 +140,7 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .island: return "capsule.fill"
         case .widgets: return "square.grid.2x2.fill"
         case .resourceMonitor: return "chart.bar.fill"
+        case .focusInsights: return "keyboard"
         case .general: return "gearshape"
         case .privacy: return "hand.raised.fill"
         case .about: return "info.circle"
@@ -168,6 +173,8 @@ struct SettingsRootView: View {
                     WidgetsSettingsPane(settings: widgetSettings)
                 case .resourceMonitor:
                     ResourceMonitorSettingsPane()
+                case .focusInsights:
+                    ResourceFocusInsightsPane()
                 case .general:
                     GeneralSettingsPane()
                 case .privacy:

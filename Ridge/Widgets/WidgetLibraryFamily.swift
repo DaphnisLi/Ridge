@@ -2,7 +2,18 @@ import Foundation
 
 /// 设置「小组件」库扁平展示顺序（不再分提示/实况/面板段）。
 /// 上岛闸门仍用 `WidgetLibraryFamily`；本枚举只定库卡先后。
+/// 「开发者小组件」仅 UI 沉底分区；`defaultFlatDisplayOrder` 保持原序不改。
 enum WidgetLibraryLayout {
+    /// 开发者向：AI 额度、项目释放（库页底部独立分类展示）。
+    static let developerWidgetIDs: [WidgetID] = [
+        "builtin.aiUsage",
+        "system.controlDeck.projects",
+    ]
+
+    static func isDeveloperWidget(_ widgetID: WidgetID) -> Bool {
+        developerWidgetIDs.contains(widgetID)
+    }
+
     /// 库页默认顺序：已复制第一；货架紧接专注计时之后；音量倒数第二；项目释放最后。
     static let defaultFlatDisplayOrder: [WidgetID] = [
         "builtin.copiedNotice",

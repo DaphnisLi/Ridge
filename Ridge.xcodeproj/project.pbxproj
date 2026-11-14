@@ -74,6 +74,7 @@
 		4CC44F1C1DB2CC0B1A4A7DC4 /* WorldClockIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */; };
 		4DD3FAF78AD08376D9606A4B /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */; };
 		4E4EF64C76E429208D63F2DE /* NowPlayingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5047AA5E636C0BAB3B1CD1 /* NowPlayingService.swift */; };
+		4FF30F6FAB95049B6303F382 /* ResourceFocusInsightsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2E36E3A439D6CB5716AD6 /* ResourceFocusInsightsPane.swift */; };
 		506AEFE51A96DEF1D6BF3308 /* ProjectSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440C96AEB669FCE08EA4DC22 /* ProjectSettings.swift */; };
 		513CAB175428D3C3573A7911 /* BatterySystemProfilerProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */; };
 		529931F2CDA102243049C1AA /* SoundAppVolumeRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */; };
@@ -387,6 +388,7 @@
 		CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidget.swift; sourceTree = "<group>"; };
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
+		CFF2E36E3A439D6CB5716AD6 /* ResourceFocusInsightsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceFocusInsightsPane.swift; sourceTree = "<group>"; };
 		D1B1815ACA35688D69984BD8 /* ColorPickSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickSettings.swift; sourceTree = "<group>"; };
 		D21CE498DE2A53DF7D0A1A01 /* RecurringRegressionManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRegressionManifest.swift; sourceTree = "<group>"; };
 		D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandWindow.swift; sourceTree = "<group>"; };
@@ -512,6 +514,7 @@
 				F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */,
 				29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */,
 				9BD0F250D843379DB1C96EB7 /* ResourceCPUTemperature.swift */,
+				CFF2E36E3A439D6CB5716AD6 /* ResourceFocusInsightsPane.swift */,
 				7D5EA0D02265585850CF8455 /* ResourceFocusPresentation.swift */,
 				0282F0FE5B383EEA9C10CD47 /* ResourceFocusTracker.swift */,
 				2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */,
@@ -1071,6 +1074,7 @@
 				E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */,
 				685AC87190FC4F1693EF1B66 /* ResourceCPUTemperature.swift in Sources */,
 				19167EB80BB407F50CC8069A /* ResourceChipInfo.swift in Sources */,
+				4FF30F6FAB95049B6303F382 /* ResourceFocusInsightsPane.swift in Sources */,
 				80AB1DE4B230D2BF015DD611 /* ResourceFocusPresentation.swift in Sources */,
 				96C53033E7493C8FE3D61484 /* ResourceFocusTracker.swift in Sources */,
 				1B559574B3122F5B1DE00207 /* ResourceKeystrokeMonitor.swift in Sources */,

@@ -136,7 +136,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         let settings = NSMenuItem(
             title: L10n.Common.settings,
             action: #selector(openSettings),
-            keyEquivalent: ","
+            keyEquivalent: ""
         )
         settings.target = self
         menu.addItem(settings)
@@ -172,7 +172,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         let quit = NSMenuItem(
             title: L10n.Common.quitApp,
             action: #selector(quit),
-            keyEquivalent: "q"
+            keyEquivalent: ""
         )
         quit.target = self
         menu.addItem(quit)
@@ -356,7 +356,7 @@ final class MenuBarController: NSObject, NSWindowDelegate {
             ResourceMonitorSession.shared.setSettingsVisible(false)
             // 各设置页均用页内预览，打开时不钉住展开真岛。
             IslandController.shared?.beginSettingsSessionCollapsed()
-        case .resourceMonitor:
+        case .resourceMonitor, .focusInsights:
             ResourceMonitorSession.shared.setSettingsVisible(true)
             IslandController.shared?.beginSettingsSessionCollapsed()
         }
