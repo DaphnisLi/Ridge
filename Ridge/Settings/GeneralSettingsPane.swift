@@ -1,5 +1,4 @@
 import AppKit
-import ApplicationServices
 import CoreBluetooth
 import CoreGraphics
 import SwiftUI
@@ -11,7 +10,6 @@ struct GeneralSettingsPane: View {
 
     @State private var screenCaptureOK = CGPreflightScreenCaptureAccess()
     @State private var inputOK = ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess
-    @State private var accessibilityOK = AXIsProcessTrusted()
     @State private var bluetoothOK = false
 
     private var grantedCount: Int {
@@ -19,12 +17,11 @@ struct GeneralSettingsPane: View {
             calendar.authStatus == .authorized,
             screenCaptureOK,
             inputOK,
-            bluetoothOK,
-            accessibilityOK
+            bluetoothOK
         ].filter(\.self).count
     }
 
-    private let permissionTotal = 5
+    private let permissionTotal = 4
 
     var body: some View {
         ScrollView {
@@ -177,16 +174,6 @@ struct GeneralSettingsPane: View {
                         SystemPrivacyOpener.open(anchor: "Privacy_Bluetooth")
                         refreshPermissions()
                     }
-                    SettingsHairline()
-                    permissionRow(
-                        symbol: "accessibility",
-                        title: L10n.PrivacyHub.accessibilityTitle,
-                        subtitle: L10n.PrivacyHub.accessibilitySubtitle,
-                        granted: accessibilityOK
-                    ) {
-                        SystemPrivacyOpener.open(anchor: "Privacy_Accessibility")
-                        refreshPermissions()
-                    }
                 }
             }
         }
@@ -271,7 +258,6 @@ struct GeneralSettingsPane: View {
         calendar.refreshAuthStatus()
         screenCaptureOK = CGPreflightScreenCaptureAccess()
         inputOK = ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess
-        accessibilityOK = AXIsProcessTrusted()
         bluetoothOK = {
             switch CBManager.authorization {
             case .allowedAlways: return true

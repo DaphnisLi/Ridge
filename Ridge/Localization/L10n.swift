@@ -248,13 +248,6 @@ enum L10n {
         static var bluetoothSubtitle: String {
             tr("privacy_hub.bluetooth_subtitle", "用于在灵动岛实时显示蓝牙外设电量")
         }
-        static var accessibilityTitle: String { tr("privacy_hub.accessibility_title", "辅助功能") }
-        static var accessibilitySubtitle: String {
-            tr(
-                "privacy_hub.accessibility_subtitle",
-                "用于适配屏幕物理刘海边缘与全屏窗口避让"
-            )
-        }
         static var pendingBadge: String { tr("privacy_hub.pending_badge", "待授权") }
         static var goAuthorize: String { tr("privacy_hub.go_authorize", "前往授权") }
         static var notAuthorized: String { tr("privacy_hub.not_authorized", "未授权") }
