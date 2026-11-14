@@ -60,6 +60,12 @@ final class ResourceKeystrokeMonitor: @unchecked Sendable {
     @MainActor
     func start() {
         guard !isListening else { return }
+        // 无权限时禁止创建 event tap——否则一启动就会弹出「输入监控」授权。
+        guard CGPreflightListenEventAccess() else {
+            AppLog.debug("ResourceMonitor", "跳过击键监听：尚未授权输入监控")
+            isListening = false
+            return
+        }
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(

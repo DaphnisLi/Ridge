@@ -55,13 +55,13 @@ final class ShelfSettings: ObservableObject {
     func migrateCopiedNoticeWidgetGateIfNeeded() {
         let defaults = UserDefaults.standard
         guard !defaults.bool(forKey: Key.copiedNoticeMigrated) else { return }
-        if let legacy = defaults.object(forKey: Key.showCopiedNoticeLegacy) as? Bool, !legacy {
-            WidgetSettings.shared.setEnabled(ClipboardCopiedNoticeGate.widgetID, enabled: false)
-            AppLog.info("Shelf", "已复制提示：旧关状态已迁到小组件库")
-        } else {
-            // 旧默认开启 / 无键：显式打开 tip，并立刻按 tip 拉起剪贴板监听。
+        if let legacy = defaults.object(forKey: Key.showCopiedNoticeLegacy) as? Bool, legacy {
             WidgetSettings.shared.setEnabled(ClipboardCopiedNoticeGate.widgetID, enabled: true)
-            AppLog.debug("Shelf", "已复制提示：沿用默认开启并同步监听")
+            AppLog.info("Shelf", "已复制提示：旧开状态已迁到小组件库")
+        } else {
+            // 新产品默认关闭；打开开关时再启用。
+            WidgetSettings.shared.setEnabled(ClipboardCopiedNoticeGate.widgetID, enabled: false)
+            AppLog.debug("Shelf", "已复制提示：默认关闭")
         }
         defaults.set(true, forKey: Key.copiedNoticeMigrated)
         ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "copiedNoticeMigrate")

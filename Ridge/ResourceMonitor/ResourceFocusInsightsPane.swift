@@ -32,6 +32,8 @@ struct ResourceFocusInsightsPane: View {
             guard MenuBarController.shared?.settingsWindow != nil else { return }
             session.start()
             session.setSettingsVisible(true)
+            // 仅进入本页才申请输入监控；禁止 App 启动时弹授权。
+            WidgetPermissionGate.ensureInputMonitoring(reason: "focusInsightsAppear")
             session.refreshInputMonitoringStatus()
             IslandController.shared?.beginSettingsSessionCollapsed()
             AppLog.info("ResourceMonitor", "专注与击键页已显示", [

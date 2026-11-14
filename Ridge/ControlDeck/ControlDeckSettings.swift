@@ -54,6 +54,8 @@ final class ControlDeckSettings: ObservableObject {
         static let modules = "controlDeck.modules.v1"
         static let migratedFromCombo = "controlDeck.migratedFromCombo.v1"
         static let activePane = "controlDeck.activePane.v1"
+        /// 磁贴默认全关（升 v 号会再强制关一次；v1 曾只写标记未关模块）。
+        static let modulesDefaultOffMigrated = "controlDeck.modulesDefaultOff.v2"
     }
 
     /// 岛上是否展示控制台页（任一已落地模块开启即显示）。
@@ -151,29 +153,34 @@ final class ControlDeckSettings: ObservableObject {
         }
 
         var modules = defaults.dictionary(forKey: Key.modules) as? [String: Bool] ?? [:]
-        // 与旧总开关对齐：曾开启控制台 → 默认打开音量模块。
-        if modules["volume"] == nil {
-            modules["volume"] = enabled
+        // 未写过的磁贴默认关闭。
+        for id in Self.liveModuleIDs where modules[id] == nil {
+            modules[id] = false
+        }
+        // v2：强制全关并落盘（修复 v1 标记已写但模块仍全开）。
+        if !defaults.bool(forKey: Key.modulesDefaultOffMigrated) {
+            for id in Self.liveModuleIDs {
+                modules[id] = false
+            }
+            defaults.set(modules, forKey: Key.modules)
+            defaults.set(true, forKey: Key.modulesDefaultOffMigrated)
+            AppLog.info("ControlDeck", "已迁移为控制台磁贴默认全关", [
+                "version": Key.modulesDefaultOffMigrated
+            ])
         }
         moduleEnabled = modules
 
-        if let raw = defaults.string(forKey: Key.activePane), let pane = Pane(rawValue: raw) {
+        if let raw = defaults.string(forKey: Key.activePane),
+           let pane = Pane(rawValue: raw),
+           modules[pane.rawValue] == true
+        {
             activePane = pane
-        } else if modules["shelf"] == true {
-            activePane = .shelf
-        } else if modules["projects"] == true {
-            activePane = .projects
         } else {
             activePane = .volume
         }
 
         isEnabled = Self.anyLiveModuleEnabled(modules)
-        if isEnabled != enabled {
-            defaults.set(isEnabled, forKey: Key.enabled)
-        }
-        let startShelf = modules["shelf"] == true
-        let startProjects = modules["projects"] == true
-        let startBattery = modules["battery"] == true
+        defaults.set(isEnabled, forKey: Key.enabled)
         AppLog.debug("ControlDeck", "已加载控制台设置", [
             "enabled": isEnabled,
             "modules": modules.filter(\.value).map(\.key).sorted().joined(separator: ","),
@@ -181,21 +188,13 @@ final class ControlDeckSettings: ObservableObject {
         ])
         // 勿在 init 同步 start：BatterySession.refreshLiveInvite 会再取 ControlDeckSettings.shared，
         // 触发 dispatch_once 重入 → 启动即 SIGTRAP。
+        // 电量 / 项目等会话只在用户打开对应磁贴时 start，禁止启动即申请蓝牙等权限。
         Task { @MainActor in
-            // 「已复制」tip 独立后：关货架仍须按 tip 开关保持剪贴板监听。
             ShelfSettings.shared.migrateCopiedNoticeWidgetGateIfNeeded()
             ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "controlDeckInit")
-            if startProjects {
-                ProjectReleaseSession.shared.start()
-            }
-            if startBattery {
-                BatterySession.shared.start()
-            }
-            AppLog.debug("ControlDeck", "启动后已拉起模块会话", [
-                "shelf": startShelf,
+            AppLog.debug("ControlDeck", "启动后未拉起需权限的模块会话", [
                 "copiedTip": ClipboardCopiedNoticeGate.isTipEnabled,
-                "projects": startProjects,
-                "battery": startBattery
+                "anyModule": isEnabled
             ])
         }
     }
@@ -209,8 +208,20 @@ final class ControlDeckSettings: ObservableObject {
         moduleEnabled[id] = enabled
         AppLog.info("ControlDeck", "模块开关变更", ["id": id, "enabled": enabled])
 
+        // 每次打开磁贴都校验并申请权限（音量→屏幕录制，电量→蓝牙）。
+        if enabled {
+            Task { @MainActor in
+                await WidgetPermissionGate.ensureOnEnable(deckModule: id)
+            }
+        }
+
         if id == "shelf" {
             ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "shelfModuleToggle")
+        }
+        if id == "volume" {
+            if enabled {
+                SoundSession.shared.start()
+            }
         }
         if id == "projects" {
             if enabled {

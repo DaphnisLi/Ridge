@@ -8,7 +8,8 @@ final class WidgetSettings: ObservableObject {
 
     enum Defaults {
         static var order: [WidgetID] { WidgetLibraryLayout.defaultContentOrder }
-        static let disabled: [WidgetID] = []
+        /// 权限按需：库内小组件默认全部关闭，打开开关时再申请。
+        static var disabled: [WidgetID] { WidgetLibraryLayout.defaultContentOrder }
         static let pinned: [WidgetID] = []
     }
 
@@ -21,6 +22,8 @@ final class WidgetSettings: ObservableObject {
         static let pageGroupsLegacy = "widget.pageGroups.v1"
         /// 库页扁平默认序（一次性迁移；升 v 号会再写一遍 canonical）。
         static let flatLibraryOrderMigrated = "widget.libraryFlatOrder.v4"
+        /// 小组件默认全关（升 v 号再强制一次）。
+        static let defaultOffMigrated = "widget.defaultOff.v2"
     }
 
     /// 用户排序：越靠前 priority 越高。仅含 `showsInLibrary` 的 id。
@@ -53,6 +56,20 @@ final class WidgetSettings: ObservableObject {
         AppLog.info("Widget", "开关变更", ["id": id, "enabled": enabled])
         if id == ClipboardCopiedNoticeGate.widgetID {
             ClipboardCopiedNoticeGate.syncClipboardMonitoring(reason: "copiedTipToggle")
+        }
+        // 每次打开开关都校验并申请该能力所需权限（无需求则空操作）。
+        if enabled {
+            if id == "builtin.moveReminder" {
+                MoveReminderSession.shared.start()
+            }
+            if id == "builtin.aiUsage" {
+                AIUsageSession.shared.start()
+            }
+            Task { @MainActor in
+                await WidgetPermissionGate.ensureOnEnable(widgetID: id)
+            }
+        } else if id == "builtin.moveReminder" {
+            MoveReminderSession.shared.stop()
         }
     }
 
@@ -185,6 +202,18 @@ final class WidgetSettings: ObservableObject {
         order = loadedOrder
         disabledIDs = Set(defaults.stringArray(forKey: Key.disabled) ?? Defaults.disabled)
         pinnedIDs = Set(defaults.stringArray(forKey: Key.pinned) ?? Defaults.pinned)
+
+        if !defaults.bool(forKey: Key.defaultOffMigrated) {
+            let allOff = Set(WidgetLibraryLayout.defaultContentOrder)
+            disabledIDs = allOff
+            pinnedIDs = []
+            defaults.set(Array(disabledIDs), forKey: Key.disabled)
+            defaults.set(true, forKey: Key.defaultOffMigrated)
+            AppLog.info("Widget", "已迁移为小组件默认全关", [
+                "version": Key.defaultOffMigrated,
+                "disabled": disabledIDs.count
+            ])
+        }
 
         // 确保 ControlDeck 迁移先跑（清掉旧 combo 键）。
         _ = ControlDeckSettings.shared
