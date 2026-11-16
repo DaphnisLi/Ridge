@@ -39,10 +39,10 @@ final class MoveReminderSession: ObservableObject {
         }
         started = true
         lastTickAt = Date()
-        noticeObserver = IslandNoticeCenter.shared.$current
+        noticeObserver = IslandNoticeCenter.shared.$slots
             .receive(on: RunLoop.main)
-            .sink { [weak self] payload in
-                self?.handleNoticeCenterChange(payload)
+            .sink { [weak self] slots in
+                self?.handleNoticeCenterChange(slots)
             }
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -62,11 +62,11 @@ final class MoveReminderSession: ObservableObject {
         tick(reason: "start")
     }
 
-    private func handleNoticeCenterChange(_ payload: IslandNoticePayload?) {
+    private func handleNoticeCenterChange(_ slots: IslandNoticeSlots) {
         guard let id = presentingNoticeID else { return }
-        if payload?.id != id {
+        // 双槽：久坐在次槽时 `current` 可能是会议，不能误判为已撤。
+        if !slots.contains(id: id) {
             presentingNoticeID = nil
-            // 被其它通知顶掉 / 用户操作收起后清零，避免立刻再次触阈。
             resetAccumulation(reason: "noticeDismissed")
         }
     }

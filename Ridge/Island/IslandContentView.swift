@@ -87,7 +87,7 @@ struct IslandContentView: View {
 
     private var usesNotchRightOrb: Bool {
         runtime.isTransientNoticePage
-            && (noticeCenter.current?.usesNotchRightOrbChrome == true)
+            && noticeCenter.slots.anyUsesNotchRightOrbChrome
     }
 
     private var appliedBottomRadius: CGFloat {
@@ -304,17 +304,17 @@ private struct IslandBody: View {
 
     private var usesNotchWingTip: Bool {
         runtime.isTransientNoticePage
-            && (noticeCenter.current?.usesNotchWingChrome == true)
+            && noticeCenter.slots.anyUsesNotchWingChrome
     }
 
     private var usesShortBelowNotchTip: Bool {
         runtime.isTransientNoticePage
-            && (noticeCenter.current?.usesShortBelowNotchChrome == true)
+            && (noticeCenter.current?.usesShortBelowNotchChrome == true) // 遗留短 tip；双槽暂无此态
     }
 
     private var usesNotchRightOrbTip: Bool {
         runtime.isTransientNoticePage
-            && (noticeCenter.current?.usesNotchRightOrbChrome == true)
+            && noticeCenter.slots.anyUsesNotchRightOrbChrome
     }
 
     private var hidesPageDots: Bool {

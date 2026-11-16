@@ -27,6 +27,11 @@ final class IslandController: NSObject {
     private(set) var isPointerOverIsland = false
     /// 对外别名，供 `IslandNoticeWidget` 等读取悬停态。
     var isHoveringIsland: Bool { isPointerOverIsland }
+
+    /// 设置「小组件 / 控制台」设计页：真岛保持收起，程序 tip 不得抢展开（否则 sticky↔设置窗收起互殴连震）。
+    var blocksProgrammaticNoticeExpand: Bool {
+        isSettingsSessionActive && !isSettingsLivePreview
+    }
     private var collapseWorkItem: DispatchWorkItem?
     /// 岛内按下拖拽中：保持接收事件，避免穿透把翻页掐断。
     private var isMouseDownInIsland = false
@@ -70,6 +75,8 @@ final class IslandController: NSObject {
     private var isSettingsLivePreview = false
     /// 灵动岛设置页要实时预览；小组件 / 控制台设计页保持收起。
     private var settingsPreferLivePreview = true
+    /// 展开触感节流：sticky↔收起互殴时禁止连震。
+    private var lastExpandHapticAt: Date = .distantPast
 
     func start() {
         Self.shared = self
@@ -408,18 +415,27 @@ final class IslandController: NSObject {
 
     func expand(reason: String) {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
+        let noticeExpand = Self.isNoticeExpandReason(reason)
+        // 设计页保持收起：程序 tip 不得抢展开（与 pointerOverSettings 收起互殴会连震）。
+        if noticeExpand, blocksProgrammaticNoticeExpand {
+            AppLog.warn("Island", "设置设计页中，跳过程序通知展开", [
+                "reason": reason,
+                "notice": IslandNoticeCenter.shared.current?.id ?? ""
+            ])
+            return
+        }
         // 已展开时仍要刷番茄画布：进行中→终局不会再走展开，否则 Preference 矮框会一直压住备注热区。
         if viewModel.isExpanded {
             // 短提示替换（取色/OCR →「已复制」圆岛等）：必须允许缩宽，否则卡在上一翼尺寸看不见。
-            if reason.contains("islandNotice") {
+            if noticeExpand {
                 viewModel.allowPanelShrink(for: 0.8, reason: "expandAlready:\(reason)")
+                applyNoticeTipPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
                 AppLog.warn("Island", "通知替换：已允许面板缩小", ["reason": reason])
-            }
-            if reason.contains("focusTimer") {
-                applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             } else if shelfDropExpand {
+                applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
                 applyShelfDropPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             } else {
+                applyFocusTimerPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
                 applyControlDeckExpandedPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
                 applyMediaExpandedPanelSizeIfNeeded(reason: "expandAlready:\(reason)")
             }
@@ -445,11 +461,15 @@ final class IslandController: NSObject {
             "active": WidgetRuntime.shared.activeID ?? "nil"
         ])
         viewModel.expand()
-        // 仅当前页是番茄时写入番茄画布；媒体展开勿套番茄尺寸。
-        applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
-        if shelfDropExpand {
+        // 通知 tip 必须先套圆岛/翼尺寸；勿走控制台/媒体画布把 Ø32 盖掉。
+        if noticeExpand {
+            applyNoticeTipPanelSizeIfNeeded(reason: "expand:\(reason)")
+        } else if shelfDropExpand {
+            applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
             applyShelfDropPanelSizeIfNeeded(reason: "expand:\(reason)")
         } else {
+            // 仅当前页是番茄时写入番茄画布；媒体展开勿套番茄尺寸（内部会判断）。
+            applyFocusTimerPanelSizeIfNeeded(reason: "expand:\(reason)")
             // 控制台 / 媒体：立刻抬高可点区与保展开，否则 Preference 未到时下半截一移就收 / 按钮点空。
             applyControlDeckExpandedPanelSizeIfNeeded(reason: "expand:\(reason)")
             applyMediaExpandedPanelSizeIfNeeded(reason: "expand:\(reason)")
@@ -471,6 +491,28 @@ final class IslandController: NSObject {
     /// 货架拖文件展开 / 投放：勿 `NSApp.activate`，否则系统会取消跨 App 拖放。
     private static func isShelfDropExpandReason(_ reason: String) -> Bool {
         reason.hasPrefix("shelfDrop")
+    }
+
+    private static func isNoticeExpandReason(_ reason: String) -> Bool {
+        reason.contains("islandNotice") || reason.hasPrefix("noticeSticky")
+    }
+
+    /// 瞬时通知展开：按当前槽位写圆岛 / 翼 / 短条，避免被控制台画布盖成刘海宽。
+    private func applyNoticeTipPanelSizeIfNeeded(reason: String) {
+        let slots = IslandNoticeCenter.shared.slots
+        if slots.anyUsesNotchRightOrbChrome {
+            prepareNotchRightOrbLayout(reason: reason)
+            return
+        }
+        if slots.anyUsesNotchWingChrome {
+            prepareMeetingWingNoticeLayout(reason: reason)
+            return
+        }
+        if case .fullNotice(let payload) = slots.resolvedLayout,
+           payload.usesShortBelowNotchChrome
+        {
+            prepareShortNoticeLayout(reason: reason)
+        }
     }
 
     /// 拖入暂存态立刻写成控制台画布，避免切掉 IslandBody 后 Preference 停在刘海尺寸。
@@ -706,12 +748,13 @@ final class IslandController: NSObject {
         }
         // 会议 / 久坐等常驻提示：移开指针不得收岛（须入会 / 点掉 / 状态结束）。
         if reason == "hoverEnd",
-           let notice = IslandNoticeCenter.shared.current,
-           notice.keepsExpandedWithoutHover
+           IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover
         {
+            let notice = IslandNoticeCenter.shared.current
             AppLog.debug("Island", "常驻提示中，忽略悬停收起", [
-                "notice": notice.id,
-                "source": notice.sourceTag
+                "notice": notice?.id ?? "",
+                "source": notice?.sourceTag ?? "",
+                "dual": IslandNoticeCenter.shared.slots.isDual
             ])
             return
         }
@@ -797,9 +840,50 @@ final class IslandController: NSObject {
             return
         }
 
+        // 久坐 / 会议等常驻 tip：禁止停在收起 + 刘海可点区（右翼 +10m / 入会点穿）。
+        let noticeSlots = IslandNoticeCenter.shared.slots
+        let pointerOverSettings = MenuBarController.shared?.isPointerOverPresentedSettings(mouse) == true
+        if IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+            isExpanded: viewModel.isExpanded,
+            keepsExpandedWithoutHover: noticeSlots.anyKeepsExpandedWithoutHover,
+            settingsSessionBlocksIslandTips: blocksProgrammaticNoticeExpand,
+            pointerOverSettings: pointerOverSettings
+        ) {
+            let notice = noticeSlots.current
+            AppLog.warn("Island", "常驻提示未展开，强制展开", [
+                "notice": notice?.id ?? "",
+                "source": notice?.sourceTag ?? "",
+                "dual": noticeSlots.isDual,
+                "panelW": Int(viewModel.panelSize.width)
+            ])
+            expand(reason: "noticeSticky:\(notice?.sourceTag ?? "dual")")
+        }
+        if noticeSlots.anyKeepsExpandedWithoutHover, noticeSlots.anyUsesNotchWingChrome {
+            let floored = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+                current: viewModel.panelSize,
+                notchWidth: geometry.notchWidth,
+                notchHeight: geometry.notchHeight,
+                usesNotchWingChrome: true
+            )
+            if floored.width - viewModel.panelSize.width > 0.5
+                || floored.height - viewModel.panelSize.height > 0.5
+            {
+                let notice = noticeSlots.current
+                AppLog.warn("Island", "常驻翼 tip 可点区过窄，抬回预备双翼宽", [
+                    "notice": notice?.id ?? "",
+                    "fromW": Int(viewModel.panelSize.width),
+                    "fromH": Int(viewModel.panelSize.height),
+                    "toW": Int(floored.width),
+                    "toH": Int(floored.height)
+                ])
+                viewModel.forcePanelSize(floored, reason: "noticeWingFloor:\(notice?.id ?? "dual")")
+                updateInteractiveFrame(expanded: true)
+            }
+        }
+
         // 设置窗与展开岛常在屏幕上方重叠；命中设置窗时必须穿透，否则关闭按钮/输入会被岛吞掉。
         // 用 isSettingsPresented（非仅 session）：开窗同步标记、关窗先清标记，避免竞态假死。
-        if MenuBarController.shared?.isPointerOverPresentedSettings(mouse) == true {
+        if pointerOverSettings {
             setClickThrough(true, reason: "pointerOverSettings")
             let leftIsland = isPointerOverIsland || viewModel.isExpanded
             isPointerOverIsland = false
@@ -1019,8 +1103,7 @@ final class IslandController: NSObject {
                     "notice": IslandNoticeCenter.shared.current?.id ?? ""
                 ])
             }
-        } else if let notice = IslandNoticeCenter.shared.current,
-                  notice.keepsExpandedWithoutHover,
+        } else if IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover,
                   viewModel.isExpanded
         {
             // 会议等常驻提示：离开热区也不安排收起，岛保持展开。
@@ -1235,7 +1318,7 @@ final class IslandController: NSObject {
                 "appActive": NSApp.isActive
             ])
         }
-        let meetingTip = IslandNoticeCenter.shared.current?.usesNotchWingChrome == true
+        let meetingTip = IslandNoticeCenter.shared.slots.anyUsesNotchWingChrome
         // 会议 tip 穿透切换必须落盘：按钮点穿多半是可点区过窄 + 仍穿透。
         if meetingTip || WidgetRuntime.shared.isControlDeckPage {
             AppLog.warn("Overlay", enabled ? "开启点击穿透" : "关闭点击穿透", [
@@ -1326,9 +1409,16 @@ final class IslandController: NSObject {
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight
         )
-        let panelOffsetX = currentPanelHorizontalOffset(panel: viewModel.panelSize)
+        // 翼 tip：可点区至少预备双翼宽，避免 panel 误缩后右翼按钮点穿。
+        let interactivePanel = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+            current: viewModel.panelSize,
+            notchWidth: geometry.notchWidth,
+            notchHeight: geometry.notchHeight,
+            usesNotchWingChrome: IslandNoticeCenter.shared.slots.anyUsesNotchWingChrome
+        )
+        let panelOffsetX = currentPanelHorizontalOffset(panel: interactivePanel)
         let retentionOffsetX = currentPanelHorizontalOffset(panel: retentionSize)
-        var pageBody = geometry.panelFrameOnScreen(size: viewModel.panelSize, horizontalOffset: panelOffsetX)
+        var pageBody = geometry.panelFrameOnScreen(size: interactivePanel, horizontalOffset: panelOffsetX)
         var retentionBody = geometry.panelFrameOnScreen(size: retentionSize, horizontalOffset: retentionOffsetX)
         if retentionSize != viewModel.panelSize, expanded {
             AppLog.warn("Island", "保展开改用稳定面板尺寸", [
@@ -1379,10 +1469,11 @@ final class IslandController: NSObject {
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             // 会议等常驻提示：宽限到期也不收。
-            if let notice = IslandNoticeCenter.shared.current,
-               notice.keepsExpandedWithoutHover
-            {
-                AppLog.debug("Island", "收起前复查：常驻提示，取消收起", ["notice": notice.id])
+            if IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover {
+                AppLog.debug("Island", "收起前复查：常驻提示，取消收起", [
+                    "notice": IslandNoticeCenter.shared.current?.id ?? "",
+                    "dual": IslandNoticeCenter.shared.slots.isDual
+                ])
                 return
             }
             // 收起前再确认一次，避免边缘抖动。
@@ -1743,8 +1834,16 @@ final class IslandController: NSObject {
         ])
         // 以 sink 收到的 appearance 为准，避免与 viewModel 时序错位时热区停在刘海尺寸。
         updateInteractiveFrame(expanded: appearance == .expanded)
-        // 仅展开时震动；收起保持安静。
+        // 仅展开时震动；收起保持安静。节流：互殴连震时触控板会抖个不停。
         if appearance == .expanded {
+            let now = Date()
+            if now.timeIntervalSince(lastExpandHapticAt) < 0.4 {
+                AppLog.debug("Island", "展开触感节流，跳过", [
+                    "sinceMs": Int(now.timeIntervalSince(lastExpandHapticAt) * 1000)
+                ])
+                return
+            }
+            lastExpandHapticAt = now
             IslandHaptics.play(settings.hapticIntensity)
         }
     }
@@ -1771,11 +1870,17 @@ final class IslandController: NSObject {
     }
 
     private func updateInteractiveFrame(expanded: Bool? = nil) {
-        guard geometry != nil else { return }
+        guard let geometry else { return }
         let windowFrame = window.frame
         let isExpanded = expanded ?? viewModel.isExpanded
-        // 展开 / 收起 / 待命一律以内容（或收起几何）写入的 panelSize 为准。
-        let panel = viewModel.panelSize
+        // 展开 / 收起 / 待命一律以内容（或收起几何）写入的 panelSize 为准；
+        // 翼 tip 额外抬到预备双翼宽，保证右翼按钮落在 HitTest 内。
+        let panel = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+            current: viewModel.panelSize,
+            notchWidth: geometry.notchWidth,
+            notchHeight: geometry.notchHeight,
+            usesNotchWingChrome: IslandNoticeCenter.shared.slots.anyUsesNotchWingChrome
+        )
         let offsetX = currentPanelHorizontalOffset(panel: panel)
         // 面板在窗内水平居中（圆岛再加右偏）、贴顶（AppKit 原点左下）。
         let interactive = CGRect(
@@ -1806,7 +1911,7 @@ final class IslandController: NSObject {
 
     /// 「已复制」圆岛相对刘海中心右偏；其它面板为 0。
     private func currentPanelHorizontalOffset(panel: CGSize) -> CGFloat {
-        let orbActive = IslandNoticeCenter.shared.current?.usesNotchRightOrbChrome == true
+        let orbActive = IslandNoticeCenter.shared.slots.anyUsesNotchRightOrbChrome
             || IslandChrome.isNotchRightOrbPanelSize(panel)
         guard orbActive else { return 0 }
         return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)

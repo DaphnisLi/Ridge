@@ -27,6 +27,10 @@ final class ClipboardHistoryStore: ObservableObject {
     private var suppressedHistoryChangeCounts: Set<Int> = []
     /// 解码后的预览图缓存：滑动列表时禁止反复 `NSImage(data:)` 堵主线程。
     private let previewImageCache = NSCache<NSString, NSImage>()
+    /// 同一指纹短时内不重复上岛/触感（系统剪贴板 changeCount 抖动会连投）。
+    private var lastCopiedNoticeFingerprint: String?
+    private var lastCopiedNoticeAt: Date = .distantPast
+    private static let copiedNoticeDedupInterval: TimeInterval = 2.0
 
     private init() {
         previewImageCache.countLimit = Self.maxItems
@@ -236,12 +240,33 @@ final class ClipboardHistoryStore: ObservableObject {
             AppLog.debug("Clipboard", "采集成功提示刚投递，跳过轮询重复提示")
             return
         }
+        // 设置设计页真岛保持收起：上岛会与 pointerOverSettings 收起互殴连震，且提示看不见。
+        if IslandController.shared?.blocksProgrammaticNoticeExpand == true
+            || MenuBarController.shared?.isSettingsPresented == true
+        {
+            AppLog.info("Clipboard", "设置窗打开，跳过复制上岛提示", [
+                "category": item.category.rawValue
+            ])
+            return
+        }
         let guidingID = IslandNoticeCenter.shared.current?.id
         if guidingID == IslandNoticePayload.colorPickTipID
             || guidingID == IslandNoticePayload.ocrSelectTipID {
             AppLog.debug("Clipboard", "取色/OCR 引导中，跳过复制提示")
             return
         }
+        let now = Date()
+        if lastCopiedNoticeFingerprint == item.fingerprint,
+           now.timeIntervalSince(lastCopiedNoticeAt) < Self.copiedNoticeDedupInterval
+        {
+            AppLog.debug("Clipboard", "相同内容短时内已提示，跳过重复上岛", [
+                "category": item.category.rawValue,
+                "sinceMs": Int(now.timeIntervalSince(lastCopiedNoticeAt) * 1000)
+            ])
+            return
+        }
+        lastCopiedNoticeFingerprint = item.fingerprint
+        lastCopiedNoticeAt = now
         let text = L10n.Shelf.copiedNotice(for: item)
         // id 带唯一后缀：每次复制都能触发上岛；`copy.` 前缀走刘海右侧圆岛，并保持展开至自动收起。
         let tipID = "copy.\(item.category.rawValue).\(UUID().uuidString)"

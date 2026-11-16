@@ -29,20 +29,18 @@ final class IslandNoticeWidget: IslandWidget {
     var title: String { "" }
 
     private var observers: Set<AnyCancellable> = []
-    private var dismissTask: Task<Void, Never>?
+    private var dismissTasks: [String: Task<Void, Never>] = [:]
     private var presenting: IslandNoticePayload?
 
     init(context: WidgetContext) {
         self.context = context
-        noticeCenter.$current
+        noticeCenter.$slots
             .receive(on: RunLoop.main)
-            .sink { [weak self] payload in
-                self?.handlePayload(payload)
+            .sink { [weak self] slots in
+                self?.handleSlots(slots)
             }
             .store(in: &observers)
-        if let existing = noticeCenter.current {
-            handlePayload(existing)
-        }
+        handleSlots(noticeCenter.slots)
         context.log("瞬时通知小组件已创建")
     }
 
@@ -54,7 +52,8 @@ final class IslandNoticeWidget: IslandWidget {
     func onAppear() {
         context.log("瞬时通知 onAppear", fields: [
             "hasNotice": presenting != nil,
-            "source": presenting?.sourceTag ?? ""
+            "source": presenting?.sourceTag ?? "",
+            "dual": noticeCenter.slots.isDual
         ])
     }
 
@@ -65,15 +64,20 @@ final class IslandNoticeWidget: IslandWidget {
     /// 仅同步文案；展示争夺只由 `IslandNoticeCenter` 驱动。
     func refresh() {
         presenting = noticeCenter.current
-        if presenting == nil, wantsDisplay {
+        if noticeCenter.slots.isEmpty, wantsDisplay {
             hide()
         }
     }
 
-    private func handlePayload(_ payload: IslandNoticePayload?) {
-        guard let payload else {
-            dismissTask?.cancel()
-            dismissTask = nil
+    private func handleSlots(_ slots: IslandNoticeSlots) {
+        // 清掉已离槽的自动收起任务。
+        for id in dismissTasks.keys where !slots.contains(id: id) {
+            dismissTasks[id]?.cancel()
+            dismissTasks[id] = nil
+        }
+
+        // 仅专注满岛：走收起待命翼，不上通知页。
+        guard slots.hasNoticePayload else {
             presenting = nil
             if wantsDisplay {
                 hide()
@@ -81,24 +85,26 @@ final class IslandNoticeWidget: IslandWidget {
             return
         }
 
-        presenting = payload
-        // 必须先切到通知页再 expand，否则会先闪出货架/控制台等当前页，看起来不像三种额度胶囊。
-        showThenExpand(payload: payload)
+        let lead = slots.current!
+        presenting = lead
+        showThenExpand(payload: lead)
 
-        // RAM 高压需用户处理（释放 / 忽略），不自动收起。
-        if let nanos = payload.autoDismissNanoseconds {
-            scheduleAutoDismiss(
-                for: payload.id,
-                nanoseconds: nanos,
-                holdWhileHovering: payload.holdsWhileHovering
-            )
-        } else {
-            dismissTask?.cancel()
-            dismissTask = nil
-            AppLog.debug("IslandNotice", "通知保持展示，直至用户操作", [
-                "id": payload.id,
-                "source": payload.sourceTag
-            ])
+        for payload in [slots.primary, slots.secondary].compactMap({ $0 }) {
+            if let nanos = payload.autoDismissNanoseconds {
+                if dismissTasks[payload.id] == nil {
+                    scheduleAutoDismiss(
+                        for: payload.id,
+                        nanoseconds: nanos,
+                        holdWhileHovering: payload.holdsWhileHovering
+                    )
+                }
+            } else {
+                AppLog.debug("IslandNotice", "通知保持展示，直至用户操作", [
+                    "id": payload.id,
+                    "source": payload.sourceTag,
+                    "lane": payload.displayLane.rawValue
+                ])
+            }
         }
     }
 
@@ -108,11 +114,11 @@ final class IslandNoticeWidget: IslandWidget {
         nanoseconds: UInt64,
         holdWhileHovering: Bool
     ) {
-        dismissTask?.cancel()
-        dismissTask = Task { @MainActor [weak self] in
+        dismissTasks[noticeID]?.cancel()
+        dismissTasks[noticeID] = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: nanoseconds)
             guard !Task.isCancelled, let self else { return }
-            guard self.presenting?.id == noticeID else { return }
+            guard self.noticeCenter.slots.contains(id: noticeID) else { return }
 
             if holdWhileHovering {
                 while !Task.isCancelled, IslandController.shared?.isHoveringIsland == true {
@@ -120,7 +126,7 @@ final class IslandNoticeWidget: IslandWidget {
                     try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
                 }
                 guard !Task.isCancelled else { return }
-                guard self.presenting?.id == noticeID else { return }
+                guard self.noticeCenter.slots.contains(id: noticeID) else { return }
             }
 
             self.finishDismiss(
@@ -136,27 +142,36 @@ final class IslandNoticeWidget: IslandWidget {
         reason: String,
         displayedNanoseconds: UInt64 = IslandNoticeWidget.defaultDisplayNanoseconds
     ) {
-        // 定时器触发时若已被新提示替换，绝不能 hide/collapse 把新条收掉。
-        guard noticeCenter.current?.id == noticeID || noticeCenter.current == nil else {
-            if presenting?.id == noticeID {
-                presenting = noticeCenter.current
-            }
-            AppLog.warn("IslandNotice", "收起跳过：已被新通知替换", [
+        guard noticeCenter.slots.contains(id: noticeID) else {
+            AppLog.warn("IslandNotice", "收起跳过：槽内已无此通知", [
                 "old": noticeID,
-                "current": noticeCenter.current?.id ?? ""
+                "primary": noticeCenter.slots.primary?.id ?? "",
+                "secondary": noticeCenter.slots.secondary?.id ?? ""
             ])
             return
         }
-        if case .processEnded(let notice) = presenting, notice.id == noticeID {
+        let payload = noticeCenter.slots.primary?.id == noticeID
+            ? noticeCenter.slots.primary
+            : noticeCenter.slots.secondary
+        if case .processEnded(let notice) = payload, notice.id == noticeID {
             ProjectReleaseSession.shared.dismissWatchEnded()
         } else {
             noticeCenter.dismiss(id: noticeID)
         }
-        hide()
+        dismissTasks[noticeID]?.cancel()
+        dismissTasks[noticeID] = nil
+        // 双槽时只撤一条，另一条仍在则保持上岛。
+        if noticeCenter.slots.isEmpty {
+            hide()
+        } else {
+            presenting = noticeCenter.current
+        }
         AppLog.warn("IslandNotice", "瞬时通知已收起", [
             "id": noticeID,
             "reason": reason,
-            "ms": Int(displayedNanoseconds / 1_000_000)
+            "ms": Int(displayedNanoseconds / 1_000_000),
+            "remainPrimary": noticeCenter.slots.primary?.id ?? "",
+            "remainSecondary": noticeCenter.slots.secondary?.id ?? ""
         ])
     }
 
@@ -169,6 +184,14 @@ final class IslandNoticeWidget: IslandWidget {
         }
         Task { @MainActor [weak self] in
             guard let self, self.wantsDisplay else { return }
+            // 设置设计页真岛保持收起：切页+expand 会与 pointerOverSettings 互殴连震。
+            if IslandController.shared?.blocksProgrammaticNoticeExpand == true {
+                AppLog.warn("IslandNotice", "设置设计页中，通知仅入槽不展开", [
+                    "id": payload.id,
+                    "source": payload.sourceTag
+                ])
+                return
+            }
             // 与会议一致：延后一拍避开 applyPage 同步重入；但 expand 必须在切页之后。
             // 替换（尤其上一短条→「已复制」）依赖 expand 内 allowPanelShrink，否则尺寸卡死看不见。
             self.context.requestDisplay()
@@ -185,8 +208,10 @@ final class IslandNoticeWidget: IslandWidget {
 
     private func hide() {
         wantsDisplay = false
-        dismissTask?.cancel()
-        dismissTask = nil
+        for (_, task) in dismissTasks {
+            task.cancel()
+        }
+        dismissTasks.removeAll()
         context.withdrawDisplay()
         // 通知是程序主动 expand 的；指针不在岛上时悬停轮询不会 scheduleCollapse
         //（over 与 isPointerOverIsland 同为 false），必须显式收岛，否则会闪一下空态/其它页。
@@ -209,9 +234,49 @@ final class IslandNoticeWidget: IslandWidget {
 
 private struct IslandNoticeCardView: View {
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
+    @ObservedObject private var focusTimer = FocusTimerSession.shared
 
     var body: some View {
-        switch noticeCenter.current {
+        switch noticeCenter.slots.resolvedLayout {
+        case .empty, .fullFocus, .fullMedia:
+            // 仅专注 / 仅音乐：收起翼由 IslandBody 画，不上通知页内容。
+            ProcessEndedNoticeCard(notice: nil)
+        case .fullNotice(let payload):
+            noticeBody(payload, compact: false)
+        case .dual(let left, let right):
+            HStack(alignment: .center, spacing: 8) {
+                sideView(left, compact: false)
+                    .layoutPriority(1)
+                sideView(right, compact: true)
+                    .layoutPriority(0)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sideView(_ side: IslandNoticeLayoutSide, compact: Bool) -> some View {
+        switch side {
+        case .notice(let payload):
+            noticeBody(payload, compact: compact)
+        case .focus:
+            FocusTimerStandbyView(snapshot: focusTimer.snapshot)
+                .frame(minWidth: compact ? 96 : 140)
+        case .media:
+            if let snap = NowPlayingService.shared.snapshot {
+                MediaCompactStandbyView(
+                    title: snap.title,
+                    artwork: snap.artwork,
+                    elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
+                    isPlaying: snap.isPlaying
+                )
+                .frame(minWidth: compact ? 96 : 140)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func noticeBody(_ payload: IslandNoticePayload, compact: Bool) -> some View {
+        switch payload {
         case .processEnded(let notice):
             ProcessEndedNoticeCard(notice: notice)
         case .ramPressure(let notice):
@@ -224,7 +289,6 @@ private struct IslandNoticeCardView: View {
             PeripheralBatteryNoticeCard(notice: notice, style: .connect)
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
-                // token=完整 id，每次复制重播入场；板夹常显避免换页重建后只剩黑圆。
                 ClipboardCopiedIslandView(detail: text, animationToken: id)
             } else {
                 ClipboardCaptureHintNoticeCard(text: text, symbol: symbol)
@@ -234,7 +298,6 @@ private struct IslandNoticeCardView: View {
         case .ocrSelectTip:
             OCRSelectTipIslandView()
         case .aiUsageAlert(_, let providerName, let remainingPercent, let stage, let resetsAt):
-            // 根视图禁止再加外圈 padding：壳层 `IslandChrome` + notchWing 已管边距。
             AIUsageIslandCardView(
                 providerName: providerName,
                 remainingPercent: remainingPercent,
@@ -243,11 +306,9 @@ private struct IslandNoticeCardView: View {
                 errorMessage: nil
             )
         case .moveReminder(let notice):
-            MoveReminderNoticeCard(notice: notice)
+            MoveReminderNoticeCard(notice: notice, compact: compact)
         case .meetingLead:
             MeetingLeadNoticeCard()
-        case .none:
-            ProcessEndedNoticeCard(notice: nil)
         }
     }
 }

@@ -174,6 +174,7 @@ enum IslandExpandedPanelPolicy {
     }
 
     /// 展开且面板已接近刘海尺寸时视为异常（热区会退化成「小岛」）。
+    /// 「已复制」Ø32 圆岛故意小于刘海宽，不算异常。
     static func isCollapsedSizedWhileExpanded(
         panel: CGSize,
         notch: CGSize,
@@ -181,6 +182,7 @@ enum IslandExpandedPanelPolicy {
         slop: CGFloat = 8
     ) -> Bool {
         guard isExpanded else { return false }
+        if IslandChrome.isNotchRightOrbPanelSize(panel) { return false }
         return panel.width <= notch.width + slop && panel.height <= notch.height + slop
     }
 
@@ -277,5 +279,37 @@ enum IslandExpandedPanelPolicy {
     ) -> Bool {
         guard let lastScrollAt else { return false }
         return now.timeIntervalSince(lastScrollAt) < grace
+    }
+
+    /// 翼 tip（会议 / 久坐等）可点区：不得窄于预备双翼宽，否则右翼按钮落在 interactive 外点穿。
+    static func wingTipInteractivePanelSize(
+        current: CGSize,
+        notchWidth: CGFloat,
+        notchHeight: CGFloat,
+        usesNotchWingChrome: Bool
+    ) -> CGSize {
+        guard usesNotchWingChrome else { return current }
+        let prepared = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchWidth,
+            notchHeight: notchHeight
+        )
+        return CGSize(
+            width: max(current.width, prepared.width),
+            height: max(current.height, prepared.height)
+        )
+    }
+
+    /// 常驻 tip（`keepsExpandedWithoutHover`）未展开时是否强制 expand。
+    /// 设置设计页保持收起 / 指针在设置窗上时禁止：否则 sticky 展开与 `pointerOverSettings` 收起互殴，触控板连震且提示看不见。
+    static func shouldForceStickyNoticeExpand(
+        isExpanded: Bool,
+        keepsExpandedWithoutHover: Bool,
+        settingsSessionBlocksIslandTips: Bool,
+        pointerOverSettings: Bool
+    ) -> Bool {
+        guard keepsExpandedWithoutHover, !isExpanded else { return false }
+        if settingsSessionBlocksIslandTips { return false }
+        if pointerOverSettings { return false }
+        return true
     }
 }

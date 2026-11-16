@@ -105,7 +105,7 @@ struct MoveReminderNoticeCard: View {
                 compact: compact,
                 enabled: !isPreview
             ) {
-                AppLog.info("MoveReminder", "通知：稍后 10 分钟")
+                AppLog.warn("MoveReminder", "AppKit +10m 已点击")
                 MoveReminderSession.shared.snoozeTenMinutes()
             }
             .frame(height: actionControlSide)
@@ -121,7 +121,7 @@ struct MoveReminderNoticeCard: View {
                     .font(.system(size: compact ? 9 : 10, weight: .semibold))
                     .foregroundStyle(Color.white.opacity(0.78))
                 MoveReminderAppKitHitTarget(enabled: !isPreview) {
-                    AppLog.info("MoveReminder", "通知：今天不再提醒")
+                    AppLog.warn("MoveReminder", "AppKit 免打扰已点击")
                     MoveReminderSession.shared.muteForToday()
                 }
             }
@@ -196,7 +196,7 @@ private struct MoveReminderAppKitPillButton: NSViewRepresentable {
     }
 }
 
-private final class MoveReminderPillNSButton: NSButton {
+private final class MoveReminderPillNSButton: NSButton, IslandDirectHitTarget {
     private let compact: Bool
     private let fixedHeight: CGFloat
 
@@ -206,6 +206,7 @@ private final class MoveReminderPillNSButton: NSButton {
         super.init(frame: .zero)
         isBordered = false
         setButtonType(.momentaryLight)
+        isEnabled = true
         focusRingType = .none
         wantsLayer = true
         layer?.masksToBounds = true
@@ -230,8 +231,19 @@ private final class MoveReminderPillNSButton: NSButton {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
+    /// 整颗胶囊 bounds 都可点，不限于文字字形。
     override func hitTest(_ point: NSPoint) -> NSView? {
         bounds.contains(point) ? self : nil
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        // nonactivatingPanel 上偶发只吃 mouseDown 不派发 action；首击直接走 target。
+        if isEnabled, let action, let target {
+            AppLog.warn("MoveReminder", "PillNSButton mouseDown → sendAction")
+            _ = NSApp.sendAction(action, to: target, from: self)
+            return
+        }
+        super.mouseDown(with: event)
     }
 
     func apply(
@@ -322,7 +334,7 @@ private struct MoveReminderAppKitHitTarget: NSViewRepresentable {
     }
 }
 
-private final class MoveReminderHitNSView: NSView {
+private final class MoveReminderHitNSView: NSView, IslandDirectHitTarget {
     weak var coordinator: MoveReminderAppKitHitTarget.Coordinator?
     var isEnabled = true
 
@@ -339,6 +351,7 @@ private final class MoveReminderHitNSView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard isEnabled else { return }
+        AppLog.warn("MoveReminder", "HitNSView mouseDown → mute")
         coordinator?.action()
     }
 }

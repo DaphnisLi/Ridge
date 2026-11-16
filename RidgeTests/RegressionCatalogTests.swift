@@ -610,6 +610,51 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(clamped.height, IslandChrome.notchRightOrbDiameter)
     }
 
+    /// 设置设计页 / 指针在设置窗：禁止 sticky 强制展开，否则与 pointerOverSettings 收起互殴连震。
+    func test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand() {
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: true,
+                pointerOverSettings: false
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: false,
+                pointerOverSettings: true
+            )
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: false,
+                pointerOverSettings: false
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: true,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: false,
+                pointerOverSettings: false
+            )
+        )
+        // Ø32 圆岛不得被当成「展开态缩回刘海」异常。
+        let orb = IslandChrome.preparedNotchRightOrbPanelSize()
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+                panel: orb,
+                notch: CGSize(width: 172, height: 32),
+                isExpanded: true
+            )
+        )
+    }
+
     func test_islandHoverRetention_contentScrollHoldsExpandWithinGrace() {
         let now = Date()
         XCTAssertTrue(
@@ -746,7 +791,43 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertNil(meeting.autoDismissNanoseconds)
     }
 
-    /// meeting-tip-preemption：会议 tip 在场时，其它瞬时通知不得盖住。
+    /// island-focus-steal：久坐常驻 tip 须 keepExpanded；可点区不得窄于预备双翼宽。
+    func test_islandFocusSteal_moveReminderWingTipInteractiveFloor() {
+        let move = IslandNoticePayload.moveReminder(
+            .init(id: "move.focus", activeMinutes: 30, restMinutes: 2)
+        )
+        XCTAssertTrue(move.keepsExpandedWithoutHover)
+        XCTAssertTrue(move.usesNotchWingChrome)
+        XCTAssertNil(move.autoDismissNanoseconds)
+        XCTAssertEqual(move.preemptionRank, 50)
+
+        let notchW: CGFloat = 179
+        let notchH: CGFloat = 32
+        let prepared = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchW,
+            notchHeight: notchH
+        )
+        // 误缩成刘海宽时，可点区仍须抬回双翼预备宽（否则右翼 +10m 点穿）。
+        let floored = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+            current: CGSize(width: notchW - 7, height: notchH),
+            notchWidth: notchW,
+            notchHeight: notchH,
+            usesNotchWingChrome: true
+        )
+        XCTAssertEqual(floored.width, prepared.width, accuracy: 0.5)
+        XCTAssertEqual(floored.height, prepared.height, accuracy: 0.5)
+        XCTAssertGreaterThan(floored.width, notchW + 100)
+
+        let untouched = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+            current: CGSize(width: 200, height: 40),
+            notchWidth: notchW,
+            notchHeight: notchH,
+            usesNotchWingChrome: false
+        )
+        XCTAssertEqual(untouched.width, 200, accuracy: 0.5)
+    }
+
+    /// meeting-tip-preemption：会议 tip 在场时，次档不得整岛替换（改走副槽并排）。
     func test_meetingTipPreemption_blocksLowerPriorityWhileMeetingShowing() {
         let meeting = IslandNoticePayload.meetingLead(meetingID: "m1")
         let otherMeeting = IslandNoticePayload.meetingLead(meetingID: "m2")
@@ -755,16 +836,152 @@ final class RegressionCatalogTests: XCTestCase {
             text: "已复制",
             symbol: "doc.on.doc"
         )
-        let ram = IslandNoticePayload.colorPickTip
+        let exclusive = IslandNoticePayload.colorPickTip
+        let move = IslandNoticePayload.moveReminder(
+            .init(id: "move.preempt", activeMinutes: 30, restMinutes: 2)
+        )
 
         XCTAssertEqual(meeting.preemptionRank, 100)
+        XCTAssertEqual(move.preemptionRank, 50)
         XCTAssertEqual(copy.preemptionRank, 0)
+        XCTAssertEqual(meeting.displayLane, .primary)
+        XCTAssertEqual(copy.displayLane, .secondary)
+        XCTAssertEqual(exclusive.displayLane, .exclusive)
         XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: nil))
         XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: copy))
         XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: otherMeeting, replacing: meeting))
         XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: meeting))
+        // 旧单槽语义：次档不得整岛盖住主提示。
         XCTAssertFalse(IslandNoticePreemption.shouldAccept(incoming: copy, replacing: meeting))
-        XCTAssertFalse(IslandNoticePreemption.shouldAccept(incoming: ram, replacing: meeting))
+        // 独占工具可清槽上岛。
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: exclusive, replacing: meeting))
+        // 短 C 可暂占粘性 C（久坐 park，复制上右翼）。
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: copy, replacing: move))
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: meeting, replacing: move))
+        XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: move, replacing: copy))
+    }
+
+    /// 双槽：A 满岛；B+C 左右；专注常驻与短 C；短 C 暂占后归还粘性 C。
+    func test_islandNoticeDualSlots_primarySecondaryAndExclusive() {
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "dual-m")
+        let copy = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.dual",
+            text: "已复制",
+            symbol: "doc.on.doc"
+        )
+        let move = IslandNoticePayload.moveReminder(
+            .init(id: "move.dual", activeMinutes: 30, restMinutes: 2)
+        )
+        let exclusive = IslandNoticePayload.ocrSelectTip
+        let otherMeeting = IslandNoticePayload.meetingLead(meetingID: "dual-m2")
+
+        let withMeeting = IslandNoticeSlotPolicy.applying(
+            incoming: meeting,
+            to: IslandNoticeSlots()
+        )
+        XCTAssertEqual(withMeeting?.primary?.id, meeting.id)
+        XCTAssertEqual(withMeeting?.resolvedLayout, .fullNotice(meeting))
+
+        // B + 短 C → 左 B 右 C
+        let dual = IslandNoticeSlotPolicy.applying(incoming: copy, to: withMeeting!)
+        XCTAssertEqual(dual?.primary?.id, meeting.id)
+        XCTAssertEqual(dual?.secondary?.id, copy.id)
+        XCTAssertEqual(
+            dual?.resolvedLayout,
+            .dual(left: .notice(meeting), right: .notice(copy))
+        )
+        XCTAssertFalse(dual?.anyUsesNotchRightOrbChrome == true)
+
+        // 久坐盖掉复制（粘性换粘性，rank）
+        let moveOnDual = IslandNoticeSlotPolicy.applying(incoming: move, to: dual!)
+        XCTAssertEqual(moveOnDual?.secondary?.id, move.id)
+
+        // 短复制可暂占久坐：park 久坐
+        let copyOverMove = IslandNoticeSlotPolicy.applying(incoming: copy, to: moveOnDual!)
+        XCTAssertEqual(copyOverMove?.secondary?.id, copy.id)
+        XCTAssertEqual(copyOverMove?.parkedSecondary?.id, move.id)
+
+        // 复制收起 → 久坐归还
+        let restored = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: copyOverMove!)
+        XCTAssertEqual(restored.secondary?.id, move.id)
+        XCTAssertNil(restored.parkedSecondary)
+
+        // 另一场会议覆盖主槽，次槽保留。
+        let swapped = IslandNoticeSlotPolicy.applying(incoming: otherMeeting, to: restored)
+        XCTAssertEqual(swapped?.primary?.id, otherMeeting.id)
+        XCTAssertEqual(swapped?.secondary?.id, move.id)
+
+        // 独占清通知槽，专注旗标可保留
+        var withFocus = swapped!
+        withFocus.focusResident = true
+        let cleared = IslandNoticeSlotPolicy.applying(incoming: exclusive, to: withFocus)
+        XCTAssertEqual(cleared?.primary?.id, exclusive.id)
+        XCTAssertNil(cleared?.secondary)
+        XCTAssertTrue(cleared?.focusResident == true)
+        XCTAssertEqual(cleared?.resolvedLayout, .fullNotice(exclusive))
+
+        XCTAssertNil(IslandNoticeSlotPolicy.applying(incoming: copy, to: cleared!))
+
+        let afterExclusive = IslandNoticeSlotPolicy.dismissing(id: exclusive.id, from: cleared!)
+        XCTAssertNil(afterExclusive.primary)
+        XCTAssertTrue(afterExclusive.focusResident)
+        XCTAssertEqual(afterExclusive.resolvedLayout, .fullFocus)
+    }
+
+    /// 专注 / 音乐常驻：独满岛；+短 C 左右并排；C 没后 B/专注回满岛。
+    func test_islandNoticeDualSlots_focusResidentLayouts() {
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "focus-m")
+        let copy = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.focus",
+            text: "已复制",
+            symbol: "doc.on.doc"
+        )
+
+        var focusOnly = IslandNoticeSlots(focusResident: true)
+        XCTAssertEqual(focusOnly.resolvedLayout, .fullFocus)
+
+        let focusCopy = IslandNoticeSlotPolicy.applying(incoming: copy, to: focusOnly)
+        XCTAssertEqual(
+            focusCopy?.resolvedLayout,
+            .dual(left: .focus, right: .notice(copy))
+        )
+
+        let meetingFocus = IslandNoticeSlotPolicy.applying(
+            incoming: meeting,
+            to: IslandNoticeSlots(focusResident: true)
+        )
+        XCTAssertEqual(
+            meetingFocus?.resolvedLayout,
+            .dual(left: .notice(meeting), right: .focus)
+        )
+
+        // B 会议满岛中来短 C → 左右；C 没后会议回满岛
+        let meetingOnly = IslandNoticeSlotPolicy.applying(incoming: meeting, to: IslandNoticeSlots())
+        XCTAssertEqual(meetingOnly?.resolvedLayout, .fullNotice(meeting))
+        let meetingCopy = IslandNoticeSlotPolicy.applying(incoming: copy, to: meetingOnly!)
+        XCTAssertEqual(
+            meetingCopy?.resolvedLayout,
+            .dual(left: .notice(meeting), right: .notice(copy))
+        )
+        let meetingBack = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: meetingCopy!)
+        XCTAssertEqual(meetingBack.resolvedLayout, .fullNotice(meeting))
+
+        // B 音乐 + 短 C → 左音乐右 C；C 没后音乐满岛
+        var mediaSlots = IslandNoticeSlots(mediaResident: true)
+        XCTAssertEqual(mediaSlots.resolvedLayout, .fullMedia)
+        let mediaCopy = IslandNoticeSlotPolicy.applying(incoming: copy, to: mediaSlots)
+        XCTAssertEqual(
+            mediaCopy?.resolvedLayout,
+            .dual(left: .media, right: .notice(copy))
+        )
+        let mediaBack = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: mediaCopy!)
+        XCTAssertEqual(mediaBack.resolvedLayout, .fullMedia)
+
+        // 会议盖音乐：primary 会议时即使 mediaResident 也左会议
+        var meetingOverMedia = IslandNoticeSlots(mediaResident: true)
+        meetingOverMedia = IslandNoticeSlotPolicy.applying(incoming: meeting, to: meetingOverMedia)!
+        meetingOverMedia.mediaResident = true
+        XCTAssertEqual(meetingOverMedia.resolvedLayout, .fullNotice(meeting))
     }
 
     func test_islandOutline_panelKeepsSquareTopCorners() {

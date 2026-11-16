@@ -22,9 +22,9 @@
 | `island-hover-retention` | 岛悬停热区退化 | ≥8 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区** | 收起悬停仅刘海；拖文件才用接近区；展开地板 + 中下点用例 |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
-| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 | ≥6 | 取色/框选后看不见；关货架不上岛；或展开未完即 hoverEnd 收掉 | `ClipboardCopiedNoticeGate`；`copy.*` keepExpanded；翼→短放行；`test_shelfCopiedNoticeMiss_*` |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 | ≥7 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；**设置设计页 sticky↔收起互殴连震** | `shouldForceStickyNoticeExpand`；同指纹去抖；notice 套圆岛尺寸；`test_shelfCopiedNoticeMiss_*` |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
-| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥5 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌 / 混音台滑条静音） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；`test_islandFocusPolicy_*` |
+| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥6 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌 / 混音台滑条静音 / **久坐 +10m 点穿**） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；常驻翼 tip 可点区抬双翼宽；`test_islandFocusPolicy_*` / `test_islandFocusSteal_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 | `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
@@ -104,12 +104,12 @@
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
 - **recurring:** true  
-- **occurrences:** 6（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；2026-11-11 货架开关；**2026-11-11 展开未完即消失：`keepsExpandedWithoutHover` 未开，hoverEnd 秒收**）  
-- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**  
-- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至约 3s 自动收起**；clamp 不得把 Ø32 抬到刘海宽  
-- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.usesNotchRightOrbChrome`、`IslandExpandedPanelPolicy`、`ClipboardCopiedIslandView`  
-- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关、copy 须 keepExpanded + 圆岛尺寸）、`IslandExpandedPanelPolicyTests`
+- **occurrences:** 7（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；2026-11-11 货架开关；2026-11-11 keepExpanded；**2026-11-16 设置设计页打开时 Cmd+C：sticky 强制展开 ↔ `pointerOverSettings` 收起互殴 → 触控板连震且圆岛看不见；剪贴板 changeCount 抖动连投**）  
+- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**；**或一点复制触控板一直震**  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**；⑥ **设置设计页 `blocksProgrammaticNoticeExpand` 时 sticky 仍强制 expand，随即被 pointerOverSettings 收起 → 每帧触感**；⑦ **同指纹短时内 changeCount 抖动反复 present + haptic**；⑧ **expand(notice) 误走控制台画布盖掉 Ø32**  
+- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至约 3s 自动收起**；clamp 不得把 Ø32 抬到刘海宽；**`shouldForceStickyNoticeExpand` 在设置设计页/指针在设置窗时禁止**；**设置打开跳过复制上岛**；**同指纹 2s 去抖**；**notice expand 套 `applyNoticeTipPanelSizeIfNeeded`**；展开触感 0.4s 节流  
+- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.usesNotchRightOrbChrome`、`IslandExpandedPanelPolicy`、`ClipboardCopiedIslandView`、`IslandController.blocksProgrammaticNoticeExpand`  
+- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关、copy 须 keepExpanded + 圆岛尺寸、**settingsBlocksStickyForceExpand**）、`IslandExpandedPanelPolicyTests`
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -189,12 +189,12 @@
 ### island-focus-steal — 岛抢鼠标/键盘焦点
 
 - **recurring:** true  
-- **occurrences:** 5（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；2026-11-12 媒体展开暂停/切歌；**2026-11-13 混音台滑条/静音/设备行 SwiftUI 无响应**）  
-- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体播放控件/混音台控件点了没反应  
-- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 SwiftUI 首击；横滑翻页 pan 抢走音量横向拖动；会议 tip 可点区停在刘海/短条  
-- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl` / `IslandDirectHitTarget`；会议 tip / 媒体播放 / **混音台滑条·静音·设备行**用 AppKit；翻页 pan 在控件上 `failed`  
-- **相关代码:** `IslandFocusPolicy`、`IslandDirectHitTarget`、`MixerVolumeTrackNSView`、`MixerMuteNSButton`、`MediaTransportAppKitButton`、`MeetingLeadAppKitPillButton`  
-- **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`、`test_controlDeckVolumeHeight_adaptsBelowMaxAndCapsAtMax`
+- **occurrences:** 6（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；2026-11-12 媒体展开暂停/切歌；2026-11-13 混音台；**2026-11-16 久坐 +10m：tip 在场但 expanded=false / panel≈刘海，右翼点穿；且被「已复制」顶掉**）  
+- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体播放控件/混音台控件/久坐「+10m」点了没反应  
+- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 SwiftUI 首击；横滑翻页 pan 抢走音量横向拖动；会议/久坐 tip 可点区停在刘海/短条；常驻 tip 未保展开  
+- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl` / `IslandDirectHitTarget`；会议 tip / 媒体播放 / 混音台 / **久坐**用 AppKit；常驻翼 tip `wingTipInteractivePanelSize` 抬双翼宽 + 未展开则强制 expand；久坐 `preemptionRank=50` 不被复制盖；翻页 pan 在控件上 `failed`  
+- **相关代码:** `IslandFocusPolicy`、`IslandExpandedPanelPolicy.wingTipInteractivePanelSize`、`IslandDirectHitTarget`、`MoveReminderPillNSButton`、`MeetingLeadAppKitPillButton`  
+- **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`、`test_islandFocusSteal_*`、`test_controlDeckVolumeHeight_adaptsBelowMaxAndCapsAtMax`
 
 ### tip-outline-panel — 瞬时提示上直角下圆角
 
@@ -371,6 +371,9 @@
 | 2026-11-16 | 引导权限未齐不进自启：`allSelectedPermissionsSatisfied`；catalog `onboarding-perms-skip-ahead` |
 | 2026-11-16 | 开蓝牙勿叠弹输入监控：HID 仅 Battery System + 蓝牙未决跳过 HID；catalog `bluetooth-hid-input-monitoring` |
 | 2026-11-16 | 屏幕录制：首次 CGRequest 登记列表（不叠开设置）；再点才直开隐私页；catalog `screen-capture-double-prompt` |
+| 2026-11-16 | island-focus-steal +1：久坐 +10m 点穿；翼 tip 可点区抬双翼 + 强制保展开；久坐 preemption=50 |
+| 2026-11-16 | 提示双槽：A 满岛；B+C 左右；专注待命 C 常驻；短 C 暂占后归还；`test_islandNoticeDualSlots_*` |
+| 2026-11-16 | shelf-copied-notice-miss +1：设置设计页 sticky↔收起互殴连震；同指纹去抖；notice expand 套圆岛；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
 | 2026-11-14 | OCR 无文字静默收起，不上岛「选区内未识别到文字」；catalog `ocr-empty-notice-noise` |
 | 2026-11-14 | 播放中点刘海勿落空态：`dragHold` 先开媒体；catalog `media-click-opens-empty` |
 | 2026-11-11 | 媒体：播放小岛常驻、点按展开大面板；预览去掉「收起待命」；catalog `media-compact-not-resident` |
