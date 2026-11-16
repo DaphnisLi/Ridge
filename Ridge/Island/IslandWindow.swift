@@ -206,6 +206,11 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
     var onHorizontalPageSwipe: ((Int) -> Void)?
     private var scrollAccumX: CGFloat = 0
 
+    /// 岛窗本身贴进刘海：宿主安全区必须清零，否则 SwiftUI 把内容顶到刘海下方留缝。
+    override var safeAreaInsets: NSEdgeInsets {
+        NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+    }
+
     /// nonactivatingPanel 不抢前台；必须允许首击直达 SwiftUI 按钮，否则「点一下没反应」。
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 

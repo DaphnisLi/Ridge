@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// 播放中常驻小岛：左翼封面+歌名，右翼律动+时长；中空避开刘海（歌名轮播宽=左翼可见宽）。
+/// 播放中常驻小岛：左翼封面+歌名，右翼律动+时长；双槽一侧 flush（音符+时长+律动）。
 struct MediaCompactStandbyView: View {
     let title: String
     let artwork: NSImage?
@@ -9,12 +9,18 @@ struct MediaCompactStandbyView: View {
     let isPlaying: Bool
     /// 设置样张可关，避免 TimelineView 拖垮设置窗。
     var animatedEqualizer: Bool = true
+    /// 双槽一侧：左翼内容（音符+时长+律动）。
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    /// 真岛双槽：只画内容，不套黑胶囊（岛壳已黑；再套会叠成下方一条）。
+    var bareWingContent: Bool = false
     /// 设置预览无真刘海时的占位宽。
     var previewNotchWidth: CGFloat = 110
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
 
-    private let eqGreen = Color(red: 0.196, green: 0.843, blue: 0.294) // #32D74B
+    /// 满岛待命原色 #32D74B；半块 flush 另用 `flushEqGreen`。
+    private let eqGreen = Color(red: 0.196, green: 0.843, blue: 0.294)
+    private let flushEqGreen = IslandFlushWingStyle.accentSuccess
     private let artworkSide: CGFloat = 22
     private let leftClusterSpacing: CGFloat = 8
 
@@ -23,6 +29,47 @@ struct MediaCompactStandbyView: View {
     }
 
     var body: some View {
+        if flushSide != nil {
+            wingLeadContent(bare: bareWingContent)
+        } else {
+            fullStandbyBody
+        }
+    }
+
+    private func wingLeadContent(bare: Bool) -> some View {
+        // 仅双槽半块：音符 | 时长 | 律动。满岛待命仍用 `fullStandbyBody` + `eqGreen`。
+        let spacer = bare
+            ? IslandFlushWingStyle.bareContentSpacerMin
+            : CGFloat(4)
+        let row = HStack(spacing: 0) {
+            Image(systemName: "music.note")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(flushEqGreen)
+            Spacer(minLength: spacer)
+            Text(elapsedText)
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.92))
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: spacer)
+            MediaCompactEqualizerBars(
+                isPlaying: isPlaying,
+                tint: flushEqGreen,
+                animated: animatedEqualizer
+            )
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title)，\(elapsedText)")
+
+        if bare {
+            return AnyView(row.islandBareFlushWingContent())
+        }
+        return AnyView(
+            IslandFlushWingCapsule(side: flushSide ?? .leading) { row }
+        )
+    }
+
+    private var fullStandbyBody: some View {
         GeometryReader { geo in
             let total = max(geo.size.width, 1)
             // 中段留给刘海，左右翼等宽；歌名只在左翼可见区内轮播。

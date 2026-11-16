@@ -9,11 +9,16 @@ struct MoveReminderNoticeCard: View {
     /// 设置样张：仍画出按钮，但不触发真实 snooze / mute。
     var isPreview: Bool = false
     var compact: Bool = false
+    /// 双槽一侧：flush 胶囊（人型 + 分钟 + 琥珀呼吸点）。
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    /// 真岛双槽：只画内容，不套黑胶囊（对齐音乐左翼）。
+    var bareWingContent: Bool = false
     var previewNotchWidth: CGFloat = 110
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
     @Environment(\.islandNotchHeight) private var envNotchHeight
 
+    /// 满岛 tip 原琥珀；半块 flush 可同色，但勿改成别的 flush 令牌去带偏满岛。
     private let amber = Color(red: 1.0, green: 0.624, blue: 0.039) // #FF9F0A
     private let amberSoft = Color(red: 1.0, green: 0.702, blue: 0.251) // #FFB340
 
@@ -22,6 +27,7 @@ struct MoveReminderNoticeCard: View {
     }
 
     private var barHeight: CGFloat {
+        if flushSide != nil { return IslandFlushWingStyle.height }
         if compact { return 30 }
         return max(envNotchHeight, 32)
     }
@@ -43,6 +49,20 @@ struct MoveReminderNoticeCard: View {
     }
 
     var body: some View {
+        Group {
+            if let flushSide {
+                flushCapsule(side: flushSide)
+            } else {
+                fullWingBody
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(
+            "\(L10n.MoveReminder.metricTitle(notice.activeMinutes))，\(L10n.MoveReminder.noticeSubtitle(notice.restMinutes))"
+        )
+    }
+
+    private var fullWingBody: some View {
         HStack(spacing: 0) {
             leftCluster
                 .frame(width: wingWidth + notchWidth * 0.28, alignment: .leading)
@@ -52,10 +72,29 @@ struct MoveReminderNoticeCard: View {
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(
-            "\(L10n.MoveReminder.metricTitle(notice.activeMinutes))，\(L10n.MoveReminder.noticeSubtitle(notice.restMinutes))"
-        )
+    }
+
+    private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
+        let spacer = bareWingContent
+            ? IslandFlushWingStyle.bareContentSpacerMin
+            : CGFloat(4)
+        let row = HStack(spacing: 0) {
+            Image(systemName: "figure.stand")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(amber)
+            Spacer(minLength: spacer)
+            Text("\(notice.activeMinutes)m")
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.92))
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: spacer)
+            MoveReminderFlushPulseDot(accent: amber)
+        }
+        if bareWingContent {
+            return AnyView(row.islandBareFlushWingContent())
+        }
+        return AnyView(IslandFlushWingCapsule(side: side) { row })
     }
 
     // MARK: - Left
@@ -137,7 +176,9 @@ struct MoveReminderNoticeCard: View {
     static func previewSample(
         activeMinutes: Int = 30,
         restMinutes: Int = 2,
-        compact: Bool = true
+        compact: Bool = true,
+        flushSide: IslandFlushWingStyle.Side? = nil,
+        bareWingContent: Bool = false
     ) -> MoveReminderNoticeCard {
         MoveReminderNoticeCard(
             notice: .init(
@@ -146,8 +187,40 @@ struct MoveReminderNoticeCard: View {
                 restMinutes: restMinutes
             ),
             isPreview: true,
-            compact: compact
+            compact: compact,
+            flushSide: flushSide,
+            bareWingContent: bareWingContent
         )
+    }
+}
+
+/// flush 翼琥珀呼吸点（对照久坐稿）。
+private struct MoveReminderFlushPulseDot: View {
+    let accent: Color
+    private let period: TimeInterval = 1.0
+    @State private var phase: CGFloat = 0
+
+    var body: some View {
+        let ringScale = 1 + 1.1 * phase
+        let ringOpacity = 0.75 * (1 - phase)
+        ZStack {
+            Circle()
+                .fill(accent.opacity(0.55))
+                .frame(width: 8, height: 8)
+                .scaleEffect(ringScale)
+                .opacity(ringOpacity)
+            Circle()
+                .fill(accent)
+                .frame(width: 8, height: 8)
+        }
+        .frame(width: 12, height: 12)
+        .onReceive(
+            Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
+        ) { date in
+            let t = date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: period)
+            phase = CGFloat(t / period)
+        }
+        .accessibilityHidden(true)
     }
 }
 

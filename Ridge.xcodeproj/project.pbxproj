@@ -38,6 +38,7 @@
 		1FD8B6EAC10EAE393FAAB4C2 /* SoundBluetoothBattery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */; };
 		214B99A48477A62224F94288 /* IOBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C37BDB2DF0AB19CED15BE41 /* IOBluetooth.framework */; };
 		231E54EE1B0F800754620952 /* StockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F00F4B122F586E980C2B2F /* StockWidget.swift */; };
+		2704CB14D70C0E89FC7A838A /* IslandFlushWingStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D3812EB79B21806D4A37916 /* IslandFlushWingStyle.swift */; };
 		27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45BDD3FD3EEAF28093A962D7 /* HotKeyChord.swift */; };
 		27BFC264B4A738F590680B85 /* ProjectScanRootTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C3A7D77738F10EB67B95471 /* ProjectScanRootTests.swift */; };
 		2983F53A047FAB854C63FCA7 /* MoveReminderSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8919AB617974C1727F52BE9A /* MoveReminderSession.swift */; };
@@ -327,6 +328,7 @@
 		6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidget.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLibraryFamily.swift; sourceTree = "<group>"; };
+		6D3812EB79B21806D4A37916 /* IslandFlushWingStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFlushWingStyle.swift; sourceTree = "<group>"; };
 		6ECE154103BEFEDA8D48A4DD /* BatteryDeckIslandPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryDeckIslandPreview.swift; sourceTree = "<group>"; };
 		6FD8589B22DFD6CF327C4AC5 /* Ridge-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Ridge-Bridging-Header.h"; sourceTree = "<group>"; };
 		6FE493B8006D7D7FD4162B96 /* CaptureHotKeySummaryLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureHotKeySummaryLabel.swift; sourceTree = "<group>"; };
@@ -558,6 +560,7 @@
 				5894114050B192E21DBC168B /* IslandContentView.swift */,
 				1073E52F82BA9EE649BA7890 /* IslandController.swift */,
 				585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */,
+				6D3812EB79B21806D4A37916 /* IslandFlushWingStyle.swift */,
 				0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */,
 				41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */,
 				D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */,
@@ -1051,6 +1054,7 @@
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
 				089B80CDF812C21F5E851F43 /* IslandExpandedPanelPolicy.swift in Sources */,
+				2704CB14D70C0E89FC7A838A /* IslandFlushWingStyle.swift in Sources */,
 				38E07147B859BA2648E95197 /* IslandFocusPolicy.swift in Sources */,
 				7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */,
 				E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */,

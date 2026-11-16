@@ -81,13 +81,29 @@ struct IslandContentView: View {
     }
 
     /// 「已复制」等：刘海右侧正圆微岛；其余贴顶直角下圆角。
+    /// 双槽：左右各自 flush 裁切，外层禁止再用 panel 裁整框。
     private var outlineStyle: IslandOutlineStyle {
         usesNotchRightOrb ? .circle : .panel
+    }
+
+    /// 双槽不对外层做 panel clip：左右翼各自 flush；右圆岛禁止被裁成异形。
+    private var appliesOuterClipShape: Bool {
+        !usesDualFlushChrome
     }
 
     private var usesNotchRightOrb: Bool {
         runtime.isTransientNoticePage
             && noticeCenter.slots.anyUsesNotchRightOrbChrome
+    }
+
+    private var usesDualFlushChrome: Bool {
+        runtime.isTransientNoticePage
+            && noticeCenter.slots.usesDualFlushChrome
+    }
+
+    private var usesDualFlushWithRightOrb: Bool {
+        runtime.isTransientNoticePage
+            && noticeCenter.slots.usesDualFlushWithRightOrb
     }
 
     private var appliedBottomRadius: CGFloat {
@@ -105,10 +121,17 @@ struct IslandContentView: View {
         )
     }
 
-    /// 圆岛相对刘海中心右偏（与 `IslandController` 可点区一致）。
+    /// 圆岛相对刘海中心右偏；双槽非对称时左移，让加宽的左翼往左伸（与 `IslandController` 可点区一致）。
     private var panelHorizontalOffset: CGFloat {
-        guard usesNotchRightOrb else { return 0 }
-        return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)
+        if usesNotchRightOrb {
+            return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)
+        }
+        if usesDualFlushChrome {
+            return IslandChrome.dualFlushHorizontalOffsetX(
+                rightIsOrb: usesDualFlushWithRightOrb
+            )
+        }
+        return 0
     }
 
     private var palette: IslandPalette { settings.theme.palette }
@@ -119,7 +142,38 @@ struct IslandContentView: View {
             ZStack(alignment: .top) {
                 // AppKit device 色不透明层：比 SwiftUI Color 经透明窗合成更接近刘海漆黑。
                 // 圆岛改由内容自绘 SwiftUI 黑底——NSView fill 易盖住 Ø32 内的 SF Symbol。
-                if !usesNotchRightOrb {
+                // 双槽：左右各自 flush 黑底 + underlap；禁止整条黑底盖住刘海中空或包住右圆岛。
+                if usesDualFlushChrome {
+                    let underlap = IslandChrome.dualFlushNotchUnderlap
+                    let wingW = IslandChrome.dualFlushLeftWingWidth
+                    let leftFillW = wingW + underlap
+                    IslandOpaqueFillView(
+                        bottomRadius: IslandFlushWingStyle.outerBottomRadius,
+                        outlineStyle: .flushLeading,
+                        fill: settings.theme.nsFillColor
+                    )
+                    .frame(width: leftFillW, height: bodySize.height)
+                    .frame(
+                        width: bodySize.width,
+                        height: bodySize.height,
+                        alignment: .topLeading
+                    )
+                    if !usesDualFlushWithRightOrb {
+                        // 右翼同宽 flush；「已复制」Ø32 自绘圆，勿再铺长方形黑底。
+                        let rightFillW = wingW + underlap
+                        IslandOpaqueFillView(
+                            bottomRadius: IslandFlushWingStyle.outerBottomRadius,
+                            outlineStyle: .flushTrailing,
+                            fill: settings.theme.nsFillColor
+                        )
+                        .frame(width: rightFillW, height: bodySize.height)
+                        .frame(
+                            width: bodySize.width,
+                            height: bodySize.height,
+                            alignment: .topTrailing
+                        )
+                    }
+                } else if !usesNotchRightOrb {
                     IslandOpaqueFillView(
                         bottomRadius: appliedBottomRadius,
                         outlineStyle: outlineStyle,
@@ -147,16 +201,17 @@ struct IslandContentView: View {
                     // 按内容固有尺寸布局，再上报给 ViewModel；勿先铺满面板。
                     .fixedSize(horizontal: true, vertical: true)
                     .reportIslandPanelSize()
-                    // 圆岛内容压过 AppKit OpaqueFill，避免只见黑底不见图标。
-                    .zIndex(usesNotchRightOrb ? 2 : 0)
+                    // 圆岛 / 双槽：内容压过 AppKit OpaqueFill，避免只见黑底不见图标。
+                    .zIndex(usesNotchRightOrb || usesDualFlushChrome ? 2 : 0)
                 }
             }
             // 面板框跟已测尺寸走；内容用 fixedSize 自撑，避免矮框 clip 把新页热区裁掉。
             .frame(width: bodySize.width, height: bodySize.height, alignment: .top)
             .animation(.easeOut(duration: 0.18), value: shelfDropSession.isActive)
-            .clipShape(shape)
-            // 整块面板都要可命中，避免透明子区把点击漏给下层页面。
-            .contentShape(shape)
+            .modifier(IslandOuterClipModifier(
+                enabled: appliesOuterClipShape,
+                shape: shape
+            ))
             // 圆岛：先裁圆再右偏，避免 clip 吃掉偏移后的可视区。
             .offset(x: panelHorizontalOffset)
             // 货架开启时：整岛接收文件拖入（不限货架小栏）。
@@ -178,6 +233,8 @@ struct IslandContentView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 窗体贴进刘海：必须忽略安全区，否则内容被顶到刘海下沿，翼/圆岛与刘海之间出现缺口。
+        .ignoresSafeArea()
         .environment(\.islandPalette, palette)
         .environment(\.islandNotchHeight, viewModel.notchHeight)
         .environment(\.islandNotchWidth, viewModel.notchWidth)
@@ -303,8 +360,14 @@ private struct IslandBody: View {
     @Environment(\.islandPalette) private var palette
 
     private var usesNotchWingTip: Bool {
+        // 仅会议翼 tip；音乐/专注+短 C 走 dualFlush（零 inset、同刘海高）。
         runtime.isTransientNoticePage
             && noticeCenter.slots.anyUsesNotchWingChrome
+    }
+
+    private var usesDualFlushTip: Bool {
+        runtime.isTransientNoticePage
+            && noticeCenter.slots.usesDualFlushChrome
     }
 
     private var usesShortBelowNotchTip: Bool {
@@ -319,7 +382,8 @@ private struct IslandBody: View {
 
     private var hidesPageDots: Bool {
         // 瞬时通知不参与翻页点；媒体展开态也不画角点（左右滑仍可翻页）。
-        usesNotchWingTip || usesShortBelowNotchTip || usesNotchRightOrbTip || runtime.isTransientNoticePage
+        usesNotchWingTip || usesDualFlushTip || usesShortBelowNotchTip || usesNotchRightOrbTip
+            || runtime.isTransientNoticePage
             || runtime.activeID == LiveIslandGate.mediaID
     }
 
@@ -404,6 +468,7 @@ private struct IslandBody: View {
 
     private var chromeSurface: IslandChrome.Surface {
         if usesNotchRightOrbTip { return .notchRightOrb }
+        if usesDualFlushTip { return .dualFlush }
         if usesNotchWingTip { return .notchWingTip }
         if usesShortBelowNotchTip { return .shortBelowNotchTip }
         if runtime.isTransientNoticePage { return .notice }
@@ -432,5 +497,21 @@ private struct IslandBody: View {
         // 番茄完成态略收底距；其余一律走 IslandChrome 固定令牌。
         if chromeSurface == .expanded, focusTimer.phase == .completed { return 8 }
         return chromeInsets.bottom
+    }
+}
+
+/// 外层 clip / hit 形状；双槽右圆岛时关闭，避免 panel 裁切把 Ø32「已复制」改形。
+private struct IslandOuterClipModifier: ViewModifier {
+    var enabled: Bool
+    var shape: IslandOutlineShape
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .clipShape(shape)
+                .contentShape(shape)
+        } else {
+            content
+        }
     }
 }

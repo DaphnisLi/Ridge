@@ -3,12 +3,14 @@ import Foundation
 /// 提示三档。
 ///
 /// - exclusive (A)：框选 / 取色 → 满岛
-/// - primary (B)：**会议 / 音乐** → 同档会议盖音乐；与短 C 并排时在左；短 C 没后 B 回满岛
+/// - primary (B)：**会议 tip / 音乐常驻** → 两 B 同时只展示会议（盖音乐）；与短 C 并排时左会议右 C；C 没后会议回满岛
 /// - secondary (C)：复制 / 久坐 / 外设 / 额度等；「已复制」圆岛本就靠右，满不满无所谓
 ///
 /// 专注计时收起待命是 **C 常驻**：
 /// - 仅它 → 满岛；+短 C → 左专注右短条；+B → 左 B 右专注
 /// - 右翼是专注时来短 C → 短 C 暂占约 2–3s，没后专注归位
+///
+/// 凡 `.dual`（含会议+C、音乐+C）一律 **dualFlush** 左右小岛，禁止再抬会议双翼宽。
 enum IslandNoticeDisplayLane: Int, Equatable, Comparable {
     case secondary = 0
     case primary = 1
@@ -79,13 +81,28 @@ struct IslandNoticeSlots: Equatable {
 
     var anyUsesNotchWingChrome: Bool {
         switch resolvedLayout {
-        case .fullFocus, .fullMedia, .dual:
-            return true
-        case .fullNotice(let p):
-            return p.usesNotchWingChrome
-        case .empty:
+        case .fullFocus, .fullMedia, .dual, .empty:
+            // 双槽一律左右 flush 小岛，勿抬会议双翼宽；单独专注/音乐不走翼 tip。
             return false
+        case .fullNotice(let p):
+            // 仅「满岛单 tip」（如只有会议 / 两 B 时只留会议）才用双翼壳。
+            return p.usesNotchWingChrome
         }
+    }
+
+    /// 任意 `.dual` 都走贴刘海左右 flush（音乐标准）；含会议+C、两 B 后再出 C。
+    var usesDualFlushChrome: Bool {
+        if case .dual = resolvedLayout { return true }
+        return false
+    }
+
+    /// 双槽且右侧是「已复制」Ø32：左翼可加宽，右翼不要再铺整块黑底。
+    var usesDualFlushWithRightOrb: Bool {
+        guard usesDualFlushChrome,
+              case .dual(_, let right) = resolvedLayout,
+              case .notice(let payload) = right
+        else { return false }
+        return payload.usesNotchRightOrbChrome
     }
 
     var anyUsesNotchRightOrbChrome: Bool {
@@ -204,26 +221,27 @@ enum IslandNoticeSlotPolicy {
     }
 
     /// 布局解析。
-    /// B = 会议 tip（primary）或音乐常驻；会议优先于音乐。
-    /// B 满岛时来短 C → 左右；C 没后 B 回满岛。
+    /// B = 会议 tip（primary）或音乐常驻；两 B 同时只展示会议（盖音乐）。
+    /// 会议满岛时来短 C → 左会议右 C（音乐仍被盖）；C 没后会议回满岛。
     static func resolvedLayout(_ slots: IslandNoticeSlots) -> IslandNoticeLayout {
         if let primary = slots.primary, primary.displayLane == .exclusive {
             return .fullNotice(primary)
         }
 
-        // B：会议 tip
+        // B：会议 tip（可与 mediaResident 并存；布局层始终盖音乐）
         if let primary = slots.primary {
             if let secondary = slots.secondary {
-                // B 满岛中来了短 C → 左右；C 没后回满岛 B
+                // 两 B + C，或会议 + C → 左会议右 C；勿再把音乐摆上右/左翼
                 return .dual(left: .notice(primary), right: .notice(secondary))
             }
             if slots.focusResident {
                 return .dual(left: .notice(primary), right: .focus)
             }
+            // 仅会议，或会议+音乐两 B：只展示加入会议满岛 tip
             return .fullNotice(primary)
         }
 
-        // B：音乐（无会议时）
+        // B：音乐（无会议时才生效）
         if slots.mediaResident {
             if let secondary = slots.secondary {
                 return .dual(left: .media, right: .notice(secondary))

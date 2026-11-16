@@ -28,18 +28,58 @@ final class MeetingLeadSession: ObservableObject {
 
     @Published private(set) var snapshot: Snapshot?
 
-    /// 入会成功后通知 widget 记 dismissed（可选）。
+    /// 用户已点入会的会议 id（会话级权威；勿只存在 widget weak self 上）。
+    private(set) var dismissedAfterJoinID: String?
+
+    /// 入会成功后通知 widget 清 latch（可选）。
     var onJoined: ((String) -> Void)?
-    /// 保留窗口结束 / 日程结束自动撤 tip 后，让 widget 立刻改选下一场。
+    /// 保留窗口结束 / 入会后改选下一场。
     var onTipExpired: ((String) -> Void)?
     var onRequestAuth: (() -> Void)?
+
+    /// 测试可注入；默认 `NSWorkspace.open`。
+    var openURLHandler: (URL) -> Bool = { NSWorkspace.shared.open($0) }
 
     private var tick: Timer?
 
     private init() {}
 
+    /// 单测复位；生产勿调用。
+    func resetForTests() {
+        stopTicking()
+        snapshot = nil
+        dismissedAfterJoinID = nil
+        onJoined = nil
+        onTipExpired = nil
+        onRequestAuth = nil
+        openURLHandler = { NSWorkspace.shared.open($0) }
+    }
+
+    func clearDismissedAfterJoinIfAbsent(from meetingIDs: Set<String>) {
+        guard let dismissed = dismissedAfterJoinID,
+              !meetingIDs.contains(dismissed)
+        else { return }
+        AppLog.debug("Meeting", "已入会场次已离开列表，清除 dismissed", [
+            "meeting": String(dismissed.prefix(8))
+        ])
+        dismissedAfterJoinID = nil
+    }
+
     func publish(_ next: Snapshot?, reason: String) {
         let previous = snapshot
+        // 已入会场次禁止再 present（防 widget tick / 改选竞态把 tip 贴回来）。
+        if let next, next.meetingID == dismissedAfterJoinID {
+            AppLog.warn("Meeting", "拒绝再次投递已入会场次", [
+                "reason": reason,
+                "meeting": String(next.meetingID.prefix(8))
+            ])
+            if previous?.meetingID == next.meetingID {
+                snapshot = nil
+                stopTicking()
+                IslandNoticeCenter.shared.dismiss(id: "meeting.lead.\(next.meetingID)")
+            }
+            return
+        }
         guard previous != next else { return }
         snapshot = next
         if let next {
@@ -87,9 +127,9 @@ final class MeetingLeadSession: ObservableObject {
             return
         }
 
-        var opened = NSWorkspace.shared.open(openURL)
+        var opened = openURLHandler(openURL)
         if !opened, let source = snap.joinSourceURL, source != openURL {
-            opened = NSWorkspace.shared.open(source)
+            opened = openURLHandler(source)
             AppLog.warn("Meeting", "deep link 失败，回退网页链接", [
                 "platform": snap.joinPlatform ?? "unknown"
             ])
@@ -100,13 +140,24 @@ final class MeetingLeadSession: ObservableObject {
             "meeting": String(snap.meetingID.prefix(8))
         ])
 
-        guard opened else { return }
         let meetingID = snap.meetingID
-        publish(nil, reason: "joined")
+        // 会话级先打标（不依赖 widget weak self），再撤 tip，再改选。
+        dismissedAfterJoinID = meetingID
         onJoined?(meetingID)
-        AppLog.info("Meeting", "入会成功，已撤回会前提示", [
-            "meeting": String(meetingID.prefix(8))
-        ])
+        publish(nil, reason: "joined")
+        onTipExpired?("joinedAdvance")
+        if opened {
+            AppLog.info("Meeting", "入会成功，已撤回会前提示", [
+                "meeting": String(meetingID.prefix(8)),
+                "dismissed": dismissedAfterJoinID ?? ""
+            ])
+        } else {
+            AppLog.warn("Meeting", "入会打开失败仍撤回提示", [
+                "meeting": String(meetingID.prefix(8)),
+                "platform": snap.joinPlatform ?? "unknown",
+                "dismissed": dismissedAfterJoinID ?? ""
+            ])
+        }
     }
 
     func requestAuthFromNotice() {

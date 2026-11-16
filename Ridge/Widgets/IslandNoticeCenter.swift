@@ -233,6 +233,9 @@ final class IslandNoticeCenter: ObservableObject {
                 "secondary": next.secondary?.id ?? "",
                 "parked": next.parkedSecondary?.id ?? "",
                 "focus": next.focusResident,
+                "media": next.mediaResident,
+                "layout": String(describing: next.resolvedLayout),
+                "dualFlush": next.usesDualFlushChrome,
                 "orbTip": next.anyUsesNotchRightOrbChrome,
                 "wingTip": next.anyUsesNotchWingChrome,
                 "rank": payload.preemptionRank
@@ -246,9 +249,15 @@ final class IslandNoticeCenter: ObservableObject {
             // 仅专注 / 仅音乐：收起翼，不预备通知页尺寸。
             return
         case .dual:
-            IslandController.shared?.prepareMeetingWingNoticeLayout(
-                reason: "presentDual:\(payload?.id ?? "resident")"
-            )
+            if next.usesDualFlushChrome {
+                IslandController.shared?.prepareDualFlushNoticeLayout(
+                    reason: "presentDualFlush:\(payload?.id ?? "resident")"
+                )
+            } else {
+                IslandController.shared?.prepareMeetingWingNoticeLayout(
+                    reason: "presentDual:\(payload?.id ?? "resident")"
+                )
+            }
         case .fullNotice(let p):
             if next.anyUsesNotchRightOrbChrome {
                 IslandController.shared?.prepareNotchRightOrbLayout(reason: "present:\(p.id)")

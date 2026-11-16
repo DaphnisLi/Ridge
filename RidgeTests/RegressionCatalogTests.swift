@@ -610,6 +610,41 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(clamped.height, IslandChrome.notchRightOrbDiameter)
     }
 
+    /// 半块 flush 档位映射；满岛会议入会钮色/文案保持原契约（勿被 flush 稿改掉）。
+    func test_islandFlushWing_severityColorsAndMeetingJoinLabel() {
+        XCTAssertEqual(L10n.Meeting.joinEnter, "入会")
+        // 半块会议固定日程 calendar；勿用 video.fill。
+        XCTAssertEqual(MeetingLeadUrgency.relaxed.flushSymbolName, "calendar")
+        XCTAssertEqual(MeetingLeadUrgency.warning.flushSymbolName, "calendar")
+        XCTAssertEqual(MeetingLeadUrgency.critical.flushSymbolName, "calendar")
+        XCTAssertEqual(MeetingLeadUrgency.relaxed.symbolName, "calendar")
+        XCTAssertEqual(MeetingLeadUrgency.warning.symbolName, "video.fill")
+        XCTAssertEqual(MeetingLeadUrgency.relaxed.flushSeverity, .info)
+        XCTAssertEqual(MeetingLeadUrgency.warning.flushSeverity, .warning)
+        XCTAssertEqual(MeetingLeadUrgency.critical.flushSeverity, .danger)
+        XCTAssertEqual(AIUsageStage.abundant.flushSeverity, .info)
+        XCTAssertEqual(AIUsageStage.warning.flushSeverity, .warning)
+        XCTAssertEqual(AIUsageStage.critical.flushSeverity, .danger)
+        // 满岛入会钮：充裕白底黑字，勿变成 flush morph 蓝底白字。
+        XCTAssertEqual(MeetingLeadUrgency.relaxed.joinForeground, .black)
+        XCTAssertEqual(MeetingLeadUrgency.relaxed.joinBackground, .white)
+        XCTAssertEqual(IslandFlushWingStyle.width, 112)
+        XCTAssertEqual(IslandFlushWingStyle.height, 34)
+        XCTAssertEqual(IslandFlushWingStyle.outerBottomRadius, 14)
+        XCTAssertEqual(
+            MeetingLeadUrgency.resolve(secondsToStart: 6 * 60),
+            .relaxed
+        )
+        XCTAssertEqual(
+            MeetingLeadUrgency.resolve(secondsToStart: 3 * 60),
+            .warning
+        )
+        XCTAssertEqual(
+            MeetingLeadUrgency.resolve(secondsToStart: 60),
+            .critical
+        )
+    }
+
     /// 设置设计页 / 指针在设置窗：禁止 sticky 强制展开，否则与 pointerOverSettings 收起互殴连震。
     func test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand() {
         XCTAssertFalse(
@@ -705,11 +740,16 @@ final class RegressionCatalogTests: XCTestCase {
         let shortTip = IslandChrome.insets(for: .shortBelowNotchTip, notchHeight: notchH)
         let notice = IslandChrome.insets(for: .notice, notchHeight: notchH)
         let orb = IslandChrome.insets(for: .notchRightOrb, notchHeight: notchH)
+        let dualFlush = IslandChrome.insets(for: .dualFlush, notchHeight: notchH)
 
         // 展开 / 翼 / 短 tip / 普通通知：左右边距同一固定令牌。
         for insets in [expanded, wing, shortTip, notice] {
             XCTAssertEqual(insets.horizontal, IslandChrome.contentHorizontal)
         }
+        // 双槽贴刘海 / 圆岛：零 inset，勿叠 tip 边距把内容挤没。
+        XCTAssertEqual(dualFlush.top, 0)
+        XCTAssertEqual(dualFlush.bottom, 0)
+        XCTAssertEqual(dualFlush.horizontal, 0)
 
         XCTAssertEqual(expanded.bottom, IslandChrome.contentBottom)
         XCTAssertEqual(notice.bottom, IslandChrome.contentBottom)
@@ -789,6 +829,164 @@ final class RegressionCatalogTests: XCTestCase {
         let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
         XCTAssertTrue(meeting.keepsExpandedWithoutHover)
         XCTAssertNil(meeting.autoDismissNanoseconds)
+    }
+
+    /// meeting-join-wrong-calendar-url：EventKit 日程页不得盖住备注里的真入会链。
+    func test_meetingJoinLink_prefersConferenceURLOverCalendarEventPage() {
+        let calendarPage = URL(string: "https://www.google.com/calendar/event?eid=abc123")!
+        let zoom = URL(string: "https://zoom.us/j/123456789?pwd=secret")!
+        XCTAssertTrue(MeetingLinkDetector.isLikelyCalendarEventPage(calendarPage))
+        XCTAssertFalse(MeetingLinkDetector.isLikelyCalendarEventPage(zoom))
+
+        let target = MeetingLinkDetector.detect(
+            location: nil,
+            notes: "Join Zoom: \(zoom.absoluteString)",
+            url: calendarPage
+        )
+        XCTAssertEqual(target?.platform, .zoom)
+        XCTAssertEqual(target?.sourceURL.host, "zoom.us")
+        XCTAssertEqual(target?.openURL.scheme, "zoommtg")
+        XCTAssertTrue(target?.openURL.absoluteString.contains("confno=123456789") == true)
+
+        // 仅日程页、无会议链 → 不入会（禁止打开 Google 日历页冒充 Join）。
+        XCTAssertNil(
+            MeetingLinkDetector.detect(location: nil, notes: nil, url: calendarPage)
+        )
+
+        // 钉钉：保留原 https，勿换成无会议号的通用 conference 深链。
+        let ding = URL(string: "https://meeting.dingtalk.com/j/abcdef")!
+        let dingTarget = MeetingLinkDetector.detect(location: nil, notes: nil, url: ding)
+        XCTAssertEqual(dingTarget?.platform, .dingTalk)
+        XCTAssertEqual(dingTarget?.openURL, ding)
+    }
+
+    /// meeting-join-wrong-calendar-url：Outlook / iCloud 日程页也须识别并跳过。
+    func test_meetingJoinLink_skipsOutlookAndICloudCalendarPages() {
+        let outlook = URL(string: "https://outlook.office.com/calendar/item/AAMkAGI")!
+        let outlook365 = URL(string: "https://outlook.office365.com/owa/?itemid=abc")!
+        let live = URL(string: "https://outlook.live.com/calendar/0/deeplink/compose")!
+        let icloud = URL(string: "https://www.icloud.com/calendar/event/abc")!
+        let googleHost = URL(string: "https://calendar.google.com/calendar/u/0/r/eventedit/abc")!
+
+        for page in [outlook, outlook365, live, icloud, googleHost] {
+            XCTAssertTrue(
+                MeetingLinkDetector.isLikelyCalendarEventPage(page),
+                "须识别为日程页: \(page.host ?? "")"
+            )
+            XCTAssertNil(
+                MeetingLinkDetector.detect(location: nil, notes: nil, url: page),
+                "仅日程页不得冒充入会: \(page.host ?? "")"
+            )
+        }
+
+        let meet = URL(string: "https://meet.google.com/abc-defg-hij")!
+        let fromOutlook = MeetingLinkDetector.detect(
+            location: meet.absoluteString,
+            notes: nil,
+            url: outlook
+        )
+        XCTAssertEqual(fromOutlook?.platform, .googleMeet)
+        XCTAssertEqual(fromOutlook?.openURL, meet)
+    }
+
+    /// meeting-join-wrong-calendar-url：location 里的腾讯会优先于 EventKit 日程 url。
+    func test_meetingJoinLink_locationTencentBeatsCalendarURL() {
+        let calendarPage = URL(string: "https://www.google.com/calendar/event?eid=xyz")!
+        let tencent = URL(string: "https://meeting.tencent.com/dm/AbCdEfGh?meeting_code=123456789")!
+        let target = MeetingLinkDetector.detect(
+            location: "腾讯会议 \(tencent.absoluteString)",
+            notes: nil,
+            url: calendarPage
+        )
+        XCTAssertEqual(target?.platform, .tencentMeeting)
+        XCTAssertEqual(target?.sourceURL.host, "meeting.tencent.com")
+        XCTAssertNotEqual(target?.openURL.host, "www.google.com")
+        XCTAssertFalse(
+            MeetingLinkDetector.isLikelyCalendarEventPage(target!.openURL),
+            "入会 openURL 不得仍是日程页"
+        )
+    }
+
+    /// meeting-join-wrong-calendar-url：notes 泛型 https 可用；EventKit url 泛型日程页不可。
+    func test_meetingJoinLink_genericOnlyFromTextNotCalendarURL() {
+        let calendarPage = URL(string: "https://www.google.com/calendar/event?eid=only")!
+        let genericJoin = URL(string: "https://example.com/room/42")!
+
+        XCTAssertNil(
+            MeetingLinkDetector.detect(location: nil, notes: nil, url: calendarPage),
+            "日程页不得当 generic 入会"
+        )
+
+        let fromNotes = MeetingLinkDetector.detect(
+            location: nil,
+            notes: "网页会：\(genericJoin.absoluteString)",
+            url: calendarPage
+        )
+        XCTAssertEqual(fromNotes?.platform, .generic)
+        XCTAssertEqual(fromNotes?.openURL, genericJoin)
+
+        // 已知平台须压过同场 notes 里的泛型链接。
+        let zoom = URL(string: "https://zoom.us/j/999888777")!
+        let preferKnown = MeetingLinkDetector.detect(
+            location: nil,
+            notes: "\(genericJoin.absoluteString)\n\(zoom.absoluteString)",
+            url: calendarPage
+        )
+        XCTAssertEqual(preferKnown?.platform, .zoom)
+    }
+
+    /// meeting-join-wrong-calendar-url：会话入会须打开 detector 解析出的链，而非日程页。
+    @MainActor
+    func test_meetingJoinLink_sessionOpensDetectorURLNotCalendarPage() {
+        let session = MeetingLeadSession.shared
+        session.resetForTests()
+        IslandNoticeCenter.shared.dismiss(id: nil)
+        defer {
+            session.resetForTests()
+            IslandNoticeCenter.shared.dismiss(id: nil)
+        }
+
+        let calendarPage = URL(string: "https://www.google.com/calendar/event?eid=session")!
+        let zoomWeb = URL(string: "https://zoom.us/j/555666777?pwd=p")!
+        let detected = MeetingLinkDetector.detect(
+            location: nil,
+            notes: zoomWeb.absoluteString,
+            url: calendarPage
+        )
+        XCTAssertEqual(detected?.platform, .zoom)
+        guard let join = detected else {
+            XCTFail("须解析出 Zoom")
+            return
+        }
+
+        var opened: [URL] = []
+        session.openURLHandler = { url in
+            opened.append(url)
+            return true
+        }
+
+        let now = Date()
+        session.publish(
+            .init(
+                meetingID: "m-join-url",
+                title: "入会链验收",
+                startDate: now.addingTimeInterval(5 * 60),
+                endDate: now.addingTimeInterval(35 * 60),
+                secondsToStart: 5 * 60,
+                showJoin: true,
+                showAuth: false,
+                joinOpenURL: join.openURL,
+                joinSourceURL: join.sourceURL,
+                joinPlatform: join.logLabel
+            ),
+            reason: "testJoinURL"
+        )
+        session.joinFromNotice()
+
+        XCTAssertEqual(opened.count, 1)
+        XCTAssertEqual(opened.first?.scheme, "zoommtg")
+        XCTAssertTrue(opened.first?.absoluteString.contains("confno=555666777") == true)
+        XCTAssertFalse(opened.contains(calendarPage), "禁止打开 Google 日程页")
     }
 
     /// island-focus-steal：久坐常驻 tip 须 keepExpanded；可点区不得窄于预备双翼宽。
@@ -974,14 +1172,98 @@ final class RegressionCatalogTests: XCTestCase {
             mediaCopy?.resolvedLayout,
             .dual(left: .media, right: .notice(copy))
         )
+        // 音乐+复制：双 flush，右 Ø32；禁止会议双翼宽 / 整条黑底包圆岛。
+        XCTAssertTrue(mediaCopy?.usesDualFlushChrome == true)
+        XCTAssertTrue(mediaCopy?.usesDualFlushWithRightOrb == true)
+        XCTAssertFalse(mediaCopy?.anyUsesNotchWingChrome == true)
+        XCTAssertFalse(mediaCopy?.anyUsesNotchRightOrbChrome == true)
+        let dualFlush = IslandChrome.preparedDualFlushPanelSize(
+            notchWidth: 172,
+            notchHeight: 32,
+            rightIsOrb: true
+        )
+        let wing = IslandChrome.preparedWingTipPanelSize(notchWidth: 172, notchHeight: 32)
+        let dualInsets = IslandChrome.insets(for: .dualFlush, notchHeight: 32)
+        let expectedDualW = IslandChrome.dualFlushLeftWingWidth
+            + 172
+            + IslandChrome.notchRightOrbGap
+            + IslandChrome.notchRightOrbDiameter
+        let dualOffset = IslandChrome.dualFlushHorizontalOffsetX(rightIsOrb: true)
+        // 贴刘海：高=刘海；左翼略宽于 flush、右仅圆岛可留缝；零 inset；偏移为负=往左伸。
+        XCTAssertEqual(dualFlush.height, 32)
+        XCTAssertEqual(dualFlush.width, expectedDualW)
+        XCTAssertGreaterThanOrEqual(
+            IslandChrome.dualFlushLeftWingWidth,
+            IslandFlushWingStyle.width
+        )
+        XCTAssertLessThan(
+            IslandChrome.dualFlushLeftWingWidth,
+            140,
+            "左翼过宽会让音符与时长之间空洞过大"
+        )
+        XCTAssertGreaterThanOrEqual(IslandChrome.dualFlushNotchUnderlap, 10)
+        XCTAssertEqual(
+            IslandChrome.dualFlushLeftNotchBleed,
+            IslandChrome.dualFlushNotchUnderlap
+        )
+        XCTAssertLessThan(dualFlush.width, wing.width)
+        XCTAssertLessThan(dualOffset, 0, "左翼更宽时应左移面板，勿往右顶进刘海")
+        XCTAssertEqual(
+            dualOffset,
+            (IslandChrome.dualFlushRightSideWidth(rightIsOrb: true)
+                - IslandChrome.dualFlushLeftWingWidth) / 2
+        )
+        // 仅圆岛与刘海有缝；非圆岛右翼贴死。
+        XCTAssertEqual(
+            IslandChrome.dualFlushRightSideWidth(rightIsOrb: true),
+            IslandChrome.notchRightOrbGap + IslandChrome.notchRightOrbDiameter
+        )
+        // 非圆岛右翼与左翼同宽（音乐标准），禁止再缩成 112 胶囊造成左右不对称。
+        XCTAssertEqual(
+            IslandChrome.dualFlushRightSideWidth(rightIsOrb: false),
+            IslandChrome.dualFlushLeftWingWidth
+        )
+        XCTAssertEqual(
+            IslandChrome.dualFlushHorizontalOffsetX(rightIsOrb: false),
+            0,
+            "左右同宽时应无水平偏移"
+        )
+        XCTAssertEqual(dualInsets.top, 0)
+        XCTAssertEqual(dualInsets.bottom, 0)
+        XCTAssertEqual(dualInsets.horizontal, 0)
         let mediaBack = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: mediaCopy!)
         XCTAssertEqual(mediaBack.resolvedLayout, .fullMedia)
 
-        // 会议盖音乐：primary 会议时即使 mediaResident 也左会议
+        // 会议+复制：双槽走 dualFlush 左右小岛（勿再抬会议双翼宽）
+        XCTAssertFalse(meetingCopy?.anyUsesNotchWingChrome == true)
+        XCTAssertTrue(meetingCopy?.usesDualFlushChrome == true)
+
+        // 两 B（会议+音乐）：只展示加入会议满岛 tip
         var meetingOverMedia = IslandNoticeSlots(mediaResident: true)
         meetingOverMedia = IslandNoticeSlotPolicy.applying(incoming: meeting, to: meetingOverMedia)!
         meetingOverMedia.mediaResident = true
         XCTAssertEqual(meetingOverMedia.resolvedLayout, .fullNotice(meeting))
+        XCTAssertTrue(meetingOverMedia.anyUsesNotchWingChrome)
+        XCTAssertFalse(meetingOverMedia.usesDualFlushChrome)
+
+        // 两 B + C：左会议右 C；音乐仍被盖，勿出现左音乐
+        let meetingMediaCopy = IslandNoticeSlotPolicy.applying(
+            incoming: copy,
+            to: meetingOverMedia
+        )
+        XCTAssertEqual(
+            meetingMediaCopy?.resolvedLayout,
+            .dual(left: .notice(meeting), right: .notice(copy))
+        )
+        XCTAssertTrue(meetingMediaCopy?.usesDualFlushChrome == true)
+        XCTAssertFalse(meetingMediaCopy?.anyUsesNotchWingChrome == true)
+        // C 没后仍回两 B → 只会议
+        let meetingMediaBack = IslandNoticeSlotPolicy.dismissing(
+            id: copy.id,
+            from: meetingMediaCopy!
+        )
+        XCTAssertEqual(meetingMediaBack.resolvedLayout, .fullNotice(meeting))
+        XCTAssertTrue(meetingMediaBack.mediaResident)
     }
 
     func test_islandOutline_panelKeepsSquareTopCorners() {
@@ -1098,6 +1380,130 @@ final class RegressionCatalogTests: XCTestCase {
         )
         let selected = MeetingLeadTipSelector.select(from: [first, second], input: input)
         XCTAssertEqual(selected?.meeting.id, second.id)
+    }
+
+    /// meeting-tip-stays-after-join：入会后即使 latch 未清，也不得再选同一场。
+    func test_meetingTipAfterJoin_skipsDismissedEvenIfStillLatched() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let meeting = MeetingEvent(
+            id: "m-join",
+            title: "已入会场",
+            startDate: now.addingTimeInterval(3 * 60),
+            endDate: now.addingTimeInterval(33 * 60),
+            calendarIdentifier: "cal",
+            calendarTitle: "日历",
+            join: nil
+        )
+        let stillLatched = MeetingLeadTipSelector.Input(
+            now: now,
+            leadSeconds: 10 * 60,
+            tipDismissMode: .afterMinutes,
+            tipDismissMinutes: 5,
+            dismissedAfterJoinID: meeting.id,
+            latchedMeetingID: meeting.id
+        )
+        XCTAssertNil(
+            MeetingLeadTipSelector.select(from: [meeting], input: stillLatched),
+            "入会后 tip 须消失：dismissed 优先于 latch"
+        )
+    }
+
+    /// meeting-tip-stays-after-join：会话级 join 须立刻撤 tip，且后续 publish 不得贴回同一场。
+    @MainActor
+    func test_meetingTipAfterJoin_sessionDismissesAndRejectsRepublish() {
+        let session = MeetingLeadSession.shared
+        session.resetForTests()
+        IslandNoticeCenter.shared.dismiss(id: nil)
+        defer {
+            session.resetForTests()
+            IslandNoticeCenter.shared.dismiss(id: nil)
+        }
+
+        var openedURLs: [URL] = []
+        session.openURLHandler = { url in
+            openedURLs.append(url)
+            return true
+        }
+
+        let meetingID = "m-session-join"
+        let joinURL = URL(string: "https://zoom.us/j/123456789")!
+        let now = Date()
+        let snap = MeetingLeadSession.Snapshot(
+            meetingID: meetingID,
+            title: "入会后须撤 tip",
+            startDate: now.addingTimeInterval(3 * 60),
+            endDate: now.addingTimeInterval(33 * 60),
+            secondsToStart: 3 * 60,
+            showJoin: true,
+            showAuth: false,
+            joinOpenURL: joinURL,
+            joinSourceURL: joinURL,
+            joinPlatform: "zoom"
+        )
+        session.publish(snap, reason: "testPresent")
+        XCTAssertEqual(session.snapshot?.meetingID, meetingID)
+        XCTAssertEqual(IslandNoticeCenter.shared.current?.id, "meeting.lead.\(meetingID)")
+
+        session.joinFromNotice()
+        XCTAssertEqual(openedURLs, [joinURL])
+        XCTAssertEqual(session.dismissedAfterJoinID, meetingID)
+        XCTAssertNil(session.snapshot, "入会后快照须清空")
+        XCTAssertNotEqual(
+            IslandNoticeCenter.shared.current?.id,
+            "meeting.lead.\(meetingID)",
+            "入会后岛上须撤回会前提示"
+        )
+
+        // 模拟 widget tick / joinedAdvance 再次投递同一场：须拒收。
+        session.publish(snap, reason: "tick")
+        XCTAssertNil(session.snapshot, "已入会场次不得再 present")
+        XCTAssertEqual(session.dismissedAfterJoinID, meetingID)
+        XCTAssertNotEqual(
+            IslandNoticeCenter.shared.current?.id,
+            "meeting.lead.\(meetingID)"
+        )
+    }
+
+    /// meeting-tip-stays-after-join：open 失败也必须撤 tip 并打 dismissed。
+    @MainActor
+    func test_meetingTipAfterJoin_openFailureStillDismissesTip() {
+        let session = MeetingLeadSession.shared
+        session.resetForTests()
+        IslandNoticeCenter.shared.dismiss(id: nil)
+        defer {
+            session.resetForTests()
+            IslandNoticeCenter.shared.dismiss(id: nil)
+        }
+
+        session.openURLHandler = { _ in false }
+
+        let meetingID = "m-open-fail"
+        let joinURL = URL(string: "https://meeting.tencent.com/dm/abc")!
+        let now = Date()
+        session.publish(
+            .init(
+                meetingID: meetingID,
+                title: "打开失败仍撤",
+                startDate: now.addingTimeInterval(2 * 60),
+                endDate: now.addingTimeInterval(32 * 60),
+                secondsToStart: 2 * 60,
+                showJoin: true,
+                showAuth: false,
+                joinOpenURL: joinURL,
+                joinSourceURL: joinURL,
+                joinPlatform: "tencent"
+            ),
+            reason: "testPresent"
+        )
+        XCTAssertNotNil(session.snapshot)
+
+        session.joinFromNotice()
+        XCTAssertEqual(session.dismissedAfterJoinID, meetingID)
+        XCTAssertNil(session.snapshot)
+        XCTAssertNotEqual(
+            IslandNoticeCenter.shared.current?.id,
+            "meeting.lead.\(meetingID)"
+        )
     }
 
     func test_islandFocusPolicy_neverStealsOnHoverOrPlainClick() {

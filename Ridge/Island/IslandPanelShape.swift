@@ -8,6 +8,10 @@ enum IslandOutlineStyle: String, Equatable {
     case capsule
     /// 正圆（「已复制」刘海右侧 Ø32 微岛）。
     case circle
+    /// 左翼 flush：上直角，仅左下圆（贴刘海内侧直角）。
+    case flushLeading
+    /// 右翼 flush：上直角，仅右下圆。
+    case flushTrailing
 }
 
 /// 上直角、下圆角（常驻面板）。
@@ -131,6 +135,53 @@ struct IslandCircleShape: Shape {
     }
 }
 
+/// 单侧 flush 翼：上直角贴顶；外侧下角圆、贴刘海内侧直角。
+struct IslandFlushWingOutlineShape: Shape {
+    var side: IslandFlushWingStyle.Side
+    var bottomRadius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let r = min(max(0, bottomRadius), rect.height / 2, rect.width / 2)
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        switch side {
+        case .leading:
+            // 右直边（贴刘海）→ 底 → 左下圆
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            if r < 0.5 {
+                path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            } else {
+                path.addLine(to: CGPoint(x: rect.minX + r, y: rect.maxY))
+                path.addArc(
+                    center: CGPoint(x: rect.minX + r, y: rect.maxY - r),
+                    radius: r,
+                    startAngle: .degrees(90),
+                    endAngle: .degrees(180),
+                    clockwise: false
+                )
+            }
+        case .trailing:
+            // 右下圆 → 底 → 左直边（贴刘海）
+            if r < 0.5 {
+                path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            } else {
+                path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
+                path.addArc(
+                    center: CGPoint(x: rect.maxX - r, y: rect.maxY - r),
+                    radius: r,
+                    startAngle: .degrees(0),
+                    endAngle: .degrees(90),
+                    clockwise: false
+                )
+            }
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
 /// 按 `IslandOutlineStyle` 选择面板或四角等弧路径（SwiftUI clip / AppKit fill 共用）。
 struct IslandOutlineShape: Shape {
     var style: IslandOutlineStyle
@@ -144,6 +195,16 @@ struct IslandOutlineShape: Shape {
             return IslandCapsuleShape(cornerRadius: bottomRadius).path(in: rect)
         case .circle:
             return IslandCircleShape().path(in: rect)
+        case .flushLeading:
+            return IslandFlushWingOutlineShape(
+                side: .leading,
+                bottomRadius: bottomRadius > 0.5 ? bottomRadius : IslandFlushWingStyle.outerBottomRadius
+            ).path(in: rect)
+        case .flushTrailing:
+            return IslandFlushWingOutlineShape(
+                side: .trailing,
+                bottomRadius: bottomRadius > 0.5 ? bottomRadius : IslandFlushWingStyle.outerBottomRadius
+            ).path(in: rect)
         }
     }
 }

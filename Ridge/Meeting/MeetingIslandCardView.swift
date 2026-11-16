@@ -16,7 +16,7 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
         return .critical
     }
 
-    /// 系统绿 #34C759 / 琥珀 #FF9500 / 猩红 #FF3B30。
+    /// 系统绿 #34C759 / 琥珀 #FF9500 / 猩红 #FF3B30（满岛 tip 原色，勿改成 flush 稿色）。
     var accent: Color {
         switch self {
         case .relaxed:
@@ -30,6 +30,7 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
 
     var settingsTint: Color { accent }
 
+    /// 满岛 tip 左翼小标：充裕日历 / 临近视频 / 紧急电波。
     var symbolName: String {
         switch self {
         case .relaxed: return "calendar"
@@ -37,6 +38,9 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
         case .critical: return "dot.radiowaves.left.and.right"
         }
     }
+
+    /// 半块 flush 用日程图标（非视频会议 cam）；满岛三态仍走 `symbolName`。
+    var flushSymbolName: String { "calendar" }
 
     var stageTitle: String {
         switch self {
@@ -66,6 +70,7 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// 满岛 tip 入会钮字色（原样）。
     var joinForeground: Color {
         switch self {
         case .relaxed: return .black
@@ -74,6 +79,7 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// 满岛 tip 入会钮底色（原样）。
     var joinBackground: Color {
         switch self {
         case .relaxed: return .white
@@ -88,23 +94,45 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
         case .relaxed, .critical: return nil
         }
     }
+
+    /// 仅半块 flush 翼悬停 morph 底色；禁止拿去改满岛入会钮。
+    var joinMorphBackground: Color {
+        switch self {
+        case .relaxed: return IslandFlushWingStyle.joinFill
+        case .warning, .critical: return accent
+        }
+    }
+
+    /// 仅半块 flush 档位映射；满岛仍用 `accent` 原色。
+    var flushSeverity: IslandFlushWingStyle.Severity {
+        switch self {
+        case .relaxed: return .info
+        case .warning: return .warning
+        case .critical: return .danger
+        }
+    }
 }
 
-/// 会议岛 tip：左翼图标+标题 · 中置纯黑刘海 · 右翼脉冲+MM:SS+进入。
-/// 壳层 `usesNotchWingChrome`；外形上直角、下圆角（贴顶融刘海）。
-/// 根视图禁止外圈 padding。
+/// 会议岛 tip：满岛仍为左右翼贴刘海 + 常显入会钮。
+/// 仅双槽半块（`flushSide`）才走 flush 胶囊与悬停 morph；不得改满岛样式。
+/// 壳层 `usesNotchWingChrome`；根视图禁止外圈 padding。
 struct MeetingIslandCardView: View {
     let title: String
     let secondsToStart: TimeInterval
     let showJoin: Bool
     let showAuth: Bool
     var compact: Bool = false
+    /// 非 nil 时画单侧 flush 胶囊（双槽左/右），不再撑满双翼。
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    /// 真岛双槽：只画内容，不套黑胶囊（对齐音乐左翼；壳层已铺 flush 黑底）。
+    var bareWingContent: Bool = false
     var previewNotchWidth: CGFloat = 110
     var onJoin: (() -> Void)?
     var onRequestAuth: (() -> Void)?
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
     @Environment(\.islandNotchHeight) private var envNotchHeight
+    @State private var isHovering = false
 
     private var urgency: MeetingLeadUrgency {
         MeetingLeadUrgency.resolve(secondsToStart: secondsToStart)
@@ -115,6 +143,7 @@ struct MeetingIslandCardView: View {
     }
 
     private var barHeight: CGFloat {
+        if flushSide != nil { return IslandFlushWingStyle.height }
         if compact { return 30 }
         return max(envNotchHeight, 32)
     }
@@ -129,9 +158,28 @@ struct MeetingIslandCardView: View {
 
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
 
+    /// 仅半块 flush：悬停（或授权）morph「入会」。满岛始终常显入会钮，不走此态。
+    private var showsFlushJoinMorph: Bool {
+        flushSide != nil && (showAuth || (showJoin && isHovering))
+    }
+
     var body: some View {
-        // 左右 / 底外边距只由壳层 `IslandChrome`（notchWing）提供；根上禁止再叠 padding。
-        // 主轴 HStack 承载左右内容（勿用全清底+overlay，易把右翼按钮点穿）。
+        Group {
+            if let flushSide {
+                flushCapsule(side: flushSide)
+                    .onHover { hovering in
+                        isHovering = hovering
+                    }
+            } else {
+                fullWingBody
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var fullWingBody: some View {
+        // 满岛原样：左标题 · 右脉冲+倒计时+入会钮常显。禁止叠 hover morph。
         HStack(spacing: 0) {
             leftCluster
                 .frame(width: wingWidth + notchWidth * 0.48, alignment: .leading)
@@ -141,8 +189,86 @@ struct MeetingIslandCardView: View {
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(accessibilityText)
+    }
+
+    /// 双槽半块专用：外图标 | 倒计时 | 点；悬停 morph「入会」。不得影响满岛。
+    private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
+        let shape = IslandFlushWingStyle.capsuleShape(side: side)
+        let spacer = bareWingContent
+            ? IslandFlushWingStyle.bareContentSpacerMin
+            : CGFloat(4)
+        let idleRow = HStack(spacing: 0) {
+            Image(systemName: urgency.flushSymbolName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(urgency.accent)
+                .symbolRenderingMode(.monochrome)
+            Spacer(minLength: spacer)
+            Text(Self.countdownText(secondsToStart: secondsToStart))
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(urgency.timerColor)
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: spacer)
+            MeetingLeadPulseDot(accent: urgency.accent, compact: true)
+        }
+        .opacity(showsFlushJoinMorph ? 0 : 1)
+        .scaleEffect(showsFlushJoinMorph ? 0.95 : 1)
+
+        let joinRow = HStack(spacing: 4) {
+            Text(showAuth ? L10n.Common.authorize : urgency.joinTitle)
+                .font(.system(size: 13, weight: .semibold))
+            Image(systemName: "arrow.forward")
+                .font(.system(size: 12, weight: .semibold))
+        }
+        .foregroundStyle(Color.white)
+        .opacity(showsFlushJoinMorph ? 1 : 0)
+        .scaleEffect(showsFlushJoinMorph ? 1 : 0.95)
+
+        let stack = ZStack {
+            if bareWingContent {
+                idleRow.islandBareFlushWingContent()
+                joinRow
+            } else {
+                idleRow.padding(.horizontal, IslandFlushWingStyle.horizontalPadding)
+                joinRow
+            }
+        }
+
+        let tap = {
+            guard showsFlushJoinMorph else { return }
+            if showAuth {
+                onRequestAuth?()
+            } else if showJoin {
+                onJoin?()
+            }
+        }
+
+        if bareWingContent {
+            // 壳层已铺黑底；morph 时在本翼叠入会色，勿再套固定宽黑胶囊。
+            return AnyView(
+                stack
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background {
+                        if showsFlushJoinMorph {
+                            urgency.joinMorphBackground
+                        }
+                    }
+                    .animation(.easeOut(duration: 0.18), value: showsFlushJoinMorph)
+                    .contentShape(Rectangle())
+                    .onTapGesture(perform: tap)
+            )
+        }
+        return AnyView(
+            stack
+                .frame(width: IslandFlushWingStyle.width, height: IslandFlushWingStyle.height)
+                .background(
+                    shape.fill(showsFlushJoinMorph ? urgency.joinMorphBackground : Color.black)
+                )
+                .clipShape(shape)
+                .animation(.easeOut(duration: 0.18), value: showsFlushJoinMorph)
+                .contentShape(shape)
+                .onTapGesture(perform: tap)
+        )
     }
 
     // MARK: - Left
@@ -285,8 +411,12 @@ struct MeetingIslandCardView: View {
 /// 灵动岛是非 key 的 LSUIElement 面板，`TimelineView.animation` / `withAnimation` 常不跑。
 private struct MeetingLeadPulseDot: View {
     let accent: Color
+    var compact: Bool = false
     private let period: TimeInterval = 0.9
     @State private var phase: CGFloat = 0
+
+    private var core: CGFloat { compact ? 6 : 6 }
+    private var box: CGFloat { compact ? 10 : 16 }
 
     var body: some View {
         let ringScale = 1 + 1.2 * phase
@@ -295,15 +425,15 @@ private struct MeetingLeadPulseDot: View {
         ZStack {
             Circle()
                 .fill(accent.opacity(0.55))
-                .frame(width: 6, height: 6)
+                .frame(width: core, height: core)
                 .scaleEffect(ringScale)
                 .opacity(ringOpacity)
             Circle()
                 .fill(accent)
-                .frame(width: 6, height: 6)
+                .frame(width: core, height: core)
                 .opacity(coreOpacity)
         }
-        .frame(width: 16, height: 16)
+        .frame(width: box, height: box)
         .onReceive(
             Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
         ) { date in

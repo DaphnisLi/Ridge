@@ -27,27 +27,26 @@ final class MeetingCountdownWidget: IslandWidget {
 
     private var tick: Timer?
     private var observers: Set<AnyCancellable> = []
-    /// 用户已点击入会的会议 id；该场会不再上岛，直到换下一场。
-    private var dismissedAfterJoinID: String?
     /// 已进入提醒窗口的会议 id：持续展示到入会或保留窗口结束。
+    /// 「已入会」权威在 `MeetingLeadSession.dismissedAfterJoinID`，勿再在 widget 上另存一份。
     private var latchedMeetingID: String?
 
     init(context: WidgetContext) {
         self.context = context
         calendar.start()
-        // 入会打开链接由 MeetingLeadSession 自持；此处只记「已入会」以免同场会再上岛。
+        // 入会打开链接与 dismissed 标均由 MeetingLeadSession 自持；此处只清 latch。
+        // 禁止在此 reevaluate：须等 session 先 publish(nil)，再由 onTipExpired/joinedAdvance 改选。
         MeetingLeadSession.shared.onJoined = { [weak self] meetingID in
-            self?.dismissedAfterJoinID = meetingID
             self?.latchedMeetingID = nil
-            AppLog.info("Meeting", "会话入会回调：已标记 dismissed", [
-                "meeting": String(meetingID.prefix(8))
+            AppLog.info("Meeting", "会话入会回调：已清 latch", [
+                "meeting": String(meetingID.prefix(8)),
+                "dismissed": MeetingLeadSession.shared.dismissedAfterJoinID ?? ""
             ])
-            // 入会撤掉本场后，立刻看是否该提示下一场。
-            self?.reevaluate(reason: "joinedAdvance")
         }
         MeetingLeadSession.shared.onTipExpired = { [weak self] reason in
-            // 开始后保留窗口结束：清 latch，改选下一场。
+            // 开始后保留窗口结束 / 入会后改选：清 latch，立刻看下一场。
             self?.latchedMeetingID = nil
+            AppLog.info("Meeting", "会前提示到期/入会后改选", ["reason": reason])
             self?.reevaluate(reason: reason)
         }
         MeetingLeadSession.shared.onRequestAuth = { [weak self] in self?.requestCalendarAccess() }
@@ -137,12 +136,10 @@ final class MeetingCountdownWidget: IslandWidget {
         }
 
         let meetings = calendar.upcomingMeetings
-        // 已入会场次若不在列表（已结束），清 dismissed，避免脏状态挡下一场。
-        if let dismissed = dismissedAfterJoinID,
-           !meetings.contains(where: { $0.id == dismissed })
-        {
-            dismissedAfterJoinID = nil
-        }
+        let meetingIDs = Set(meetings.map(\.id))
+        // 已入会场次若不在列表（已结束），清会话级 dismissed，避免脏状态挡下一场。
+        MeetingLeadSession.shared.clearDismissedAfterJoinIfAbsent(from: meetingIDs)
+        let dismissedAfterJoinID = MeetingLeadSession.shared.dismissedAfterJoinID
 
         let input = MeetingLeadTipSelector.Input(
             now: now,

@@ -17,7 +17,7 @@ enum AIUsageStage: String, Hashable {
     case critical
     case unknown
 
-    /// 岛上胶囊强调色（对照新稿：绿 / `#facc15` / error）。
+    /// 满岛 tip 强调色（原样：绿 / `#facc15` / error）；半块 flush 用 `flushAccent`。
     var accent: Color {
         switch self {
         case .abundant:
@@ -30,6 +30,17 @@ enum AIUsageStage: String, Hashable {
             return Color.white.opacity(0.45)
         }
     }
+
+    /// 仅双槽半块用；禁止改 `accent` 去迁就 flush 稿。
+    var flushSeverity: IslandFlushWingStyle.Severity {
+        switch self {
+        case .abundant, .unknown: return .info
+        case .warning: return .warning
+        case .critical: return .danger
+        }
+    }
+
+    var flushAccent: Color { flushSeverity.accent }
 
     /// 设置阈值卡边框 / 点色。
     var settingsAccent: Color {

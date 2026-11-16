@@ -244,51 +244,81 @@ private struct IslandNoticeCardView: View {
         case .fullNotice(let payload):
             noticeBody(payload, compact: false)
         case .dual(let left, let right):
-            HStack(alignment: .center, spacing: 8) {
-                sideView(left, compact: false)
-                    .layoutPriority(1)
-                sideView(right, compact: true)
-                    .layoutPriority(0)
+            // 贴刘海：左翼 | 刘海空隙 | 右翼；高=刘海。已复制仍用 Ø32，勿再包黑框。
+            let rightOrb = noticeCenter.slots.usesDualFlushWithRightOrb
+            IslandDualNotchWingRow(rightIsOrb: rightOrb) {
+                sideView(left, flushSide: .leading)
+            } right: {
+                sideView(right, flushSide: .trailing)
             }
         }
     }
 
     @ViewBuilder
-    private func sideView(_ side: IslandNoticeLayoutSide, compact: Bool) -> some View {
+    private func sideView(
+        _ side: IslandNoticeLayoutSide,
+        flushSide: IslandFlushWingStyle.Side
+    ) -> some View {
         switch side {
         case .notice(let payload):
-            noticeBody(payload, compact: compact)
+            // 真岛双槽：一律 bare（壳层黑底），对齐音乐左翼标准。
+            noticeBody(payload, flushSide: flushSide, bareWingContent: true)
         case .focus:
-            FocusTimerStandbyView(snapshot: focusTimer.snapshot)
-                .frame(minWidth: compact ? 96 : 140)
+            FocusTimerStandbyView(
+                snapshot: focusTimer.snapshot,
+                flushSide: flushSide,
+                bareWingContent: true
+            )
         case .media:
             if let snap = NowPlayingService.shared.snapshot {
                 MediaCompactStandbyView(
                     title: snap.title,
                     artwork: snap.artwork,
                     elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
-                    isPlaying: snap.isPlaying
+                    isPlaying: snap.isPlaying,
+                    flushSide: flushSide,
+                    bareWingContent: true
                 )
-                .frame(minWidth: compact ? 96 : 140)
             }
         }
     }
 
     @ViewBuilder
-    private func noticeBody(_ payload: IslandNoticePayload, compact: Bool) -> some View {
+    private func noticeBody(
+        _ payload: IslandNoticePayload,
+        compact: Bool = false,
+        flushSide: IslandFlushWingStyle.Side? = nil,
+        bareWingContent: Bool = false
+    ) -> some View {
         switch payload {
         case .processEnded(let notice):
             ProcessEndedNoticeCard(notice: notice)
         case .ramPressure(let notice):
             RAMPressureNoticeCard(notice: notice)
         case .peripheralLowBattery(let notice):
-            PeripheralBatteryNoticeCard(notice: notice, style: .low)
+            PeripheralBatteryNoticeCard(
+                notice: notice,
+                style: .low,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .peripheralFullCharge(let notice):
-            PeripheralBatteryNoticeCard(notice: notice, style: .full)
+            PeripheralBatteryNoticeCard(
+                notice: notice,
+                style: .full,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .peripheralConnected(let notice):
-            PeripheralBatteryNoticeCard(notice: notice, style: .connect)
+            PeripheralBatteryNoticeCard(
+                notice: notice,
+                style: .connect,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
+                // 单独 / 双槽右侧一律现有 Ø32 圆岛；双槽时不要外包 Spacer 黑翼。
                 ClipboardCopiedIslandView(detail: text, animationToken: id)
             } else {
                 ClipboardCaptureHintNoticeCard(text: text, symbol: symbol)
@@ -303,12 +333,20 @@ private struct IslandNoticeCardView: View {
                 remainingPercent: remainingPercent,
                 stage: stage,
                 resetsAt: resetsAt,
-                errorMessage: nil
+                errorMessage: nil,
+                compact: compact,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
             )
         case .moveReminder(let notice):
-            MoveReminderNoticeCard(notice: notice, compact: compact)
+            MoveReminderNoticeCard(
+                notice: notice,
+                compact: compact,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .meetingLead:
-            MeetingLeadNoticeCard()
+            MeetingLeadNoticeCard(flushSide: flushSide, bareWingContent: bareWingContent)
         }
     }
 }
@@ -316,6 +354,8 @@ private struct IslandNoticeCardView: View {
 /// 会前提示卡：矮胶囊；入会后由会话撤提示。
 private struct MeetingLeadNoticeCard: View {
     @ObservedObject private var lead = MeetingLeadSession.shared
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    var bareWingContent: Bool = false
 
     var body: some View {
         if let snap = lead.snapshot {
@@ -324,6 +364,8 @@ private struct MeetingLeadNoticeCard: View {
                 secondsToStart: snap.secondsToStart,
                 showJoin: snap.showJoin,
                 showAuth: snap.showAuth,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent,
                 onJoin: { MeetingLeadSession.shared.joinFromNotice() },
                 onRequestAuth: { MeetingLeadSession.shared.requestAuthFromNotice() }
             )
@@ -365,20 +407,20 @@ struct PeripheralBatteryNoticeCard: View {
     let notice: BatteryPeripheralNotice
     let style: Style
     var compact: Bool = false
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    /// 真岛双槽：只画内容，不套黑胶囊（壳层已铺 flush 黑底）。
+    var bareWingContent: Bool = false
     var previewNotchWidth: CGFloat = 110
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
     @Environment(\.islandNotchHeight) private var envNotchHeight
-
-    private let accentRed = Color(.sRGB, red: 0.86, green: 0.22, blue: 0.24, opacity: 1)
-    private let accentGreen = Color(.sRGB, red: 0.18, green: 0.62, blue: 0.34, opacity: 1)
-    private let accentBlue = Color(.sRGB, red: 0.20, green: 0.48, blue: 0.96, opacity: 1)
 
     private var notchWidth: CGFloat {
         compact ? previewNotchWidth : max(envNotchWidth, 110)
     }
 
     private var barHeight: CGFloat {
+        if flushSide != nil { return IslandFlushWingStyle.height }
         if compact { return 30 }
         return max(envNotchHeight, 32)
     }
@@ -402,11 +444,23 @@ struct PeripheralBatteryNoticeCard: View {
         }
     }
 
+    /// 满岛 tip 原色（红/绿/蓝）；半块 flush 另用 `flushTint`。
     private var statusTint: Color {
         switch style {
-        case .low: return accentRed
-        case .full: return accentGreen
-        case .connect: return accentBlue
+        case .low: return Color(.sRGB, red: 0.86, green: 0.22, blue: 0.24, opacity: 1)
+        case .full: return Color(.sRGB, red: 0.18, green: 0.62, blue: 0.34, opacity: 1)
+        case .connect: return Color(.sRGB, red: 0.20, green: 0.48, blue: 0.96, opacity: 1)
+        }
+    }
+
+    /// 仅双槽半块色；禁止改 `statusTint` 迁就 flush 稿。
+    private var flushTint: Color {
+        switch style {
+        case .low:
+            let pct = notice.percent ?? 0
+            return (pct <= 5 ? IslandFlushWingStyle.Severity.danger : .warning).accent
+        case .full: return IslandFlushWingStyle.accentSuccess
+        case .connect: return IslandFlushWingStyle.accentInfoSolid
         }
     }
 
@@ -460,6 +514,20 @@ struct PeripheralBatteryNoticeCard: View {
     }
 
     var body: some View {
+        Group {
+            if let flushSide {
+                flushCapsule(side: flushSide)
+            } else {
+                fullWingBody
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { openBatteryLive(reason: "\(style)NoticeTap") }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(displayName)，\(statusText)")
+    }
+
+    private var fullWingBody: some View {
         HStack(spacing: 0) {
             leftCluster
                 .frame(width: wingWidth + notchWidth * 0.35, alignment: .leading)
@@ -469,10 +537,45 @@ struct PeripheralBatteryNoticeCard: View {
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
-        .contentShape(Rectangle())
-        .onTapGesture { openBatteryLive(reason: "\(style)NoticeTap") }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(displayName)，\(statusText)")
+    }
+
+    /// 仅双槽半块：外图标 | 电量% | 刘海侧电量条；满岛仍走 `fullWingBody` + `statusTint`。
+    private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
+        let pct = notice.percent ?? (style == .full ? 100 : 0)
+        let spacer = bareWingContent
+            ? IslandFlushWingStyle.bareContentSpacerMin
+            : CGFloat(4)
+        let tint = flushTint
+        let row = HStack(spacing: 0) {
+            Image(systemName: notice.kind.systemSymbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(style == .connect ? Color.white.opacity(0.85) : tint)
+            Spacer(minLength: spacer)
+            Text("\(pct)%")
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.92))
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: spacer)
+            flushBatteryBar(percent: pct, tint: tint)
+        }
+        if bareWingContent {
+            return AnyView(row.islandBareFlushWingContent())
+        }
+        return AnyView(IslandFlushWingCapsule(side: side) { row })
+    }
+
+    private func flushBatteryBar(percent: Int, tint: Color) -> some View {
+        let fill = min(max(CGFloat(percent) / 100, 0.05), 1)
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .strokeBorder(Color.white.opacity(0.50), lineWidth: 1)
+            .frame(width: 14, height: 8)
+            .overlay(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 1, style: .continuous)
+                    .fill(tint)
+                    .padding(1.5)
+                    .frame(width: max(14 * fill, 3), height: 8)
+            }
     }
 
     private var leftCluster: some View {
@@ -496,7 +599,8 @@ struct PeripheralBatteryNoticeCard: View {
     }
 
     private var statusPill: some View {
-        HStack(spacing: 5) {
+        let connectSoft = style == .connect
+        return HStack(spacing: 5) {
             Image(systemName: statusSymbol)
                 .font(.system(size: compact ? 9 : 10, weight: .semibold))
             Text(statusText)
@@ -504,13 +608,18 @@ struct PeripheralBatteryNoticeCard: View {
                 .monospacedDigit()
                 .lineLimit(1)
         }
-        .foregroundStyle(.white)
+        // 「已连接」：蓝字 + 浅底描边（旧 tip）；低电/满电仍实心填充。
+        .foregroundStyle(connectSoft ? statusTint : Color.white)
         .padding(.horizontal, compact ? 8 : 10)
         .padding(.vertical, compact ? 4 : 5)
         .background(
             Capsule(style: .continuous)
-                .fill(statusTint)
-                .shadow(color: statusTint.opacity(0.45), radius: 6, y: 0)
+                .fill(connectSoft ? statusTint.opacity(0.14) : statusTint)
+                .shadow(color: statusTint.opacity(connectSoft ? 0.45 : 0.45), radius: 6, y: 0)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .strokeBorder(connectSoft ? statusTint.opacity(0.75) : Color.clear, lineWidth: 1)
         )
     }
 

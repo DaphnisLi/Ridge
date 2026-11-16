@@ -96,13 +96,53 @@ enum IslandChrome {
         return CGSize(width: width, height: height)
     }
 
+    /// 双槽左翼**内容**宽（音乐/专注）；过宽会让音符与时长之间空洞过大。
+    static let dualFlushLeftWingWidth: CGFloat = 120
+
+    /// 左右翼黑底伸进刘海弧度的空宽（只铺黑、禁止放图标/文案）；过小会在刘海圆角处露缺口。
+    static let dualFlushNotchUnderlap: CGFloat = 12
+
+    /// 兼容旧名：同 `dualFlushNotchUnderlap`。
+    static var dualFlushLeftNotchBleed: CGFloat { dualFlushNotchUnderlap }
+
+    /// 双槽右侧内容宽（圆岛或与左翼同宽的 flush）。
+    /// 仅「已复制」圆岛与刘海外缘留 `notchRightOrbGap`；伸进刘海的 underlap 另算在 notch 槽内。
+    /// 非圆岛右侧与左翼同宽（音乐标准），禁止再用窄胶囊 112 造成左右不对称。
+    static func dualFlushRightSideWidth(rightIsOrb: Bool) -> CGFloat {
+        if rightIsOrb {
+            return notchRightOrbGap + notchRightOrbDiameter
+        }
+        return dualFlushLeftWingWidth
+    }
+
+    /// 双槽贴刘海：高=刘海；右为「已复制」圆岛时左宽右窄，勿整条黑底包住圆岛。
+    /// 总宽不含 underlap（underlap 吃进 notch 槽，由黑底铺进弧度）。
+    static func preparedDualFlushPanelSize(
+        notchWidth: CGFloat,
+        notchHeight: CGFloat,
+        rightIsOrb: Bool = false
+    ) -> CGSize {
+        let height = NotchGeometry.compactPanelHeight(notchHeight: notchHeight)
+        let notch = max(notchWidth, 1)
+        let width = dualFlushLeftWingWidth + notch + dualFlushRightSideWidth(rightIsOrb: rightIsOrb)
+        return CGSize(width: width, height: height)
+    }
+
+    /// 非对称双槽水平偏移：让内容中的刘海空隙对准硬件刘海，多出来的左翼往左伸（勿往右顶进刘海）。
+    /// 公式：`(rightSide - leftWing) / 2`；左更宽时为负。
+    static func dualFlushHorizontalOffsetX(rightIsOrb: Bool) -> CGFloat {
+        (dualFlushRightSideWidth(rightIsOrb: rightIsOrb) - dualFlushLeftWingWidth) / 2
+    }
+
     /// 壳层表面类型：决定顶/底/左右 inset；`IslandBody` 与测试共用。
     /// 外形裁切另见 `IslandOutlineStyle`（提示胶囊 / 常驻上直角）。
     enum Surface: String, CaseIterable {
         /// 展开内容页（控制台 / 面板类 widget）。
         case expanded
-        /// 遗留左右翼 tip inset（业务已改胶囊，勿再选用）。
+        /// 遗留左右翼 tip inset（会议 tip 等）。
         case notchWingTip
+        /// 音乐/专注 + 短 C：贴刘海左右翼，高=刘海；内容自撑，零 inset。
+        case dualFlush
         /// 刘海正下方矮胶囊（遗留短 tip）。
         case shortBelowNotchTip
         /// 刘海右侧圆形微岛（「已复制」方案 02）；内容自撑 Ø32，无外圈 inset。
@@ -126,6 +166,9 @@ enum IslandChrome {
                 bottom: compactTipBottom,
                 horizontal: contentHorizontal
             )
+        case .dualFlush:
+            // 与刘海同高；左右翼贴边，禁止再叠 tip/notice 边距把内容挤没。
+            return Insets(top: 0, bottom: 0, horizontal: 0)
         case .shortBelowNotchTip:
             return Insets(
                 top: shortTipTopInset(notchHeight: notchHeight),

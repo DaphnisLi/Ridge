@@ -139,16 +139,32 @@ struct FocusTimerIslandCardView: View {
 
 struct FocusTimerStandbyView: View {
     let snapshot: FocusTimerSnapshot
+    /// 双槽一侧：timer + MM:SS + 点。
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    /// 真岛双槽：只画内容，不套黑胶囊。
+    var bareWingContent: Bool = false
 
     private var isOvertime: Bool { snapshot.phase == .overtime }
+    /// 满岛待命原色；半块 flush 另用 `flushAccent`，禁止串色。
     private var ringColor: Color {
         isOvertime
             ? Color(red: 0.96, green: 0.62, blue: 0.04)
             : Color(red: 0.325, green: 0.882, blue: 0.435)
     }
+    private var flushAccent: Color {
+        isOvertime ? IslandFlushWingStyle.accentWarning : IslandFlushWingStyle.accentInfo
+    }
 
     var body: some View {
-        // 左右翼贴边拉开，勿挤在胶囊中段。
+        if flushSide != nil {
+            wingLeadContent(bare: bareWingContent)
+        } else {
+            fullStandbyBody
+        }
+    }
+
+    private var fullStandbyBody: some View {
+        // 满岛待命原样：左右翼贴边；勿改色/布局去迁就半块 flush。
         HStack(spacing: 0) {
             HStack(spacing: 8) {
                 FocusTimerProgressRing(
@@ -178,6 +194,41 @@ struct FocusTimerStandbyView: View {
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func wingLeadContent(bare: Bool) -> some View {
+        let clock = isOvertime
+            ? "+\(FocusTimerFormatting.clock(snapshot.remainingSeconds))"
+            : FocusTimerFormatting.clock(snapshot.remainingSeconds)
+        // 仅双槽半块：外图标 | 时长 | 刘海侧指示点。
+        let spacer = bare
+            ? IslandFlushWingStyle.bareContentSpacerMin
+            : CGFloat(4)
+        let row = HStack(spacing: 0) {
+            Image(systemName: isOvertime ? "alarm.fill" : "timer")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(flushAccent)
+                .symbolRenderingMode(.hierarchical)
+            Spacer(minLength: spacer)
+            Text(clock)
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.95))
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: spacer)
+            Circle()
+                .fill(Color.white.opacity(isOvertime ? 0.55 : 0.40))
+                .frame(width: 4, height: 4)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(isOvertime ? L10n.FocusTimer.overtimeBadge : L10n.FocusTimer.focusing)，\(clock)")
+
+        if bare {
+            return AnyView(row.islandBareFlushWingContent())
+        }
+        return AnyView(
+            IslandFlushWingCapsule(side: flushSide ?? .leading) { row }
+        )
     }
 }
 

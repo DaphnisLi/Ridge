@@ -497,7 +497,7 @@ final class IslandController: NSObject {
         reason.contains("islandNotice") || reason.hasPrefix("noticeSticky")
     }
 
-    /// 瞬时通知展开：按当前槽位写圆岛 / 翼 / 短条，避免被控制台画布盖成刘海宽。
+    /// 瞬时通知展开：按当前槽位写圆岛 / 翼 / 双 flush / 短条，避免被控制台画布盖成刘海宽。
     private func applyNoticeTipPanelSizeIfNeeded(reason: String) {
         let slots = IslandNoticeCenter.shared.slots
         if slots.anyUsesNotchRightOrbChrome {
@@ -508,11 +508,34 @@ final class IslandController: NSObject {
             prepareMeetingWingNoticeLayout(reason: reason)
             return
         }
+        if slots.usesDualFlushChrome {
+            prepareDualFlushNoticeLayout(reason: reason)
+            return
+        }
         if case .fullNotice(let payload) = slots.resolvedLayout,
            payload.usesShortBelowNotchChrome
         {
             prepareShortNoticeLayout(reason: reason)
         }
+    }
+
+    /// 音乐/专注 + 短 C：贴刘海左右翼，高=刘海，禁止抬到会议双翼或掉到下方。
+    func prepareDualFlushNoticeLayout(reason: String) {
+        let rightOrb = IslandNoticeCenter.shared.slots.usesDualFlushWithRightOrb
+        let size = IslandChrome.preparedDualFlushPanelSize(
+            notchWidth: viewModel.notchWidth,
+            notchHeight: viewModel.notchHeight,
+            rightIsOrb: rightOrb
+        )
+        viewModel.forcePanelSize(size, reason: reason)
+        updateInteractiveFrame(expanded: true)
+        AppLog.warn("Island", "双槽贴刘海布局已预备", [
+            "reason": reason,
+            "w": Int(size.width),
+            "h": Int(size.height),
+            "notchW": Int(viewModel.notchWidth),
+            "rightOrb": rightOrb
+        ])
     }
 
     /// 拖入暂存态立刻写成控制台画布，避免切掉 IslandBody 后 Preference 停在刘海尺寸。
@@ -1581,6 +1604,9 @@ final class IslandController: NSObject {
             self?.commitPageSwipe(offset: offset, source: "hostingScroll")
         }
         hostingView = hosting
+        AppLog.info("Island", "Hosting 安全区已清零，贴顶进刘海", [
+            "safeAreaTop": Int(hosting.safeAreaInsets.top)
+        ])
 
         hitTestView.wantsLayer = true
         hitTestView.layer?.backgroundColor = NSColor.clear.cgColor
@@ -1909,12 +1935,20 @@ final class IslandController: NSObject {
         }
     }
 
-    /// 「已复制」圆岛相对刘海中心右偏；其它面板为 0。
+    /// 「已复制」圆岛相对刘海中心右偏；双槽非对称左移让左翼往左伸；其它为 0。
     private func currentPanelHorizontalOffset(panel: CGSize) -> CGFloat {
-        let orbActive = IslandNoticeCenter.shared.slots.anyUsesNotchRightOrbChrome
+        let slots = IslandNoticeCenter.shared.slots
+        let orbActive = slots.anyUsesNotchRightOrbChrome
             || IslandChrome.isNotchRightOrbPanelSize(panel)
-        guard orbActive else { return 0 }
-        return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)
+        if orbActive {
+            return IslandChrome.notchRightOrbCenterOffsetX(notchWidth: viewModel.notchWidth)
+        }
+        if slots.usesDualFlushChrome {
+            return IslandChrome.dualFlushHorizontalOffsetX(
+                rightIsOrb: slots.usesDualFlushWithRightOrb
+            )
+        }
+        return 0
     }
 
     private func applyFullscreen(_ fullscreen: Bool) {

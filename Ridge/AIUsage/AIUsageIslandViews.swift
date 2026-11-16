@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// 岛上 AI 额度瞬时 tip：布局对齐会议（左右翼贴刘海）。
-/// 左：双环点 + 名 + 彩色%；右：重置倒计时（>24h / ≤24h / ≤1h 三档）。
+/// 岛上 AI 额度瞬时 tip：满岛左右翼贴刘海；双槽一侧 flush 胶囊（✦ + % + 点）。
 /// 壳层 `usesNotchWingChrome`；根视图禁止外圈 padding。
 struct AIUsageIslandCardView: View {
     let providerName: String
@@ -10,6 +9,9 @@ struct AIUsageIslandCardView: View {
     let resetsAt: Date?
     let errorMessage: String?
     var compact: Bool = false
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    /// 真岛双槽：只画内容，不套黑胶囊（对齐音乐左翼）。
+    var bareWingContent: Bool = false
     var previewNotchWidth: CGFloat = 110
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
@@ -20,6 +22,7 @@ struct AIUsageIslandCardView: View {
     }
 
     private var barHeight: CGFloat {
+        if flushSide != nil { return IslandFlushWingStyle.height }
         if compact { return 30 }
         return max(envNotchHeight, 32)
     }
@@ -35,6 +38,18 @@ struct AIUsageIslandCardView: View {
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
 
     var body: some View {
+        Group {
+            if let flushSide {
+                flushCapsule(side: flushSide)
+            } else {
+                fullWingBody
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var fullWingBody: some View {
         HStack(spacing: 0) {
             leftCluster
                 .frame(width: wingWidth + notchWidth * 0.48, alignment: .leading)
@@ -44,8 +59,34 @@ struct AIUsageIslandCardView: View {
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityText)
+    }
+
+    /// 仅双槽半块：外 ✦ | 百分比 | 刘海侧脉冲点；满岛仍走 `fullWingBody` + `stage.accent`。
+    private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
+        let spacer = bareWingContent
+            ? IslandFlushWingStyle.bareContentSpacerMin
+            : CGFloat(4)
+        let tint = stage.flushAccent
+        let row = HStack(spacing: 0) {
+            Text("✦")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(tint)
+            Spacer(minLength: spacer)
+            Text(percentText)
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.92))
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: spacer)
+            Circle()
+                .fill(tint)
+                .frame(width: 6, height: 6)
+                .modifier(AIUsagePingModifier(enabled: stage == .warning || stage == .critical))
+        }
+        if bareWingContent {
+            return AnyView(row.islandBareFlushWingContent())
+        }
+        return AnyView(IslandFlushWingCapsule(side: side) { row })
     }
 
     // MARK: - Left

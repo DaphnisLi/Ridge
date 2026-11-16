@@ -73,6 +73,18 @@ enum RecurringRegressionManifest {
                 "test_shelfFileDragCancel_",
                 "test_shelfMagneticStagingDouble_"
             ]
+        ),
+        Entry(
+            id: "meeting-tip-stays-after-join",
+            testNamePrefixes: [
+                "test_meetingTipAfterJoin_"
+            ]
+        ),
+        Entry(
+            id: "meeting-join-wrong-calendar-url",
+            testNamePrefixes: [
+                "test_meetingJoinLink_"
+            ]
         )
     ]
 

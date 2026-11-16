@@ -22,12 +22,14 @@
 | `island-hover-retention` | 岛悬停热区退化 | ≥8 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区** | 收起悬停仅刘海；拖文件才用接近区；展开地板 + 中下点用例 |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
-| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 | ≥7 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；**设置设计页 sticky↔收起互殴连震** | `shouldForceStickyNoticeExpand`；同指纹去抖；notice 套圆岛尺寸；`test_shelfCopiedNoticeMiss_*` |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥6 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌 / 混音台滑条静音 / **久坐 +10m 点穿**） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；常驻翼 tip 可点区抬双翼宽；`test_islandFocusPolicy_*` / `test_islandFocusSteal_*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 | `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
+| `meeting-tip-stays-after-join` | 点入会后 tip 仍不消失 | ≥3 | 已入会仍贴着会前提示；tick/改选把同一场贴回 | 会话级 `dismissedAfterJoinID` + publish 拒投；`test_meetingTipAfterJoin_*` |
+| `meeting-join-wrong-calendar-url` | 入会打开日程页而非会议室 | ≥2 | 点入会进 Google/Outlook 日程；钉钉丢会议号 | 跳过日程页；先扫平台；钉钉原 https；`test_meetingJoinLink_*` |
 
 ---
 
@@ -104,12 +106,31 @@
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
 - **recurring:** true  
-- **occurrences:** 7（2026-11-08 偶发；2026-11-09 取色两次；2026-11-10 翼 tip；2026-11-11 货架开关；2026-11-11 keepExpanded；**2026-11-16 设置设计页打开时 Cmd+C：sticky 强制展开 ↔ `pointerOverSettings` 收起互殴 → 触控板连震且圆岛看不见；剪贴板 changeCount 抖动连投**）  
-- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**；**或一点复制触控板一直震**  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**；⑥ **设置设计页 `blocksProgrammaticNoticeExpand` 时 sticky 仍强制 expand，随即被 pointerOverSettings 收起 → 每帧触感**；⑦ **同指纹短时内 changeCount 抖动反复 present + haptic**；⑧ **expand(notice) 误走控制台画布盖掉 Ø32**  
-- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至约 3s 自动收起**；clamp 不得把 Ø32 抬到刘海宽；**`shouldForceStickyNoticeExpand` 在设置设计页/指针在设置窗时禁止**；**设置打开跳过复制上岛**；**同指纹 2s 去抖**；**notice expand 套 `applyNoticeTipPanelSizeIfNeeded`**；展开触感 0.4s 节流  
-- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.usesNotchRightOrbChrome`、`IslandExpandedPanelPolicy`、`ClipboardCopiedIslandView`、`IslandController.blocksProgrammaticNoticeExpand`  
-- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`（含 tip 开/货架关、copy 须 keepExpanded + 圆岛尺寸、**settingsBlocksStickyForceExpand**）、`IslandExpandedPanelPolicyTests`
+- **occurrences:** 9（…；设置页连震；dual 会议翼宽黑条；**2026-11-16 DualNotchWingRow+GeometryReader 在 fixedSize 下理想宽≈0 → 只剩黑底**）  
+- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**；**或一点复制触控板一直震**；**或正在播放时复制灵动岛全黑**  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**；⑥ **设置设计页 sticky↔pointerOverSettings 互殴连震**；⑦ **同指纹短时内 changeCount 抖动反复 present + haptic**；⑧ **expand(notice) 误走控制台画布盖掉 Ø32**；⑨ **media+copy dual 误用会议双翼宽**；⑩ **`IslandDualNotchWingRow` 用 GeometryReader + IslandBody `.fixedSize` → 内容塌宽，OpaqueFill 仍铺满 → 全黑**  
+- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至约 3s 自动收起**；clamp 不得把 Ø32 抬到刘海宽；**`shouldForceStickyNoticeExpand` 在设置设计页/指针在设置窗时禁止**；**设置打开跳过复制上岛**；**同指纹 2s 去抖**；**notice expand 套 `applyNoticeTipPanelSizeIfNeeded`**；展开触感 0.4s 节流；**`usesDualFlushChrome`：左右各自 flush OpaqueFill + underlap；右圆岛时仅左填、Ø32 自绘**；**双槽 tip 一律 `bareWingContent`（对齐音乐三区，禁再套黑胶囊）**；**双槽禁 GeometryReader**；**`Surface.dualFlush` 零 inset**  
+
+- **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.usesNotchRightOrbChrome`、`IslandExpandedPanelPolicy`、`ClipboardCopiedIslandView`、`IslandDualNotchWingRow`、`IslandController.blocksProgrammaticNoticeExpand`、`IslandNoticeSlots.usesDualFlushChrome`、`IslandChrome.Surface.dualFlush`  
+- **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`、`test_islandNoticeDualSlots_*`（含 media+copy dualFlush 零 inset）、`IslandExpandedPanelPolicyTests`
+
+### meeting-join-wrong-calendar-url — 入会打开日程页而非会议室
+
+- **recurring:** true  
+- **occurrences:** 2+（2026-11-16：Google 日程页盖住 Zoom；要求进 recurring 套件）  
+- **症状:** 点「入会」打开 Google/Outlook 日程详情，或钉钉进无会议号的空页  
+- **根因倾向:** EventKit `url` 常是日历事件页；`detect` 先吃任意 https 当 generic，盖住 notes 里的 Zoom/腾讯等；钉钉深链写成通用 conference 丢号  
+- **防护:** 识别并跳过日历事件页；先扫已知平台；泛型 https 仅从 location/notes；钉钉用原 https；会话 `joinOpenURL` 用 detector 结果  
+- **自动化:** `test_meetingJoinLink_*`（日程页跳过 / location·notes 优先 / 泛型仅文本 / Session 打开深链而非日历页）
+
+### meeting-tip-stays-after-join — 点入会后 tip 仍不消失
+
+- **recurring:** true  
+- **occurrences:** 3+（2026-11-16 多次：仅靠 widget weak `onJoined` 打标会丢；tick 再 present）  
+- **症状:** 已点「入会」并拉起客户端，灵动岛会前提示仍在  
+- **根因倾向:** `dismissedAfterJoinID` 只活在 widget；`onJoined` weak self 未命中；1s tick / `joinedAdvance` 在打标前把同一场再 present；`open` 失败曾直接 return 不撤 tip  
+- **防护:** `MeetingLeadSession` 会话级先打 `dismissedAfterJoinID` → `publish(nil)` → `onTipExpired(joinedAdvance)`；`publish` 拒投已入会 id；打开失败也撤 tip；widget 只读会话标  
+- **自动化:** `test_meetingTipAfterJoin_*`（含 Session `joinFromNotice` 撤 tip + 拒再 present + selector latch）
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -374,6 +395,19 @@
 | 2026-11-16 | island-focus-steal +1：久坐 +10m 点穿；翼 tip 可点区抬双翼 + 强制保展开；久坐 preemption=50 |
 | 2026-11-16 | 提示双槽：A 满岛；B+C 左右；专注待命 C 常驻；短 C 暂占后归还；`test_islandNoticeDualSlots_*` |
 | 2026-11-16 | shelf-copied-notice-miss +1：设置设计页 sticky↔收起互殴连震；同指纹去抖；notice expand 套圆岛；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
+| 2026-11-16 | shelf-copied-notice-miss +1：播放中复制 dual 误抬会议翼宽整岛黑；`usesDualFlushChrome` + flush 已复制 |
+| 2026-11-16 | shelf-copied-notice-miss +1：DualNotchWingRow 禁 GeometryReader（fixedSize 塌宽）；`Surface.dualFlush` 零 inset；右翼仍 Ø32 |
+| 2026-11-16 | shelf-copied-notice-miss：双槽右圆岛只填左翼 flush；左宽 148、右 Ø32，勿整条黑框包「已复制」 |
+| 2026-11-16 | shelf-copied-notice-miss：双槽非对称 `dualFlushHorizontalOffsetX` 为负，左翼往左伸、刘海空隙对准硬件 |
+| 2026-11-16 | tip/双槽与刘海竖缝：Hosting `safeAreaInsets` 顶出内容；`ignoresSafeArea` + 宿主 `safeAreaInsets` 清零 |
+| 2026-11-16 | 双槽左右黑底各伸进刘海 `dualFlushNotchUnderlap`（空宽无内容），盖住刘海圆角缺口 |
+| 2026-11-16 | 双槽左右小岛统一音乐标准：`bareWingContent` 三区 + 左右同宽 flush；非圆岛双槽左右分填，禁整板黑底/嵌套黑胶囊 |
+| 2026-11-16 | 两 B（会议+音乐）只展示会议满岛；再出 C → 左会议右 C + dualFlush；`.dual` 不再抬会议双翼宽 |
+| 2026-11-16 | 半块 flush 不得改满岛 tip：会议常显入会钮/原色；AI/外设/专注/音乐满岛色与半块 `flush*` 隔离 |
+| 2026-11-16 | 入会链：跳过 Google/Outlook 日程页；先匹配 Zoom 等；钉钉保留原 https；catalog `meeting-join-wrong-calendar-url` |
+| 2026-11-16 | 入会后 tip 不消失：先打 dismissed 再撤 tip，避免 tick 竞态；catalog `meeting-tip-stays-after-join` |
+| 2026-11-16 | meeting-tip-stays-after-join → recurring：会话级 `dismissedAfterJoinID` + publish 拒投；`test_meetingTipAfterJoin_*` |
+| 2026-11-16 | meeting-join-wrong-calendar-url → recurring：扩写 `test_meetingJoinLink_*`（Outlook/腾讯/泛型/Session） |
 | 2026-11-14 | OCR 无文字静默收起，不上岛「选区内未识别到文字」；catalog `ocr-empty-notice-noise` |
 | 2026-11-14 | 播放中点刘海勿落空态：`dragHold` 先开媒体；catalog `media-click-opens-empty` |
 | 2026-11-11 | 媒体：播放小岛常驻、点按展开大面板；预览去掉「收起待命」；catalog `media-compact-not-resident` |

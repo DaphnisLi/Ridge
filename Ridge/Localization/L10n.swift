@@ -1983,7 +1983,7 @@ enum L10n {
         static var joinA11y: String { tr("meeting.join_a11y", "加入会议") }
         static var joinShort: String { tr("meeting.join_short", "进入") }
         /// 充裕 / 临近态右翼按钮。
-        static var joinEnter: String { tr("meeting.join_enter", "进入") }
+        static var joinEnter: String { tr("meeting.join_enter", "入会") }
         /// 紧急态右翼按钮。
         static var joinEnterNow: String { tr("meeting.join_enter_now", "立即进入") }
         static var urgencyRelaxed: String { tr("meeting.urgency.relaxed", "充裕状态") }

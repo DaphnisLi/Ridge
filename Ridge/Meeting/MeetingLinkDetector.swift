@@ -107,21 +107,64 @@ enum MeetingLinkDetector {
         customApps: [CustomMeetingApp] = [],
         disabledPlatforms: Set<MeetingPlatform> = []
     ) -> MeetingJoinTarget? {
-        var candidates: [URL] = []
-        if let url { candidates.append(url) }
-        candidates.append(contentsOf: extractURLs(from: location))
-        candidates.append(contentsOf: extractURLs(from: notes))
+        // EventKit `url` 常是「打开此日程」网页（Google/Outlook），不是入会链。
+        // 先扫全部候选里的已知平台；泛型 https 只从 location/notes 取，禁止日程页冒充入会。
+        var knownCandidates: [URL] = []
+        if let url, !isLikelyCalendarEventPage(url) {
+            knownCandidates.append(url)
+        }
+        let textURLs = extractURLs(from: location) + extractURLs(from: notes)
+        knownCandidates.append(contentsOf: textURLs.filter { !isLikelyCalendarEventPage($0) })
 
-        for candidate in candidates {
+        for candidate in knownCandidates {
             if let target = map(
                 candidate,
                 customApps: customApps,
-                disabledPlatforms: disabledPlatforms
+                disabledPlatforms: disabledPlatforms,
+                allowGeneric: false
             ) {
+                AppLog.info("Meeting", "入会链接已解析", [
+                    "platform": target.logLabel,
+                    "host": target.sourceURL.host ?? "",
+                    "deep": target.openURL.scheme ?? ""
+                ])
+                return target
+            }
+        }
+
+        for candidate in textURLs where !isLikelyCalendarEventPage(candidate) {
+            if let target = map(
+                candidate,
+                customApps: customApps,
+                disabledPlatforms: disabledPlatforms,
+                allowGeneric: true
+            ) {
+                AppLog.info("Meeting", "入会链接回退泛型网页", [
+                    "host": target.sourceURL.host ?? ""
+                ])
                 return target
             }
         }
         return nil
+    }
+
+    /// 日历「事件详情页」——点开会进日程，不是会议室。
+    static func isLikelyCalendarEventPage(_ url: URL) -> Bool {
+        let host = (url.host ?? "").lowercased()
+        let path = url.path.lowercased()
+        let absolute = url.absoluteString.lowercased()
+        if host.contains("calendar.google.com") { return true }
+        if host.contains("google.com"), path.contains("/calendar") || absolute.contains("eid=") {
+            return true
+        }
+        if host.contains("outlook.office.com")
+            || host.contains("outlook.office365.com")
+            || host.contains("outlook.live.com") {
+            return true
+        }
+        if host.contains("icloud.com"), path.contains("calendar") { return true }
+        if host == "aka.ms", path.contains("meettimes") { return false }
+        return false
     }
 
     static func extractURLs(from text: String?) -> [URL] {
@@ -141,8 +184,11 @@ enum MeetingLinkDetector {
     static func map(
         _ url: URL,
         customApps: [CustomMeetingApp] = [],
-        disabledPlatforms: Set<MeetingPlatform> = []
+        disabledPlatforms: Set<MeetingPlatform> = [],
+        allowGeneric: Bool = true
     ) -> MeetingJoinTarget? {
+        if isLikelyCalendarEventPage(url) { return nil }
+
         let absolute = url.absoluteString
         let host = (url.host ?? "").lowercased()
         let scheme = (url.scheme ?? "").lowercased()
@@ -181,13 +227,11 @@ enum MeetingLinkDetector {
                 return accept(MeetingJoinTarget(platform: .zoom, openURL: deep, sourceURL: url))
             }
             return accept(MeetingJoinTarget(platform: .zoom, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // Google Meet
         if host.contains("meet.google.com") {
             return accept(MeetingJoinTarget(platform: .googleMeet, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // Teams
@@ -196,22 +240,18 @@ enum MeetingLinkDetector {
             || absolute.lowercased().contains("meetup-join") {
             if let deep = teamsDeepLink(from: url) {
                 return accept(MeetingJoinTarget(platform: .teams, openURL: deep, sourceURL: url))
-                    ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
             }
             return accept(MeetingJoinTarget(platform: .teams, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // Webex
         if host.contains("webex.com") {
             return accept(MeetingJoinTarget(platform: .webex, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // FaceTime
         if host.contains("facetime.apple.com") {
             return accept(MeetingJoinTarget(platform: .faceTime, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // 腾讯会议
@@ -220,10 +260,8 @@ enum MeetingLinkDetector {
             || host.contains("tencentmeeting.com") {
             if let deep = tencentDeepLink(from: url) {
                 return accept(MeetingJoinTarget(platform: .tencentMeeting, openURL: deep, sourceURL: url))
-                    ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
             }
             return accept(MeetingJoinTarget(platform: .tencentMeeting, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // 飞书 / Lark
@@ -233,20 +271,15 @@ enum MeetingLinkDetector {
             || host.contains("meeting.feishu.cn") {
             if let deep = larkDeepLink(from: url) {
                 return accept(MeetingJoinTarget(platform: .lark, openURL: deep, sourceURL: url))
-                    ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
             }
             return accept(MeetingJoinTarget(platform: .lark, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
-        // 钉钉
-        if host.contains("meeting.dingtalk.com") || host.contains("dingtalk.com") && absolute.contains("meeting") {
-            if let deep = dingTalkDeepLink(from: url) {
-                return accept(MeetingJoinTarget(platform: .dingTalk, openURL: deep, sourceURL: url))
-                    ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
-            }
+        // 钉钉（注意 && 优先于 ||，须加括号）
+        if host.contains("meeting.dingtalk.com")
+            || (host.contains("dingtalk.com") && absolute.lowercased().contains("meeting")) {
+            // 勿换成无会议号的通用 conference 深链；用原 https，系统会拉起钉钉。
             return accept(MeetingJoinTarget(platform: .dingTalk, openURL: url, sourceURL: url))
-                ?? MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
         // 用户自定义：按域名匹配，打开用日历原链。
@@ -259,11 +292,11 @@ enum MeetingLinkDetector {
             )
         }
 
-        if scheme == "http" || scheme == "https" {
+        // 泛型网页：仅第二轮允许；第一轮必须让后面的 Zoom/腾讯等候选有机会命中。
+        if allowGeneric, scheme == "http" || scheme == "https" {
             return MeetingJoinTarget(platform: .generic, openURL: url, sourceURL: url)
         }
 
-        _ = absolute
         return nil
     }
 
@@ -347,7 +380,4 @@ enum MeetingLinkDetector {
         return deep
     }
 
-    private static func dingTalkDeepLink(from url: URL) -> URL? {
-        URL(string: "dingtalk://dingtalkclient/page/conference")
-    }
 }
