@@ -51,6 +51,8 @@ final class NowPlayingService: ObservableObject {
     private var appIconCache: [String: NSImage] = [:]
     /// 网易云等打开 App 时会先推曲目再短暂清空；延迟清空以免 UI 闪成「暂无」。
     private static let clearSnapshotGrace: TimeInterval = 2.5
+    /// 首次引导第 1 步：注入假曲目，屏蔽真实 MediaRemote，直到演示结束。
+    private(set) var isOnboardingDemoActive = false
 
     private init() {
         controller.onTrackInfoReceived = { [weak self] info in
@@ -116,29 +118,102 @@ final class NowPlayingService: ObservableObject {
         AppLog.info("Media", "Now Playing 服务已停止")
     }
 
+    // MARK: - Onboarding demo
+
+    /// 引导演示：岛上出现假「正在播放」小岛；悬停后展开真媒体面板（仍用本快照）。
+    func setOnboardingDemoActive(_ active: Bool) {
+        guard active != isOnboardingDemoActive else { return }
+        isOnboardingDemoActive = active
+        clearSnapshotWork?.cancel()
+        clearSnapshotWork = nil
+        if active {
+            let demo = Self.makeOnboardingDemoSnapshot()
+            baseElapsed = demo.elapsed
+            baseTimestamp = Date()
+            playbackRate = 1
+            snapshot = demo
+            nudgeWidget()
+            AppLog.warn("Media", "引导演示假媒体已注入", [
+                "title": String(demo.title.prefix(24)),
+                "elapsed": Int(demo.elapsed)
+            ])
+        } else {
+            playbackRate = 0
+            snapshot = nil
+            nudgeWidget()
+            AppLog.warn("Media", "引导演示假媒体已撤出")
+            // 恢复真实曲目（若有）：主动拉一帧。
+            if started {
+                controller.getTrackInfo { [weak self] info in
+                    Task { @MainActor in
+                        guard let self, !self.isOnboardingDemoActive else { return }
+                        self.apply(info)
+                    }
+                }
+            }
+        }
+    }
+
+    private static func makeOnboardingDemoSnapshot() -> NowPlayingSnapshot {
+        NowPlayingSnapshot(
+            title: L10n.Media.previewSampleTitle,
+            artist: L10n.Media.previewSampleArtist,
+            album: nil,
+            isPlaying: true,
+            duration: 4 * 60 + 3,
+            elapsed: 2 * 60 + 14,
+            artwork: MediaIslandCardView.previewArtwork,
+            appIcon: nil,
+            bundleIdentifier: "app.daphnis.Ridge.onboardingDemo",
+            applicationName: "Ridge",
+            shuffleMode: .off,
+            repeatMode: .off
+        )
+    }
+
     // MARK: - Controls
 
     func togglePlayPause() {
+        if isOnboardingDemoActive {
+            guard var current = snapshot else { return }
+            current.isPlaying.toggle()
+            playbackRate = current.isPlaying ? 1 : 0
+            baseElapsed = current.elapsed
+            baseTimestamp = Date()
+            snapshot = current
+            AppLog.info("Media", "引导演示：切换播放/暂停", ["playing": current.isPlaying])
+            return
+        }
         AppLog.info("Media", "切换播放/暂停")
         controller.togglePlayPause()
     }
 
     func nextTrack() {
+        guard !isOnboardingDemoActive else {
+            AppLog.debug("Media", "引导演示：忽略下一曲")
+            return
+        }
         AppLog.info("Media", "下一曲")
         controller.nextTrack()
     }
 
     func previousTrack() {
+        guard !isOnboardingDemoActive else {
+            AppLog.debug("Media", "引导演示：忽略上一曲")
+            return
+        }
         AppLog.info("Media", "上一曲")
         controller.previousTrack()
     }
 
     func toggleShuffle() {
+        guard !isOnboardingDemoActive else { return }
         AppLog.info("Media", "切换随机")
         controller.toggleShuffle()
     }
 
     func toggleRepeat() {
+        guard !isOnboardingDemoActive else { return }
         AppLog.info("Media", "切换循环")
         controller.toggleRepeat()
     }
@@ -152,6 +227,7 @@ final class NowPlayingService: ObservableObject {
             current.elapsed = clamped
             snapshot = current
         }
+        guard !isOnboardingDemoActive else { return }
         controller.setTime(seconds: clamped)
     }
 
@@ -186,6 +262,9 @@ final class NowPlayingService: ObservableObject {
     }
 
     private func apply(_ info: TrackInfo?) {
+        // 引导演示期间屏蔽真实 Now Playing，避免冲掉假曲目。
+        guard !isOnboardingDemoActive else { return }
+
         guard let payload = info?.payload else {
             scheduleClearSnapshot(reason: "nilPayload")
             return
@@ -249,6 +328,7 @@ final class NowPlayingService: ObservableObject {
 
     /// 延迟清空：打开播放器未点播放时，系统常会先推曲目再推空帧。
     private func scheduleClearSnapshot(reason: String) {
+        guard !isOnboardingDemoActive else { return }
         guard snapshot != nil else { return }
         if clearSnapshotWork != nil {
             AppLog.debug("Media", "Now Playing 清空已在等待", ["reason": reason])

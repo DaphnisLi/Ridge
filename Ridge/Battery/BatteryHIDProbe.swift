@@ -1,7 +1,11 @@
+import CoreBluetooth
 import Foundation
 import IOKit.hid
 
 /// 从 IOHID 读 `BatteryPercent`（妙控键鼠等常见；第三方 BLE 键盘往往没有此键）。
+///
+/// **禁止** `IOHIDManagerSetDeviceMatching(nil)`：会打开全部键盘类 HID，
+/// 在较新的 macOS 上会顺带弹出「输入监控」授权（与蓝牙外设电量无关）。
 enum BatteryHIDProbe {
     struct Snapshot: Equatable {
         var name: String
@@ -10,9 +14,36 @@ enum BatteryHIDProbe {
         var transport: String
     }
 
+    /// HID Battery System 用法页；只枚举带电池语义的设备，避免扫到键盘输入流。
+    private static let batterySystemUsagePage = 0x85
+
+    /// 蓝牙系统对话框未决时不要碰 HID，以免与「输入监控」叠弹。
+    @MainActor
+    static var shouldProbeNow: Bool {
+        switch CBManager.authorization {
+        case .notDetermined:
+            return false
+        default:
+            return true
+        }
+    }
+
+    @MainActor
+    static func connectedDevicesIfAllowed() -> [Snapshot] {
+        guard shouldProbeNow else {
+            AppLog.debug("Battery", "跳过 IOHID 电量探测：蓝牙权限未决，避免触发输入监控")
+            return []
+        }
+        return connectedDevices()
+    }
+
     static func connectedDevices() -> [Snapshot] {
         let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
-        IOHIDManagerSetDeviceMatching(manager, nil)
+        // 仅匹配 Battery System（0x85），勿 matching:nil。
+        let match: [String: Any] = [
+            kIOHIDDeviceUsagePageKey as String: batterySystemUsagePage
+        ]
+        IOHIDManagerSetDeviceMatching(manager, match as CFDictionary)
         let open = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
         guard open == kIOReturnSuccess else {
             AppLog.debug("Battery", "IOHIDManager 打开失败", ["kr": Int(open)])

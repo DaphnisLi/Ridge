@@ -266,6 +266,36 @@
 - **相关代码:** `ShelfCaptureTools.finishOCR`  
 - **自动化:** 不强制（occurrences=1）
 
+### screen-capture-double-prompt — 屏幕录制小窗与设置页叠开 / 列表无 App
+
+- **recurring:** false  
+- **occurrences:** 2（2026-11-16：① 小窗未点设置页已开；② 只开设置页则列表无 Ridge）  
+- **症状:** request+open 双开；或只 open 时「录屏与系统录音」列表里没有本 App  
+- **根因倾向:** 须 `CGRequestScreenCaptureAccess` 才登记进 TCC 列表；新系统上 request 几乎立刻返回，若紧接着 `SystemPrivacyOpener` 会与小窗叠开  
+- **防护:** 本进程首次只 `CGRequest`（由小窗「打开系统设置」进页）；再次点击才 `open(Privacy_ScreenCapture)`；通用设置走同一 `ensureOne`  
+- **相关代码:** `WidgetPermissionGate.ensureScreenCapture`、`GeneralSettingsPane`  
+- **自动化:** 不强制（occurrences=1 档，尚未 recurring 闸）
+
+### onboarding-perms-skip-ahead — 引导权限未齐就进自启页
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-16：第三项未同意已到开机自启）  
+- **症状:** 权限步在队列空 / 蓝牙异步未决时跳到下一步  
+- **根因倾向:** 以 `permissionQueue.isEmpty` 为跳步条件；蓝牙 `start()` 后立即 `stillNeeded` 未等用户点系统框；队列与真实缺口可能短暂不一致  
+- **防护:** `allSelectedPermissionsSatisfied()` 才进自启；`ensurePermissionQueueReflectsGaps`；蓝牙轮询等待授权结果；跳步/停留均 warn  
+- **相关代码:** `OnboardingProgress`、`OnboardingController.requestNextPermission`、`WidgetPermissionGate.ensureBluetooth`  
+- **自动化:** 不强制（occurrences=1）
+
+### bluetooth-hid-input-monitoring — 开蓝牙外设电量却弹出输入监控
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-16：引导第三项「蓝牙与外设」授权时顺带弹出键盘/输入监控）  
+- **症状:** 只申请蓝牙时，系统还弹出「输入监控」或隐私列表里多了击键相关项  
+- **根因倾向:** `BatterySession.start` → `BatteryHIDProbe` 用 `IOHIDManagerSetDeviceMatching(nil)` 打开全部 HID（含键盘）；新系统把「打开键盘类 HID」当成输入监控场景；且蓝牙对话框未决时仍立刻扫 HID，两弹叠出  
+- **防护:** HID 仅匹配 Battery System（0x85），禁止 nil matching；`CBManager.authorization == .notDetermined` 时跳过 HID；蓝牙申请路径打 warn 说明  
+- **相关代码:** `BatteryHIDProbe`、`BatterySession.refresh`、`WidgetPermissionGate.ensureBluetooth`  
+- **自动化:** 不强制（occurrences=1）
+
 ### sound-app-volume-host-key — 按 App 音量对不上宿主进程
 
 - **recurring:** false  
@@ -338,6 +368,9 @@
 | 2026-11-12 | 电量预览暗淡：根因是样张 `Button.disabled` 降透明度 → 改 `allowsHitTesting`；catalog recurring |
 | 2026-11-12 | 电量预览：锁深色 + sRGB 卡片色；去掉样张分页角点；顶距用可见 inset；catalog `settings-preview-island-appearance` |
 | 2026-11-11 | 电量岛宽高随台数自适应（最多 3×2，超出纵滑）；两台不再留右侧黑空 |
+| 2026-11-16 | 引导权限未齐不进自启：`allSelectedPermissionsSatisfied`；catalog `onboarding-perms-skip-ahead` |
+| 2026-11-16 | 开蓝牙勿叠弹输入监控：HID 仅 Battery System + 蓝牙未决跳过 HID；catalog `bluetooth-hid-input-monitoring` |
+| 2026-11-16 | 屏幕录制：首次 CGRequest 登记列表（不叠开设置）；再点才直开隐私页；catalog `screen-capture-double-prompt` |
 | 2026-11-14 | OCR 无文字静默收起，不上岛「选区内未识别到文字」；catalog `ocr-empty-notice-noise` |
 | 2026-11-14 | 播放中点刘海勿落空态：`dragHold` 先开媒体；catalog `media-click-opens-empty` |
 | 2026-11-11 | 媒体：播放小岛常驻、点按展开大面板；预览去掉「收起待命」；catalog `media-compact-not-resident` |

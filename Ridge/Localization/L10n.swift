@@ -262,19 +262,31 @@ enum L10n {
         static var next: String { tr("onboarding.next", "继续") }
         static var back: String { tr("onboarding.back", "上一步") }
         static var done: String { tr("onboarding.done", "开始使用") }
-        static var grantNextPermission: String { tr("onboarding.grant_next", "授权下一项") }
+        static var grantNextPermission: String { tr("onboarding.grant_next", "授权") }
         static var openSystemSettingsAgain: String {
             tr("onboarding.open_system_settings_again", "打开系统设置")
+        }
+        static var stepIslandEyebrow: String {
+            tr("onboarding.island_eyebrow", "macOS 灵动体验")
         }
         static var stepIslandTitle: String { tr("onboarding.island_title", "认识灵动岛") }
         static var stepIslandBody: String {
             tr(
                 "onboarding.island_body",
-                "把指针移到屏幕顶部刘海区域，岛会展开。可先看下方演示了解用法。"
+                "刘海处已出现正在播放的小岛。把指针移上去，即可展开媒体控制面板。"
             )
+        }
+        static var stepIslandTryHint: String {
+            tr("onboarding.island_try_hint", "请把指针移到刘海区域试一下，展开后即可继续")
+        }
+        static var stepIslandTriedHint: String {
+            tr("onboarding.island_tried_hint", "已检测到展开，可以继续")
         }
         static var videoPlaceholder: String {
             tr("onboarding.video_placeholder", "演示视频稍后加入")
+        }
+        static var stepPickEyebrow: String {
+            tr("onboarding.pick_eyebrow", "精选功能")
         }
         static var stepPickTitle: String { tr("onboarding.pick_title", "推荐开启") }
         static var stepPickBody: String {
@@ -282,6 +294,9 @@ enum L10n {
                 "onboarding.pick_body",
                 "这些是常用能力，默认已勾选。可按需调整，下一步仅为勾选项申请权限。"
             )
+        }
+        static var stepPermissionsEyebrow: String {
+            tr("onboarding.permissions_eyebrow", "系统偏好与安全")
         }
         static var stepPermissionsTitle: String { tr("onboarding.permissions_title", "授权所需权限") }
         static var stepPermissionsBody: String {
@@ -294,6 +309,12 @@ enum L10n {
             tr(
                 "onboarding.permissions_resume_body",
                 "按队列逐项授权。若系统要求关闭 App，重新打开 Ridge 会回到这里继续。"
+            )
+        }
+        static var stepPermissionsHint: String {
+            tr(
+                "onboarding.permissions_hint",
+                "点击授权将唤起 macOS 系统弹窗。如遇系统安全性限制，可在「系统设置 › 隐私与安全性」中手动勾选 Ridge。"
             )
         }
         static var permissionsAllDone: String {
@@ -313,6 +334,12 @@ enum L10n {
             tr(
                 "onboarding.launch_body",
                 "建议开启登录时启动，以便随时使用灵动岛。之后仍可在「通用」或系统登录项中更改。"
+            )
+        }
+        static var stepLaunchToggleSubtitle: String {
+            tr(
+                "onboarding.launch_toggle_subtitle",
+                "登录 Mac 后静默在后台启动，无需手动开启"
             )
         }
         static var stepWidgetsTitle: String { tr("onboarding.widgets_title", "配置小组件") }

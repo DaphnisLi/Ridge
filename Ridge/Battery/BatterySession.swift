@@ -65,7 +65,7 @@ final class BatterySession: ObservableObject {
         {
             applyMerged(
                 bluetooth: BatteryBluetoothProbe.connectedDevices(),
-                hid: BatteryHIDProbe.connectedDevices(),
+                hid: BatteryHIDProbe.connectedDevicesIfAllowed(),
                 profiler: BatterySystemProfilerProbe.connectedDevices(force: false),
                 bleLevels: BatteryCoreBluetoothMonitor.shared.levelsByName,
                 continuity: BatteryCoreBluetoothMonitor.shared.continuityDevices,
@@ -81,7 +81,8 @@ final class BatterySession: ObservableObject {
         BatteryCoreBluetoothMonitor.shared.requestRefresh(reason: reason)
 
         let bluetooth = BatteryBluetoothProbe.connectedDevices()
-        let hid = BatteryHIDProbe.connectedDevices()
+        // 蓝牙授权弹窗期间禁止扫 HID，否则会叠出「输入监控」（与外设电量无关）。
+        let hid = BatteryHIDProbe.connectedDevicesIfAllowed()
         let bleLevels = BatteryCoreBluetoothMonitor.shared.levelsByName
         let continuity = BatteryCoreBluetoothMonitor.shared.continuityDevices
         let threshold = settings.lowThresholdPercent
@@ -118,7 +119,7 @@ final class BatterySession: ObservableObject {
                 // 异步回来时重新采一次即时源，避免长时间 profiler 期间漏掉刚连上的设备。
                 self.applyMerged(
                     bluetooth: BatteryBluetoothProbe.connectedDevices(),
-                    hid: BatteryHIDProbe.connectedDevices(),
+                    hid: BatteryHIDProbe.connectedDevicesIfAllowed(),
                     profiler: profiler,
                     bleLevels: BatteryCoreBluetoothMonitor.shared.levelsByName,
                     continuity: BatteryCoreBluetoothMonitor.shared.continuityDevices,

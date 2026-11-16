@@ -149,9 +149,14 @@ struct GeneralSettingsPane: View {
                         subtitle: L10n.PrivacyHub.screenCaptureSubtitle,
                         granted: screenCaptureOK
                     ) {
-                        _ = CGRequestScreenCaptureAccess()
-                        SystemPrivacyOpener.open(anchor: "Privacy_ScreenCapture")
-                        refreshPermissions()
+                        // 与引导同一闸门：首次 CGRequest 登记列表；再次才直开隐私页。
+                        Task { @MainActor in
+                            _ = await WidgetPermissionGate.ensureOne(
+                                .screenCapture,
+                                reason: "generalSettings"
+                            )
+                            refreshPermissions()
+                        }
                     }
                     SettingsHairline()
                     permissionRow(

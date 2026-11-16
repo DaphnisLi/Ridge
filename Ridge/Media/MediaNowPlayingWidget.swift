@@ -184,9 +184,13 @@ enum MediaCompactPresence {
         }
         AppLog.warn("Media", "播放小岛触发，展开控制面板", [
             "reason": reason,
-            "title": String((NowPlayingService.shared.snapshot?.title ?? "").prefix(24))
+            "title": String((NowPlayingService.shared.snapshot?.title ?? "").prefix(24)),
+            "onboardingDemo": NowPlayingService.shared.isOnboardingDemoActive
         ])
         LiveIslandGate.shared.open(LiveIslandGate.mediaID, reason: reason)
+        if NowPlayingService.shared.isOnboardingDemoActive {
+            OnboardingIslandMediaDemo.shared.noteUserExpandedIsland(reason: reason)
+        }
         return true
     }
 }

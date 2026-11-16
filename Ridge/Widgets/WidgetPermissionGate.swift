@@ -149,7 +149,7 @@ enum WidgetPermissionGate {
         case .screenCapture:
             return ensureScreenCapture(reason: reason)
         case .bluetooth:
-            return ensureBluetooth(reason: reason)
+            return await ensureBluetooth(reason: reason)
         case .inputMonitoring:
             return ensureInputMonitoringAccess(reason: reason)
         }
@@ -165,22 +165,39 @@ enum WidgetPermissionGate {
         return granted || isSatisfied(.calendar) ? .satisfied : .stillNeeded
     }
 
+    /// 本进程是否已弹过系统「录屏」预授权窗。须先 CGRequest 才会把 App 登记进列表；
+    /// 但 CGRequest 与自开设置页叠在一起会双开，故首次只 request，再次才 open。
+    @MainActor
+    private static var didPromptScreenCaptureThisSession = false
+
     @MainActor
     private static func ensureScreenCapture(reason: String) -> EnsureOutcome {
-        AppLog.info("PrivacyHub", "申请屏幕录制权限", ["reason": reason])
-        NSApp.activate(ignoringOtherApps: true)
-        SoundSession.shared.requestScreenCaptureAccess()
         if isSatisfied(.screenCapture) {
-            AppLog.info("PrivacyHub", "屏幕录制权限结果", ["reason": reason, "granted": true])
+            SoundSession.shared.requestScreenCaptureAccess()
+            AppLog.info("PrivacyHub", "屏幕录制已授权", ["reason": reason])
             return .satisfied
         }
+        NSApp.activate(ignoringOtherApps: true)
+        if !didPromptScreenCaptureThisSession {
+            didPromptScreenCaptureThisSession = true
+            // 必须 CGRequest：否则隐私列表里没有 Ridge。不要同时 SystemPrivacyOpener——
+            // 新系统上 request 往往立刻返回，设置页会抢在用户点小窗「打开系统设置」之前出现。
+            AppLog.warn("PrivacyHub", "申请屏幕录制：系统对话框登记 App", ["reason": reason])
+            let granted = CGRequestScreenCaptureAccess()
+            if granted || isSatisfied(.screenCapture) {
+                AppLog.info("PrivacyHub", "屏幕录制权限结果", ["reason": reason, "granted": true])
+                return .satisfied
+            }
+            AppLog.warn("PrivacyHub", "屏幕录制待用户在系统对话框中打开设置", ["reason": reason])
+            return .awaitingSystemSettingsRelaunch
+        }
+        AppLog.warn("PrivacyHub", "屏幕录制仍缺，打开系统设置", ["reason": reason])
         SystemPrivacyOpener.open(anchor: "Privacy_ScreenCapture")
-        AppLog.info("PrivacyHub", "屏幕录制未当场授权，已打开系统设置", ["reason": reason])
         return .awaitingSystemSettingsRelaunch
     }
 
     @MainActor
-    private static func ensureBluetooth(reason: String) -> EnsureOutcome {
+    private static func ensureBluetooth(reason: String) async -> EnsureOutcome {
         switch CBManager.authorization {
         case .denied, .restricted:
             AppLog.warn("PrivacyHub", "蓝牙已拒绝，打开系统设置", [
@@ -189,16 +206,42 @@ enum WidgetPermissionGate {
             ])
             SystemPrivacyOpener.open(anchor: "Privacy_Bluetooth")
             return .awaitingSystemSettingsRelaunch
+        case .allowedAlways:
+            BatterySession.shared.start()
+            return .satisfied
         default:
-            AppLog.info("PrivacyHub", "申请蓝牙权限（拉起电量监视）", [
+            AppLog.warn("PrivacyHub", "申请蓝牙权限（拉起电量监视并等待结果）", [
                 "reason": reason,
-                "auth": bluetoothAuthLabel()
+                "auth": bluetoothAuthLabel(),
+                "note": "HID 电量探测在蓝牙未决时跳过，避免叠弹输入监控"
             ])
+            // start → CoreBluetooth 弹蓝牙框；HID 在 notDetermined 时由 BatteryHIDProbe 跳过。
             BatterySession.shared.start()
             if isSatisfied(.bluetooth) {
                 return .satisfied
             }
-            // 系统弹窗可能稍后才出结果；未立刻授权则视为仍缺，用户可再点。
+            // 系统蓝牙对话框是异步的：等用户点完再返回，避免引导以为「点过授权」就跳步。
+            for _ in 0..<50 {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                switch CBManager.authorization {
+                case .allowedAlways:
+                    AppLog.warn("PrivacyHub", "蓝牙权限已授予", ["reason": reason])
+                    return .satisfied
+                case .denied, .restricted:
+                    AppLog.warn("PrivacyHub", "蓝牙已拒绝，打开系统设置", [
+                        "reason": reason,
+                        "auth": bluetoothAuthLabel()
+                    ])
+                    SystemPrivacyOpener.open(anchor: "Privacy_Bluetooth")
+                    return .awaitingSystemSettingsRelaunch
+                default:
+                    continue
+                }
+            }
+            AppLog.warn("PrivacyHub", "蓝牙权限仍待用户确认", [
+                "reason": reason,
+                "auth": bluetoothAuthLabel()
+            ])
             return .stillNeeded
         }
     }

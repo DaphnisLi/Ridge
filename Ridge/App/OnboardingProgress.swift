@@ -88,4 +88,30 @@ struct OnboardingProgress: Codable, Equatable {
             awaitingRelaunchFor = nil
         }
     }
+
+    /// 所选推荐小组件涉及的权限是否全部已满足（进自启页的唯一门槛）。
+    @MainActor
+    func allSelectedPermissionsSatisfied() -> Bool {
+        for id in selectedWidgetIDs {
+            for need in WidgetPermissionGate.needs(forWidgetID: id) where !WidgetPermissionGate.isSatisfied(need) {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// 队列空了但权限未齐时，按所选小组件重建剩余项，避免误跳步。
+    @MainActor
+    mutating func ensurePermissionQueueReflectsGaps() {
+        reconcilePermissionsWithSystem()
+        guard !allSelectedPermissionsSatisfied() else {
+            permissionQueue = []
+            awaitingRelaunchFor = nil
+            return
+        }
+        if permissionQueue.isEmpty {
+            rebuildPermissionQueue()
+            reconcilePermissionsWithSystem()
+        }
+    }
 }

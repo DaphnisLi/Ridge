@@ -159,6 +159,7 @@
 		B99AD80D13D5E59ED4A5D036 /* ShelfDropSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CD9A18A09BD50A075D9F52 /* ShelfDropSession.swift */; };
 		BB0A9DF8C27CC8790787FF25 /* GeneralSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8615C58E4BE6EED80BEDE67 /* GeneralSettingsPane.swift */; };
 		BB3203E8150F348528C82282 /* CaptureHotKeyCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3516E62C9271DC712B4B03F4 /* CaptureHotKeyCoordinator.swift */; };
+		BC271AF698E7D0C0C7DF63D7 /* OnboardingIslandMediaDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857D8F3D5704C8BA855CD241 /* OnboardingIslandMediaDemo.swift */; };
 		BF4CD04EE06A17838AEBCB55 /* WidgetPermissionGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE542A3A94E3093868C25D4C /* WidgetPermissionGateTests.swift */; };
 		BF7C3BB88AC273565B1B17BC /* CopiedNoticeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */; };
 		BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; };
@@ -340,6 +341,7 @@
 		81C3A12F6CC22B56853E09A1 /* SoundAppVolumeRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAppVolumeRoute.swift; sourceTree = "<group>"; };
 		81FA823E3DD358069BCD1369 /* BatteryListeningModeBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BatteryListeningModeBridge.m; sourceTree = "<group>"; };
 		84CAAD888892D784B7830797 /* SoundSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettings.swift; sourceTree = "<group>"; };
+		857D8F3D5704C8BA855CD241 /* OnboardingIslandMediaDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingIslandMediaDemo.swift; sourceTree = "<group>"; };
 		858D15B24A7D8F4C7436BEB3 /* OnboardingDemoVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDemoVideoView.swift; sourceTree = "<group>"; };
 		85DB713B5E38759909A00339 /* IslandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTheme.swift; sourceTree = "<group>"; };
 		864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaIslandCardView.swift; sourceTree = "<group>"; };
@@ -794,6 +796,7 @@
 				1742ACEEC5D563B0420C7326 /* LoginItemService.swift */,
 				E739BE14AAE020C039073346 /* OnboardingController.swift */,
 				858D15B24A7D8F4C7436BEB3 /* OnboardingDemoVideoView.swift */,
+				857D8F3D5704C8BA855CD241 /* OnboardingIslandMediaDemo.swift */,
 				FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */,
 				8A1266F73AC4146FF0C01385 /* RidgeApp.swift */,
 				B2AC3AA0CEB857437EF53DCE /* SystemPrivacyOpener.swift */,
@@ -1089,6 +1092,7 @@
 				9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */,
 				DE01462175BA9E4E3293C0F6 /* OnboardingController.swift in Sources */,
 				67EAB4820D13734234D7FF57 /* OnboardingDemoVideoView.swift in Sources */,
+				BC271AF698E7D0C0C7DF63D7 /* OnboardingIslandMediaDemo.swift in Sources */,
 				567D6175D02B968E56D3BA29 /* OnboardingProgress.swift in Sources */,
 				195729684A43B3A82BA65EAC /* PeripheralTipWidget.swift in Sources */,
 				B7B000F914D3CEF92154A1A0 /* PeripheralTipWidgetConfigSection.swift in Sources */,
