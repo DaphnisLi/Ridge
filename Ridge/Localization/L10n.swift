@@ -2775,11 +2775,11 @@ enum L10n {
             tr("focus_timer.widget.summary", "选时起钟、计时待命与加时收拢，常驻灵动岛")
         }
 
-        static var phaseStandby: String { tr("focus_timer.phase.standby", "标准待命态") }
-        static var phasePicking: String { tr("focus_timer.phase.picking", "选时起钟态") }
-        static var phaseRunning: String { tr("focus_timer.phase.running", "计时进行中") }
-        static var phaseOvertime: String { tr("focus_timer.phase.overtime", "顺延加时中") }
-        static var phaseCompleted: String { tr("focus_timer.phase.completed", "终局收拢态") }
+        static var phaseStandby: String { tr("focus_timer.phase.standby", "待命") }
+        static var phasePicking: String { tr("focus_timer.phase.picking", "选时") }
+        static var phaseRunning: String { tr("focus_timer.phase.running", "计时中") }
+        static var phaseOvertime: String { tr("focus_timer.phase.overtime", "加时中") }
+        static var phaseCompleted: String { tr("focus_timer.phase.completed", "完成") }
         static var tabBadgeCustom: String { tr("focus_timer.tab.badge_custom", "自选") }
         static var tabBadgeSummary: String { tr("focus_timer.tab.badge_summary", "总结") }
 

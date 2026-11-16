@@ -78,18 +78,11 @@ struct IslandSettingsPane: View {
 
     private var themeCard: some View {
         SettingsBentoCard {
-            HStack(alignment: .firstTextBaseline) {
-                SettingsBentoCardTitle(
-                    symbol: "paintpalette.fill",
-                    tint: SettingsChrome.primary,
-                    title: L10n.Settings.presetTheme,
-                    badge: L10n.Settings.themeCountBadge
-                )
-                Spacer(minLength: 8)
-                Text(L10n.Settings.themeClickHint)
-                    .font(SettingsChrome.Font.caption)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-            }
+            SettingsBentoCardTitle(
+                symbol: "paintpalette.fill",
+                tint: SettingsChrome.primary,
+                title: L10n.Settings.presetTheme
+            )
 
             HStack(spacing: 10) {
                 ForEach(IslandTheme.allCases) { theme in
@@ -142,11 +135,6 @@ struct IslandSettingsPane: View {
                 .background(Capsule().fill(SettingsChrome.surfaceContainer.opacity(0.9)))
             }
 
-            Text(L10n.Settings.geometrySubtitle)
-                .font(SettingsChrome.Font.caption)
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                .fixedSize(horizontal: false, vertical: true)
-
             cornerPresetBar
 
             SettingsSliderRow(
@@ -163,14 +151,9 @@ struct IslandSettingsPane: View {
             )
 
             HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.Settings.geometryPreview)
-                        .font(SettingsChrome.Font.label)
-                        .foregroundStyle(SettingsChrome.onSurface)
-                    Text(L10n.Settings.geometryPreviewHint)
-                        .font(SettingsChrome.Font.footnote)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                }
+                Text(L10n.Settings.geometryPreview)
+                    .font(SettingsChrome.Font.label)
+                    .foregroundStyle(SettingsChrome.onSurface)
                 Spacer(minLength: 8)
                 geometryMiniPreview
             }
@@ -298,13 +281,6 @@ struct IslandSettingsPane: View {
                     ),
                     in: 0.5...2.0
                 )
-                HStack {
-                    Text("\(L10n.Settings.speedSlow) (0.5×)")
-                    Spacer(minLength: 0)
-                    Text("\(L10n.Settings.speedFast) (2.0×)")
-                }
-                .font(SettingsChrome.Font.footnote)
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -354,24 +330,10 @@ struct IslandSettingsPane: View {
                 }
                 .frame(width: 32, height: 32)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 8) {
-                        Text(L10n.Settings.hideInFullscreen)
-                            .font(SettingsChrome.Font.cardTitle)
-                            .foregroundStyle(SettingsChrome.onSurface)
-                        Text(L10n.Settings.hideFullscreenBadge)
-                            .font(SettingsChrome.Font.micro)
-                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(SettingsChrome.surfaceContainer))
-                    }
-                    Text(L10n.Settings.hideFullscreenSubtitle)
-                        .font(SettingsChrome.Font.caption)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text(L10n.Settings.hideInFullscreen)
+                    .font(SettingsChrome.Font.cardTitle)
+                    .foregroundStyle(SettingsChrome.onSurface)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 Toggle("", isOn: $settings.hideInFullscreen)
                     .labelsHidden()

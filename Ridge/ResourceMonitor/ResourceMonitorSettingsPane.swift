@@ -52,29 +52,18 @@ struct ResourceMonitorSettingsPane: View {
 
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
-            HStack(spacing: 8) {
-                if session.snapshot.ramPercent >= settings.ramThresholdPercent {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(SettingsChrome.error)
-                            .frame(width: 6, height: 6)
-                        Text(L10n.ResourceMonitor.highPressure)
-                            .font(.system(size: 11, weight: .semibold))
-                    }
-                    .foregroundStyle(SettingsChrome.error)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Capsule().fill(SettingsChrome.error.opacity(0.12)))
+            if session.snapshot.ramPercent >= settings.ramThresholdPercent {
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(SettingsChrome.error)
+                        .frame(width: 6, height: 6)
+                    Text(L10n.ResourceMonitor.highPressure)
+                        .font(.system(size: 11, weight: .semibold))
                 }
-                HStack(spacing: 6) {
-                    Text(L10n.ResourceMonitor.pageSubtitle)
-                    Text("·")
-                        .foregroundStyle(SettingsChrome.outline)
-                    Text(L10n.ResourceMonitor.sampleInterval)
-                        .font(.system(size: 12, design: .monospaced))
-                }
-                .font(.system(size: 12))
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .foregroundStyle(SettingsChrome.error)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(SettingsChrome.error.opacity(0.12)))
             }
             Spacer(minLength: 8)
             HStack(spacing: 8) {

@@ -260,11 +260,6 @@ struct ResourceFocusInsightsPane: View {
                     .foregroundStyle(SettingsChrome.onSurface)
             }
 
-            Text(L10n.ResourceMonitor.behaviorHint)
-                .font(.system(size: 12))
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                .fixedSize(horizontal: false, vertical: true)
-
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Label {

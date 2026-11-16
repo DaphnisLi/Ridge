@@ -2713,7 +2713,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "终局收拢态"
+            "value": "完成"
           }
         }
       }
@@ -2724,7 +2724,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "顺延加时中"
+            "value": "加时中"
           }
         }
       }
@@ -2735,7 +2735,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选时起钟态"
+            "value": "选时"
           }
         }
       }
@@ -2746,7 +2746,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "计时进行中"
+            "value": "计时中"
           }
         }
       }
@@ -2757,7 +2757,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "标准待命态"
+            "value": "待命"
           }
         }
       }

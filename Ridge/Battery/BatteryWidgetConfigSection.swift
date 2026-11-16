@@ -72,22 +72,6 @@ struct BatteryWidgetConfigSection: View {
                         }
                     }
                 )
-
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .font(SettingsChrome.Font.iconInline)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant.opacity(0.85))
-                    Text(L10n.Battery.sortStrategyHint(settings.peripheralSortMode))
-                        .font(SettingsChrome.Font.caption)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(SettingsChrome.surfaceContainerLow)
-                )
             }
             .padding(SettingsChrome.Spacing.cardPadding)
         }

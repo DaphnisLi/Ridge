@@ -226,26 +226,27 @@ struct SettingsSegmentedControl: View {
     let items: [Item]
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             ForEach(items) { item in
                 segment(item)
             }
         }
-        .padding(4)
+        .padding(3)
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(SettingsChrome.surfaceContainer.opacity(0.7))
         )
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder
     private func segment(_ item: Item) -> some View {
         let shape = RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
-        let label = HStack(spacing: 6) {
+        let label = HStack(spacing: 5) {
             if let leadingDot = item.leadingDot {
                 Circle()
                     .fill(leadingDot)
-                    .frame(width: 8, height: 8)
+                    .frame(width: 7, height: 7)
             }
             Text(item.title)
                 .font(item.selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)
@@ -253,8 +254,9 @@ struct SettingsSegmentedControl: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
         .background(
             shape
                 .fill(item.selected ? Color.white : Color.clear)
