@@ -2401,7 +2401,11 @@ enum L10n {
         static var engineReady: String { tr("resource_monitor.engine_ready", "引擎就绪") }
         /// 岛内 / 设置页：同一动作、同一文案。
         static var muteAlert: String { tr("resource_monitor.mute_alert", "免打扰（30m）") }
+        /// 岛 tip 悬停：免打扰图标无障碍标签。
+        static var muteTip: String { tr("resource_monitor.mute_tip", "免打扰") }
         static var mutedBanner: String { tr("resource_monitor.muted_banner", "已免打扰 30 分钟") }
+        /// 岛 tip 左翼单位标签。
+        static var ramTipLabel: String { tr("resource_monitor.ram_tip_label", "RAM") }
         static var requestPermission: String {
             tr("resource_monitor.request_permission", "申请权限")
         }
@@ -2422,6 +2426,8 @@ enum L10n {
         }
         static var purgeButton: String { tr("resource_monitor.purge_button", "强制回收内存") }
         static var purgeShort: String { tr("resource_monitor.purge_short", "一键释放") }
+        /// 岛 tip 悬停主按钮（稿「释放」）。
+        static var purgeTip: String { tr("resource_monitor.purge_tip", "释放") }
         static var purging: String { tr("resource_monitor.purging", "正在尽力回收内存…") }
         static var purgeNoChange: String {
             tr("resource_monitor.purge_no_change", "已尝试回收，用量未见明显下降")
@@ -2764,6 +2770,20 @@ enum L10n {
 
         private static func byteString(_ bytes: UInt64) -> String {
             ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+        }
+
+        /// 岛 tip 右翼紧凑用量：`4.1G` / `512M`。
+        static func tipMemory(_ bytes: UInt64) -> String {
+            let gb = Double(bytes) / (1024 * 1024 * 1024)
+            if gb >= 1 {
+                return String(format: "%.1fG", gb)
+            }
+            let mb = Double(bytes) / (1024 * 1024)
+            return String(format: "%.0fM", max(mb, 1))
+        }
+
+        static func tipPercent(_ percent: Double) -> String {
+            String(format: "%.0f%%", percent.rounded())
         }
     }
 

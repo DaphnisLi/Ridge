@@ -117,5 +117,23 @@ struct ResourceRAMPressureNotice: Hashable, Identifiable {
     let ramUsedBytes: UInt64
     let ramPercent: Double
     let topAppName: String
+    /// 用于岛 tip 右翼 App 图标；可空。
+    let topAppBundleID: String
     let topAppMemoryBytes: UInt64
+
+    init(
+        id: String,
+        ramUsedBytes: UInt64,
+        ramPercent: Double,
+        topAppName: String,
+        topAppBundleID: String = "",
+        topAppMemoryBytes: UInt64
+    ) {
+        self.id = id
+        self.ramUsedBytes = ramUsedBytes
+        self.ramPercent = ramPercent
+        self.topAppName = topAppName
+        self.topAppBundleID = topAppBundleID
+        self.topAppMemoryBytes = topAppMemoryBytes
+    }
 }

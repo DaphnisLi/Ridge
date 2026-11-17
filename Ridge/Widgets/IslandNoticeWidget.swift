@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Foundation
 import SwiftUI
@@ -294,7 +295,11 @@ private struct IslandNoticeCardView: View {
         case .processEnded(let notice):
             ProcessEndedNoticeCard(notice: notice)
         case .ramPressure(let notice):
-            RAMPressureNoticeCard(notice: notice)
+            RAMPressureNoticeCard(
+                notice: notice,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .peripheralLowBattery(let notice):
             PeripheralBatteryNoticeCard(
                 notice: notice,
@@ -646,86 +651,131 @@ struct PeripheralBatteryNoticeCard: View {
     }
 }
 
-/// RAM 高压瞬时通知（`system.islandNotice` / `.ramPressure`）。
+/// RAM 高压 tip（C 类半块，靠右）：idle `● 96% RAM`；悬停免打扰 + 释放。
+/// 单独上岛只要右翼；与 B/专注并排时走右翼 flush。根视图禁止外圈 padding。
 private struct RAMPressureNoticeCard: View {
     let notice: ResourceRAMPressureNotice
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    var bareWingContent: Bool = false
 
-    private let accentRed = Color(red: 1.0, green: 0.42, blue: 0.38)
+    @State private var localHover = false
+
+    private let accentRed = IslandFlushWingStyle.accentDanger
+    private let muteWell = Color.white.opacity(0.14)
+
+    /// 仅本 tip 的 SwiftUI hover；勿跟 `isHoveringIsland`（常驻展开会粘住不复原）。
+    private var showsActions: Bool { localHover }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            HStack(alignment: .center, spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(accentRed.opacity(0.28))
-                        .frame(width: 28, height: 28)
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(accentRed)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes))
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                        Text(String(format: "%.0f%%", notice.ramPercent))
-                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.white.opacity(0.75))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Capsule().fill(Color.white.opacity(0.16)))
-                    }
-                    Text(
-                        L10n.ResourceMonitor.noticeSubtitle(
-                            notice.topAppName,
-                            notice.topAppMemoryBytes
-                        )
-                    )
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                    .lineLimit(1)
+        Group {
+            if flushSide != nil {
+                // 与 B/专注并排：本翼半块（右侧）。
+                halfWingBody
+            } else {
+                // 单独 C：只要右翼半块，左翼留空。
+                IslandDualNotchWingRow {
+                    Color.clear
+                        .accessibilityHidden(true)
+                } right: {
+                    halfWingBody
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(3)
-
-            HStack(spacing: 8) {
-                Button {
-                    AppLog.info("IslandNotice", "RAM 通知：免打扰 30 分钟")
-                    ResourceMonitorSession.shared.muteAlerts30m()
-                    IslandNoticeCenter.shared.dismiss(id: notice.id)
-                } label: {
-                    Text(L10n.ResourceMonitor.muteAlert)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.88))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Capsule().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    AppLog.info("IslandNotice", "RAM 通知：一键释放")
-                    ResourceMonitorSession.shared.purgeMemory()
-                    IslandNoticeCenter.shared.dismiss(id: notice.id)
-                } label: {
-                    Text(L10n.ResourceMonitor.purgeShort)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.black)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Capsule().fill(Color.white))
-                }
-                .buttonStyle(.plain)
-            }
-            .fixedSize()
-            .layoutPriority(2)
         }
-        .frame(minWidth: 380)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes))
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            if localHover != hovering {
+                localHover = hovering
+                AppLog.debug("IslandNotice", "RAM tip 悬停", ["hover": hovering])
+            }
+        }
+        .animation(.easeOut(duration: 0.18), value: showsActions)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(
+            L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes)
+        )
+    }
+
+    /// 半块内容：idle 用量 ↔ 悬停双按钮。
+    private var halfWingBody: some View {
+        ZStack {
+            idleRAMRow
+                .opacity(showsActions ? 0 : 1)
+                .scaleEffect(showsActions ? 0.95 : 1)
+                .allowsHitTesting(!showsActions)
+            hoverActionsRow
+                .opacity(showsActions ? 1 : 0)
+                .scaleEffect(showsActions ? 1 : 0.95)
+                .allowsHitTesting(showsActions)
+        }
+        .islandBareFlushWingContent()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var idleRAMRow: some View {
+        HStack(spacing: 0) {
+            Circle()
+                .fill(accentRed)
+                .frame(width: 7, height: 7)
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
+            Text(L10n.ResourceMonitor.tipPercent(notice.ramPercent))
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .monospacedDigit()
+                .lineLimit(1)
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
+            Text(L10n.ResourceMonitor.ramTipLabel)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.45))
+                .lineLimit(1)
+        }
+    }
+
+    private var hoverActionsRow: some View {
+        HStack(spacing: 8) {
+            muteButton
+            purgeButton
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private var muteButton: some View {
+        Button {
+            AppLog.info("IslandNotice", "RAM 通知：免打扰 30 分钟")
+            ResourceMonitorSession.shared.muteAlerts30m()
+            IslandNoticeCenter.shared.dismiss(id: notice.id)
+        } label: {
+            Image(systemName: "bell.slash")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(muteWell)
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.ResourceMonitor.muteTip)
+    }
+
+    private var purgeButton: some View {
+        Button {
+            AppLog.info("IslandNotice", "RAM 通知：一键释放")
+            ResourceMonitorSession.shared.purgeMemory()
+            IslandNoticeCenter.shared.dismiss(id: notice.id)
+        } label: {
+            HStack(spacing: 4) {
+                Text(L10n.ResourceMonitor.purgeTip)
+                    .font(.system(size: 12, weight: .bold))
+                Image(systemName: "bolt.fill")
+                    .font(.system(size: 10, weight: .bold))
+            }
+            .foregroundStyle(.black)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule(style: .continuous).fill(Color.white))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(L10n.ResourceMonitor.purgeTip)
     }
 }
 

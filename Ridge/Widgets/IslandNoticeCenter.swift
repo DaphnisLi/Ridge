@@ -56,19 +56,16 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
+    /// 非专注提示统一约 3s；会议 / 取色 / OCR 仍手动收。DEBUG RAM 样张不自动收。
     var autoDismissNanoseconds: UInt64? {
         switch self {
-        case .ramPressure, .colorPickTip, .ocrSelectTip, .moveReminder, .meetingLead:
+        case .colorPickTip, .ocrSelectTip, .meetingLead:
             return nil
-        case .clipboardCaptureHint(let id, _, _):
-            if id.hasPrefix("copy.") {
-                return IslandChrome.notchRightOrbAutoDismissNanoseconds
-            }
+        case .ramPressure(let notice):
+            if notice.id == "resource.ram.debug.sticky" { return nil }
             return 3_000_000_000
-        case .processEnded,
-             .peripheralLowBattery,
-             .peripheralFullCharge,
-             .peripheralConnected,
+        case .clipboardCaptureHint, .moveReminder, .processEnded,
+             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .aiUsageAlert:
             return 3_000_000_000
         }
@@ -88,6 +85,16 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .meetingLead, .aiUsageAlert, .moveReminder, .colorPickTip, .ocrSelectTip,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// 单独上岛时走左右 flush（如 RAM 高压）；勿抬会议双翼宽。
+    var usesDualFlushSoloChrome: Bool {
+        switch self {
+        case .ramPressure:
             return true
         default:
             return false
@@ -196,7 +203,7 @@ final class IslandNoticeCenter: ObservableObject {
             "id": id ?? "all",
             "primary": next.primary?.id ?? "",
             "secondary": next.secondary?.id ?? "",
-            "parked": next.parkedSecondary?.id ?? "",
+            "queue": next.secondaryQueue.count,
             "focus": next.focusResident
         ])
         commit(next, triggering: nil)
@@ -231,7 +238,8 @@ final class IslandNoticeCenter: ObservableObject {
                 "dual": next.isDual,
                 "primary": next.primary?.id ?? "",
                 "secondary": next.secondary?.id ?? "",
-                "parked": next.parkedSecondary?.id ?? "",
+                "queue": next.secondaryQueue.count,
+                "queued": next.secondaryQueue.map(\.id).joined(separator: ","),
                 "focus": next.focusResident,
                 "media": next.mediaResident,
                 "layout": String(describing: next.resolvedLayout),
@@ -259,7 +267,9 @@ final class IslandNoticeCenter: ObservableObject {
                 )
             }
         case .fullNotice(let p):
-            if next.anyUsesNotchRightOrbChrome {
+            if next.usesDualFlushChrome {
+                IslandController.shared?.prepareDualFlushNoticeLayout(reason: "presentDualFlushSolo:\(p.id)")
+            } else if next.anyUsesNotchRightOrbChrome {
                 IslandController.shared?.prepareNotchRightOrbLayout(reason: "present:\(p.id)")
             } else if p.usesShortBelowNotchChrome {
                 IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(p.id)")

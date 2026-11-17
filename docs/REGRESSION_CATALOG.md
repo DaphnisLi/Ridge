@@ -394,6 +394,7 @@
 | 2026-11-16 | 屏幕录制：首次 CGRequest 登记列表（不叠开设置）；再点才直开隐私页；catalog `screen-capture-double-prompt` |
 | 2026-11-16 | island-focus-steal +1：久坐 +10m 点穿；翼 tip 可点区抬双翼 + 强制保展开；久坐 preemption=50 |
 | 2026-11-16 | 提示双槽：A 满岛；B+C 左右；专注待命 C 常驻；短 C 暂占后归还；`test_islandNoticeDualSlots_*` |
+| 2026-11-17 | 非专注 C 改 FIFO 队列 + 统一 3s；专注左/短 C 右；`test_islandNoticeDualSlots_secondaryTipsQueueFIFO` |
 | 2026-11-16 | shelf-copied-notice-miss +1：设置设计页 sticky↔收起互殴连震；同指纹去抖；notice expand 套圆岛；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
 | 2026-11-16 | shelf-copied-notice-miss +1：播放中复制 dual 误抬会议翼宽整岛黑；`usesDualFlushChrome` + flush 已复制 |
 | 2026-11-16 | shelf-copied-notice-miss +1：DualNotchWingRow 禁 GeometryReader（fixedSize 塌宽）；`Surface.dualFlush` 零 inset；右翼仍 Ø32 |

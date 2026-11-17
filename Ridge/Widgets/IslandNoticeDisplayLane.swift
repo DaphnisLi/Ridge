@@ -4,13 +4,13 @@ import Foundation
 ///
 /// - exclusive (A)：框选 / 取色 → 满岛
 /// - primary (B)：**会议 tip / 音乐常驻** → 两 B 同时只展示会议（盖音乐）；与短 C 并排时左会议右 C；C 没后会议回满岛
-/// - secondary (C)：复制 / 久坐 / 外设 / 额度等；「已复制」圆岛本就靠右，满不满无所谓
+/// - secondary (C)：复制 / 久坐 / 外设 / 额度 / RAM 等（**除专注外一律靠右**）
 ///
-/// 专注计时收起待命是 **C 常驻**：
+/// 专注计时收起待命是 **C 常驻**（左翼优先于短 C）：
 /// - 仅它 → 满岛；+短 C → 左专注右短条；+B → 左 B 右专注
-/// - 右翼是专注时来短 C → 短 C 暂占约 2–3s，没后专注归位
 ///
-/// 凡 `.dual`（含会议+C、音乐+C）一律 **dualFlush** 左右小岛，禁止再抬会议双翼宽。
+/// 多条非专注 C：**FIFO 队列**，同时只展示一条；前一条 3s 收起后出下一条。
+/// 凡 `.dual`（含会议+C、音乐+C、专注+C）一律 **dualFlush** 左右小岛，禁止再抬会议双翼宽。
 enum IslandNoticeDisplayLane: Int, Equatable, Comparable {
     case secondary = 0
     case primary = 1
@@ -40,11 +40,11 @@ enum IslandNoticeLayoutSide: Equatable {
 struct IslandNoticeSlots: Equatable {
     /// A 或 B 通知（会议等）；音乐不走 payload，见 `mediaResident`。
     var primary: IslandNoticePayload?
-    /// 当前可见的 C 短条。
+    /// 当前可见的 C 短条（非专注；靠右或单独满岛）。
     var secondary: IslandNoticePayload?
-    /// 被短 C 暂时挤走的粘性 C（如久坐）。
-    var parkedSecondary: IslandNoticePayload?
-    /// 专注计时收起待命（C 常驻）。
+    /// 等待中的 C（FIFO；出现顺序）。
+    var secondaryQueue: [IslandNoticePayload] = []
+    /// 专注计时收起待命（C 常驻，布局上居左优先）。
     var focusResident: Bool = false
     /// 音乐播放小岛（B；无会议时生效，会议盖音乐）。
     var mediaResident: Bool = false
@@ -52,7 +52,7 @@ struct IslandNoticeSlots: Equatable {
     var current: IslandNoticePayload? { primary ?? secondary }
 
     var isEmpty: Bool {
-        primary == nil && secondary == nil && parkedSecondary == nil
+        primary == nil && secondary == nil && secondaryQueue.isEmpty
             && !focusResident && !mediaResident
     }
 
@@ -66,17 +66,18 @@ struct IslandNoticeSlots: Equatable {
     }
 
     var ids: [String] {
-        [primary?.id, secondary?.id, parkedSecondary?.id].compactMap { $0 }
+        ([primary?.id, secondary?.id].compactMap { $0 }) + secondaryQueue.map(\.id)
     }
 
     func contains(id: String) -> Bool {
-        primary?.id == id || secondary?.id == id || parkedSecondary?.id == id
+        primary?.id == id
+            || secondary?.id == id
+            || secondaryQueue.contains(where: { $0.id == id })
     }
 
     var anyKeepsExpandedWithoutHover: Bool {
         (primary?.keepsExpandedWithoutHover == true)
             || (secondary?.keepsExpandedWithoutHover == true)
-            || (parkedSecondary?.keepsExpandedWithoutHover == true)
     }
 
     var anyUsesNotchWingChrome: Bool {
@@ -90,9 +91,12 @@ struct IslandNoticeSlots: Equatable {
         }
     }
 
-    /// 任意 `.dual` 都走贴刘海左右 flush（音乐标准）；含会议+C、两 B 后再出 C。
+    /// 任意 `.dual` 都走贴刘海左右 flush；单独 RAM 高压也走 dualFlush 右半块。
     var usesDualFlushChrome: Bool {
         if case .dual = resolvedLayout { return true }
+        if case .fullNotice(let payload) = resolvedLayout {
+            return payload.usesDualFlushSoloChrome
+        }
         return false
     }
 
@@ -103,6 +107,12 @@ struct IslandNoticeSlots: Equatable {
               case .notice(let payload) = right
         else { return false }
         return payload.usesNotchRightOrbChrome
+    }
+
+    /// 单独 RAM 高压：只要右翼半块（C 靠右），勿再铺左翼黑底。
+    var usesDualFlushTrailingOnly: Bool {
+        guard case .fullNotice(let payload) = resolvedLayout else { return false }
+        return payload.usesDualFlushSoloChrome
     }
 
     var anyUsesNotchRightOrbChrome: Bool {
@@ -134,7 +144,7 @@ enum IslandNoticeSlotPolicy {
             var next = slots
             next.primary = incoming
             next.secondary = nil
-            next.parkedSecondary = nil
+            next.secondaryQueue = []
             return next
         }
 
@@ -163,25 +173,23 @@ enum IslandNoticeSlotPolicy {
         }
     }
 
+    /// 非专注 C：同时只展示一条；已有可见 C 时按出现顺序入队。
     private static func applySecondary(
         _ incoming: IslandNoticePayload,
         to slots: IslandNoticeSlots
     ) -> IslandNoticeSlots? {
         var next = slots
-        if let existing = slots.secondary, existing.id != incoming.id {
-            let existingSticky = existing.autoDismissNanoseconds == nil
-            let incomingEphemeral = incoming.autoDismissNanoseconds != nil
-            if existingSticky, incomingEphemeral {
-                next.parkedSecondary = existing
+        if let existing = slots.secondary {
+            if existing.id == incoming.id {
                 next.secondary = incoming
                 return next
             }
-            if existingSticky,
-               incoming.autoDismissNanoseconds == nil,
-               incoming.preemptionRank < existing.preemptionRank
-            {
-                return nil
+            if let idx = next.secondaryQueue.firstIndex(where: { $0.id == incoming.id }) {
+                next.secondaryQueue[idx] = incoming
+            } else {
+                next.secondaryQueue.append(incoming)
             }
+            return next
         }
         next.secondary = incoming
         return next
@@ -199,11 +207,13 @@ enum IslandNoticeSlotPolicy {
             next.primary = nil
         }
         if next.secondary?.id == id {
-            next.secondary = next.parkedSecondary
-            next.parkedSecondary = nil
-        }
-        if next.parkedSecondary?.id == id {
-            next.parkedSecondary = nil
+            if next.secondaryQueue.isEmpty {
+                next.secondary = nil
+            } else {
+                next.secondary = next.secondaryQueue.removeFirst()
+            }
+        } else {
+            next.secondaryQueue.removeAll { $0.id == id }
         }
         return next
     }
@@ -222,7 +232,7 @@ enum IslandNoticeSlotPolicy {
 
     /// 布局解析。
     /// B = 会议 tip（primary）或音乐常驻；两 B 同时只展示会议（盖音乐）。
-    /// 会议满岛时来短 C → 左会议右 C（音乐仍被盖）；C 没后会议回满岛。
+    /// 非专注 C 靠右；专注常驻居左（仅它 / 对 B 居右 / 对短 C 居左）。
     static func resolvedLayout(_ slots: IslandNoticeSlots) -> IslandNoticeLayout {
         if let primary = slots.primary, primary.displayLane == .exclusive {
             return .fullNotice(primary)
@@ -253,12 +263,11 @@ enum IslandNoticeSlotPolicy {
             return .fullMedia
         }
 
-        // 无 B：仅 C 族
+        // 无 B：专注左 + 短 C 右；或单独短 C 满岛；或仅专注
         if let secondary = slots.secondary {
             if slots.focusResident {
                 return .dual(left: .focus, right: .notice(secondary))
             }
-            // 单独「已复制」：圆岛靠右，满不满无所谓
             return .fullNotice(secondary)
         }
 
@@ -274,11 +283,12 @@ extension IslandNoticePayload {
         switch self {
         case .colorPickTip, .ocrSelectTip:
             return .exclusive
-        case .meetingLead, .ramPressure:
+        case .meetingLead:
             return .primary
         case .clipboardCaptureHint, .moveReminder, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
-             .aiUsageAlert:
+             .aiUsageAlert, .ramPressure:
+            // 非专注 C：靠右半块 / 单独满岛；多条 FIFO。
             return .secondary
         }
     }

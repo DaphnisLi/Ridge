@@ -19,6 +19,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             IslandNoticeCenter.shared.dismiss(id: "aiUsage.debug.\(stage)")
         }
         IslandNoticeCenter.shared.dismiss(id: "moveReminder.debug.sticky")
+        // RAM 调试常驻由 ResourceMonitorSession DEBUG 开关再贴；启动先清残留。
+        IslandNoticeCenter.shared.dismiss(id: "resource.ram.debug.sticky")
 
         island.start()
         menuBar.start(island: island)

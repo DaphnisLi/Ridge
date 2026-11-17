@@ -106,6 +106,11 @@ struct IslandContentView: View {
             && noticeCenter.slots.usesDualFlushWithRightOrb
     }
 
+    private var usesDualFlushTrailingOnly: Bool {
+        runtime.isTransientNoticePage
+            && noticeCenter.slots.usesDualFlushTrailingOnly
+    }
+
     private var appliedBottomRadius: CGFloat {
         if usesNotchRightOrb {
             return IslandChrome.notchRightOrbDiameter / 2
@@ -147,17 +152,20 @@ struct IslandContentView: View {
                     let underlap = IslandChrome.dualFlushNotchUnderlap
                     let wingW = IslandChrome.dualFlushLeftWingWidth
                     let leftFillW = wingW + underlap
-                    IslandOpaqueFillView(
-                        bottomRadius: IslandFlushWingStyle.outerBottomRadius,
-                        outlineStyle: .flushLeading,
-                        fill: settings.theme.nsFillColor
-                    )
-                    .frame(width: leftFillW, height: bodySize.height)
-                    .frame(
-                        width: bodySize.width,
-                        height: bodySize.height,
-                        alignment: .topLeading
-                    )
+                    // 单独 RAM（C）只要右翼半块，跳过左翼。
+                    if !usesDualFlushTrailingOnly {
+                        IslandOpaqueFillView(
+                            bottomRadius: IslandFlushWingStyle.outerBottomRadius,
+                            outlineStyle: .flushLeading,
+                            fill: settings.theme.nsFillColor
+                        )
+                        .frame(width: leftFillW, height: bodySize.height)
+                        .frame(
+                            width: bodySize.width,
+                            height: bodySize.height,
+                            alignment: .topLeading
+                        )
+                    }
                     if !usesDualFlushWithRightOrb {
                         // 右翼同宽 flush；「已复制」Ø32 自绘圆，勿再铺长方形黑底。
                         let rightFillW = wingW + underlap

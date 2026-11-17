@@ -566,11 +566,8 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(copied.usesNotchWingChrome)
         // Cmd+C 后指针常不在岛上：须保持展开至自动收起，否则展开中途就被 hoverEnd 收掉。
         XCTAssertTrue(copied.keepsExpandedWithoutHover)
-        // 入场约 0.9s + 定格 0.5s，勿再挂满 3s。
-        XCTAssertEqual(
-            copied.autoDismissNanoseconds,
-            IslandChrome.notchRightOrbAutoDismissNanoseconds
-        )
+        // 非专注 C 统一约 3s（含已复制圆岛）。
+        XCTAssertEqual(copied.autoDismissNanoseconds, 3_000_000_000)
         XCTAssertEqual(IslandChrome.notchRightOrbLingerNanoseconds, 500_000_000)
         XCTAssertTrue(copied.holdsWhileHovering)
 
@@ -996,7 +993,7 @@ final class RegressionCatalogTests: XCTestCase {
         )
         XCTAssertTrue(move.keepsExpandedWithoutHover)
         XCTAssertTrue(move.usesNotchWingChrome)
-        XCTAssertNil(move.autoDismissNanoseconds)
+        XCTAssertEqual(move.autoDismissNanoseconds, 3_000_000_000)
         XCTAssertEqual(move.preemptionRank, 50)
 
         let notchW: CGFloat = 179
@@ -1059,7 +1056,83 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: move, replacing: copy))
     }
 
-    /// 双槽：A 满岛；B+C 左右；专注常驻与短 C；短 C 暂占后归还粘性 C。
+    /// RAM 高压是 C：半块 flush 靠右；与 B 并排居右。
+    func test_islandNoticeDualSlots_ramPressureUsesDualFlushSolo() {
+        let ram = IslandNoticePayload.ramPressure(
+            .init(
+                id: "resource.ram.test",
+                ramUsedBytes: 28 * 1024 * 1024 * 1024,
+                ramPercent: 96,
+                topAppName: "Google Chrome",
+                topAppBundleID: "com.google.Chrome",
+                topAppMemoryBytes: 4_200 * 1024 * 1024
+            )
+        )
+        XCTAssertEqual(ram.displayLane, .secondary)
+        XCTAssertEqual(ram.autoDismissNanoseconds, 3_000_000_000)
+        XCTAssertTrue(ram.usesDualFlushSoloChrome)
+        XCTAssertFalse(ram.usesNotchWingChrome)
+        XCTAssertEqual(L10n.ResourceMonitor.tipPercent(96), "96%")
+        XCTAssertEqual(L10n.ResourceMonitor.purgeTip, "释放")
+        XCTAssertEqual(L10n.ResourceMonitor.ramTipLabel, "RAM")
+
+        let solo = IslandNoticeSlotPolicy.applying(incoming: ram, to: IslandNoticeSlots())
+        XCTAssertEqual(solo?.secondary?.id, ram.id)
+        XCTAssertNil(solo?.primary)
+        XCTAssertEqual(solo?.resolvedLayout, .fullNotice(ram))
+        XCTAssertTrue(solo?.usesDualFlushChrome == true)
+        XCTAssertTrue(solo?.usesDualFlushTrailingOnly == true)
+        XCTAssertFalse(solo?.anyUsesNotchWingChrome == true)
+
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "m-with-ram")
+        let withB = IslandNoticeSlotPolicy.applying(incoming: meeting, to: solo!)
+        XCTAssertEqual(
+            withB?.resolvedLayout,
+            .dual(left: .notice(meeting), right: .notice(ram))
+        )
+        XCTAssertTrue(withB?.usesDualFlushChrome == true)
+        XCTAssertFalse(withB?.usesDualFlushTrailingOnly == true)
+    }
+
+    /// 多条非专注 C：FIFO 排队，同时只展示一条；收起后出下一条。
+    func test_islandNoticeDualSlots_secondaryTipsQueueFIFO() {
+        let ai = IslandNoticePayload.aiUsageAlert(
+            id: "ai.queue",
+            providerName: "Cursor",
+            remainingPercent: 8,
+            stage: .warning,
+            resetsAt: nil
+        )
+        let peripheral = IslandNoticePayload.peripheralConnected(
+            .init(
+                id: "bat.connect.queue",
+                deviceID: "airpods-queue",
+                deviceName: "AirPods",
+                kind: .headphones,
+                percent: 80,
+                threshold: 0,
+                detail: "已连接"
+            )
+        )
+        XCTAssertEqual(ai.autoDismissNanoseconds, 3_000_000_000)
+        XCTAssertEqual(peripheral.autoDismissNanoseconds, 3_000_000_000)
+
+        let first = IslandNoticeSlotPolicy.applying(incoming: ai, to: IslandNoticeSlots())
+        XCTAssertEqual(first?.secondary?.id, ai.id)
+        XCTAssertTrue(first?.secondaryQueue.isEmpty == true)
+        XCTAssertEqual(first?.resolvedLayout, .fullNotice(ai))
+
+        let queued = IslandNoticeSlotPolicy.applying(incoming: peripheral, to: first!)
+        XCTAssertEqual(queued?.secondary?.id, ai.id, "先到的继续展示")
+        XCTAssertEqual(queued?.secondaryQueue.map(\.id), [peripheral.id])
+
+        let next = IslandNoticeSlotPolicy.dismissing(id: ai.id, from: queued!)
+        XCTAssertEqual(next.secondary?.id, peripheral.id)
+        XCTAssertTrue(next.secondaryQueue.isEmpty)
+        XCTAssertEqual(next.resolvedLayout, .fullNotice(peripheral))
+    }
+
+    /// 双槽：A 满岛；B+C 左右；多 C FIFO；独占清槽。
     func test_islandNoticeDualSlots_primarySecondaryAndExclusive() {
         let meeting = IslandNoticePayload.meetingLead(meetingID: "dual-m")
         let copy = IslandNoticePayload.clipboardCaptureHint(
@@ -1090,31 +1163,28 @@ final class RegressionCatalogTests: XCTestCase {
         )
         XCTAssertFalse(dual?.anyUsesNotchRightOrbChrome == true)
 
-        // 久坐盖掉复制（粘性换粘性，rank）
-        let moveOnDual = IslandNoticeSlotPolicy.applying(incoming: move, to: dual!)
-        XCTAssertEqual(moveOnDual?.secondary?.id, move.id)
+        // 久坐后来：复制仍展示，久坐入队（FIFO，不再靠 rank 盖掉）
+        let moveQueued = IslandNoticeSlotPolicy.applying(incoming: move, to: dual!)
+        XCTAssertEqual(moveQueued?.secondary?.id, copy.id)
+        XCTAssertEqual(moveQueued?.secondaryQueue.map(\.id), [move.id])
 
-        // 短复制可暂占久坐：park 久坐
-        let copyOverMove = IslandNoticeSlotPolicy.applying(incoming: copy, to: moveOnDual!)
-        XCTAssertEqual(copyOverMove?.secondary?.id, copy.id)
-        XCTAssertEqual(copyOverMove?.parkedSecondary?.id, move.id)
-
-        // 复制收起 → 久坐归还
-        let restored = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: copyOverMove!)
+        // 复制收起 → 久坐出队展示
+        let restored = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: moveQueued!)
         XCTAssertEqual(restored.secondary?.id, move.id)
-        XCTAssertNil(restored.parkedSecondary)
+        XCTAssertTrue(restored.secondaryQueue.isEmpty)
 
         // 另一场会议覆盖主槽，次槽保留。
         let swapped = IslandNoticeSlotPolicy.applying(incoming: otherMeeting, to: restored)
         XCTAssertEqual(swapped?.primary?.id, otherMeeting.id)
         XCTAssertEqual(swapped?.secondary?.id, move.id)
 
-        // 独占清通知槽，专注旗标可保留
+        // 独占清通知槽与 C 队列，专注旗标可保留
         var withFocus = swapped!
         withFocus.focusResident = true
         let cleared = IslandNoticeSlotPolicy.applying(incoming: exclusive, to: withFocus)
         XCTAssertEqual(cleared?.primary?.id, exclusive.id)
         XCTAssertNil(cleared?.secondary)
+        XCTAssertTrue(cleared?.secondaryQueue.isEmpty == true)
         XCTAssertTrue(cleared?.focusResident == true)
         XCTAssertEqual(cleared?.resolvedLayout, .fullNotice(exclusive))
 

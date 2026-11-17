@@ -6700,6 +6700,39 @@
         }
       }
     },
+    "resource_monitor.mute_tip": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免打扰"
+          }
+        }
+      }
+    },
+    "resource_monitor.purge_tip": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "释放"
+          }
+        }
+      }
+    },
+    "resource_monitor.ram_tip_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RAM"
+          }
+        }
+      }
+    },
     "settings.haptic.light": {
       "extractionState": "manual",
       "localizations": {
