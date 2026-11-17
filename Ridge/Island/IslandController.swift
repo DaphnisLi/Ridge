@@ -416,8 +416,11 @@ final class IslandController: NSObject {
     func expand(reason: String) {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         let noticeExpand = Self.isNoticeExpandReason(reason)
-        // 设计页保持收起：程序 tip 不得抢展开（与 pointerOverSettings 收起互殴会连震）。
-        if noticeExpand, blocksProgrammaticNoticeExpand {
+        // 设计页：会议等无自动收的 tip 不得抢展开（与 pointerOverSettings 互殴连震）。
+        // 约 3s 瞬时 tip（RAM / 进程结束 / 已复制等）仍程序展开，不依赖悬停。
+        if noticeExpand, blocksProgrammaticNoticeExpand,
+           !IslandNoticeCenter.shared.slots.anyExpandsDuringSettingsSession
+        {
             AppLog.warn("Island", "设置设计页中，跳过程序通知展开", [
                 "reason": reason,
                 "notice": IslandNoticeCenter.shared.current?.id ?? ""
@@ -773,12 +776,13 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "货架投放区命中中，忽略收起", ["targeted": true])
             return
         }
-        // 会议 / 久坐等常驻提示：移开指针不得收岛（须入会 / 点掉 / 状态结束）。
-        if reason == "hoverEnd",
+        // 常驻 / 瞬时 tip：移开指针不得收岛（约 3s 由 auto-dismiss 撤；会议须入会 / 点掉）。
+        if reason == "hoverEnd" || reason == "pointerOverSettings",
            IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover
         {
             let notice = IslandNoticeCenter.shared.current
-            AppLog.debug("Island", "常驻提示中，忽略悬停收起", [
+            AppLog.debug("Island", "常驻提示中，忽略收起", [
+                "reason": reason,
                 "notice": notice?.id ?? "",
                 "source": notice?.sourceTag ?? "",
                 "dual": IslandNoticeCenter.shared.slots.isDual
@@ -874,14 +878,16 @@ final class IslandController: NSObject {
             isExpanded: viewModel.isExpanded,
             keepsExpandedWithoutHover: noticeSlots.anyKeepsExpandedWithoutHover,
             settingsSessionBlocksIslandTips: blocksProgrammaticNoticeExpand,
-            pointerOverSettings: pointerOverSettings
+            pointerOverSettings: pointerOverSettings,
+            expandsDuringSettingsSession: noticeSlots.anyExpandsDuringSettingsSession
         ) {
             let notice = noticeSlots.current
             AppLog.warn("Island", "常驻提示未展开，强制展开", [
                 "notice": notice?.id ?? "",
                 "source": notice?.sourceTag ?? "",
                 "dual": noticeSlots.isDual,
-                "panelW": Int(viewModel.panelSize.width)
+                "panelW": Int(viewModel.panelSize.width),
+                "settingsTransient": noticeSlots.anyExpandsDuringSettingsSession
             ])
             expand(reason: "noticeSticky:\(notice?.sourceTag ?? "dual")")
         }
@@ -922,9 +928,16 @@ final class IslandController: NSObject {
             } else if leftIsland, !isMouseDownInIsland {
                 // 控制台 / 小组件设计页：设置窗与展开岛几何重叠，
                 // 延迟收起的 stillOver 复查会误判「还在岛上」→ 必须立刻收起。
+                // 瞬时 tip 除外：约 3s 常驻展示，指针在设置窗上也不得收掉。
                 collapseWorkItem?.cancel()
                 collapseWorkItem = nil
-                collapse(reason: "pointerOverSettings")
+                if IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover {
+                    AppLog.debug("Island", "设置窗命中中，常驻 tip 保持展开", [
+                        "notice": IslandNoticeCenter.shared.current?.id ?? ""
+                    ])
+                } else {
+                    collapse(reason: "pointerOverSettings")
+                }
             }
             return
         }

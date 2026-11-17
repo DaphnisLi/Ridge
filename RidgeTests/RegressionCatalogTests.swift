@@ -642,7 +642,8 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
-    /// 设置设计页 / 指针在设置窗：禁止 sticky 强制展开，否则与 pointerOverSettings 收起互殴连震。
+    /// 会议等无自动收的 sticky：设置设计页 / 指针在设置窗禁止强制展开（防连震）。
+    /// 约 3s 瞬时 tip：设置开着也要强制展开，与悬停无关。
     func test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand() {
         XCTAssertFalse(
             IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
@@ -676,6 +677,29 @@ final class RegressionCatalogTests: XCTestCase {
                 pointerOverSettings: false
             )
         )
+        // 瞬时 tip：设置会话 / 指针在设置窗也强制展开。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: true,
+                pointerOverSettings: true,
+                expandsDuringSettingsSession: true
+            )
+        )
+        let ram = IslandNoticePayload.ramPressure(
+            .init(
+                id: "resource.ram.settings-expand",
+                ramUsedBytes: 28 * 1024 * 1024 * 1024,
+                ramPercent: 96,
+                topAppName: "Google Chrome",
+                topAppBundleID: "com.google.Chrome",
+                topAppMemoryBytes: 4_200 * 1024 * 1024
+            )
+        )
+        XCTAssertTrue(ram.expandsDuringSettingsSession)
+        XCTAssertTrue(ram.keepsExpandedWithoutHover)
+        XCTAssertEqual(ram.autoDismissNanoseconds, 3_000_000_000)
         // Ø32 圆岛不得被当成「展开态缩回刘海」异常。
         let orb = IslandChrome.preparedNotchRightOrbPanelSize()
         XCTAssertFalse(
@@ -1056,7 +1080,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(IslandNoticePreemption.shouldAccept(incoming: move, replacing: copy))
     }
 
-    /// RAM 高压是 C：半块 flush 靠右；与 B 并排居右。
+    /// RAM 高压是 C：单独左右双翼贴刘海（左用量、右 Top App）；与 B 并排居右半块；常驻 tip。
     func test_islandNoticeDualSlots_ramPressureUsesDualFlushSolo() {
         let ram = IslandNoticePayload.ramPressure(
             .init(
@@ -1071,10 +1095,12 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(ram.displayLane, .secondary)
         XCTAssertEqual(ram.autoDismissNanoseconds, 3_000_000_000)
         XCTAssertTrue(ram.usesDualFlushSoloChrome)
-        XCTAssertTrue(ram.usesDualFlushTrailingOnlyChrome)
+        XCTAssertFalse(ram.usesDualFlushTrailingOnlyChrome)
         XCTAssertFalse(ram.usesNotchWingChrome)
+        XCTAssertTrue(ram.keepsExpandedWithoutHover)
+        XCTAssertTrue(ram.expandsDuringSettingsSession)
         XCTAssertEqual(L10n.ResourceMonitor.tipPercent(96), "96%")
-        XCTAssertEqual(L10n.ResourceMonitor.purgeTip, "释放")
+        XCTAssertEqual(L10n.ResourceMonitor.manageTip, "管理")
         XCTAssertEqual(L10n.ResourceMonitor.ramTipLabel, "RAM")
 
         let solo = IslandNoticeSlotPolicy.applying(incoming: ram, to: IslandNoticeSlots())
@@ -1082,8 +1108,11 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertNil(solo?.primary)
         XCTAssertEqual(solo?.resolvedLayout, .fullNotice(ram))
         XCTAssertTrue(solo?.usesDualFlushChrome == true)
-        XCTAssertTrue(solo?.usesDualFlushTrailingOnly == true)
+        XCTAssertFalse(solo?.usesDualFlushTrailingOnly == true)
+        XCTAssertTrue(solo?.usesDualFlushCompactWings == true)
+        XCTAssertEqual(solo?.dualFlushWingWidth, IslandChrome.dualFlushCompactWingWidth)
         XCTAssertFalse(solo?.anyUsesNotchWingChrome == true)
+        XCTAssertTrue(solo?.anyKeepsExpandedWithoutHover == true)
 
         let meeting = IslandNoticePayload.meetingLead(meetingID: "m-with-ram")
         let withB = IslandNoticeSlotPolicy.applying(incoming: meeting, to: solo!)
@@ -1115,6 +1144,8 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(ended.usesDualFlushSoloChrome)
         XCTAssertFalse(ended.usesDualFlushTrailingOnlyChrome)
         XCTAssertFalse(ended.usesNotchWingChrome)
+        XCTAssertTrue(ended.keepsExpandedWithoutHover)
+        XCTAssertTrue(ended.expandsDuringSettingsSession)
         XCTAssertEqual(L10n.Projects.tipDuration(6 * 60 + 12), "6m12s")
         XCTAssertEqual(L10n.Projects.exitTag(.succeeded), "exit 0")
 

@@ -32,6 +32,8 @@ final class IslandNoticeWidget: IslandWidget {
     private var observers: Set<AnyCancellable> = []
     private var dismissTasks: [String: Task<Void, Never>] = [:]
     private var presenting: IslandNoticePayload?
+    /// 设置会话挡住 tip 展开时轮询，关闭后再 expand。
+    private var settingsUnblockTask: Task<Void, Never>?
 
     init(context: WidgetContext) {
         self.context = context
@@ -96,7 +98,8 @@ final class IslandNoticeWidget: IslandWidget {
                     scheduleAutoDismiss(
                         for: payload.id,
                         nanoseconds: nanos,
-                        holdWhileHovering: payload.holdsWhileHovering
+                        holdWhileHovering: payload.holdsWhileHovering,
+                        expandsDuringSettingsSession: payload.expandsDuringSettingsSession
                     )
                 }
             } else {
@@ -110,15 +113,30 @@ final class IslandNoticeWidget: IslandWidget {
     }
 
     /// 到达时长后撤回；可选：悬停时延后（剪贴板短提示不延后）。
+    /// 仅「设置页挡住且未展开」的 tip 延后计时；瞬时 tip 设置中仍展开，按 3s 正常收。
     private func scheduleAutoDismiss(
         for noticeID: String,
         nanoseconds: UInt64,
-        holdWhileHovering: Bool
+        holdWhileHovering: Bool,
+        expandsDuringSettingsSession: Bool
     ) {
         dismissTasks[noticeID]?.cancel()
         dismissTasks[noticeID] = Task { @MainActor [weak self] in
+            guard let self else { return }
+            // 会议等被设置挡住、尚未上岛：不计时。瞬时 tip 已上岛则立刻开计时。
+            if !expandsDuringSettingsSession {
+                while !Task.isCancelled,
+                      IslandController.shared?.blocksProgrammaticNoticeExpand == true
+                {
+                    AppLog.debug("IslandNotice", "设置页挡住展开，延后自动收起计时", ["id": noticeID])
+                    try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
+                }
+                guard !Task.isCancelled else { return }
+                guard self.noticeCenter.slots.contains(id: noticeID) else { return }
+            }
+
             try? await Task.sleep(nanoseconds: nanoseconds)
-            guard !Task.isCancelled, let self else { return }
+            guard !Task.isCancelled else { return }
             guard self.noticeCenter.slots.contains(id: noticeID) else { return }
 
             if holdWhileHovering {
@@ -185,13 +203,24 @@ final class IslandNoticeWidget: IslandWidget {
         }
         Task { @MainActor [weak self] in
             guard let self, self.wantsDisplay else { return }
-            // 设置设计页真岛保持收起：切页+expand 会与 pointerOverSettings 互殴连震。
-            if IslandController.shared?.blocksProgrammaticNoticeExpand == true {
-                AppLog.warn("IslandNotice", "设置设计页中，通知仅入槽不展开", [
+            // 会议等无自动收的 tip：设置设计页仅入槽，关设置后再展开。
+            // 约 3s 瞬时 tip（RAM 等）：设置开着也立刻 expand，与悬停无关。
+            if IslandController.shared?.blocksProgrammaticNoticeExpand == true,
+               !payload.expandsDuringSettingsSession
+            {
+                AppLog.warn("IslandNotice", "设置设计页中，通知仅入槽不展开，待关闭设置后再展示", [
                     "id": payload.id,
                     "source": payload.sourceTag
                 ])
+                self.context.requestDisplay()
+                self.ensureExpandAfterSettingsUnblock()
                 return
+            }
+            if IslandController.shared?.blocksProgrammaticNoticeExpand == true {
+                AppLog.warn("IslandNotice", "设置会话中仍展开瞬时 tip", [
+                    "id": payload.id,
+                    "source": payload.sourceTag
+                ])
             }
             // 与会议一致：延后一拍避开 applyPage 同步重入；但 expand 必须在切页之后。
             // 替换（尤其上一短条→「已复制」）依赖 expand 内 allowPanelShrink，否则尺寸卡死看不见。
@@ -207,8 +236,32 @@ final class IslandNoticeWidget: IslandWidget {
         }
     }
 
+    /// 设置会话结束后，把仍在槽内的瞬时通知真正展开到岛上。
+    private func ensureExpandAfterSettingsUnblock() {
+        guard settingsUnblockTask == nil else { return }
+        settingsUnblockTask = Task { @MainActor [weak self] in
+            defer { self?.settingsUnblockTask = nil }
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
+                guard let self else { return }
+                if IslandController.shared?.blocksProgrammaticNoticeExpand == true {
+                    continue
+                }
+                guard self.wantsDisplay, let lead = self.noticeCenter.current else { return }
+                AppLog.warn("IslandNotice", "设置已关闭，补展开被挡住的瞬时通知", [
+                    "id": lead.id,
+                    "source": lead.sourceTag
+                ])
+                self.showThenExpand(payload: lead)
+                return
+            }
+        }
+    }
+
     private func hide() {
         wantsDisplay = false
+        settingsUnblockTask?.cancel()
+        settingsUnblockTask = nil
         for (_, task) in dismissTasks {
             task.cancel()
         }
@@ -217,13 +270,20 @@ final class IslandNoticeWidget: IslandWidget {
         // 通知是程序主动 expand 的；指针不在岛上时悬停轮询不会 scheduleCollapse
         //（over 与 isPointerOverIsland 同为 false），必须显式收岛，否则会闪一下空态/其它页。
         let hovering = IslandController.shared?.isHoveringIsland == true
-        // 通知结束后若岛上已无面板/已点进实况，即使仍悬停也收起，避免空岛挂着。
-        let keepExpanded = hovering && WidgetRuntime.shared.allowsHoverExpand
+        // allowsHoverExpand 在「仍是瞬时通知页 / current 未清」时也会 true；
+        // 若照单保展开，免打扰后悬停会留下空双翼岛。仅通知真正撤干净且仍有面板/实况才保。
+        let noticeGone = IslandNoticeCenter.shared.current == nil
+            && !WidgetRuntime.shared.isTransientNoticePage
+        let keepExpanded = hovering
+            && noticeGone
+            && WidgetRuntime.shared.allowsHoverExpand
         if !keepExpanded {
             IslandController.shared?.collapse(reason: "islandNoticeEnd")
             AppLog.info("IslandNotice", "通知结束已收起灵动岛", [
                 "hovering": hovering,
-                "allowHover": WidgetRuntime.shared.allowsHoverExpand
+                "noticeGone": noticeGone,
+                "allowHover": WidgetRuntime.shared.allowsHoverExpand,
+                "transientPage": WidgetRuntime.shared.isTransientNoticePage
             ])
         } else {
             AppLog.debug("IslandNotice", "通知结束但面板仍在且悬停，保持展开")
@@ -655,8 +715,8 @@ struct PeripheralBatteryNoticeCard: View {
     }
 }
 
-/// RAM 高压 tip（C 类半块，靠右）：idle `● 96% RAM`；悬停免打扰 + 释放。
-/// 单独上岛只要右翼；与 B/专注并排时走右翼 flush。根视图禁止外圈 padding。
+/// RAM 高压 tip：单独紧凑双翼贴刘海——左 `● 96% RAM`，右 App 名+内存（无图标）；悬停右翼切免打扰+管理。
+/// 与 B/专注并排 = 右翼半块。程序 expand + 约 3s。禁止一键杀进程。根视图禁止外圈 padding。
 private struct RAMPressureNoticeCard: View {
     let notice: ResourceRAMPressureNotice
     var flushSide: IslandFlushWingStyle.Side? = nil
@@ -666,9 +726,20 @@ private struct RAMPressureNoticeCard: View {
 
     private let accentRed = IslandFlushWingStyle.accentDanger
     private let muteWell = Color.white.opacity(0.14)
+    private let compactWing = IslandChrome.dualFlushCompactWingWidth
 
     /// 仅本 tip 的 SwiftUI hover；勿跟 `isHoveringIsland`（常驻展开会粘住不复原）。
     private var showsActions: Bool { localHover }
+
+    private var topAppName: String {
+        let raw = notice.topAppName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { return L10n.ResourceMonitor.unknownApp }
+        return raw
+    }
+
+    private var topAppMemoryLabel: String {
+        L10n.ResourceMonitor.tipMemory(notice.topAppMemoryBytes)
+    }
 
     var body: some View {
         Group {
@@ -676,12 +747,11 @@ private struct RAMPressureNoticeCard: View {
                 // 与 B/专注并排：本翼半块（右侧）。
                 halfWingBody
             } else {
-                // 单独 C：只要右翼半块，左翼留空。
-                IslandDualNotchWingRow {
-                    Color.clear
-                        .accessibilityHidden(true)
+                // 单独：紧凑左右双翼贴刘海。
+                IslandDualNotchWingRow(wingWidth: compactWing) {
+                    leftWingIdle
                 } right: {
-                    halfWingBody
+                    rightWingBody
                 }
             }
         }
@@ -697,6 +767,29 @@ private struct RAMPressureNoticeCard: View {
         .accessibilityLabel(
             L10n.ResourceMonitor.noticeTitle(notice.ramUsedBytes)
         )
+    }
+
+    private var leftWingIdle: some View {
+        idleRAMRow
+            .islandBareFlushWingContent()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .opacity(showsActions ? 0.35 : 1)
+    }
+
+    /// 右翼：idle App 名 + 内存 ↔ 悬停免打扰 + 管理。
+    private var rightWingBody: some View {
+        ZStack {
+            topAppRow
+                .opacity(showsActions ? 0 : 1)
+                .scaleEffect(showsActions ? 0.95 : 1)
+                .allowsHitTesting(!showsActions)
+            hoverActionsRow
+                .opacity(showsActions ? 1 : 0)
+                .scaleEffect(showsActions ? 1 : 0.95)
+                .allowsHitTesting(showsActions)
+        }
+        .islandBareFlushWingContent()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// 半块内容：idle 用量 ↔ 悬停双按钮。
@@ -717,15 +810,17 @@ private struct RAMPressureNoticeCard: View {
 
     private var idleRAMRow: some View {
         HStack(spacing: 0) {
-            Circle()
-                .fill(accentRed)
-                .frame(width: 7, height: 7)
-            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
-            Text(L10n.ResourceMonitor.tipPercent(notice.ramPercent))
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .monospacedDigit()
-                .lineLimit(1)
+            // 红点紧贴百分比；「RAM」仍靠右。
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(accentRed)
+                    .frame(width: 7, height: 7)
+                Text(L10n.ResourceMonitor.tipPercent(notice.ramPercent))
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
             Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
             Text(L10n.ResourceMonitor.ramTipLabel)
                 .font(.system(size: 10, weight: .semibold))
@@ -734,52 +829,72 @@ private struct RAMPressureNoticeCard: View {
         }
     }
 
+    /// 右翼 idle：名称靠左、用量靠右；无 App 图标。
+    private var topAppRow: some View {
+        HStack(spacing: 0) {
+            Text(topAppName)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
+            Text(topAppMemoryLabel)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.white.opacity(0.55))
+                .monospacedDigit()
+                .lineLimit(1)
+        }
+    }
+
     private var hoverActionsRow: some View {
         HStack(spacing: 8) {
             muteButton
-            purgeButton
+            manageButton
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
 
+    /// 浮层岛上 SwiftUI Button 易点不中；与会议半块一样用 onTapGesture。
     private var muteButton: some View {
-        Button {
-            AppLog.info("IslandNotice", "RAM 通知：免打扰 30 分钟")
-            ResourceMonitorSession.shared.muteAlerts30m()
-            IslandNoticeCenter.shared.dismiss(id: notice.id)
-        } label: {
-            Image(systemName: "bell.slash")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 28, height: 28)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(muteWell)
-                )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(L10n.ResourceMonitor.muteTip)
+        Image(systemName: "bell.slash")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: 28, height: 28)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(muteWell)
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                AppLog.info("IslandNotice", "RAM 通知：免打扰 30 分钟", ["id": notice.id])
+                ResourceMonitorSession.shared.muteAlerts30m()
+                // muteAlerts30m 会撤 tip；此处再强制收岛，避免悬停保展开留下空翼。
+                IslandController.shared?.collapse(reason: "ramMute")
+            }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(L10n.ResourceMonitor.muteTip)
     }
 
-    private var purgeButton: some View {
-        Button {
-            AppLog.info("IslandNotice", "RAM 通知：一键释放")
-            ResourceMonitorSession.shared.purgeMemory()
-            IslandNoticeCenter.shared.dismiss(id: notice.id)
-        } label: {
-            HStack(spacing: 4) {
-                Text(L10n.ResourceMonitor.purgeTip)
-                    .font(.system(size: 12, weight: .bold))
-                Image(systemName: "bolt.fill")
-                    .font(.system(size: 10, weight: .bold))
-            }
-            .foregroundStyle(.black)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Capsule(style: .continuous).fill(Color.white))
+    private var manageButton: some View {
+        HStack(spacing: 4) {
+            Text(L10n.ResourceMonitor.manageTip)
+                .font(.system(size: 12, weight: .bold))
+            Image(systemName: "list.bullet")
+                .font(.system(size: 10, weight: .bold))
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(L10n.ResourceMonitor.purgeTip)
+        .foregroundStyle(.black)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Capsule(style: .continuous).fill(Color.white))
+        .contentShape(Capsule(style: .continuous))
+        .onTapGesture {
+            AppLog.info("IslandNotice", "RAM 通知：打开进程树设置页", ["id": notice.id])
+            IslandNoticeCenter.shared.dismiss(id: notice.id)
+            IslandController.shared?.collapse(reason: "ramManage")
+            SettingsNavigator.shared.open(.resourceMonitor)
+        }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(L10n.ResourceMonitor.manageTip)
     }
 }
 

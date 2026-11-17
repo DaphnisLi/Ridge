@@ -300,14 +300,17 @@ enum IslandExpandedPanelPolicy {
     }
 
     /// 常驻 tip（`keepsExpandedWithoutHover`）未展开时是否强制 expand。
-    /// 设置设计页保持收起 / 指针在设置窗上时禁止：否则 sticky 展开与 `pointerOverSettings` 收起互殴，触控板连震且提示看不见。
+    /// 会议等无自动收的 tip：设置设计页 / 指针在设置窗上时禁止（避免 sticky↔收起互殴连震）。
+    /// 约 3s 瞬时 tip（`expandsDuringSettingsSession`）：设置开着也要补展开，与悬停无关。
     static func shouldForceStickyNoticeExpand(
         isExpanded: Bool,
         keepsExpandedWithoutHover: Bool,
         settingsSessionBlocksIslandTips: Bool,
-        pointerOverSettings: Bool
+        pointerOverSettings: Bool,
+        expandsDuringSettingsSession: Bool = false
     ) -> Bool {
         guard keepsExpandedWithoutHover, !isExpanded else { return false }
+        if expandsDuringSettingsSession { return true }
         if settingsSessionBlocksIslandTips { return false }
         if pointerOverSettings { return false }
         return true

@@ -26,7 +26,7 @@ final class RecurringRegressionCoverageTests: XCTestCase {
     func test_recurringManifest_matchesDocumentedTableCount() {
         XCTAssertEqual(
             RecurringRegressionManifest.all.count,
-            11,
+            12,
             "增减 recurring 项时同步改 Manifest、REGRESSION_CATALOG 顶部表与本断言"
         )
         let unique = Set(RecurringRegressionManifest.ids)

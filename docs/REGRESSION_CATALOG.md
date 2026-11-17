@@ -30,6 +30,7 @@
 | `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
 | `meeting-tip-stays-after-join` | 点入会后 tip 仍不消失 | ≥3 | 已入会仍贴着会前提示；tick/改选把同一场贴回 | 会话级 `dismissedAfterJoinID` + publish 拒投；`test_meetingTipAfterJoin_*` |
 | `meeting-join-wrong-calendar-url` | 入会打开日程页而非会议室 | ≥2 | 点入会进 Google/Outlook 日程；钉钉丢会议号 | 跳过日程页；先扫平台；钉钉原 https；`test_meetingJoinLink_*` |
+| `settings-session-swallows-transient-notice` | 设置开着 / 不悬停就看不见瞬时 tip | 2 | 改 RAM 阈值仅入槽；必须移入岛才展开 | `expandsDuringSettingsSession`；设置中仍 expand；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
 
 ---
 
@@ -131,6 +132,16 @@
 - **根因倾向:** `dismissedAfterJoinID` 只活在 widget；`onJoined` weak self 未命中；1s tick / `joinedAdvance` 在打标前把同一场再 present；`open` 失败曾直接 return 不撤 tip  
 - **防护:** `MeetingLeadSession` 会话级先打 `dismissedAfterJoinID` → `publish(nil)` → `onTipExpired(joinedAdvance)`；`publish` 拒投已入会 id；打开失败也撤 tip；widget 只读会话标  
 - **自动化:** `test_meetingTipAfterJoin_*`（含 Session `joinFromNotice` 撤 tip + 拒再 present + selector latch）
+
+### settings-session-swallows-transient-notice — 开着设置改阈值时 tip 入槽但看不见
+
+- **recurring:** true  
+- **occurrences:** 2（2026-11-17：仅入槽不展开；同日：不移入岛就看不见——悬停 `expand(hover)` 绕过设置挡，程序 expand 被挡）  
+- **症状:** 设置「RAM 监控」开着时改阈值 / 告警已触发，岛上没有任何 tip；或必须把鼠标移入灵动岛才出现  
+- **根因倾向:** `blocksProgrammaticNoticeExpand` 挡住 `islandNotice` expand；`expand(hover)` 不走该挡 → 表现为「靠悬停才展示」；`pointerOverSettings` 还会把已展开的 sticky tip 收掉  
+- **防护:** `expandsDuringSettingsSession`（有 `autoDismissNanoseconds` 的瞬时 tip）设置中仍程序 expand；`pointerOverSettings` / `hoverEnd` 不收 `keepsExpandedWithoutHover`；瞬时 tip 计时不因设置会话延后；会议等无自动收的仍挡  
+- **相关代码:** `IslandNoticePayload.expandsDuringSettingsSession`、`IslandNoticeWidget.showThenExpand`、`IslandController.expand` / `collapse`、`IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand`  
+- **自动化:** `test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand`（含瞬时 tip 设置中仍 force expand + RAM `expandsDuringSettingsSession`）  
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -347,12 +358,27 @@
 - **相关代码:** `MoveReminderSession.tick` / `MoveReminderIdleProbe`  
 - **自动化建议:** 可选：模拟 idle≥leave 须清零、accum≥trigger 须 present
 
+### ram-mute-tip-stays — 点免打扰后 RAM tip 不立刻消失
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-17：悬停点免打扰后 tip / 空双翼仍挂着）  
+- **症状:** 点免打扰后提示不马上收；仍悬停时可能留下空翼岛  
+- **根因倾向:** ① 浮层上 SwiftUI `Button` 易点不中；② `hide()` 用 `allowsHoverExpand` 保展开时，瞬时通知页 / `current` 未清也会被当成可保展开  
+- **防护:** 免打扰走 `onTapGesture`；`muteAlerts30m` 同步撤 RAM tip；`hide()` 仅在通知真正撤干净且仍有面板/实况时保展开；点击后再 `collapse(ramMute)`  
+- **相关代码:** `RAMPressureNoticeCard`、`ResourceMonitorSession.muteAlerts30m`、`IslandNoticeWidget.hide`  
+- **自动化建议:** 可选：mute 后 slots 无 ramPressure，且 hide 在 transient 残留时仍 collapse
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-17 | 改 RAM 阈值 / 开告警时清免打扰并 rearm，新规则立刻可再提示 |
+| 2026-11-17 | 点免打扰立刻撤 RAM tip 并收岛；catalog `ram-mute-tip-stays` |
+| 2026-11-17 | RAM tip 对齐原稿：单独紧凑双翼（左 `● % RAM`，右 App 名+`4.1G`、无图标）；悬停右翼免打扰+管理；并排才半块 |
+| 2026-11-17 | 瞬时 tip（`expandsDuringSettingsSession`）设置开着也程序 expand，不靠悬停；`pointerOverSettings` 不收 sticky；catalog recurring |
+| 2026-11-17 | 设置会话挡住 tip 展开时延后 3s 计时，关闭后补 expand；catalog `settings-session-swallows-transient-notice` |
 | 2026-11-14 | 久坐关键路径改 warn 落盘（启动/离开/进度/投递）；catalog `move-reminder-hard-to-trigger` |
 | 2026-11-14 | 击键峰值按当日小时桶 max；桶持久化；`KeystrokePeakHourTests`；catalog `keystroke-peak-hour-not-max` |
 | 2026-11-13 | recurring 全量闸门：`RecurringRegressionManifest` + `scripts/test-recurring.sh`；occurrences=1 不强制测 |

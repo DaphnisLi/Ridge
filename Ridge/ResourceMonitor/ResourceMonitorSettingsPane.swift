@@ -11,12 +11,6 @@ struct ResourceMonitorSettingsPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                header
-                if let banner = session.lastActionBanner {
-                    Text(banner)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(SettingsChrome.secondary)
-                }
                 metricsGrid
                 topAppsCard
                 alertPolicyBar
@@ -45,62 +39,6 @@ struct ResourceMonitorSettingsPane: View {
         }
         .onDisappear {
             session.setSettingsVisible(false)
-        }
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        HStack(alignment: .center, spacing: 12) {
-            if session.snapshot.ramPercent >= settings.ramThresholdPercent {
-                HStack(spacing: 5) {
-                    Circle()
-                        .fill(SettingsChrome.error)
-                        .frame(width: 6, height: 6)
-                    Text(L10n.ResourceMonitor.highPressure)
-                        .font(.system(size: 11, weight: .semibold))
-                }
-                .foregroundStyle(SettingsChrome.error)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(SettingsChrome.error.opacity(0.12)))
-            }
-            Spacer(minLength: 8)
-            HStack(spacing: 8) {
-                Button {
-                    session.muteAlerts30m()
-                } label: {
-                    Label(L10n.ResourceMonitor.muteAlert, systemImage: "bell.slash")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(SettingsChrome.onSurface)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(SettingsChrome.surfaceContainer)
-                        )
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    session.purgeMemory()
-                } label: {
-                    Label(
-                        session.isPurging ? L10n.ResourceMonitor.purging : L10n.ResourceMonitor.purgeButton,
-                        systemImage: "trash"
-                    )
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(SettingsChrome.primary)
-                    )
-                }
-                .buttonStyle(.plain)
-                .disabled(session.isPurging)
-            }
         }
     }
 
@@ -628,17 +566,21 @@ struct ResourceMonitorSettingsPane: View {
         guard abs(settings.ramThresholdPercent - Double(n)) > 0.01 else { return }
         settings.ramThresholdPercent = Double(n)
         AppLog.info("ResourceMonitor", "用户修改 RAM 告警阈值", ["percent": n, "via": "typing"])
+        session.rearmAlertAndEvaluate(reason: "thresholdTyping:\(n)")
     }
 
     /// 回车 / 收尾：钳制到 50…99 并写回草稿。
     private func commitRamThreshold() {
         let raw = Int(ramThresholdDraft) ?? Int(settings.ramThresholdPercent.rounded())
         let clamped = min(99, max(50, raw))
-        if abs(settings.ramThresholdPercent - Double(clamped)) > 0.01 {
+        let changed = abs(settings.ramThresholdPercent - Double(clamped)) > 0.01
+        if changed {
             settings.ramThresholdPercent = Double(clamped)
             AppLog.info("ResourceMonitor", "用户修改 RAM 告警阈值", ["percent": clamped, "via": "submit"])
         }
         ramThresholdDraft = "\(clamped)"
+        // 回车时即使数值未变也再评估一次，方便用户「确认阈值」触发提示。
+        session.rearmAlertAndEvaluate(reason: changed ? "thresholdSubmit:\(clamped)" : "thresholdConfirm:\(clamped)")
     }
 
     // MARK: - Helpers

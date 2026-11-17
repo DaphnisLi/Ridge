@@ -88,7 +88,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 单独上岛时走左右 flush（RAM 右半 / 进程结束双翼）；勿抬会议双翼宽。
+    /// 单独上岛时走左右 flush（RAM / 进程结束双翼贴刘海）；勿抬会议双翼宽。
     var usesDualFlushSoloChrome: Bool {
         switch self {
         case .ramPressure, .processEnded:
@@ -98,14 +98,9 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 单独上岛时只要右翼半块（RAM）；进程结束要左右双翼。
+    /// 单独上岛只要右翼半块；RAM 单独为左右双翼整岛，不走 trailing-only。
     var usesDualFlushTrailingOnlyChrome: Bool {
-        switch self {
-        case .ramPressure:
-            return true
-        default:
-            return false
-        }
+        false
     }
 
     var usesShortBelowNotchChrome: Bool { false }
@@ -119,15 +114,20 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
+    /// 程序 expand 后保持展开，不依赖指针移入；约 3s 自动收的瞬时 tip 全部纳入。
     var keepsExpandedWithoutHover: Bool {
         switch self {
-        case .meetingLead, .moveReminder, .ramPressure, .colorPickTip, .ocrSelectTip:
+        case .meetingLead, .moveReminder, .ramPressure, .processEnded, .colorPickTip, .ocrSelectTip,
+             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected, .aiUsageAlert:
             return true
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")
-        default:
-            return false
         }
+    }
+
+    /// 有自动收起的瞬时 tip：设置设计页开着也要程序上岛（不靠悬停）；会议/取色等无自动收的仍挡。
+    var expandsDuringSettingsSession: Bool {
+        autoDismissNanoseconds != nil
     }
 
     var preemptionRank: Int {

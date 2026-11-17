@@ -85,6 +85,12 @@ enum RecurringRegressionManifest {
             testNamePrefixes: [
                 "test_meetingJoinLink_"
             ]
+        ),
+        Entry(
+            id: "settings-session-swallows-transient-notice",
+            testNamePrefixes: [
+                "test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand"
+            ]
         )
     ]
 

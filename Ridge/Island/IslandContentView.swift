@@ -153,7 +153,7 @@ struct IslandContentView: View {
                     let underlap = IslandChrome.dualFlushNotchUnderlap
                     let wingW = noticeCenter.slots.dualFlushWingWidth
                     let leftFillW = wingW + underlap
-                    // 单独 RAM（C）只要右翼半块，跳过左翼。
+                    // 仅 trailing-only 态跳过左翼；当前 RAM 单独走整块翼，不进此分支。
                     if !usesDualFlushTrailingOnly {
                         IslandOpaqueFillView(
                             bottomRadius: IslandFlushWingStyle.outerBottomRadius,

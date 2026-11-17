@@ -60,7 +60,11 @@ final class ResourceMonitorSettings: ObservableObject {
         ramThresholdPercent = min(99, max(50, threshold))
         singleAppAlertGB = defaults.object(forKey: Key.singleAppGB) as? Double ?? 8
         if let ts = defaults.object(forKey: Key.muteUntil) as? Double, ts > 0 {
-            muteUntil = Date(timeIntervalSince1970: ts)
+            let until = Date(timeIntervalSince1970: ts)
+            muteUntil = until > Date() ? until : nil
+            if muteUntil == nil {
+                defaults.removeObject(forKey: Key.muteUntil)
+            }
         } else {
             muteUntil = nil
         }
@@ -74,5 +78,12 @@ final class ResourceMonitorSettings: ObservableObject {
     func clearMute() {
         muteUntil = nil
         AppLog.info("ResourceMonitor", "告警静音已清除")
+    }
+
+    /// 过期静音从 prefs 清掉，避免长期残留。
+    func clearMuteIfExpired() {
+        guard let muteUntil, muteUntil <= Date() else { return }
+        self.muteUntil = nil
+        AppLog.debug("ResourceMonitor", "免打扰已过期并清除")
     }
 }

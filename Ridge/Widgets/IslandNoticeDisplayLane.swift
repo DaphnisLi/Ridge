@@ -80,6 +80,12 @@ struct IslandNoticeSlots: Equatable {
             || (secondary?.keepsExpandedWithoutHover == true)
     }
 
+    /// 槽内是否有「设置会话中仍可程序展开」的瞬时 tip。
+    var anyExpandsDuringSettingsSession: Bool {
+        (primary?.expandsDuringSettingsSession == true)
+            || (secondary?.expandsDuringSettingsSession == true)
+    }
+
     var anyUsesNotchWingChrome: Bool {
         switch resolvedLayout {
         case .fullFocus, .fullMedia, .dual, .empty:
@@ -91,7 +97,7 @@ struct IslandNoticeSlots: Equatable {
         }
     }
 
-    /// 任意 `.dual` 都走贴刘海左右 flush；单独 RAM 高压也走 dualFlush 右半块。
+    /// 任意 `.dual` 都走贴刘海左右 flush；单独进程结束等走 dualFlush 双翼。
     var usesDualFlushChrome: Bool {
         if case .dual = resolvedLayout { return true }
         if case .fullNotice(let payload) = resolvedLayout {
@@ -109,17 +115,21 @@ struct IslandNoticeSlots: Equatable {
         return payload.usesNotchRightOrbChrome
     }
 
-    /// 单独 RAM 高压：只要右翼半块（C 靠右），勿再铺左翼黑底。进程结束双翼除外。
+    /// 单独 tip 只要右翼半块时跳过左翼黑底；当前无此态（RAM 单独走整块翼）。
     var usesDualFlushTrailingOnly: Bool {
         guard case .fullNotice(let payload) = resolvedLayout else { return false }
         return payload.usesDualFlushTrailingOnlyChrome
     }
 
-    /// 进程结束单独上岛：左右翼用紧凑宽；与 B/专注并排时仍跟标准翼宽。
+    /// RAM / 进程结束单独上岛：左右翼用紧凑宽；与 B/专注并排时仍跟标准翼宽。
     var usesDualFlushCompactWings: Bool {
         guard case .fullNotice(let payload) = resolvedLayout else { return false }
-        if case .processEnded = payload { return true }
-        return false
+        switch payload {
+        case .ramPressure, .processEnded:
+            return true
+        default:
+            return false
+        }
     }
 
     var dualFlushWingWidth: CGFloat {

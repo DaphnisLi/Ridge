@@ -2441,8 +2441,8 @@ enum L10n {
         }
         static var purgeButton: String { tr("resource_monitor.purge_button", "强制回收内存") }
         static var purgeShort: String { tr("resource_monitor.purge_short", "一键释放") }
-        /// 岛 tip 悬停主按钮（稿「释放」）。
-        static var purgeTip: String { tr("resource_monitor.purge_tip", "释放") }
+        /// 岛 tip 悬停主按钮：打开进程树，由用户自选结束（禁止一键杀进程）。
+        static var manageTip: String { tr("resource_monitor.manage_tip", "管理") }
         static var purging: String { tr("resource_monitor.purging", "正在尽力回收内存…") }
         static var purgeNoChange: String {
             tr("resource_monitor.purge_no_change", "已尝试回收，用量未见明显下降")

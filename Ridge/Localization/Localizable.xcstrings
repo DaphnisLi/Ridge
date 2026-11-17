@@ -6711,8 +6711,19 @@
         }
       }
     },
-    "resource_monitor.purge_tip": {
+    "resource_monitor.manage_tip": {
       "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理"
+          }
+        }
+      }
+    },
+    "resource_monitor.purge_tip": {
+      "extractionState": "stale",
       "localizations": {
         "zh-Hans": {
           "stringUnit": {

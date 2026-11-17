@@ -267,15 +267,43 @@ final class ResourceMonitorSession: ObservableObject {
     }
 
     private func evaluateAlert() {
+        // 过期静音清掉，避免 prefs 残留误导排查。
+        settings.clearMuteIfExpired()
+
         let over = snapshot.ramPercent >= settings.ramThresholdPercent
         if !over {
+            if !alertArmed {
+                AppLog.debug("ResourceMonitor", "RAM 已回落到阈值以下，告警重新武装", [
+                    "percent": String(format: "%.1f", snapshot.ramPercent),
+                    "threshold": settings.ramThresholdPercent
+                ])
+            }
             alertArmed = true
             awaitingTopForAlert = false
             return
         }
-        guard settings.alertEnabled, !settings.isMuted else { return }
+        guard settings.alertEnabled else {
+            AppLog.debug("ResourceMonitor", "RAM 已超阈值但告警关闭，跳过", [
+                "percent": String(format: "%.1f", snapshot.ramPercent),
+                "threshold": settings.ramThresholdPercent
+            ])
+            return
+        }
+        guard !settings.isMuted else {
+            AppLog.debug("ResourceMonitor", "RAM 已超阈值但处于免打扰，跳过", [
+                "percent": String(format: "%.1f", snapshot.ramPercent),
+                "muteUntil": settings.muteUntil.map { ISO8601DateFormatter().string(from: $0) } ?? ""
+            ])
+            return
+        }
         // 已武装，或正在等进程树补齐后再投递。
-        guard alertArmed || awaitingTopForAlert else { return }
+        guard alertArmed || awaitingTopForAlert else {
+            AppLog.debug("ResourceMonitor", "RAM 仍超阈值但本轮已提示过，待回落后再武装", [
+                "percent": String(format: "%.1f", snapshot.ramPercent),
+                "threshold": settings.ramThresholdPercent
+            ])
+            return
+        }
 
         guard let top = snapshot.topApps.first else {
             if !awaitingTopForAlert {
@@ -304,6 +332,28 @@ final class ResourceMonitorSession: ObservableObject {
             "top": top.name,
             "topMB": Int(top.memoryBytes / (1024 * 1024))
         ])
+    }
+
+    /// 改阈值 / 开告警：清掉免打扰、重新武装并立刻评估（已超阈值时也应能再提示）。
+    /// 改了规则等于重开一轮，之前点的免打扰不再挡住新阈值。
+    func rearmAlertAndEvaluate(reason: String) {
+        let wasMuted = settings.isMuted
+        if wasMuted {
+            settings.clearMute()
+            AppLog.info("ResourceMonitor", "规则变更，已解除免打扰", [
+                "reason": reason
+            ])
+        }
+        alertArmed = true
+        awaitingTopForAlert = false
+        AppLog.info("ResourceMonitor", "告警策略变更，重新武装并评估", [
+            "reason": reason,
+            "enabled": settings.alertEnabled,
+            "threshold": settings.ramThresholdPercent,
+            "percent": String(format: "%.1f", snapshot.ramPercent),
+            "clearedMute": wasMuted
+        ])
+        evaluateAlert()
     }
 
     /// 默认展开 Top1；用户收起后本会话不再强行展开。
@@ -341,10 +391,38 @@ final class ResourceMonitorSession: ObservableObject {
     func muteAlerts30m() {
         settings.muteAlerts(minutes: 30)
         flashBanner(L10n.ResourceMonitor.mutedBanner)
+        dismissPresentedRAMNotices(reason: "mute30m")
+        AppLog.info("ResourceMonitor", "用户免打扰 30 分钟")
+    }
+
+    /// 免打扰后立刻撤掉岛上 / 队列里的 RAM tip，避免仍挂着约 3s。
+    private func dismissPresentedRAMNotices(reason: String) {
+        let center = IslandNoticeCenter.shared
+        var ramIDs: [String] = []
+        if case .ramPressure(let notice) = center.slots.secondary {
+            ramIDs.append(notice.id)
+        }
+        for payload in center.slots.secondaryQueue {
+            if case .ramPressure(let notice) = payload {
+                ramIDs.append(notice.id)
+            }
+        }
+        guard !ramIDs.isEmpty else { return }
+        for id in ramIDs {
+            center.dismiss(id: id)
+        }
+        AppLog.info("ResourceMonitor", "免打扰已撤 RAM tip", [
+            "reason": reason,
+            "ids": ramIDs.joined(separator: ","),
+            "count": ramIDs.count
+        ])
     }
 
     func setAlertEnabled(_ enabled: Bool) {
         settings.alertEnabled = enabled
+        if enabled {
+            rearmAlertAndEvaluate(reason: "alertEnabled")
+        }
     }
 
     @discardableResult
@@ -384,6 +462,7 @@ final class ResourceMonitorSession: ObservableObject {
         return nil
     }
 
+    /// 尽力系统 `purge`（不杀用户进程）。岛 tip 不走此路径，改开设置页由用户自选结束。
     func purgeMemory() {
         guard !isPurging else { return }
         isPurging = true
