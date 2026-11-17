@@ -1071,6 +1071,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(ram.displayLane, .secondary)
         XCTAssertEqual(ram.autoDismissNanoseconds, 3_000_000_000)
         XCTAssertTrue(ram.usesDualFlushSoloChrome)
+        XCTAssertTrue(ram.usesDualFlushTrailingOnlyChrome)
         XCTAssertFalse(ram.usesNotchWingChrome)
         XCTAssertEqual(L10n.ResourceMonitor.tipPercent(96), "96%")
         XCTAssertEqual(L10n.ResourceMonitor.purgeTip, "释放")
@@ -1092,6 +1093,45 @@ final class RegressionCatalogTests: XCTestCase {
         )
         XCTAssertTrue(withB?.usesDualFlushChrome == true)
         XCTAssertFalse(withB?.usesDualFlushTrailingOnly == true)
+    }
+
+    /// 进程结束是 C：单独上岛左右双翼 flush（非仅右半）；与 B 并排居右。
+    func test_islandNoticeDualSlots_processEndedUsesDualFlushBothWings() {
+        let ended = IslandNoticePayload.processEnded(
+            .init(
+                id: "projects.watch.test",
+                projectName: "ridge-api",
+                label: "dev server",
+                message: "ridge-api / dev server",
+                endedAt: Date(),
+                outcome: .succeeded,
+                logPath: nil,
+                peakMemoryBytes: 420 * 1024 * 1024,
+                durationSeconds: 6 * 60 + 12
+            )
+        )
+        XCTAssertEqual(ended.displayLane, .secondary)
+        XCTAssertEqual(ended.autoDismissNanoseconds, 3_000_000_000)
+        XCTAssertTrue(ended.usesDualFlushSoloChrome)
+        XCTAssertFalse(ended.usesDualFlushTrailingOnlyChrome)
+        XCTAssertFalse(ended.usesNotchWingChrome)
+        XCTAssertEqual(L10n.Projects.tipDuration(6 * 60 + 12), "6m12s")
+        XCTAssertEqual(L10n.Projects.exitTag(.succeeded), "exit 0")
+
+        let solo = IslandNoticeSlotPolicy.applying(incoming: ended, to: IslandNoticeSlots())
+        XCTAssertEqual(solo?.resolvedLayout, .fullNotice(ended))
+        XCTAssertTrue(solo?.usesDualFlushChrome == true)
+        XCTAssertFalse(solo?.usesDualFlushTrailingOnly == true)
+        XCTAssertTrue(solo?.usesDualFlushCompactWings == true)
+        XCTAssertEqual(solo?.dualFlushWingWidth, IslandChrome.dualFlushCompactWingWidth)
+
+        let meeting = IslandNoticePayload.meetingLead(meetingID: "m-with-ended")
+        let withB = IslandNoticeSlotPolicy.applying(incoming: meeting, to: solo!)
+        XCTAssertEqual(
+            withB?.resolvedLayout,
+            .dual(left: .notice(meeting), right: .notice(ended))
+        )
+        XCTAssertTrue(withB?.usesDualFlushChrome == true)
     }
 
     /// 多条非专注 C：FIFO 排队，同时只展示一条；收起后出下一条。

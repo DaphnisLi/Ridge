@@ -109,10 +109,23 @@ struct IslandNoticeSlots: Equatable {
         return payload.usesNotchRightOrbChrome
     }
 
-    /// 单独 RAM 高压：只要右翼半块（C 靠右），勿再铺左翼黑底。
+    /// 单独 RAM 高压：只要右翼半块（C 靠右），勿再铺左翼黑底。进程结束双翼除外。
     var usesDualFlushTrailingOnly: Bool {
         guard case .fullNotice(let payload) = resolvedLayout else { return false }
-        return payload.usesDualFlushSoloChrome
+        return payload.usesDualFlushTrailingOnlyChrome
+    }
+
+    /// 进程结束单独上岛：左右翼用紧凑宽；与 B/专注并排时仍跟标准翼宽。
+    var usesDualFlushCompactWings: Bool {
+        guard case .fullNotice(let payload) = resolvedLayout else { return false }
+        if case .processEnded = payload { return true }
+        return false
+    }
+
+    var dualFlushWingWidth: CGFloat {
+        usesDualFlushCompactWings
+            ? IslandChrome.dualFlushCompactWingWidth
+            : IslandChrome.dualFlushLeftWingWidth
     }
 
     var anyUsesNotchRightOrbChrome: Bool {

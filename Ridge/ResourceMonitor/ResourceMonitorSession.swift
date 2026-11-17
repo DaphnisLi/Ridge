@@ -65,12 +65,6 @@ final class ResourceMonitorSession: ObservableObject {
         lightTick()
         scheduleHeavy(force: true)
         AppLog.info("ResourceMonitor", "会话已启动")
-        #if DEBUG
-        // 验收完删：调试常驻 RAM 高压样张。
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
-            self?.presentDebugStickyRAMPressureIfNeeded(reason: "start")
-        }
-        #endif
     }
 
     func refreshInputMonitoringStatus() {
@@ -296,13 +290,6 @@ final class ResourceMonitorSession: ObservableObject {
 
         alertArmed = false
         awaitingTopForAlert = false
-        #if DEBUG
-        // 调试常驻样张期间勿用真告警盖掉，方便对照 UI。
-        if debugStickyRAMPressure {
-            presentDebugStickyRAMPressureIfNeeded(reason: "alertSuppressed")
-            return
-        }
-        #endif
         let notice = ResourceRAMPressureNotice(
             id: "ram-\(Int(Date().timeIntervalSince1970))",
             ramUsedBytes: snapshot.ramUsedBytes,
@@ -354,9 +341,6 @@ final class ResourceMonitorSession: ObservableObject {
     func muteAlerts30m() {
         settings.muteAlerts(minutes: 30)
         flashBanner(L10n.ResourceMonitor.mutedBanner)
-        #if DEBUG
-        scheduleDebugStickyRAMPressureReinstate(reason: "mute")
-        #endif
     }
 
     func setAlertEnabled(_ enabled: Bool) {
@@ -424,41 +408,9 @@ final class ResourceMonitorSession: ObservableObject {
                     "freed": freed
                 ])
                 self.lightTick()
-                #if DEBUG
-                self.scheduleDebugStickyRAMPressureReinstate(reason: "purge")
-                #endif
             }
         }
     }
-
-    // MARK: - DEBUG sticky（验收完删）
-
-    #if DEBUG
-    /// 启动后常驻 RAM 高压样张；验收后改 `false` 并删本段。
-    var debugStickyRAMPressure = true
-    static let debugStickyNoticeID = "resource.ram.debug.sticky"
-
-    func presentDebugStickyRAMPressureIfNeeded(reason: String) {
-        guard debugStickyRAMPressure else { return }
-        let notice = ResourceRAMPressureNotice(
-            id: Self.debugStickyNoticeID,
-            ramUsedBytes: 28 * 1024 * 1024 * 1024,
-            ramPercent: 96,
-            topAppName: "Google Chrome",
-            topAppBundleID: "com.google.Chrome",
-            topAppMemoryBytes: 4_200 * 1024 * 1024
-        )
-        IslandNoticeCenter.shared.present(.ramPressure(notice))
-        AppLog.warn("ResourceMonitor", "DEBUG 常驻 RAM 高压样张", ["reason": reason])
-    }
-
-    func scheduleDebugStickyRAMPressureReinstate(reason: String) {
-        guard debugStickyRAMPressure else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.presentDebugStickyRAMPressureIfNeeded(reason: "reinstate:\(reason)")
-        }
-    }
-    #endif
 
     private func signalKill(pid: Int32) -> ResourceKillFailure? {
         if kill(pid, 0) != 0 {

@@ -133,7 +133,8 @@ struct IslandContentView: View {
         }
         if usesDualFlushChrome {
             return IslandChrome.dualFlushHorizontalOffsetX(
-                rightIsOrb: usesDualFlushWithRightOrb
+                rightIsOrb: usesDualFlushWithRightOrb,
+                wingWidth: noticeCenter.slots.dualFlushWingWidth
             )
         }
         return 0
@@ -150,7 +151,7 @@ struct IslandContentView: View {
                 // 双槽：左右各自 flush 黑底 + underlap；禁止整条黑底盖住刘海中空或包住右圆岛。
                 if usesDualFlushChrome {
                     let underlap = IslandChrome.dualFlushNotchUnderlap
-                    let wingW = IslandChrome.dualFlushLeftWingWidth
+                    let wingW = noticeCenter.slots.dualFlushWingWidth
                     let leftFillW = wingW + underlap
                     // 单独 RAM（C）只要右翼半块，跳过左翼。
                     if !usesDualFlushTrailingOnly {

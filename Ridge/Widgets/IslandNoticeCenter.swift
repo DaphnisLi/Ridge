@@ -56,15 +56,12 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 非专注提示统一约 3s；会议 / 取色 / OCR 仍手动收。DEBUG RAM 样张不自动收。
+    /// 非专注提示统一约 3s；会议 / 取色 / OCR 仍手动收。
     var autoDismissNanoseconds: UInt64? {
         switch self {
         case .colorPickTip, .ocrSelectTip, .meetingLead:
             return nil
-        case .ramPressure(let notice):
-            if notice.id == "resource.ram.debug.sticky" { return nil }
-            return 3_000_000_000
-        case .clipboardCaptureHint, .moveReminder, .processEnded,
+        case .clipboardCaptureHint, .moveReminder, .ramPressure, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .aiUsageAlert:
             return 3_000_000_000
@@ -91,8 +88,18 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 单独上岛时走左右 flush（如 RAM 高压）；勿抬会议双翼宽。
+    /// 单独上岛时走左右 flush（RAM 右半 / 进程结束双翼）；勿抬会议双翼宽。
     var usesDualFlushSoloChrome: Bool {
+        switch self {
+        case .ramPressure, .processEnded:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// 单独上岛时只要右翼半块（RAM）；进程结束要左右双翼。
+    var usesDualFlushTrailingOnlyChrome: Bool {
         switch self {
         case .ramPressure:
             return true

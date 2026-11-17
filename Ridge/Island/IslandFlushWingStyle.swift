@@ -106,6 +106,8 @@ struct IslandDualNotchWingRow<Left: View, Right: View>: View {
     var previewNotchWidth: CGFloat = 110
     /// 右侧是「已复制」Ø32：右槽仅圆岛宽，勿再留对称黑翼。
     var rightIsOrb: Bool = false
+    /// 左右 flush 翼内容宽；进程结束 tip 可传紧凑宽。
+    var wingWidth: CGFloat = IslandChrome.dualFlushLeftWingWidth
     @ViewBuilder var left: () -> Left
     @ViewBuilder var right: () -> Right
 
@@ -120,7 +122,8 @@ struct IslandDualNotchWingRow<Left: View, Right: View>: View {
         IslandChrome.preparedDualFlushPanelSize(
             notchWidth: notchWidth,
             notchHeight: envNotchHeight > 1 ? envNotchHeight : IslandFlushWingStyle.height,
-            rightIsOrb: rightIsOrb
+            rightIsOrb: rightIsOrb,
+            wingWidth: wingWidth
         )
     }
 
@@ -133,11 +136,11 @@ struct IslandDualNotchWingRow<Left: View, Right: View>: View {
             ? min(IslandChrome.dualFlushNotchUnderlap, max(0, notch - 8))
             : min(IslandChrome.dualFlushNotchUnderlap, max(0, (notch - 4) / 2))
         let rightUnderlap: CGFloat = rightIsOrb ? 0 : leftUnderlap
-        // 左右 flush 翼同宽（音乐标准）；仅「已复制」右槽收成 Ø32。
-        let leftContentW = IslandChrome.dualFlushLeftWingWidth
+        // 左右 flush 翼同宽；仅「已复制」右槽收成 Ø32。
+        let leftContentW = wingWidth
         let rightW: CGFloat = rightIsOrb
             ? IslandChrome.notchRightOrbDiameter
-            : IslandChrome.dualFlushLeftWingWidth
+            : wingWidth
         // 与单独「已复制」一致：圆岛贴刘海外缘 + notchRightOrbGap，勿再 nudge/clip。
         let gap: CGFloat = rightIsOrb ? IslandChrome.notchRightOrbGap : 0
         return HStack(spacing: 0) {

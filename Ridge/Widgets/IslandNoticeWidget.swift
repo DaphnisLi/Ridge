@@ -241,7 +241,7 @@ private struct IslandNoticeCardView: View {
         switch noticeCenter.slots.resolvedLayout {
         case .empty, .fullFocus, .fullMedia:
             // 仅专注 / 仅音乐：收起翼由 IslandBody 画，不上通知页内容。
-            ProcessEndedNoticeCard(notice: nil)
+            Color.clear.frame(width: 1, height: 1)
         case .fullNotice(let payload):
             noticeBody(payload, compact: false)
         case .dual(let left, let right):
@@ -293,7 +293,11 @@ private struct IslandNoticeCardView: View {
     ) -> some View {
         switch payload {
         case .processEnded(let notice):
-            ProcessEndedNoticeCard(notice: notice)
+            ProcessEndedNoticeCard(
+                notice: notice,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .ramPressure(let notice):
             RAMPressureNoticeCard(
                 notice: notice,
@@ -779,178 +783,148 @@ private struct RAMPressureNoticeCard: View {
     }
 }
 
-/// 进程监视结束卡片（`IslandNoticePayload.processEnded`）。
+/// 进程监视结束 tip（C）：稿「Sequoia 双翼」——左 `>_`+短名+状态点，右 exit 徽标+耗时。
+/// 单独上岛左右 flush；与 B/专注并排时只占右翼。根视图禁止外圈 padding。
 private struct ProcessEndedNoticeCard: View {
     let notice: ProjectWatchEndedNotice?
+    var flushSide: IslandFlushWingStyle.Side? = nil
+    var bareWingContent: Bool = false
 
-    private let accentGreen = Color(red: 0.325, green: 0.882, blue: 0.435)
-    private let accentGreenSoft = Color(red: 0.325, green: 0.882, blue: 0.435).opacity(0.18)
-    private let accentRed = Color(red: 1.0, green: 0.42, blue: 0.38)
-    private let accentRedSoft = Color(red: 1.0, green: 0.42, blue: 0.38).opacity(0.18)
-    private let accentAmber = Color(red: 1.0, green: 0.72, blue: 0.28)
-    private let accentAmberSoft = Color(red: 1.0, green: 0.72, blue: 0.28).opacity(0.18)
-    private let accentMuted = Color.white.opacity(0.55)
-    private let accentMutedSoft = Color.white.opacity(0.12)
+    private var outcome: ProjectWatchOutcome {
+        notice?.outcome ?? .unknown
+    }
 
     private var canOpenLog: Bool {
         guard let path = notice?.logPath, !path.isEmpty else { return false }
         return FileManager.default.fileExists(atPath: path)
     }
 
-    private static let glyphSize: CGFloat = 28
-
     var body: some View {
-        let outcome = notice?.outcome ?? .unknown
-        HStack(alignment: .top, spacing: 10) {
-            terminalGlyph(for: outcome)
-
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(alignment: .center, spacing: 8) {
-                    titleText
-
-                    if let tag = exitTagText(for: outcome) {
-                        Text(tag)
-                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(accent(for: outcome))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(
-                                Capsule().fill(tagBackground(for: outcome))
-                            )
-                            .fixedSize()
-                    }
+        Group {
+            if flushSide != nil {
+                trailingWingBody
+            } else if notice == nil {
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .accessibilityHidden(true)
+            } else {
+                IslandDualNotchWingRow(wingWidth: IslandChrome.dualFlushCompactWingWidth) {
+                    leadingWingBody
+                } right: {
+                    trailingWingBody
                 }
-
-                if let notice {
-                    Text(subtitle(for: notice))
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(Color.white.opacity(0.40))
-                        .lineLimit(1)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            if canOpenLog {
-                viewLogButton
             }
         }
-        .frame(minWidth: 360)
-        .accessibilityElement(children: .contain)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard canOpenLog else { return }
+            AppLog.info("IslandNotice", "进程结束 tip 点击查看日志", [
+                "path": (notice?.logPath as NSString?)?.lastPathComponent ?? ""
+            ])
+            ProjectReleaseSession.shared.openEndedWatchLogs()
+        }
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(
             notice.map(L10n.IslandNotice.accessibilityLabel)
                 ?? L10n.IslandNotice.headline(for: outcome)
         )
+        .accessibilityHint(canOpenLog ? L10n.Projects.viewLog : "")
     }
 
-    private var viewLogButton: some View {
-        Button {
-            AppLog.info("IslandNotice", "点击查看日志", [
-                "path": (notice?.logPath as NSString?)?.lastPathComponent ?? ""
-            ])
-            ProjectReleaseSession.shared.openEndedWatchLogs()
-        } label: {
+    /// 左翼：`>_` 与进程名紧贴靠左，状态点靠右。
+    private var leadingWingBody: some View {
+        HStack(spacing: 0) {
             HStack(spacing: 4) {
-                Text(L10n.Projects.viewLog)
-                    .font(.system(size: 10, weight: .semibold))
-                Image(systemName: "arrow.up.right")
-                    .font(.system(size: 9, weight: .semibold))
-            }
-            .foregroundStyle(.white.opacity(0.92))
-            .padding(.horizontal, 9)
-            .padding(.vertical, 3)
-            .background(
-                Capsule().fill(Color(nsColor: NSColor(calibratedWhite: 0.18, alpha: 1)))
-            )
-            .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-        .fixedSize()
-        .accessibilityLabel(L10n.Projects.viewLog)
-    }
-
-    @ViewBuilder
-    private var titleText: some View {
-        if let notice {
-            HStack(spacing: 0) {
-                Text("\(notice.projectName) / ")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                Text(notice.label)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            .lineLimit(1)
-        } else {
-            Text(L10n.IslandNotice.endedHeadline)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-        }
-    }
-
-    private func terminalGlyph(for outcome: ProjectWatchOutcome) -> some View {
-        let color = accent(for: outcome)
-        let side = Self.glyphSize
-        return RoundedRectangle(cornerRadius: 7, style: .continuous)
-            .fill(Color.white.opacity(0.10))
-            .frame(width: side, height: side)
-            .overlay(
                 Text(">_")
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(color)
-            )
-            .overlay(alignment: .topTrailing) {
-                Circle()
-                    .fill(color)
-                    .frame(width: 7, height: 7)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.black.opacity(0.35), lineWidth: 1)
-                    )
-                    .offset(x: 2, y: -2)
+                    .foregroundStyle(accent)
+                Text(shortLabel)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .frame(width: side, height: side, alignment: .top)
+            Spacer(minLength: 4)
+            Circle()
+                .fill(accent)
+                .frame(width: 6, height: 6)
+        }
+        .islandBareFlushWingContent()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func exitTagText(for outcome: ProjectWatchOutcome) -> String? {
+    /// 右翼：exit 徽标与耗时紧挨，不再拉开。
+    private var trailingWingBody: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 5) {
+                exitBadge
+                if let duration = tipDurationText {
+                    Text(duration)
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(durationColor)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .islandBareFlushWingContent()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var exitBadge: some View {
+        Text(L10n.Projects.exitTag(outcome))
+            .font(.system(size: 10, weight: .bold, design: .monospaced))
+            .foregroundStyle(accent)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(tagBackground)
+            )
+            .fixedSize()
+    }
+
+    /// 翼宽紧：取 label 末段首词（`dev server` → `dev`）。
+    private var shortLabel: String {
+        let raw = (notice?.label ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else {
+            return notice?.projectName ?? "…"
+        }
+        let base = (raw as NSString).lastPathComponent
+        if let space = base.firstIndex(of: " ") {
+            return String(base[..<space])
+        }
+        return base
+    }
+
+    private var tipDurationText: String? {
+        guard let notice, notice.durationSeconds > 0 else { return nil }
+        return L10n.Projects.tipDuration(notice.durationSeconds)
+    }
+
+    private var accent: Color {
         switch outcome {
-        case .succeeded, .failed:
-            return L10n.Projects.exitTag(outcome)
-        case .signaled, .unknown:
-            return nil
+        case .succeeded: return IslandFlushWingStyle.accentSuccess
+        case .failed: return IslandFlushWingStyle.accentDanger
+        case .signaled: return IslandFlushWingStyle.accentWarning
+        case .unknown: return Color.white.opacity(0.55)
         }
     }
 
-    private func subtitle(for notice: ProjectWatchEndedNotice) -> String {
-        var parts: [String] = []
-        if notice.durationSeconds > 0 {
-            parts.append(L10n.Projects.durationText(notice.durationSeconds))
-        }
-        if notice.peakMemoryBytes > 0 {
-            parts.append(L10n.Projects.memoryUsed(notice.peakMemoryBytes))
-        }
-        if parts.isEmpty {
-            return L10n.Projects.outcomeText(notice.outcome)
-        }
-        return parts.joined(separator: " · ")
-    }
-
-    /// 成功绿 / 退出码失败红 / 信号终止橙 / 未知灰。
-    private func accent(for outcome: ProjectWatchOutcome) -> Color {
+    private var tagBackground: Color {
         switch outcome {
-        case .succeeded: return accentGreen
-        case .failed: return accentRed
-        case .signaled: return accentAmber
-        case .unknown: return accentMuted
+        case .succeeded: return Color(red: 0.02, green: 0.14, blue: 0.08)
+        case .failed: return Color(red: 0.22, green: 0.04, blue: 0.05)
+        case .signaled: return Color(red: 0.20, green: 0.12, blue: 0.02)
+        case .unknown: return Color.white.opacity(0.10)
         }
     }
 
-    private func tagBackground(for outcome: ProjectWatchOutcome) -> Color {
+    private var durationColor: Color {
         switch outcome {
-        case .succeeded: return accentGreenSoft
-        case .failed: return accentRedSoft
-        case .signaled: return accentAmberSoft
-        case .unknown: return accentMutedSoft
+        case .failed: return Color(red: 1.0, green: 0.75, blue: 0.72)
+        default: return Color.white.opacity(0.60)
         }
     }
 }

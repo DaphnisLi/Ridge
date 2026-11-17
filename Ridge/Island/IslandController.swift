@@ -521,11 +521,14 @@ final class IslandController: NSObject {
 
     /// 音乐/专注 + 短 C：贴刘海左右翼，高=刘海，禁止抬到会议双翼或掉到下方。
     func prepareDualFlushNoticeLayout(reason: String) {
-        let rightOrb = IslandNoticeCenter.shared.slots.usesDualFlushWithRightOrb
+        let slots = IslandNoticeCenter.shared.slots
+        let rightOrb = slots.usesDualFlushWithRightOrb
+        let wingW = slots.dualFlushWingWidth
         let size = IslandChrome.preparedDualFlushPanelSize(
             notchWidth: viewModel.notchWidth,
             notchHeight: viewModel.notchHeight,
-            rightIsOrb: rightOrb
+            rightIsOrb: rightOrb,
+            wingWidth: wingW
         )
         viewModel.forcePanelSize(size, reason: reason)
         updateInteractiveFrame(expanded: true)
@@ -534,6 +537,7 @@ final class IslandController: NSObject {
             "w": Int(size.width),
             "h": Int(size.height),
             "notchW": Int(viewModel.notchWidth),
+            "wingW": Int(wingW),
             "rightOrb": rightOrb
         ])
     }
@@ -1945,7 +1949,8 @@ final class IslandController: NSObject {
         }
         if slots.usesDualFlushChrome {
             return IslandChrome.dualFlushHorizontalOffsetX(
-                rightIsOrb: slots.usesDualFlushWithRightOrb
+                rightIsOrb: slots.usesDualFlushWithRightOrb,
+                wingWidth: slots.dualFlushWingWidth
             )
         }
         return 0

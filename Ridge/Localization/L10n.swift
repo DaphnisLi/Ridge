@@ -1431,6 +1431,21 @@ enum L10n {
             }
             return String(format: tr("projects.deck.duration_format", "耗时 %@"), text)
         }
+        /// 进程结束 tip 右翼紧凑耗时（稿 `6m12s`）。
+        static func tipDuration(_ seconds: TimeInterval) -> String {
+            let total = max(0, Int(seconds.rounded()))
+            if total >= 3600 {
+                let h = total / 3600
+                let m = (total % 3600) / 60
+                return "\(h)h\(m)m"
+            }
+            if total >= 60 {
+                let m = total / 60
+                let s = total % 60
+                return String(format: "%dm%02ds", m, s)
+            }
+            return "\(total)s"
+        }
         static func exitTag(_ outcome: ProjectWatchOutcome) -> String {
             switch outcome {
             case .succeeded:

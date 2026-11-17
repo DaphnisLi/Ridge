@@ -98,6 +98,8 @@ enum IslandChrome {
 
     /// 双槽左翼**内容**宽（音乐/专注）；过宽会让音符与时长之间空洞过大。
     static let dualFlushLeftWingWidth: CGFloat = 120
+    /// 进程结束 tip 单独上岛：内容更短，翼宽收一档（稿 ~86–104）。
+    static let dualFlushCompactWingWidth: CGFloat = 96
 
     /// 左右翼黑底伸进刘海弧度的空宽（只铺黑、禁止放图标/文案）；过小会在刘海圆角处露缺口。
     static let dualFlushNotchUnderlap: CGFloat = 12
@@ -108,11 +110,14 @@ enum IslandChrome {
     /// 双槽右侧内容宽（圆岛或与左翼同宽的 flush）。
     /// 仅「已复制」圆岛与刘海外缘留 `notchRightOrbGap`；伸进刘海的 underlap 另算在 notch 槽内。
     /// 非圆岛右侧与左翼同宽（音乐标准），禁止再用窄胶囊 112 造成左右不对称。
-    static func dualFlushRightSideWidth(rightIsOrb: Bool) -> CGFloat {
+    static func dualFlushRightSideWidth(
+        rightIsOrb: Bool,
+        wingWidth: CGFloat = dualFlushLeftWingWidth
+    ) -> CGFloat {
         if rightIsOrb {
             return notchRightOrbGap + notchRightOrbDiameter
         }
-        return dualFlushLeftWingWidth
+        return wingWidth
     }
 
     /// 双槽贴刘海：高=刘海；右为「已复制」圆岛时左宽右窄，勿整条黑底包住圆岛。
@@ -120,18 +125,25 @@ enum IslandChrome {
     static func preparedDualFlushPanelSize(
         notchWidth: CGFloat,
         notchHeight: CGFloat,
-        rightIsOrb: Bool = false
+        rightIsOrb: Bool = false,
+        wingWidth: CGFloat = dualFlushLeftWingWidth
     ) -> CGSize {
         let height = NotchGeometry.compactPanelHeight(notchHeight: notchHeight)
         let notch = max(notchWidth, 1)
-        let width = dualFlushLeftWingWidth + notch + dualFlushRightSideWidth(rightIsOrb: rightIsOrb)
+        let width = wingWidth + notch + dualFlushRightSideWidth(
+            rightIsOrb: rightIsOrb,
+            wingWidth: wingWidth
+        )
         return CGSize(width: width, height: height)
     }
 
     /// 非对称双槽水平偏移：让内容中的刘海空隙对准硬件刘海，多出来的左翼往左伸（勿往右顶进刘海）。
     /// 公式：`(rightSide - leftWing) / 2`；左更宽时为负。
-    static func dualFlushHorizontalOffsetX(rightIsOrb: Bool) -> CGFloat {
-        (dualFlushRightSideWidth(rightIsOrb: rightIsOrb) - dualFlushLeftWingWidth) / 2
+    static func dualFlushHorizontalOffsetX(
+        rightIsOrb: Bool,
+        wingWidth: CGFloat = dualFlushLeftWingWidth
+    ) -> CGFloat {
+        (dualFlushRightSideWidth(rightIsOrb: rightIsOrb, wingWidth: wingWidth) - wingWidth) / 2
     }
 
     /// 壳层表面类型：决定顶/底/左右 inset；`IslandBody` 与测试共用。
