@@ -18,7 +18,8 @@ if command -v xcodegen >/dev/null 2>&1; then
   xcodegen generate >/dev/null
 fi
 
-# 整类跑：RegressionCatalogTests / IslandExpandedPanelPolicyTests / RecurringRegressionCoverageTests
+# 整类跑：RegressionCatalogTests / IslandExpandedPanelPolicyTests /
+# RecurringRegressionCoverageTests / IslandNoticeLayoutMatrixTests
 # （类内夹杂的 occurrences=1 用例很轻，一并跑完可接受；新增 recurring 须进 Manifest）
 # 用例通过后测试宿主 Ridge 常挂住不退；后台跑并在 Selected tests passed 后收尾。
 set +e
@@ -31,6 +32,8 @@ xcodebuild test \
   -only-testing:RidgeTests/RegressionCatalogTests \
   -only-testing:RidgeTests/IslandExpandedPanelPolicyTests \
   -only-testing:RidgeTests/RecurringRegressionCoverageTests \
+  -only-testing:RidgeTests/IslandNoticeLayoutMatrixTests \
+  -only-testing:RidgeTests/IslandNoticeBehaviorTests \
   >"$LOG" 2>&1 &
 XCODE_PID=$!
 set -e

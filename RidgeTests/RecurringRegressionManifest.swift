@@ -91,6 +91,18 @@ enum RecurringRegressionManifest {
             testNamePrefixes: [
                 "test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand"
             ]
+        ),
+        Entry(
+            id: "island-notice-layout-matrix",
+            testNamePrefixes: [
+                "test_islandNoticeLayoutMatrix_"
+            ]
+        ),
+        Entry(
+            id: "island-notice-behavior",
+            testNamePrefixes: [
+                "test_islandNoticeBehavior_"
+            ]
         )
     ]
 
@@ -117,6 +129,8 @@ enum RecurringRegressionManifest {
         var names = testMethodNames(in: RegressionCatalogTests.self)
         names.append(contentsOf: testMethodNames(in: IslandExpandedPanelPolicyTests.self))
         names.append(contentsOf: testMethodNames(in: RecurringRegressionCoverageTests.self))
+        names.append(contentsOf: testMethodNames(in: IslandNoticeLayoutMatrixTests.self))
+        names.append(contentsOf: testMethodNames(in: IslandNoticeBehaviorTests.self))
         return names
     }
 

@@ -8,8 +8,8 @@ import SwiftUI
 /// 注意：`refresh` 不得再调 `requestDisplay`，否则会与 `applyPage` 形成重入栈溢出。
 @MainActor
 final class IslandNoticeWidget: IslandWidget {
-    private static let defaultDisplayNanoseconds: UInt64 = 3_000_000_000
-    private static let hoverPollNanoseconds: UInt64 = 100_000_000
+    private static let defaultDisplayNanoseconds = IslandNoticeAutoDismissPolicy.standardNanoseconds
+    private static let hoverPollNanoseconds = IslandNoticeAutoDismissPolicy.pollNanoseconds
 
     static let manifest = WidgetManifest(
         id: SystemWidgetID.islandNotice,
@@ -124,29 +124,33 @@ final class IslandNoticeWidget: IslandWidget {
         dismissTasks[noticeID] = Task { @MainActor [weak self] in
             guard let self else { return }
             // 会议等被设置挡住、尚未上岛：不计时。瞬时 tip 已上岛则立刻开计时。
-            if !expandsDuringSettingsSession {
-                while !Task.isCancelled,
-                      IslandController.shared?.blocksProgrammaticNoticeExpand == true
-                {
-                    AppLog.debug("IslandNotice", "设置页挡住展开，延后自动收起计时", ["id": noticeID])
-                    try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
-                }
-                guard !Task.isCancelled else { return }
-                guard self.noticeCenter.slots.contains(id: noticeID) else { return }
+            while !Task.isCancelled,
+                  IslandNoticeAutoDismissPolicy.shouldWaitForSettingsUnblock(
+                    expandsDuringSettingsSession: expandsDuringSettingsSession,
+                    settingsBlocksExpand: IslandController.shared?.blocksProgrammaticNoticeExpand == true
+                  )
+            {
+                AppLog.debug("IslandNotice", "设置页挡住展开，延后自动收起计时", ["id": noticeID])
+                try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
             }
+            guard !Task.isCancelled else { return }
+            guard self.noticeCenter.slots.contains(id: noticeID) else { return }
 
             try? await Task.sleep(nanoseconds: nanoseconds)
             guard !Task.isCancelled else { return }
             guard self.noticeCenter.slots.contains(id: noticeID) else { return }
 
-            if holdWhileHovering {
-                while !Task.isCancelled, IslandController.shared?.isHoveringIsland == true {
-                    AppLog.debug("IslandNotice", "指针在岛上，延后自动收起", ["id": noticeID])
-                    try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
-                }
-                guard !Task.isCancelled else { return }
-                guard self.noticeCenter.slots.contains(id: noticeID) else { return }
+            while !Task.isCancelled,
+                  IslandNoticeAutoDismissPolicy.shouldWaitForHoverEnd(
+                    holdWhileHovering: holdWhileHovering,
+                    isHovering: IslandController.shared?.isHoveringIsland == true
+                  )
+            {
+                AppLog.debug("IslandNotice", "指针在岛上，延后自动收起", ["id": noticeID])
+                try? await Task.sleep(nanoseconds: Self.hoverPollNanoseconds)
             }
+            guard !Task.isCancelled else { return }
+            guard self.noticeCenter.slots.contains(id: noticeID) else { return }
 
             self.finishDismiss(
                 noticeID: noticeID,
@@ -272,11 +276,15 @@ final class IslandNoticeWidget: IslandWidget {
         let hovering = IslandController.shared?.isHoveringIsland == true
         // allowsHoverExpand 在「仍是瞬时通知页 / current 未清」时也会 true；
         // 若照单保展开，免打扰后悬停会留下空双翼岛。仅通知真正撤干净且仍有面板/实况才保。
-        let noticeGone = IslandNoticeCenter.shared.current == nil
-            && !WidgetRuntime.shared.isTransientNoticePage
-        let keepExpanded = hovering
-            && noticeGone
-            && WidgetRuntime.shared.allowsHoverExpand
+        let noticeGone = IslandNoticeEndCollapsePolicy.isNoticeFullyGone(
+            current: IslandNoticeCenter.shared.current,
+            isTransientNoticePage: WidgetRuntime.shared.isTransientNoticePage
+        )
+        let keepExpanded = IslandNoticeEndCollapsePolicy.shouldKeepExpandedAfterNoticeEnd(
+            hovering: hovering,
+            noticeFullyGone: noticeGone,
+            allowsHoverExpand: WidgetRuntime.shared.allowsHoverExpand
+        )
         if !keepExpanded {
             IslandController.shared?.collapse(reason: "islandNoticeEnd")
             AppLog.info("IslandNotice", "通知结束已收起灵动岛", [

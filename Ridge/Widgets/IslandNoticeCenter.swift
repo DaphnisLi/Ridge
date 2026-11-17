@@ -64,7 +64,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .clipboardCaptureHint, .moveReminder, .ramPressure, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .aiUsageAlert:
-            return 3_000_000_000
+            return IslandNoticeAutoDismissPolicy.standardNanoseconds
         }
     }
 
