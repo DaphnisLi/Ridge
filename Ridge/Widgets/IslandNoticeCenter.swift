@@ -218,7 +218,7 @@ final class IslandNoticeCenter: ObservableObject {
 
     private func syncResidents() {
         let focus = FocusTimerSession.shared.showsCompactStandby
-        // 音乐是 B；专注亮时业务上不播小岛，mediaResident 仍跟 MediaCompactPresence。
+        // 音乐是 B；可与专注并排（左音乐右专注），mediaResident 跟播放态。
         let media = MediaCompactPresence.isActive
         guard slots.focusResident != focus || slots.mediaResident != media else { return }
         var next = slots
@@ -264,6 +264,8 @@ final class IslandNoticeCenter: ObservableObject {
             // 仅专注 / 仅音乐：收起翼，不预备通知页尺寸。
             return
         case .dual:
+            // 音乐+专注收起双翼走 compactSize；有 tip 的双槽才预备展开尺寸。
+            guard next.hasNoticePayload else { return }
             if next.usesDualFlushChrome {
                 IslandController.shared?.prepareDualFlushNoticeLayout(
                     reason: "presentDualFlush:\(payload?.id ?? "resident")"

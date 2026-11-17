@@ -1305,6 +1305,45 @@ final class RegressionCatalogTests: XCTestCase {
         let meetingBack = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: meetingCopy!)
         XCTAssertEqual(meetingBack.resolvedLayout, .fullNotice(meeting))
 
+        // B 音乐 + 专注 → 左音乐右专注
+        var mediaFocus = IslandNoticeSlots(focusResident: true, mediaResident: true)
+        XCTAssertEqual(
+            mediaFocus.resolvedLayout,
+            IslandNoticeLayout.dual(left: .media, right: .focus)
+        )
+        XCTAssertTrue(mediaFocus.usesDualFlushChrome)
+
+        // 右翼已是专注时来 C → C 盖住专注；C 撤后专注回到右翼
+        let mediaFocusCopy = IslandNoticeSlotPolicy.applying(incoming: copy, to: mediaFocus)
+        XCTAssertEqual(
+            mediaFocusCopy?.resolvedLayout,
+            IslandNoticeLayout.dual(left: .media, right: .notice(copy))
+        )
+        XCTAssertTrue(mediaFocusCopy?.focusResident == true)
+        let mediaFocusBack = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: mediaFocusCopy!)
+        XCTAssertEqual(
+            mediaFocusBack.resolvedLayout,
+            IslandNoticeLayout.dual(left: .media, right: .focus)
+        )
+
+        // 会议 + 专注，右翼来 C → 同理盖住再恢复
+        let meetingFocusCopy = IslandNoticeSlotPolicy.applying(incoming: copy, to: meetingFocus!)
+        XCTAssertEqual(
+            meetingFocusCopy?.resolvedLayout,
+            IslandNoticeLayout.dual(left: .notice(meeting), right: .notice(copy))
+        )
+        let meetingFocusBack = IslandNoticeSlotPolicy.dismissing(id: copy.id, from: meetingFocusCopy!)
+        XCTAssertEqual(
+            meetingFocusBack.resolvedLayout,
+            IslandNoticeLayout.dual(left: .notice(meeting), right: .focus)
+        )
+
+        // 会议 + 播放 → 会议满岛（盖音乐）
+        var meetingMedia = IslandNoticeSlots(mediaResident: true)
+        meetingMedia = IslandNoticeSlotPolicy.applying(incoming: meeting, to: meetingMedia)!
+        XCTAssertTrue(meetingMedia.mediaResident)
+        XCTAssertEqual(meetingMedia.resolvedLayout, .fullNotice(meeting))
+
         // B 音乐 + 短 C → 左音乐右 C；C 没后音乐满岛
         var mediaSlots = IslandNoticeSlots(mediaResident: true)
         XCTAssertEqual(mediaSlots.resolvedLayout, .fullMedia)

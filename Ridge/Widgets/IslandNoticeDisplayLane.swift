@@ -1,16 +1,25 @@
 import Foundation
 
-/// 提示三档。
+/// 提示三档与展示权重（高 → 低）：
 ///
-/// - exclusive (A)：框选 / 取色 → 满岛
-/// - primary (B)：**会议 tip / 音乐常驻** → 两 B 同时只展示会议（盖音乐）；与短 C 并排时左会议右 C；C 没后会议回满岛
-/// - secondary (C)：复制 / 久坐 / 外设 / 额度 / RAM 等（**除专注外一律靠右**）
+/// 1. **取色 / 框选 / 会议**（最高）
+/// 2. **播放**
+/// 3. **专注**
+/// 4. **C 类短提示**（复制 / 久坐 / 外设 / 额度 / RAM / 进程结束…）
 ///
-/// 专注计时收起待命是 **C 常驻**（左翼优先于短 C）：
-/// - 仅它 → 满岛；+短 C → 左专注右短条；+B → 左 B 右专注
+/// 形态：
+/// - 取色 / 框选 → 满岛独占（清 C 队列）
+/// - 会议 + 播放 → **会议满岛**（盖音乐）
+/// - 左会议或音乐 + 右 C 或专注
+/// - 左专注 + 右 C（无会议/音乐时）
+/// - 专注已在右翼时来了 C → C **先盖住**专注；C 约 3s 收起后专注回到右翼
 ///
-/// 多条非专注 C：**FIFO 队列**，同时只展示一条；前一条 3s 收起后出下一条。
-/// 凡 `.dual`（含会议+C、音乐+C、专注+C）一律 **dualFlush** 左右小岛，禁止再抬会议双翼宽。
+/// 多条非专注 C：**FIFO**，同时只一条。
+/// 凡 `.dual` 一律 **dualFlush** 左右小岛，禁止再抬会议双翼宽。
+///
+/// - exclusive (A)：取色 / 框选
+/// - primary (B)：会议 tip（音乐常驻走 `mediaResident`）
+/// - secondary (C)：短提示
 enum IslandNoticeDisplayLane: Int, Equatable, Comparable {
     case secondary = 0
     case primary = 1
@@ -44,9 +53,9 @@ struct IslandNoticeSlots: Equatable {
     var secondary: IslandNoticePayload?
     /// 等待中的 C（FIFO；出现顺序）。
     var secondaryQueue: [IslandNoticePayload] = []
-    /// 专注计时收起待命（C 常驻，布局上居左优先）。
+    /// 专注计时中（权重低于播放；有播放时居右，被 C 暂盖后会回到右翼）。
     var focusResident: Bool = false
-    /// 音乐播放小岛（B；无会议时生效，会议盖音乐）。
+    /// 音乐播放中（权重低于会议；会议在时满岛会议盖住音乐）。
     var mediaResident: Bool = false
 
     var current: IslandNoticePayload? { primary ?? secondary }
@@ -253,9 +262,8 @@ enum IslandNoticeSlotPolicy {
         return next
     }
 
-    /// 布局解析。
-    /// B = 会议 tip（primary）或音乐常驻；两 B 同时只展示会议（盖音乐）。
-    /// 非专注 C 靠右；专注常驻居左（仅它 / 对 B 居右 / 对短 C 居左）。
+    /// 布局解析（权重：取色/框选/会议 > 播放 > 专注 > C）。
+    /// 会议盖播放满岛；左=会议|音乐|专注，右=C|专注；C 暂盖右翼专注，撤后专注回右。
     static func resolvedLayout(_ slots: IslandNoticeSlots) -> IslandNoticeLayout {
         if let primary = slots.primary, primary.displayLane == .exclusive {
             return .fullNotice(primary)
@@ -277,11 +285,11 @@ enum IslandNoticeSlotPolicy {
         // B：音乐（无会议时才生效）
         if slots.mediaResident {
             if let secondary = slots.secondary {
+                // 短 C 占右；专注与 C 同时时专注让路。
                 return .dual(left: .media, right: .notice(secondary))
             }
             if slots.focusResident {
-                // 专注与音乐互斥于业务层；若同时亮旗，专注优先占满。
-                return .fullFocus
+                return .dual(left: .media, right: .focus)
             }
             return .fullMedia
         }

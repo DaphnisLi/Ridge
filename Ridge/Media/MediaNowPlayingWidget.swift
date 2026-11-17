@@ -150,19 +150,24 @@ final class MediaNowPlayingWidget: IslandWidget {
 // MARK: - 播放小岛（收起态）
 
 enum MediaCompactPresence {
-    /// 播放中且未被番茄翼占用时，收起岛可展示媒体小岛。
+    /// 正在播放且媒体组件开启（可与专注并排：左音乐右专注）。
     @MainActor
     static var isActive: Bool {
-        !FocusTimerSession.shared.showsCompactStandby
-            && WidgetSettings.shared.isEnabled(MediaNowPlayingWidget.manifest.id)
+        WidgetSettings.shared.isEnabled(MediaNowPlayingWidget.manifest.id)
             && NowPlayingService.shared.snapshot?.hasTrack == true
             && NowPlayingService.shared.snapshot?.isPlaying == true
     }
 
-    /// 画面上正是播放小岛：收起态、无瞬时 tip（会议等）盖住。仅此时悬停才开大面板。
+    /// 画面上正露媒体翼：收起态、无瞬时 tip 盖住。悬停/点按才开大面板。
     @MainActor
     static var isVisiblyShowingCompact: Bool {
-        isActive && IslandNoticeCenter.shared.current == nil
+        guard isActive, IslandNoticeCenter.shared.current == nil else { return false }
+        switch IslandNoticeCenter.shared.slots.resolvedLayout {
+        case .fullMedia, .dual(left: .media, _):
+            return true
+        default:
+            return false
+        }
     }
 
     /// 准入大面板并展开（悬停小岛 / 点按 / 按住刘海）。

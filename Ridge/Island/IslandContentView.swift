@@ -26,14 +26,31 @@ struct IslandContentView: View {
             && shelfDropSession.isActive
     }
 
-    /// 播放中常驻小岛（番茄优先占用左右翼；大面板仅点按后出现）。
+    /// 播放中常驻小岛（可与专注并排：左音乐右专注；大面板仅点按/悬停后出现）。
     private var showsMediaCompactStandby: Bool {
         MediaCompactPresence.isActive
+    }
+
+    /// 收起且无 tip：音乐+专注左右双翼。
+    private var showsMediaFocusCompactDual: Bool {
+        !viewModel.isExpanded
+            && showsMediaCompactStandby
+            && focusTimer.showsCompactStandby
+            && !noticeCenter.slots.hasNoticePayload
     }
 
     private var compactSize: CGSize {
         // 高度一律等于刘海：贴顶时底边齐平，禁止 max(…, 38) 再抬高掉出刘海。
         let height = NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
+        // 音乐 + 专注：贴刘海左右双翼（与 tip dualFlush 同宽）。
+        if showsMediaFocusCompactDual {
+            let dual = IslandChrome.preparedDualFlushPanelSize(
+                notchWidth: viewModel.notchWidth,
+                notchHeight: viewModel.notchHeight,
+                rightIsOrb: false
+            )
+            return CGSize(width: NotchGeometry.pixelAlign(dual.width), height: height)
+        }
         // 番茄计时中：收起态加宽，左右翼展示待命倒计时（对齐 Live Activity）。
         if focusTimer.showsCompactStandby {
             return CGSize(
@@ -97,8 +114,11 @@ struct IslandContentView: View {
     }
 
     private var usesDualFlushChrome: Bool {
-        runtime.isTransientNoticePage
-            && noticeCenter.slots.usesDualFlushChrome
+        if runtime.isTransientNoticePage, noticeCenter.slots.usesDualFlushChrome {
+            return true
+        }
+        // 收起：音乐左 + 专注右，与 tip 双槽同壳。
+        return showsMediaFocusCompactDual
     }
 
     private var usesDualFlushWithRightOrb: Bool {
@@ -400,6 +420,13 @@ private struct IslandBody: View {
         MediaCompactPresence.isActive
     }
 
+    /// 收起且无 tip：左音乐右专注。
+    private var showsMediaFocusCompactDual: Bool {
+        showsMediaCompactStandby
+            && focusTimer.showsCompactStandby
+            && !noticeCenter.slots.hasNoticePayload
+    }
+
     /// 收起态内容框高：略小于岛高，上下各留约 2pt 黑边。
     private var compactContentHeight: CGFloat {
         max(0, NotchGeometry.compactPanelHeight(notchHeight: notchHeight) - 4)
@@ -431,6 +458,31 @@ private struct IslandBody: View {
                             .padding(.top, max(6, notchHeight * 0.22))
                             .allowsHitTesting(false)
                     }
+                }
+            } else if showsMediaFocusCompactDual, let snap = nowPlaying.snapshot {
+                // 左音乐 · 右专注；与 tip dualFlush 同壳。
+                IslandDualNotchWingRow {
+                    MediaCompactStandbyView(
+                        title: snap.title,
+                        artwork: snap.artwork,
+                        elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
+                        isPlaying: snap.isPlaying,
+                        flushSide: .leading,
+                        bareWingContent: true
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        MediaCompactPresence.openExpandedPanel(reason: "compactTap")
+                    }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityHint(L10n.Media.previewStageExpanded)
+                } right: {
+                    FocusTimerStandbyView(
+                        snapshot: focusTimer.snapshot,
+                        flushSide: .trailing,
+                        bareWingContent: true
+                    )
+                    .allowsHitTesting(false)
                 }
             } else if focusTimer.showsCompactStandby {
                 // 左右翼贴胶囊边：用满 compact 宽，内边距略收，避免内容挤在中段。
