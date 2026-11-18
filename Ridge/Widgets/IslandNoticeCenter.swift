@@ -57,6 +57,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
     }
 
     /// 非专注提示统一约 3s；会议 / 取色 / OCR 仍手动收。
+    /// DEBUG 测试台可覆盖停留时长（`IslandTestLabSettings`）。
     var autoDismissNanoseconds: UInt64? {
         switch self {
         case .colorPickTip, .ocrSelectTip, .meetingLead:
@@ -64,6 +65,11 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .clipboardCaptureHint, .moveReminder, .ramPressure, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .aiUsageAlert:
+            #if DEBUG
+            if let override = IslandTestLabSettings.resolvedTipDurationNanoseconds() {
+                return override
+            }
+            #endif
             return IslandNoticeAutoDismissPolicy.standardNanoseconds
         }
     }

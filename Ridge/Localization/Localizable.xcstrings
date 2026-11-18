@@ -10120,6 +10120,831 @@
           }
         }
       }
+    },
+    "test_lab.sidebar": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "岛测试台"
+          }
+        }
+      }
+    },
+    "test_lab.page_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "岛测试台"
+          }
+        }
+      }
+    },
+    "test_lab.page_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅本地 DEBUG 可见。用于调 tip 停留、专注快进、写入真实会议、拉起监视进程与外设调试；正式包无此页。"
+          }
+        }
+      }
+    },
+    "test_lab.tip.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示停留时间"
+          }
+        }
+      }
+    },
+    "test_lab.tip.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "覆盖瞬时 tip 默认约 3 秒，方便看 FIFO 与盖住专注后再回来。"
+          }
+        }
+      }
+    },
+    "test_lab.tip.override": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用时长覆盖"
+          }
+        }
+      }
+    },
+    "test_lab.tip.override_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭后恢复默认 3 秒；不影响正式逻辑源码常量。"
+          }
+        }
+      }
+    },
+    "test_lab.tip.seconds": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停留秒数"
+          }
+        }
+      }
+    },
+    "test_lab.tip.reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复默认 3 秒"
+          }
+        }
+      }
+    },
+    "test_lab.media.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "媒体"
+          }
+        }
+      }
+    },
+    "test_lab.media.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注入引导用假「正在播放」，便于测左音乐 + 右专注 / C。"
+          }
+        }
+      }
+    },
+    "test_lab.media.on": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启假播放"
+          }
+        }
+      }
+    },
+    "test_lab.media.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭假播放"
+          }
+        }
+      }
+    },
+    "test_lab.focus.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注快进"
+          }
+        }
+      }
+    },
+    "test_lab.focus.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不必真等 25 分钟；直接切态或跳剩余时间。"
+          }
+        }
+      }
+    },
+    "test_lab.focus.enter_running": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进入计时 25m"
+          }
+        }
+      }
+    },
+    "test_lab.focus.enter_overtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进入加时"
+          }
+        }
+      }
+    },
+    "test_lab.focus.enter_completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进入终局"
+          }
+        }
+      }
+    },
+    "test_lab.focus.advance_1m": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快进 +1 分"
+          }
+        }
+      }
+    },
+    "test_lab.focus.remain_1m": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳到还剩 1 分"
+          }
+        }
+      }
+    },
+    "test_lab.focus.jump_end": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳到结束"
+          }
+        }
+      }
+    },
+    "test_lab.focus.jump_overtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳进加时"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_running_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：已进入计时 %d 分"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_overtime": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：已进入加时"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_completed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：已进入终局"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_advance_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：快进 %d 分"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_remain_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：跳到还剩 %d 秒"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_ended": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：已跳到结束"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议 · 真实日历"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写入系统日历真实事件（多平台入会链接 × 紧迫度）。标题带 [Ridge Lab]，可一键清理。"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.need_auth": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "需要日历权限"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.auth_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "授权后才能创建 / 删除测试会议。"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.no_calendar": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有可写入的日历"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.platform": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "平台"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.urgency": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紧迫度"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.create": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "创建测试会议"
+          }
+        }
+      }
+    },
+    "test_lab.meeting.cleanup": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清理测试会议"
+          }
+        }
+      }
+    },
+    "test_lab.status.meeting_created_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议：已创建 %@ · %@"
+          }
+        }
+      }
+    },
+    "test_lab.status.meeting_cleaned_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "会议：已删除 %d 条测试事件"
+          }
+        }
+      }
+    },
+    "test_lab.process.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进程结束"
+          }
+        }
+      }
+    },
+    "test_lab.process.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一键拉起短生命周期进程并开始监视；结束后上岛 tip。也可直接投递成功 / 失败 tip。"
+          }
+        }
+      }
+    },
+    "test_lab.process.launch_sleep": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动 sleep 并监视"
+          }
+        }
+      }
+    },
+    "test_lab.process.launch_docker": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启动 Docker sleep 并监视"
+          }
+        }
+      }
+    },
+    "test_lab.process.docker_missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未找到 docker 可执行文件"
+          }
+        }
+      }
+    },
+    "test_lab.process.tip_ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接投递成功 tip"
+          }
+        }
+      }
+    },
+    "test_lab.process.tip_fail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "直接投递失败 tip"
+          }
+        }
+      }
+    },
+    "test_lab.process.ended_success": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "测试进程已正常退出"
+          }
+        }
+      }
+    },
+    "test_lab.process.ended_failure": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "测试进程异常退出"
+          }
+        }
+      }
+    },
+    "test_lab.process.last_pid_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最近启动 PID：%d"
+          }
+        }
+      }
+    },
+    "test_lab.status.process_watching_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进程：已监视 PID %d（约 %d 秒后结束）"
+          }
+        }
+      }
+    },
+    "test_lab.status.process_tip_ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进程：已投递成功结束 tip"
+          }
+        }
+      }
+    },
+    "test_lab.status.process_tip_fail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "进程：已投递失败结束 tip"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注入假外设到电量磁贴，或直接投递低电 / 满电 / 接入 tip（标明为调试）。"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.inject_mouse": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注入低电鼠标"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.inject_headphones": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注入耳机"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.inject_keyboard": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "注入满电键盘"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.clear": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清空注入外设"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.tip_low": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "低电 tip"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.tip_full": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "满电 tip"
+          }
+        }
+      }
+    },
+    "test_lab.peripheral.tip_connect": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接入 tip"
+          }
+        }
+      }
+    },
+    "test_lab.status.peripheral_injected_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设：已注入 %@（%d%%）"
+          }
+        }
+      }
+    },
+    "test_lab.status.peripheral_cleared": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设：已清空注入"
+          }
+        }
+      }
+    },
+    "test_lab.status.peripheral_tip_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外设：已投递 %@ tip"
+          }
+        }
+      }
+    },
+    "test_lab.deck.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制台"
+          }
+        }
+      }
+    },
+    "test_lab.deck.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开启对应磁贴并展开控制台页。"
+          }
+        }
+      }
+    },
+    "test_lab.status.deck_opened_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "控制台：已打开 %@"
+          }
+        }
+      }
+    },
+    "test_lab.combo.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "组合剧本"
+          }
+        }
+      }
+    },
+    "test_lab.combo.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一键叠媒体 + 专注，或再盖一层 C 类 tip。"
+          }
+        }
+      }
+    },
+    "test_lab.combo.media_focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "假播放 + 专注（剩 90s）"
+          }
+        }
+      }
+    },
+    "test_lab.combo.media_focus_c": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "假播放 + 专注 + 进程 tip"
+          }
+        }
+      }
+    },
+    "test_lab.status.combo_media_focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "组合：假播放 + 专注"
+          }
+        }
+      }
+    },
+    "test_lab.status.combo_media_focus_c": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "组合：假播放 + 专注 + C tip"
+          }
+        }
+      }
+    },
+    "test_lab.status.fake_media_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "媒体：假播放已开"
+          }
+        }
+      }
+    },
+    "test_lab.status.fake_media_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "媒体：假播放已关"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

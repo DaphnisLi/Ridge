@@ -114,7 +114,9 @@
 		797C697356CC11AE2118BDB3 /* AIUsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696174AF0446BACA3704883A /* AIUsageModels.swift */; };
 		7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526499772CB67C8D450F310C /* LiveIslandGate.swift */; };
 		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
+		7DA42C24437D2B2B5FD2F358 /* IslandTestLabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0B371F5248ECFDAEDF6F42 /* IslandTestLabTests.swift */; };
 		7E8E1028A672D5A61B630EDD /* ProjectRuntimeSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A753B71C7E41C8E6E241A1 /* ProjectRuntimeSampler.swift */; };
+		7EC5E8012D6A80760C22863B /* IslandTestLabProcessLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB390E24143EB9389F74596 /* IslandTestLabProcessLauncher.swift */; };
 		7ED3B71BADBC51AE48AAFEB5 /* MeetingLeadSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1CE8183C9AB3757E2A5B69 /* MeetingLeadSession.swift */; };
 		7F846C42B4CA458D1D993C1E /* ColorPickWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01537C7FEA92D34C6EFE8309 /* ColorPickWidget.swift */; };
 		80838D06CA8BCA48EECE4768 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A211ECE1AF39EDFCFE74A8D /* ServiceManagement.framework */; };
@@ -169,6 +171,8 @@
 		BF7C3BB88AC273565B1B17BC /* CopiedNoticeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */; };
 		BFD1361FDE8022664B1C8B4F /* MediaRemoteAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 50ACDF56D1EE171B3B1BF118 /* MediaRemoteAdapter */; };
 		C01D56F615E1DBAF18A8595E /* WidgetPermissionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08E50F16624A03338786CE93 /* WidgetPermissionGate.swift */; };
+		C136996698E114F34F6A7AEE /* IslandTestHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EF4F9D292FDED0A5A63D643 /* IslandTestHarness.swift */; };
+		C1B1AFA73442854CFBA98E1E /* IslandTestLabSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BEC48C8703592B7A3A3F681 /* IslandTestLabSettings.swift */; };
 		C3616D999C1E12C1F7D29C9C /* BatteryListeningModeBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 81FA823E3DD358069BCD1369 /* BatteryListeningModeBridge.m */; };
 		C598D08747403D15CEF6C488 /* ControlDeckIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB846F3F80DAD594DDC63DD /* ControlDeckIslandView.swift */; };
 		C81C8B553E9FB563CD83D571 /* NotchGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B26AC05CF1A95DF09A789D6 /* NotchGeometry.swift */; };
@@ -192,6 +196,7 @@
 		E3514C581EF8AFC585F8748C /* SoundHostAppResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A16325F32717E7EF64A3BC51 /* SoundHostAppResolver.swift */; };
 		E37DC318BF9BD36D6C4C0784 /* ShelfStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E852DDC5B27D351C9951BB /* ShelfStore.swift */; };
 		E4600D6376CCF890DB980440 /* StockIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93EA63BEE5683B482701E421 /* StockIslandViews.swift */; };
+		E48E6DF11CD1C9470B1C4BF3 /* IslandTestLabMeetingSeeder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A45C6AA64F3A7F280A138EB /* IslandTestLabMeetingSeeder.swift */; };
 		E49B786452EB42EDDEA8128F /* CopiedNoticeWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3DBF22EFFE6CDF6CF689B7 /* CopiedNoticeWidgetConfigSection.swift */; };
 		E4A3EF8154059D5283C09B3C /* ResourceAppAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */; };
 		E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1073E52F82BA9EE649BA7890 /* IslandController.swift */; };
@@ -204,6 +209,7 @@
 		EB81F75E843FCBC6CA5BB137 /* MoveReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */; };
 		EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */; };
 		EC22FB07646158FA610B63F3 /* ProjectModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1865D56B1C82B5DD2D53FF17 /* ProjectModels.swift */; };
+		ECB8EA97896F9D8A6750E35C /* IslandTestLabPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB41CF2662A9CC15202945D7 /* IslandTestLabPane.swift */; };
 		EEF7DF550F3FA61D805FD69A /* ProjectRootDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECEE2ABCF93C94266282B12 /* ProjectRootDiscovery.swift */; };
 		F0263A1227C125DC1629107D /* FocusTimerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */; };
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
@@ -248,6 +254,7 @@
 		07EC22739F9DB8CD07D03E0B /* Ridge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		088CFC576E84896E553FC0DD /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
 		08E50F16624A03338786CE93 /* WidgetPermissionGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPermissionGate.swift; sourceTree = "<group>"; };
+		0B0B371F5248ECFDAEDF6F42 /* IslandTestLabTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestLabTests.swift; sourceTree = "<group>"; };
 		0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFocusPolicy.swift; sourceTree = "<group>"; };
 		0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectCatalog.swift; sourceTree = "<group>"; };
 		1073E52F82BA9EE649BA7890 /* IslandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandController.swift; sourceTree = "<group>"; };
@@ -261,6 +268,7 @@
 		196FB646034D57301EB78DBE /* StockQuoteClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockQuoteClient.swift; sourceTree = "<group>"; };
 		1B90FA6C86EB1EF42A7D0C60 /* MoveReminderIdleProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderIdleProbe.swift; sourceTree = "<group>"; };
 		1B971DE7978B73EEA55C59DC /* MoveReminderAvoidProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveReminderAvoidProbe.swift; sourceTree = "<group>"; };
+		1BEC48C8703592B7A3A3F681 /* IslandTestLabSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestLabSettings.swift; sourceTree = "<group>"; };
 		1D424EF6227B7F050BF3D294 /* AIUsageSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettingsPane.swift; sourceTree = "<group>"; };
 		1F5CAB6EDEF2BE36B0610B26 /* WorldClockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockSettings.swift; sourceTree = "<group>"; };
 		20320B2EAB19001C56522261 /* CopiedNoticeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedNoticeSettings.swift; sourceTree = "<group>"; };
@@ -276,6 +284,7 @@
 		2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySystemProfilerProbe.swift; sourceTree = "<group>"; };
 		2C8AA2150E33A86F1034724E /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		2D5047AA5E636C0BAB3B1CD1 /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
+		2EF4F9D292FDED0A5A63D643 /* IslandTestHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestHarness.swift; sourceTree = "<group>"; };
 		2F9F964A7A2CBC61BE826B2A /* WidgetFlyAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetFlyAnimator.swift; sourceTree = "<group>"; };
 		2FD7E0310012B7B3F70CDB47 /* ResourceKeystrokeMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceKeystrokeMonitor.swift; sourceTree = "<group>"; };
 		30F74F4493B8E0BA2978AC22 /* SoundMixerDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundMixerDeckView.swift; sourceTree = "<group>"; };
@@ -329,6 +338,7 @@
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
 		6A211ECE1AF39EDFCFE74A8D /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
+		6A45C6AA64F3A7F280A138EB /* IslandTestLabMeetingSeeder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestLabMeetingSeeder.swift; sourceTree = "<group>"; };
 		6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRSelectWidget.swift; sourceTree = "<group>"; };
 		6B2F25C6A0801ABDAF21F6DA /* MeetingSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingSettings.swift; sourceTree = "<group>"; };
 		6CA68C1C0AA936A3E9840031 /* WidgetLibraryFamily.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetLibraryFamily.swift; sourceTree = "<group>"; };
@@ -364,6 +374,7 @@
 		8A1F446438C071BD1E1487B7 /* StockSearchIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockSearchIndex.swift; sourceTree = "<group>"; };
 		8B37885E316757E08B49442F /* BatteryHIDProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryHIDProbe.swift; sourceTree = "<group>"; };
 		8B7B868652010E80E7A1FACC /* SettingsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsRootView.swift; sourceTree = "<group>"; };
+		8CB390E24143EB9389F74596 /* IslandTestLabProcessLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestLabProcessLauncher.swift; sourceTree = "<group>"; };
 		8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaCompactStandbyView.swift; sourceTree = "<group>"; };
 		8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentOpener.swift; sourceTree = "<group>"; };
 		93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryWidgetConfigSection.swift; sourceTree = "<group>"; };
@@ -451,6 +462,7 @@
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgress.swift; sourceTree = "<group>"; };
 		FABA8516BFF2A318D78C2E62 /* CursorUsageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorUsageClient.swift; sourceTree = "<group>"; };
+		FB41CF2662A9CC15202945D7 /* IslandTestLabPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestLabPane.swift; sourceTree = "<group>"; };
 		FC83119BD730DB321ACA5530 /* StockWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockWidgetConfigSection.swift; sourceTree = "<group>"; };
 		FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickTipIslandView.swift; sourceTree = "<group>"; };
 		FF3692E5FD3DAF12863120F4 /* ShelfClipboardSearchField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfClipboardSearchField.swift; sourceTree = "<group>"; };
@@ -472,6 +484,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		005BF7749C43BE20B2F94FBE /* Debug */ = {
+			isa = PBXGroup;
+			children = (
+				2EF4F9D292FDED0A5A63D643 /* IslandTestHarness.swift */,
+				6A45C6AA64F3A7F280A138EB /* IslandTestLabMeetingSeeder.swift */,
+				FB41CF2662A9CC15202945D7 /* IslandTestLabPane.swift */,
+				8CB390E24143EB9389F74596 /* IslandTestLabProcessLauncher.swift */,
+				1BEC48C8703592B7A3A3F681 /* IslandTestLabSettings.swift */,
+			);
+			path = Debug;
+			sourceTree = "<group>";
+		};
 		0308FADC0BC583E5A2A4B5A1 /* FocusTimer */ = {
 			isa = PBXGroup;
 			children = (
@@ -591,6 +615,7 @@
 				067FD7939F4B3CC048E6FC92 /* Battery */,
 				548AC9AC4C9851DB30437906 /* Capture */,
 				EFDE474CD3132D7D1ACA9802 /* ControlDeck */,
+				005BF7749C43BE20B2F94FBE /* Debug */,
 				0308FADC0BC583E5A2A4B5A1 /* FocusTimer */,
 				2A565B209C491CD8B02FF35B /* Island */,
 				AC72FD61D32CE3BA33F2B556 /* Localization */,
@@ -672,6 +697,7 @@
 				60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */,
 				41F503A5E02AA52CE9707A00 /* IslandNoticeBehaviorTests.swift */,
 				9C17AEA38ECF7C50319EA4E4 /* IslandNoticeLayoutMatrixTests.swift */,
+				0B0B371F5248ECFDAEDF6F42 /* IslandTestLabTests.swift */,
 				56E612CBA14254D2023C2AFF /* KeystrokePeakHourTests.swift */,
 				2C3A7D77738F10EB67B95471 /* ProjectScanRootTests.swift */,
 				50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */,
@@ -1075,6 +1101,11 @@
 				3A0C58F80347B876A716DB80 /* IslandSettings.swift in Sources */,
 				D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */,
 				9400FFF504FD5CADA5D9CC84 /* IslandState.swift in Sources */,
+				C136996698E114F34F6A7AEE /* IslandTestHarness.swift in Sources */,
+				E48E6DF11CD1C9470B1C4BF3 /* IslandTestLabMeetingSeeder.swift in Sources */,
+				ECB8EA97896F9D8A6750E35C /* IslandTestLabPane.swift in Sources */,
+				7EC5E8012D6A80760C22863B /* IslandTestLabProcessLauncher.swift in Sources */,
+				C1B1AFA73442854CFBA98E1E /* IslandTestLabSettings.swift in Sources */,
 				0A5B9B60AA7D728483C7BB2E /* IslandTheme.swift in Sources */,
 				AB44A1546E0B044B6B617F08 /* IslandWidget.swift in Sources */,
 				DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */,
@@ -1200,6 +1231,7 @@
 				33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */,
 				06044095856B4E556146B69D /* IslandNoticeBehaviorTests.swift in Sources */,
 				47A26013C43CDC614CDC613D /* IslandNoticeLayoutMatrixTests.swift in Sources */,
+				7DA42C24437D2B2B5FD2F358 /* IslandTestLabTests.swift in Sources */,
 				A460C629F56E217E5B978DA1 /* KeystrokePeakHourTests.swift in Sources */,
 				27BFC264B4A738F590680B85 /* ProjectScanRootTests.swift in Sources */,
 				E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */,

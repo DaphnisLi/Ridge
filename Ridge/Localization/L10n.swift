@@ -3065,6 +3065,196 @@ enum L10n {
         }
     }
 
+    // MARK: - Island Test Lab（DEBUG 文案；Release 侧栏无入口，字符串可留）
+
+    enum TestLab {
+        static var sidebarTitle: String { tr("test_lab.sidebar", "岛测试台") }
+        static var pageTitle: String { tr("test_lab.page_title", "岛测试台") }
+        static var pageSubtitle: String {
+            tr(
+                "test_lab.page_subtitle",
+                "仅本地 DEBUG 可见。用于调 tip 停留、专注快进、写入真实会议、拉起监视进程与外设调试；正式包无此页。"
+            )
+        }
+
+        static var tipDurationTitle: String { tr("test_lab.tip.title", "提示停留时间") }
+        static var tipDurationSubtitle: String {
+            tr("test_lab.tip.subtitle", "覆盖瞬时 tip 默认约 3 秒，方便看 FIFO 与盖住专注后再回来。")
+        }
+        static var tipOverrideSwitch: String { tr("test_lab.tip.override", "启用时长覆盖") }
+        static var tipOverrideHint: String {
+            tr("test_lab.tip.override_hint", "关闭后恢复默认 3 秒；不影响正式逻辑源码常量。")
+        }
+        static var tipSecondsLabel: String { tr("test_lab.tip.seconds", "停留秒数") }
+        static var tipReset: String { tr("test_lab.tip.reset", "恢复默认 3 秒") }
+
+        static var mediaTitle: String { tr("test_lab.media.title", "媒体") }
+        static var mediaSubtitle: String {
+            tr("test_lab.media.subtitle", "注入引导用假「正在播放」，便于测左音乐 + 右专注 / C。")
+        }
+        static var mediaFakeOn: String { tr("test_lab.media.on", "开启假播放") }
+        static var mediaFakeOff: String { tr("test_lab.media.off", "关闭假播放") }
+
+        static var focusTitle: String { tr("test_lab.focus.title", "专注快进") }
+        static var focusSubtitle: String {
+            tr("test_lab.focus.subtitle", "不必真等 25 分钟；直接切态或跳剩余时间。")
+        }
+        static var focusEnterRunning: String { tr("test_lab.focus.enter_running", "进入计时 25m") }
+        static var focusEnterOvertime: String { tr("test_lab.focus.enter_overtime", "进入加时") }
+        static var focusEnterCompleted: String { tr("test_lab.focus.enter_completed", "进入终局") }
+        static var focusAdvance1m: String { tr("test_lab.focus.advance_1m", "快进 +1 分") }
+        static var focusRemain1m: String { tr("test_lab.focus.remain_1m", "跳到还剩 1 分") }
+        static var focusJumpEnd: String { tr("test_lab.focus.jump_end", "跳到结束") }
+        static var focusJumpOvertime: String { tr("test_lab.focus.jump_overtime", "跳进加时") }
+
+        static func statusFocusRunning(_ minutes: Int) -> String {
+            String(format: tr("test_lab.status.focus_running_format", "专注：已进入计时 %d 分"), minutes)
+        }
+        static var statusFocusOvertime: String { tr("test_lab.status.focus_overtime", "专注：已进入加时") }
+        static var statusFocusCompleted: String { tr("test_lab.status.focus_completed", "专注：已进入终局") }
+        static func statusFocusAdvance(_ minutes: Int) -> String {
+            String(format: tr("test_lab.status.focus_advance_format", "专注：快进 %d 分"), minutes)
+        }
+        static func statusFocusRemain(_ seconds: Int) -> String {
+            String(format: tr("test_lab.status.focus_remain_format", "专注：跳到还剩 %d 秒"), seconds)
+        }
+        static var statusFocusEnded: String { tr("test_lab.status.focus_ended", "专注：已跳到结束") }
+
+        static var meetingTitle: String { tr("test_lab.meeting.title", "会议 · 真实日历") }
+        static var meetingSubtitle: String {
+            tr(
+                "test_lab.meeting.subtitle",
+                "写入系统日历真实事件（多平台入会链接 × 紧迫度）。标题带 [Ridge Lab]，可一键清理。"
+            )
+        }
+        static var meetingNeedAuth: String { tr("test_lab.meeting.need_auth", "需要日历权限") }
+        static var meetingAuthHint: String {
+            tr("test_lab.meeting.auth_hint", "授权后才能创建 / 删除测试会议。")
+        }
+        static var meetingNoCalendar: String {
+            tr("test_lab.meeting.no_calendar", "没有可写入的日历")
+        }
+        static var meetingPlatform: String { tr("test_lab.meeting.platform", "平台") }
+        static var meetingUrgency: String { tr("test_lab.meeting.urgency", "紧迫度") }
+        static var meetingCreate: String { tr("test_lab.meeting.create", "创建测试会议") }
+        static var meetingCleanup: String { tr("test_lab.meeting.cleanup", "清理测试会议") }
+        static func statusMeetingCreated(_ platform: String, _ urgency: String) -> String {
+            String(
+                format: tr("test_lab.status.meeting_created_format", "会议：已创建 %@ · %@"),
+                platform,
+                urgency
+            )
+        }
+        static func statusMeetingCleaned(_ count: Int) -> String {
+            String(format: tr("test_lab.status.meeting_cleaned_format", "会议：已删除 %d 条测试事件"), count)
+        }
+
+        static var processTitle: String { tr("test_lab.process.title", "进程结束") }
+        static var processSubtitle: String {
+            tr(
+                "test_lab.process.subtitle",
+                "一键拉起短生命周期进程并开始监视；结束后上岛 tip。也可直接投递成功 / 失败 tip。"
+            )
+        }
+        static var processLaunchSleep: String { tr("test_lab.process.launch_sleep", "启动 sleep 并监视") }
+        static var processLaunchDocker: String {
+            tr("test_lab.process.launch_docker", "启动 Docker sleep 并监视")
+        }
+        static var processDockerMissing: String {
+            tr("test_lab.process.docker_missing", "未找到 docker 可执行文件")
+        }
+        static var processTipOK: String { tr("test_lab.process.tip_ok", "直接投递成功 tip") }
+        static var processTipFail: String { tr("test_lab.process.tip_fail", "直接投递失败 tip") }
+        static var processEndedSuccess: String {
+            tr("test_lab.process.ended_success", "测试进程已正常退出")
+        }
+        static var processEndedFailure: String {
+            tr("test_lab.process.ended_failure", "测试进程异常退出")
+        }
+        static func processLastPID(_ pid: Int) -> String {
+            String(format: tr("test_lab.process.last_pid_format", "最近启动 PID：%d"), pid)
+        }
+        static func statusProcessWatching(_ pid: Int, _ seconds: Int) -> String {
+            String(
+                format: tr("test_lab.status.process_watching_format", "进程：已监视 PID %d（约 %d 秒后结束）"),
+                pid,
+                seconds
+            )
+        }
+        static var statusProcessTipOK: String {
+            tr("test_lab.status.process_tip_ok", "进程：已投递成功结束 tip")
+        }
+        static var statusProcessTipFail: String {
+            tr("test_lab.status.process_tip_fail", "进程：已投递失败结束 tip")
+        }
+
+        static var peripheralTitle: String { tr("test_lab.peripheral.title", "外设") }
+        static var peripheralSubtitle: String {
+            tr(
+                "test_lab.peripheral.subtitle",
+                "注入假外设到电量磁贴，或直接投递低电 / 满电 / 接入 tip（标明为调试）。"
+            )
+        }
+        static var peripheralInjectMouse: String {
+            tr("test_lab.peripheral.inject_mouse", "注入低电鼠标")
+        }
+        static var peripheralInjectHeadphones: String {
+            tr("test_lab.peripheral.inject_headphones", "注入耳机")
+        }
+        static var peripheralInjectKeyboard: String {
+            tr("test_lab.peripheral.inject_keyboard", "注入满电键盘")
+        }
+        static var peripheralClear: String { tr("test_lab.peripheral.clear", "清空注入外设") }
+        static var peripheralTipLow: String { tr("test_lab.peripheral.tip_low", "低电 tip") }
+        static var peripheralTipFull: String { tr("test_lab.peripheral.tip_full", "满电 tip") }
+        static var peripheralTipConnect: String {
+            tr("test_lab.peripheral.tip_connect", "接入 tip")
+        }
+        static func statusPeripheralInjected(_ kind: String, _ percent: Int) -> String {
+            String(
+                format: tr("test_lab.status.peripheral_injected_format", "外设：已注入 %@（%d%%）"),
+                kind,
+                percent
+            )
+        }
+        static var statusPeripheralCleared: String {
+            tr("test_lab.status.peripheral_cleared", "外设：已清空注入")
+        }
+        static func statusPeripheralTip(_ style: String) -> String {
+            String(format: tr("test_lab.status.peripheral_tip_format", "外设：已投递 %@ tip"), style)
+        }
+
+        static var deckTitle: String { tr("test_lab.deck.title", "控制台") }
+        static var deckSubtitle: String {
+            tr("test_lab.deck.subtitle", "开启对应磁贴并展开控制台页。")
+        }
+        static func statusDeckOpened(_ pane: String) -> String {
+            String(format: tr("test_lab.status.deck_opened_format", "控制台：已打开 %@"), pane)
+        }
+
+        static var comboTitle: String { tr("test_lab.combo.title", "组合剧本") }
+        static var comboSubtitle: String {
+            tr("test_lab.combo.subtitle", "一键叠媒体 + 专注，或再盖一层 C 类 tip。")
+        }
+        static var comboMediaFocus: String {
+            tr("test_lab.combo.media_focus", "假播放 + 专注（剩 90s）")
+        }
+        static var comboMediaFocusC: String {
+            tr("test_lab.combo.media_focus_c", "假播放 + 专注 + 进程 tip")
+        }
+        static var statusComboMediaFocus: String {
+            tr("test_lab.status.combo_media_focus", "组合：假播放 + 专注")
+        }
+        static var statusComboMediaFocusC: String {
+            tr("test_lab.status.combo_media_focus_c", "组合：假播放 + 专注 + C tip")
+        }
+
+        static var statusFakeMediaOn: String { tr("test_lab.status.fake_media_on", "媒体：假播放已开") }
+        static var statusFakeMediaOff: String {
+            tr("test_lab.status.fake_media_off", "媒体：假播放已关")
+        }
+    }
+
     // MARK: - Helpers
 
     private static func tr(_ key: StaticString, _ defaultValue: String.LocalizationValue) -> String {

@@ -535,24 +535,40 @@ final class ProjectReleaseSession: ObservableObject {
             AppLog.info("Projects", "取消 Watch", ["pid": pid])
             return
         }
+        beginWatch(
+            pid: pid,
+            label: item.title,
+            projectName: projectName,
+            startedAt: item.startedAt,
+            memoryBytes: item.memoryBytes
+        )
+    }
+
+    /// 统一开始监视（控制台点击与 DEBUG 测试台共用）。
+    private func beginWatch(
+        pid: Int32,
+        label: String,
+        projectName: String,
+        startedAt: Date?,
+        memoryBytes: UInt64
+    ) {
         let previous = watches.first?.projectName
         for old in watches {
             cancelExitTask(pid: old.pid)
         }
-        let processStartedAt = item.startedAt
+        let processStartedAt = startedAt
             ?? ProjectProcessSupport.startDate(pid: pid)
             ?? Date()
         let logPath = ProjectProcessSupport.discoverLogPath(pid: pid)
-        let mem = item.memoryBytes
         let target = ProjectWatchTarget(
             id: "watch:\(pid)",
             pid: pid,
-            label: item.title,
+            label: label,
             projectName: projectName,
             startedAt: processStartedAt,
             logPath: logPath,
-            lastMemoryBytes: mem,
-            peakMemoryBytes: mem
+            lastMemoryBytes: memoryBytes,
+            peakMemoryBytes: memoryBytes
         )
         watches = [target]
         // 换监视对象：清掉上一份结束提示，避免岛上 / 控制台仍显示被替换进程。
@@ -560,14 +576,28 @@ final class ProjectReleaseSession: ObservableObject {
         beginExitMonitor(for: target)
         AppLog.info("Projects", "开始 Watch", [
             "pid": pid,
-            "label": item.title,
+            "label": label,
             "project": projectName,
             "replaced": previous ?? "",
             "startedAt": ISO8601DateFormatter().string(from: processStartedAt),
             "hasLog": logPath != nil,
-            "memoryBytes": mem
+            "memoryBytes": memoryBytes
         ])
     }
+
+    #if DEBUG
+    /// 测试台：直接监视给定 pid（不必先出现在扫描列表）。
+    func debugStartWatch(pid: Int32, label: String, projectName: String) {
+        beginWatch(
+            pid: pid,
+            label: label,
+            projectName: projectName,
+            startedAt: ProjectProcessSupport.startDate(pid: pid),
+            memoryBytes: 0
+        )
+        AppLog.info("Projects", "测试台开始 Watch", ["pid": pid, "label": label])
+    }
+    #endif
 
     /// 监视该组主进程；已在监视则取消，否则切换为当前组。
     func toggleWatchPrimary(in group: ProjectRuntimeGroup) {

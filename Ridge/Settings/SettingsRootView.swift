@@ -6,8 +6,12 @@ enum SettingsChrome {
     /// 设置窗默认 / 最小内容尺寸（菜单栏与 App「设置…」共用，禁止另开一套）。
     static let windowDefaultSize = NSSize(width: 1200, height: 620)
     static let windowMinSize = NSSize(width: 1080, height: 520)
-    /// 侧栏贴底「设置」区高度（分区标题 + 通用 / 关于两行）。
+    /// 侧栏贴底「设置」区高度（分区标题 + 通用 / 关于；DEBUG 另含测试台一行）。
+    #if DEBUG
+    static let sidebarPinnedFooterHeight: CGFloat = 148
+    #else
     static let sidebarPinnedFooterHeight: CGFloat = 112
+    #endif
 
     // MARK: Color
 
@@ -125,6 +129,10 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
     /// 设置（含关于）：贴侧栏底。
     case general
     case about
+    #if DEBUG
+    /// 仅本地 DEBUG：岛测试台；Release 无此 case。
+    case islandTestLab
+    #endif
 
     var id: String { rawValue }
 
@@ -136,6 +144,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .focusInsights: return L10n.Settings.focusInsights
         case .general: return L10n.Settings.general
         case .about: return L10n.Settings.about
+        #if DEBUG
+        case .islandTestLab: return L10n.TestLab.sidebarTitle
+        #endif
         }
     }
 
@@ -147,6 +158,9 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
         case .focusInsights: return "keyboard"
         case .general: return "gearshape"
         case .about: return "info.circle"
+        #if DEBUG
+        case .islandTestLab: return "wrench.and.screwdriver.fill"
+        #endif
         }
     }
 
@@ -169,7 +183,11 @@ enum SettingsSection: String, CaseIterable, Identifiable, Hashable {
             case .features:
                 return [.island, .widgets, .focusInsights, .resourceMonitor]
             case .preferences:
+                #if DEBUG
+                return [.general, .about, .islandTestLab]
+                #else
                 return [.general, .about]
+                #endif
             }
         }
     }
@@ -211,6 +229,10 @@ struct SettingsRootView: View {
                     GeneralSettingsPane()
                 case .about:
                     AboutSettingsPane()
+                #if DEBUG
+                case .islandTestLab:
+                    IslandTestLabPane()
+                #endif
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

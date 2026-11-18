@@ -322,4 +322,90 @@ final class FocusTimerSession: ObservableObject {
             selectedPresetID: selectedPresetID
         )
     }
+
+    // MARK: - DEBUG 测试台快进（仅本地开发）
+
+    #if DEBUG
+    /// 一键进入计时中（不依赖真挂钟等待）。
+    func debugEnterRunning(minutes: Int = 25) {
+        let clamped = min(max(minutes, 1), 180)
+        startTimer(minutes: clamped, title: "Lab \(clamped)m", kind: .custom)
+        AppLog.info("FocusTimer", "测试台进入计时", ["minutes": clamped])
+    }
+
+    /// 一键进入加时态。
+    func debugEnterOvertime() {
+        if phase != .running && phase != .overtime {
+            debugEnterRunning(minutes: 25)
+        }
+        extend(byMinutes: settings.extendStepMinutes)
+        AppLog.info("FocusTimer", "测试台进入加时")
+    }
+
+    /// 一键进入终局（会落库一条 Lab 记录）。
+    func debugEnterCompleted() {
+        if phase != .running && phase != .overtime {
+            debugEnterRunning(minutes: 5)
+            elapsedSeconds = max(1, plannedSeconds - 1)
+        }
+        complete(reason: "testLabEnterCompleted")
+        AppLog.info("FocusTimer", "测试台进入终局")
+    }
+
+    /// 快进若干分钟（增加 elapsed）。
+    func debugAdvance(byMinutes minutes: Int) {
+        guard phase == .running || phase == .overtime else {
+            AppLog.warn("FocusTimer", "测试台快进忽略：非计时态", ["phase": phase.rawValue])
+            return
+        }
+        let add = min(max(minutes, 1), 180) * 60
+        elapsedSeconds += add
+        if remainingSeconds() <= 0 {
+            complete(reason: "testLabAdvanceEnd")
+        } else {
+            publishSnapshot()
+        }
+        AppLog.info("FocusTimer", "测试台快进", ["addSec": add, "remain": remainingSeconds()])
+    }
+
+    /// 跳到还剩指定秒数。
+    func debugJumpToRemaining(seconds: Int) {
+        if phase != .running && phase != .overtime {
+            debugEnterRunning(minutes: 25)
+        }
+        let target = max(0, seconds)
+        let total = plannedSeconds + overtimeSeconds
+        elapsedSeconds = max(0, total - target)
+        if remainingSeconds() <= 0 {
+            complete(reason: "testLabJumpRemainZero")
+        } else {
+            publishSnapshot()
+        }
+        AppLog.info("FocusTimer", "测试台跳到剩余", ["remain": remainingSeconds()])
+    }
+
+    /// 跳到结束（触发终局）。
+    func debugJumpToEnd() {
+        if phase != .running && phase != .overtime {
+            debugEnterRunning(minutes: 5)
+        }
+        elapsedSeconds = plannedSeconds + overtimeSeconds
+        complete(reason: "testLabJumpEnd")
+        AppLog.info("FocusTimer", "测试台跳到结束")
+    }
+
+    /// 若仍在 running，加时并确保仍有剩余。
+    func debugJumpIntoOvertime() {
+        if phase == .completed || phase == .picking {
+            debugEnterRunning(minutes: 25)
+        }
+        if phase == .running {
+            elapsedSeconds = plannedSeconds
+            extend(byMinutes: settings.extendStepMinutes)
+        } else if phase == .overtime {
+            publishSnapshot()
+        }
+        AppLog.info("FocusTimer", "测试台跳进加时", ["remain": remainingSeconds()])
+    }
+    #endif
 }

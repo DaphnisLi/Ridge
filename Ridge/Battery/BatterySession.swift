@@ -21,6 +21,10 @@ final class BatterySession: ObservableObject {
     private var isRefreshing = false
     /// 按设备连接先后记录的 id（用于「按设备连接顺序」）。
     private var connectionOrderIDs: [String] = []
+    #if DEBUG
+    /// 测试台注入的外设；合并进 `devices`，不影响真机扫描源。
+    private var labInjectedDevices: [BatteryDevice] = []
+    #endif
 
     private init() {}
 
@@ -147,8 +151,15 @@ final class BatterySession: ObservableObject {
             continuity: continuity,
             threshold: threshold
         )
-        updateConnectionOrder(with: mapped.map(\.id))
-        let sorted = sortDevices(mapped)
+        #if DEBUG
+        let combined = mapped + labInjectedDevices.filter { lab in
+            !mapped.contains(where: { $0.id == lab.id })
+        }
+        #else
+        let combined = mapped
+        #endif
+        updateConnectionOrder(with: combined.map(\.id))
+        let sorted = sortDevices(combined)
         if sorted != devices {
             devices = sorted
             AppLog.info("Battery", "外设电量已刷新", [
@@ -164,6 +175,45 @@ final class BatterySession: ObservableObject {
         evaluateAlerts(sorted)
         refreshLivePresence(reason: reason)
     }
+
+    #if DEBUG
+    /// 测试台：注入假外设到控制台电量磁贴（带 `lab.` 前缀 id）。
+    func debugInjectDevice(name: String, kind: BatteryDeviceKind, percent: Int?, isLow: Bool) {
+        let id = "lab.\(kind.rawValue).\(name.hashValue)"
+        let device = BatteryDevice(
+            id: id,
+            name: name,
+            kind: kind,
+            percent: percent,
+            isCharging: percent == 100,
+            isLow: isLow,
+            leftPercent: kind == .headphones ? (percent.map { max(0, $0 - 2) }) : nil,
+            rightPercent: kind == .headphones ? percent : nil,
+            casePercent: kind == .headphones ? 64 : nil,
+            listeningMode: kind == .headphones ? .noiseCancellation : nil,
+            subtitle: percent.map { "\($0)%" } ?? L10n.PeripheralTip.connectBadge
+        )
+        labInjectedDevices.removeAll { $0.id == id }
+        labInjectedDevices.append(device)
+        // 标为未知，下次刷新可走「接入」告警路径；立即合并上屏。
+        knownDeviceIDs.remove(id)
+        refresh(reason: "testLabInject")
+        AppLog.info("Battery", "测试台注入外设", [
+            "id": id,
+            "kind": kind.rawValue,
+            "percent": percent ?? -1
+        ])
+    }
+
+    func debugClearInjectedDevices() {
+        let ids = Set(labInjectedDevices.map(\.id))
+        labInjectedDevices = []
+        knownDeviceIDs.subtract(ids)
+        connectionOrderIDs.removeAll { ids.contains($0) }
+        refresh(reason: "testLabClearInject")
+        AppLog.info("Battery", "测试台已清空注入外设", ["cleared": ids.count])
+    }
+    #endif
 
     private func updateConnectionOrder(with liveIDs: [String]) {
         let live = Set(liveIDs)

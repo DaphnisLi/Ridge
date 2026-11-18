@@ -345,6 +345,11 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         case .resourceMonitor, .focusInsights:
             ResourceMonitorSession.shared.setSettingsVisible(true)
             IslandController.shared?.beginSettingsSessionCollapsed()
+        #if DEBUG
+        case .islandTestLab:
+            ResourceMonitorSession.shared.setSettingsVisible(false)
+            IslandController.shared?.beginSettingsSessionCollapsed()
+        #endif
         }
     }
 
