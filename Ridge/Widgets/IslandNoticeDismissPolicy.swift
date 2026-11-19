@@ -24,6 +24,29 @@ enum IslandNoticeAutoDismissPolicy {
     static func nanoseconds(for payload: IslandNoticePayload) -> UInt64? {
         payload.autoDismissNanoseconds
     }
+
+    /// 给定「已流逝时长 + 环境」，是否应立刻 dismiss（可注入时钟，不必真 sleep 3s）。
+    /// 顺序与 `IslandNoticeWidget.scheduleAutoDismiss` 一致：先解设置挡 → 够停留 → 再解悬停。
+    static func shouldDismissNow(
+        expandsDuringSettingsSession: Bool,
+        settingsBlocksExpand: Bool,
+        holdWhileHovering: Bool,
+        isHovering: Bool,
+        elapsedNanoseconds: UInt64,
+        displayNanoseconds: UInt64
+    ) -> Bool {
+        if shouldWaitForSettingsUnblock(
+            expandsDuringSettingsSession: expandsDuringSettingsSession,
+            settingsBlocksExpand: settingsBlocksExpand
+        ) {
+            return false
+        }
+        guard elapsedNanoseconds >= displayNanoseconds else { return false }
+        if shouldWaitForHoverEnd(holdWhileHovering: holdWhileHovering, isHovering: isHovering) {
+            return false
+        }
+        return true
+    }
 }
 
 /// 通知撤完后是否因悬停保展开（避免空双翼岛挂着）。

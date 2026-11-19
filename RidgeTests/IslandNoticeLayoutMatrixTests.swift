@@ -544,5 +544,169 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                 expandsDuringSettingsSession: true
             )
         )
+        // 瞬时 tip：即使 pointer 在设置上，仍 force
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: true,
+                pointerOverSettings: true,
+                expandsDuringSettingsSession: true
+            )
+        )
+        // 非瞬时、未挡设置、指针不在设置 → force
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: true,
+                settingsSessionBlocksIslandTips: false,
+                pointerOverSettings: false,
+                expandsDuringSettingsSession: false
+            )
+        )
+        // keepsExpanded=false → 永不 force
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
+                isExpanded: false,
+                keepsExpandedWithoutHover: false,
+                settingsSessionBlocksIslandTips: false,
+                pointerOverSettings: false,
+                expandsDuringSettingsSession: true
+            )
+        )
+    }
+
+    // MARK: - 7. 产品权重阶梯（命名规则）
+
+    func test_islandNoticeLayoutMatrix_priorityLadderNamedRules() {
+        // 取色/框选/会议 > 播放 > 专注 > C
+        let mediaFocus = IslandNoticeSlots(focusResident: true, mediaResident: true)
+        XCTAssertEqual(mediaFocus.resolvedLayout, .dual(left: .media, right: .focus), "播放左、专注右")
+
+        var meetingOverMedia = IslandNoticeSlots(mediaResident: true)
+        meetingOverMedia = IslandNoticeSlotPolicy.applying(incoming: meeting, to: meetingOverMedia)!
+        XCTAssertEqual(meetingOverMedia.resolvedLayout, .fullNotice(meeting), "会议盖播放满岛")
+
+        var meetingFocus = meetingOverMedia
+        meetingFocus.focusResident = true
+        XCTAssertEqual(
+            meetingFocus.resolvedLayout,
+            .dual(left: .notice(meeting), right: .focus),
+            "会议+专注：左会议右专注，播放仍被盖"
+        )
+
+        let withC = IslandNoticeSlotPolicy.applying(incoming: copy, to: meetingFocus)!
+        XCTAssertEqual(
+            withC.resolvedLayout,
+            .dual(left: .notice(meeting), right: .notice(copy)),
+            "C 盖右翼专注"
+        )
+
+        let exclusiveOverAll = IslandNoticeSlotPolicy.applying(
+            incoming: exclusive,
+            to: withC
+        )!
+        XCTAssertEqual(exclusiveOverAll.resolvedLayout, .fullNotice(exclusive), "取色独占一切 tip")
+        XCTAssertTrue(exclusiveOverAll.focusResident)
+        XCTAssertTrue(exclusiveOverAll.mediaResident)
+    }
+
+    // MARK: - 8. 每一种 C 都能盖右翼专注，撤后专注回右
+
+    func test_islandNoticeLayoutMatrix_everySecondaryCoversRightFocus() {
+        let secondaries: [IslandNoticePayload] = [
+            copy, move, ai, ram, processEnded, peripheralLow, peripheralFull, peripheralConnected
+        ]
+        XCTAssertEqual(secondaries.count, 8)
+
+        for tip in secondaries {
+            XCTAssertEqual(tip.displayLane, .secondary, tip.sourceTag)
+
+            // 播放 + 专注 + C
+            var mediaFocus = IslandNoticeSlots(focusResident: true, mediaResident: true)
+            mediaFocus = IslandNoticeSlotPolicy.applying(incoming: tip, to: mediaFocus)!
+            XCTAssertEqual(
+                mediaFocus.resolvedLayout,
+                .dual(left: .media, right: .notice(tip)),
+                "播放左 C 右: \(tip.sourceTag)"
+            )
+            XCTAssertTrue(mediaFocus.focusResident, tip.sourceTag)
+            let mediaRestored = IslandNoticeSlotPolicy.dismissing(id: tip.id, from: mediaFocus)
+            XCTAssertEqual(
+                mediaRestored.resolvedLayout,
+                .dual(left: .media, right: .focus),
+                "撤 C 后专注回右: \(tip.sourceTag)"
+            )
+
+            // 会议 + 专注 + C
+            var meetingFocus = IslandNoticeSlotPolicy.applying(
+                incoming: meeting,
+                to: IslandNoticeSlots(focusResident: true)
+            )!
+            meetingFocus = IslandNoticeSlotPolicy.applying(incoming: tip, to: meetingFocus)!
+            XCTAssertEqual(
+                meetingFocus.resolvedLayout,
+                .dual(left: .notice(meeting), right: .notice(tip)),
+                "会议左 C 右: \(tip.sourceTag)"
+            )
+            let meetingRestored = IslandNoticeSlotPolicy.dismissing(id: tip.id, from: meetingFocus)
+            XCTAssertEqual(
+                meetingRestored.resolvedLayout,
+                .dual(left: .notice(meeting), right: .focus),
+                "撤 C 后会议右回专注: \(tip.sourceTag)"
+            )
+
+            // 仅专注 + C → 左专注右 C（C 不占左）
+            var focusOnly = IslandNoticeSlots(focusResident: true)
+            focusOnly = IslandNoticeSlotPolicy.applying(incoming: tip, to: focusOnly)!
+            XCTAssertEqual(
+                focusOnly.resolvedLayout,
+                .dual(left: .focus, right: .notice(tip)),
+                "无 B 时专注左 C 右: \(tip.sourceTag)"
+            )
+        }
+    }
+
+    // MARK: - 9. C 有 B 时永不占左翼；翼宽：单独紧凑 / 并排标准
+
+    func test_islandNoticeLayoutMatrix_cPlacementAndWingWidths() {
+        for tip in [ram, processEnded, copy, move, ai, peripheralLow] {
+            // 有播放：左必为 media
+            var media = IslandNoticeSlots(mediaResident: true)
+            media = IslandNoticeSlotPolicy.applying(incoming: tip, to: media)!
+            if case .dual(let left, let right) = media.resolvedLayout {
+                XCTAssertEqual(left, .media, tip.sourceTag)
+                XCTAssertEqual(right, .notice(tip), tip.sourceTag)
+            } else {
+                XCTFail("应为 dual: \(tip.sourceTag)")
+            }
+
+            // 有会议：左必为会议
+            var meet = IslandNoticeSlotPolicy.applying(incoming: meeting, to: IslandNoticeSlots())!
+            meet = IslandNoticeSlotPolicy.applying(incoming: tip, to: meet)!
+            if case .dual(let left, let right) = meet.resolvedLayout {
+                XCTAssertEqual(left, .notice(meeting), tip.sourceTag)
+                XCTAssertEqual(right, .notice(tip), tip.sourceTag)
+            } else {
+                XCTFail("应为 dual: \(tip.sourceTag)")
+            }
+        }
+
+        // RAM / 进程结束：单独 = 紧凑翼；与播放并排 = 标准翼
+        let soloRAM = IslandNoticeSlots(secondary: ram)
+        XCTAssertTrue(soloRAM.usesDualFlushCompactWings)
+        XCTAssertEqual(soloRAM.dualFlushWingWidth, IslandChrome.dualFlushCompactWingWidth)
+
+        var ramWithMedia = IslandNoticeSlots(mediaResident: true)
+        ramWithMedia = IslandNoticeSlotPolicy.applying(incoming: ram, to: ramWithMedia)!
+        XCTAssertTrue(ramWithMedia.usesDualFlushChrome)
+        XCTAssertFalse(ramWithMedia.usesDualFlushCompactWings)
+        XCTAssertEqual(ramWithMedia.dualFlushWingWidth, IslandChrome.dualFlushLeftWingWidth)
+
+        let soloProcess = IslandNoticeSlots(secondary: processEnded)
+        XCTAssertTrue(soloProcess.usesDualFlushCompactWings)
+        var processWithFocus = IslandNoticeSlots(focusResident: true)
+        processWithFocus = IslandNoticeSlotPolicy.applying(incoming: processEnded, to: processWithFocus)!
+        XCTAssertFalse(processWithFocus.usesDualFlushCompactWings)
     }
 }

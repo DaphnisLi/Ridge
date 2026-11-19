@@ -12,6 +12,7 @@ alwaysApply: true
 | 文件 | 功能 |
 |------|------|
 | `ridge-standards.mdc` | 本文件：总则与索引 |
+| `product-spec.mdc` | **产品说明**：改用户可感行为须同步 `docs/PRODUCT.md` |
 | `regression-catalog.mdc` | 回归目录 + **改完必跑** `./scripts/test-recurring.sh`（仅 recurring；单次问题不强制） |
 | `widget-architecture.mdc` | 小组件扩展契约：如何实现 / 注册新 widget（含 AI 自定义） |
 | `widget-preview.mdc` | 设置预览：统一假数据组件 `WidgetSamplePreview`；上直角下圆角 |
@@ -29,6 +30,7 @@ alwaysApply: true
 
 - **最小改动**：只改与任务相关的代码
 - **复用优先**：已有组件 / 服务 / 工具先复用，再新写
+- **产品预期**：用户可感行为以 `docs/PRODUCT.md` 为准；改行为必须同步文档（见 `product-spec.mdc`）
 - **用户可见错误**：走统一错误展示；禁止把原始异常字符串直接上屏
 - **密钥**：不进仓库；本机密钥文件对话里标明未纳入即可，不要删
 

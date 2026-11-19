@@ -1,0 +1,34 @@
+---
+description: 产品说明文档（docs/PRODUCT.md）必须与用户可感行为保持同步
+alwaysApply: true
+---
+
+# 产品说明文档
+
+权威文档：`docs/PRODUCT.md`（进 Git）。用文字描述 Ridge **功能、预期表现、交互**；供人读，也供日后写/改自动化时对照。
+
+## Agent 必须
+
+1. **改用户可感行为时同步改 `docs/PRODUCT.md`**  
+   包括但不限于：岛布局/权重、瞬时 tip、会议/媒体/专注/控制台、设置入口、权限预期、收起展开与悬停规则。
+2. **改之前先读相关章节**，按现有小节更新表格/条目；不要另起第二份产品说明。
+3. **新增能力**：在 PRODUCT 对应章增加「触发 → 表现 → 例外」；瞬时 tip 还要落 §4 表。
+4. **删除或弱化能力**：删改 PRODUCT 对应段，避免文档残留假功能。
+5. 若该行为已有 recurring 自动化：改 PRODUCT 后仍按 `regression-catalog.mdc` 改测试 / catalog，并跑 `./scripts/test-recurring.sh`。
+6. 纯重构、无用户可感差异：可不改 PRODUCT；有疑虑时**偏保守更新**。
+
+## 与其它文档分工
+
+| 文档 | 管什么 |
+|---|---|
+| `docs/PRODUCT.md` | 产品预期与交互（本文） |
+| `docs/REGRESSION_CATALOG.md` | 缺陷 / 回归与测试锚点 |
+| `.cursor/rules/*.mdc` | 工程实现契约（如何写代码） |
+
+禁止用规则文件或回归目录代替产品说明；也禁止只改代码口头说「产品变了」却不改 PRODUCT。
+
+## 自检（收尾前）
+
+- [ ] 本次用户可感差异是否已反映在 `docs/PRODUCT.md`？
+- [ ] 新 tip / 新布局组合是否写进 §3 / §4？
+- [ ] 需要自动化的规则是否与 PRODUCT 表述一致？

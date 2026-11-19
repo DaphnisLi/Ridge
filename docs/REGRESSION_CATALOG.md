@@ -31,8 +31,8 @@
 | `meeting-tip-stays-after-join` | 点入会后 tip 仍不消失 | ≥3 | 已入会仍贴着会前提示；tick/改选把同一场贴回 | 会话级 `dismissedAfterJoinID` + publish 拒投；`test_meetingTipAfterJoin_*` |
 | `meeting-join-wrong-calendar-url` | 入会打开日程页而非会议室 | ≥2 | 点入会进 Google/Outlook 日程；钉钉丢会议号 | 跳过日程页；先扫平台；钉钉原 https；`test_meetingJoinLink_*` |
 | `settings-session-swallows-transient-notice` | 设置开着 / 不悬停就看不见瞬时 tip | 2 | 改 RAM 阈值仅入槽；必须移入岛才展开 | `expandsDuringSettingsSession`；设置中仍 expand；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
-| `island-notice-layout-matrix` | 岛展示权重 / 左右组合漏测 | 2 | 音乐×专注、C 盖右翼专注、会议盖播放等组合易漏改 | 真值表 32 格 + tip 契约穷尽；`test_islandNoticeLayoutMatrix_*` |
-| `island-notice-behavior` | 免打扰 / 自动收 / 收岛策略漏测 | 2 | 点免打扰 tip 仍挂；改阈值 mute 不失效；悬停空岛 | `IslandNoticeDismissPolicy` + `test_islandNoticeBehavior_*` |
+| `island-notice-layout-matrix` | 岛展示权重 / 左右组合漏测 | 2 | 音乐×专注、C 盖右翼专注、会议盖播放等组合易漏改 | 真值表 32 格 + 全 C 盖专注 + 翼宽 + 权重阶梯；`test_islandNoticeLayoutMatrix_*` |
+| `island-notice-behavior` | 免打扰 / 自动收 / 收岛策略漏测 | 2 | 点免打扰 tip 仍挂；改阈值 mute 不失效；悬停空岛 | `shouldDismissNow` 时钟注入 + Center FIFO + 专注待命；`test_islandNoticeBehavior_*` |
 
 ---
 
@@ -151,7 +151,7 @@
 - **occurrences:** 2（2026-11-17：音乐×专注并存规则；同日固化取色/会议>播放>专注>C 与 C 盖右翼专注）  
 - **症状:** 改布局只测几条组合，其它格（会议+播放+专注+C 等）易漏改、行为漂移  
 - **根因倾向:** 布局是多维真值表，零散 assert 盖不全；新增 tip case 不进契约表  
-- **防护:** `IslandNoticeLayoutMatrixTests`：A×会议×播放×专注×C 共 32 格；全部 tip 契约穷尽 switch；投递/FIFO/独占；C 盖专注再恢复  
+- **防护:** `IslandNoticeLayoutMatrixTests`：A×会议×播放×专注×C 共 32 格；全部 tip 契约穷尽 switch；投递/FIFO/独占；C 盖专注再恢复；**权重阶梯命名规则**；**每一种 C** 盖右翼再恢复；有 B 时 C 永不占左；RAM/进程结束单独紧凑翼 vs 并排标准翼  
 - **相关代码:** `IslandNoticeSlotPolicy.resolvedLayout`、`IslandNoticePayload`  
 - **自动化:** `test_islandNoticeLayoutMatrix_*`（进 recurring 套件）
 
@@ -161,9 +161,9 @@
 - **occurrences:** 2（2026-11-17：免打扰 tip 不立刻消失；改阈值须清 mute）  
 - **症状:** 点免打扰后 tip 仍挂；改阈值后仍被旧 mute 挡住；悬停留下空双翼  
 - **根因倾向:** 行为散落在 Session/Widget，无纯策略可测；共享单例易漏断言  
-- **防护:** `IslandNoticeAutoDismissPolicy` / `IslandNoticeEndCollapsePolicy`；`muteAlerts30m` 撤 RAM；`rearm` 清 mute  
+- **防护:** `IslandNoticeAutoDismissPolicy` / `IslandNoticeEndCollapsePolicy`；`muteAlerts30m` 撤 RAM；`rearm` 清 mute；**`shouldDismissNow` 可注入时钟**（不必真 sleep 3s）；Center FIFO + 独占清队；专注待命仅计时/加时  
 - **相关代码:** `IslandNoticeDismissPolicy`、`ResourceMonitorSession.muteAlerts30m` / `rearmAlertAndEvaluate`  
-- **自动化:** `test_islandNoticeBehavior_*`
+- **自动化:** `test_islandNoticeBehavior_*`  
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -396,6 +396,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-19 | 加厚岛逻辑自动化：全 C 盖专注、权重阶梯、翼宽、`shouldDismissNow`、Center FIFO、专注待命；测试台仍归手动 |
 | 2026-11-17 | 免打扰/自动收/收岛策略自动化：`IslandNoticeBehaviorTests` + `IslandNoticeDismissPolicy` |
 | 2026-11-17 | 岛展示布局真值表 + tip 契约穷尽：`IslandNoticeLayoutMatrixTests`；catalog `island-notice-layout-matrix` |
 | 2026-11-17 | 岛展示权重：取色/框选/会议 > 播放 > 专注 > C；C 暂盖右翼专注，约 3s 后专注回右 |

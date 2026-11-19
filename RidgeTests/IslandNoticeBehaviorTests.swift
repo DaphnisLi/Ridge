@@ -302,4 +302,219 @@ final class IslandNoticeBehaviorTests: XCTestCase {
         IslandNoticeCenter.shared.dismiss(id: "meeting.lead.behavior.media.guard")
         XCTAssertNil(IslandNoticeCenter.shared.current)
     }
+
+    // MARK: - 自动收起：可注入时钟（不必真 sleep 3s）
+
+    func test_islandNoticeBehavior_autoDismissShouldDismissNowTimeline() {
+        let display = IslandNoticeAutoDismissPolicy.standardNanoseconds
+
+        // 设置挡住 + 会议类（不可在设置中展开）→ 未到点也不收
+        XCTAssertFalse(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: false,
+                settingsBlocksExpand: true,
+                holdWhileHovering: true,
+                isHovering: false,
+                elapsedNanoseconds: display,
+                displayNanoseconds: display
+            )
+        )
+
+        // 瞬时 tip：设置挡住也计时；未满时长 → 不收
+        XCTAssertFalse(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: true,
+                settingsBlocksExpand: true,
+                holdWhileHovering: true,
+                isHovering: false,
+                elapsedNanoseconds: display / 2,
+                displayNanoseconds: display
+            )
+        )
+
+        // 瞬时 tip：时长够 + 未悬停 → 收
+        XCTAssertTrue(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: true,
+                settingsBlocksExpand: true,
+                holdWhileHovering: true,
+                isHovering: false,
+                elapsedNanoseconds: display,
+                displayNanoseconds: display
+            )
+        )
+
+        // 时长够但悬停保活 → 不收
+        XCTAssertFalse(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: true,
+                settingsBlocksExpand: false,
+                holdWhileHovering: true,
+                isHovering: true,
+                elapsedNanoseconds: display,
+                displayNanoseconds: display
+            )
+        )
+
+        // 时长够 + 悬停但不保活（取色类）→ 收
+        XCTAssertTrue(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: false,
+                settingsBlocksExpand: false,
+                holdWhileHovering: false,
+                isHovering: true,
+                elapsedNanoseconds: display,
+                displayNanoseconds: display
+            )
+        )
+
+        // 刚到点边界
+        XCTAssertTrue(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: true,
+                settingsBlocksExpand: false,
+                holdWhileHovering: false,
+                isHovering: false,
+                elapsedNanoseconds: display,
+                displayNanoseconds: display
+            )
+        )
+        XCTAssertFalse(
+            IslandNoticeAutoDismissPolicy.shouldDismissNow(
+                expandsDuringSettingsSession: true,
+                settingsBlocksExpand: false,
+                holdWhileHovering: false,
+                isHovering: false,
+                elapsedNanoseconds: display - 1,
+                displayNanoseconds: display
+            )
+        )
+    }
+
+    // MARK: - Center 真投递：FIFO + 独占清队
+
+    func test_islandNoticeBehavior_centerFIFOAndExclusiveClearsQueue() {
+        let center = IslandNoticeCenter.shared
+        center.dismiss(id: nil)
+
+        let first = IslandNoticePayload.aiUsageAlert(
+            id: "behavior.ai.1",
+            providerName: "A",
+            remainingPercent: 5,
+            stage: .critical,
+            resetsAt: nil
+        )
+        let second = IslandNoticePayload.peripheralLowBattery(
+            .init(
+                id: "behavior.bat.2",
+                deviceID: "d",
+                deviceName: "Mouse",
+                kind: .mouse,
+                percent: 8,
+                threshold: 20,
+                detail: "low"
+            )
+        )
+        let third = IslandNoticePayload.processEnded(
+            .init(
+                id: "behavior.watch.3",
+                projectName: "lab",
+                label: "sleep",
+                message: "ok",
+                endedAt: Date(),
+                outcome: .succeeded,
+                logPath: nil,
+                peakMemoryBytes: 0,
+                durationSeconds: 1
+            )
+        )
+
+        center.present(first)
+        center.present(second)
+        center.present(third)
+
+        XCTAssertEqual(center.slots.secondary?.id, first.id)
+        XCTAssertEqual(center.slots.secondaryQueue.map(\.id), [second.id, third.id])
+        XCTAssertEqual(center.current?.id, first.id)
+
+        center.dismiss(id: first.id)
+        XCTAssertEqual(center.slots.secondary?.id, second.id)
+        XCTAssertEqual(center.slots.secondaryQueue.map(\.id), [third.id])
+
+        // 独占清掉队列
+        center.present(.colorPickTip)
+        XCTAssertEqual(center.slots.primary?.id, IslandNoticePayload.colorPickTipID)
+        XCTAssertNil(center.slots.secondary)
+        XCTAssertTrue(center.slots.secondaryQueue.isEmpty)
+        XCTAssertEqual(center.current?.id, IslandNoticePayload.colorPickTipID)
+
+        // 独占期间 C 不得入槽
+        center.present(first)
+        XCTAssertNil(center.slots.secondary)
+        XCTAssertTrue(center.slots.secondaryQueue.isEmpty)
+
+        center.dismiss(id: IslandNoticePayload.colorPickTipID)
+        XCTAssertNil(center.current)
+    }
+
+    // MARK: - 改阈值清 mute（告警开着也只清 mute，不强行要求立刻再投）
+
+    func test_islandNoticeBehavior_rearmClearsMuteWhenAlertEnabled() {
+        let settings = ResourceMonitorSettings.shared
+        let previousEnabled = settings.alertEnabled
+        let previousThreshold = settings.ramThresholdPercent
+        defer {
+            settings.alertEnabled = previousEnabled
+            settings.ramThresholdPercent = previousThreshold
+            settings.clearMute()
+            IslandNoticeCenter.shared.dismiss(id: nil)
+        }
+
+        settings.alertEnabled = true
+        settings.muteAlerts(minutes: 30)
+        XCTAssertTrue(settings.isMuted)
+
+        ResourceMonitorSession.shared.rearmAlertAndEvaluate(reason: "testThresholdChange")
+        XCTAssertFalse(settings.isMuted, "改阈值须清免打扰，否则新规则被旧 mute 挡住")
+    }
+
+    // MARK: - 专注待命：仅计时/加时
+
+    func test_islandNoticeBehavior_focusCompactStandbyOnlyWhileTiming() {
+        let focus = FocusTimerSession.shared
+        let previousEnabled = focus.isWidgetEnabled
+        defer {
+            focus.setWidgetEnabled(false)
+            if previousEnabled {
+                focus.setWidgetEnabled(true)
+            }
+            IslandNoticeCenter.shared.dismiss(id: nil)
+        }
+
+        focus.setWidgetEnabled(false)
+        XCTAssertFalse(focus.showsCompactStandby)
+
+        focus.setWidgetEnabled(true)
+        // 选时态：不上待命翼
+        XCTAssertEqual(focus.phase, .picking)
+        XCTAssertFalse(focus.showsCompactStandby)
+
+        #if DEBUG
+        focus.debugEnterRunning(minutes: 10)
+        XCTAssertEqual(focus.phase, .running)
+        XCTAssertTrue(focus.showsCompactStandby)
+
+        focus.debugJumpIntoOvertime()
+        XCTAssertEqual(focus.phase, .overtime)
+        XCTAssertTrue(focus.showsCompactStandby)
+
+        focus.debugJumpToEnd()
+        XCTAssertEqual(focus.phase, .completed)
+        XCTAssertFalse(focus.showsCompactStandby)
+        focus.dismissCompletion()
+        #endif
+
+        focus.setWidgetEnabled(false)
+        XCTAssertFalse(focus.showsCompactStandby)
+    }
 }
