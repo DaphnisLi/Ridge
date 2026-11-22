@@ -205,16 +205,17 @@ struct FocusTimerStandbyView: View {
             ? IslandFlushWingStyle.bareContentSpacerMin
             : CGFloat(4)
         let row = HStack(spacing: 0) {
-            Image(systemName: isOvertime ? "alarm.fill" : "timer")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(flushAccent)
-                .symbolRenderingMode(.hierarchical)
-            Spacer(minLength: spacer)
-            Text(clock)
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Color.white.opacity(0.95))
-                .monospacedDigit()
-                .lineLimit(1)
+            HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+                Image(systemName: isOvertime ? "alarm.fill" : "timer")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(flushAccent)
+                    .symbolRenderingMode(.hierarchical)
+                Text(clock)
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.95))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
             Spacer(minLength: spacer)
             Circle()
                 .fill(Color.white.opacity(isOvertime ? 0.55 : 0.40))

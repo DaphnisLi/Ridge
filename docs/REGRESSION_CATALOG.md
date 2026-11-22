@@ -390,12 +390,23 @@
 - **相关代码:** `RAMPressureNoticeCard`、`ResourceMonitorSession.muteAlerts30m`、`IslandNoticeWidget.hide`  
 - **自动化建议:** 可选：mute 后 slots 无 ramPressure，且 hide 在 transient 残留时仍 collapse
 
+### process-ended-tip-stale-dismiss — 进程结束 tip 不自动消失
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-22：测试台进程结束 tip 挂住；正式路径在 `lastWatchEnded` 旧 id 时同病）  
+- **症状:** 约 3s 后应自动收的进程结束 tip（含测试台）一直不消  
+- **根因倾向:** `finishDismiss` 对 `.processEnded` 只调 `dismissWatchEnded()`，按控制台 `lastWatchEnded.id` 撤槽；测试台 tip 另有 id、或控制台仍留着旧 ended → 撤错条，岛上 tip 残留  
+- **防护:** 自动收起一律 `IslandNoticeCenter.dismiss(id: tipID)`；再 `clearWatchEndedIfMatching` 仅同源清控制台；`ProjectWatchEndedDismissSync`  
+- **相关代码:** `IslandNoticeWidget.finishDismiss`、`ProjectReleaseSession.clearWatchEndedIfMatching`  
+- **自动化建议:** `test_islandNoticeBehavior_processEndedDismissByTipIDNotStaleLocal`（occurrences=1，不强制每次跑）
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-22 | 进程结束 tip 自动收按 tip id 撤槽，勿绑旧 `lastWatchEnded`；catalog `process-ended-tip-stale-dismiss` |
 | 2026-11-19 | 加厚岛逻辑自动化：全 C 盖专注、权重阶梯、翼宽、`shouldDismissNow`、Center FIFO、专注待命；测试台仍归手动 |
 | 2026-11-17 | 免打扰/自动收/收岛策略自动化：`IslandNoticeBehaviorTests` + `IslandNoticeDismissPolicy` |
 | 2026-11-17 | 岛展示布局真值表 + tip 契约穷尽：`IslandNoticeLayoutMatrixTests`；catalog `island-notice-layout-matrix` |

@@ -74,21 +74,20 @@ struct MoveReminderNoticeCard: View {
         .clipped()
     }
 
+    /// 半岛：站姿图标贴分钟数，右侧仅脉冲点（与 AI 额度半岛同口径）。
     private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
-        let spacer = bareWingContent
-            ? IslandFlushWingStyle.bareContentSpacerMin
-            : CGFloat(4)
         let row = HStack(spacing: 0) {
-            Image(systemName: "figure.stand")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(amber)
-            Spacer(minLength: spacer)
-            Text("\(notice.activeMinutes)m")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Color.white.opacity(0.92))
-                .monospacedDigit()
-                .lineLimit(1)
-            Spacer(minLength: spacer)
+            HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+                Image(systemName: "figure.stand")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(amber)
+                Text("\(notice.activeMinutes)m")
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.92))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
             MoveReminderFlushPulseDot(accent: amber)
         }
         if bareWingContent {

@@ -478,6 +478,52 @@ final class IslandNoticeBehaviorTests: XCTestCase {
         XCTAssertNil(center.current)
     }
 
+    // MARK: - 进程结束 tip：按岛 tip id 撤，不被控制台旧 lastWatchEnded 绑死
+
+    func test_islandNoticeBehavior_processEndedDismissByTipIDNotStaleLocal() {
+        XCTAssertFalse(
+            ProjectWatchEndedDismissSync.shouldClearLocalEnded(localID: "ended:old", islandTipID: "projects.watch.debug.lab")
+        )
+        XCTAssertTrue(
+            ProjectWatchEndedDismissSync.shouldClearLocalEnded(
+                localID: "projects.watch.debug.lab",
+                islandTipID: "projects.watch.debug.lab"
+            )
+        )
+        XCTAssertFalse(
+            ProjectWatchEndedDismissSync.shouldClearLocalEnded(localID: nil, islandTipID: "projects.watch.debug.lab")
+        )
+
+        let center = IslandNoticeCenter.shared
+        center.dismiss(id: nil)
+        defer { center.dismiss(id: nil) }
+
+        let lab = IslandNoticePayload.processEnded(
+            .init(
+                id: "projects.watch.debug.lab",
+                projectName: "Ridge Lab",
+                label: "lab-ok",
+                message: "ok",
+                endedAt: Date(),
+                outcome: .succeeded,
+                logPath: nil,
+                peakMemoryBytes: 0,
+                durationSeconds: 1
+            )
+        )
+        center.present(lab)
+        XCTAssertEqual(center.slots.secondary?.id, lab.id)
+        XCTAssertEqual(lab.autoDismissNanoseconds, IslandNoticeAutoDismissPolicy.standardNanoseconds)
+
+        // 模拟旧路径按「控制台旧 id」撤：岛上测试 tip 必须还在。
+        center.dismiss(id: "ended:999:stale")
+        XCTAssertEqual(center.slots.secondary?.id, lab.id, "旧 lastWatchEnded id 不得误撤测试台 tip")
+
+        center.dismiss(id: lab.id)
+        XCTAssertNil(center.slots.secondary)
+        XCTAssertNil(center.current)
+    }
+
     // MARK: - 改阈值清 mute（告警开着也只清 mute，不强行要求立刻再投）
 
     func test_islandNoticeBehavior_rearmClearsMuteWhenAlertEnabled() {

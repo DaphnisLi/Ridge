@@ -10,7 +10,9 @@ enum IslandFlushWingStyle {
     /// 真岛 dual bare：内容左右内边距（对齐 `MediaCompactStandbyView.wingLeadContent`）。
     static let bareContentLeading: CGFloat = 10
     static let bareContentTrailing: CGFloat = 8
-    /// 三区 Spacer 最小间隙（图标 | 主文案 | 右侧指示）。
+    /// 左侧「图标 ↔ 主文案」间距（半岛贴左簇；曾为 4，现 8）。
+    static let iconLabelSpacing: CGFloat = 8
+    /// 左簇与右侧指示之间的 Spacer 最小间隙。
     static let bareContentSpacerMin: CGFloat = 6
     /// 贴顶直角；外侧下角圆（右翼 outer=右下，左翼 outer=左下）。
     static let outerBottomRadius: CGFloat = 14
@@ -94,9 +96,10 @@ struct IslandFlushWingCapsule<Content: View>: View {
 /// 真岛双槽 bare 内容：铺满翼槽，左右内边距对齐音乐标准。
 extension View {
     func islandBareFlushWingContent() -> some View {
+        // 水平靠左：半岛主文案贴外缘图标，勿用 center 把整簇挤到翼中。
         padding(.leading, IslandFlushWingStyle.bareContentLeading)
             .padding(.trailing, IslandFlushWingStyle.bareContentTrailing)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 

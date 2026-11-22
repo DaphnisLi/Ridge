@@ -785,17 +785,44 @@ final class ProjectReleaseSession: ObservableObject {
         clearWatchEndedNotice(reason: "dismiss")
     }
 
+    /// 岛 tip 已按 id 撤掉后，仅当控制台本地 ended 同源时清状态（测试台 tip 不同源则不动）。
+    func clearWatchEndedIfMatching(id: String) {
+        guard ProjectWatchEndedDismissSync.shouldClearLocalEnded(
+            localID: lastWatchEnded?.id,
+            islandTipID: id
+        ) else {
+            AppLog.debug("Projects", "岛进程 tip 已收，控制台 ended 不同源保留", [
+                "islandID": id,
+                "localID": lastWatchEnded?.id ?? ""
+            ])
+            return
+        }
+        lastWatchEnded = nil
+        AppLog.debug("Projects", "监视结束提示已清除", ["reason": "island", "id": id])
+    }
+
     private func clearWatchEndedNotice(reason: String) {
         let hadLocal = lastWatchEnded != nil
         let noticeID = lastWatchEnded?.id
         lastWatchEnded = nil
         if let noticeID {
             IslandNoticeCenter.shared.dismiss(id: noticeID)
-        } else if case .processEnded = IslandNoticeCenter.shared.current {
-            IslandNoticeCenter.shared.dismiss()
+        } else if case .processEnded(let onIsland)? =
+            IslandNoticeCenter.shared.slots.secondary ?? IslandNoticeCenter.shared.slots.primary
+        {
+            // 无本地 ended 时仍撤岛上进程 tip（测试台 / 仅上岛路径）。
+            IslandNoticeCenter.shared.dismiss(id: onIsland.id)
         }
         if hadLocal {
             AppLog.debug("Projects", "监视结束提示已清除", ["reason": reason])
         }
+    }
+}
+
+/// 进程结束 tip 与控制台 `lastWatchEnded` 的同步策略（可单测）。
+enum ProjectWatchEndedDismissSync {
+    /// 仅 id 一致时清控制台本地状态，避免旧 ended 绑死测试台 / 新 tip。
+    static func shouldClearLocalEnded(localID: String?, islandTipID: String) -> Bool {
+        localID == islandTipID
     }
 }

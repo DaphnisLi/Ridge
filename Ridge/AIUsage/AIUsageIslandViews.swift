@@ -61,23 +61,21 @@ struct AIUsageIslandCardView: View {
         .clipped()
     }
 
-    /// 仅双槽半块：外 ✦ | 百分比 | 刘海侧脉冲点；满岛仍走 `fullWingBody` + `stage.accent`。
+    /// 仅双槽半块：外 ✦ 贴百分比，右侧刘海侧脉冲点；满岛仍走 `fullWingBody` + `stage.accent`。
     private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
-        let spacer = bareWingContent
-            ? IslandFlushWingStyle.bareContentSpacerMin
-            : CGFloat(4)
         let tint = stage.flushAccent
         let row = HStack(spacing: 0) {
-            Text("✦")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(tint)
-            Spacer(minLength: spacer)
-            Text(percentText)
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Color.white.opacity(0.92))
-                .monospacedDigit()
-                .lineLimit(1)
-            Spacer(minLength: spacer)
+            HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+                Text("✦")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(tint)
+                Text(percentText)
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.92))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
             Circle()
                 .fill(tint)
                 .frame(width: 6, height: 6)

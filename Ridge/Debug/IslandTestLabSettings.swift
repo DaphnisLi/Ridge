@@ -52,7 +52,9 @@ final class IslandTestLabSettings: ObservableObject {
     }
 
     /// 非 MainActor：通知策略路径可直接读 UserDefaults，避免隔离冲突。
+    /// XCTest 进程忽略覆盖，避免本机调试台把套件里的 3s 断言打成 0.5s。
     nonisolated static func resolvedTipDurationNanoseconds() -> UInt64? {
+        if NSClassFromString("XCTestCase") != nil { return nil }
         let defaults = UserDefaults.standard
         guard defaults.bool(forKey: Key.tipOverrideEnabled) else { return nil }
         let raw = defaults.object(forKey: Key.tipSeconds) as? Double ?? 3

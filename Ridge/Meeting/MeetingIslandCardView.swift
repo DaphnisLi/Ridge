@@ -198,16 +198,17 @@ struct MeetingIslandCardView: View {
             ? IslandFlushWingStyle.bareContentSpacerMin
             : CGFloat(4)
         let idleRow = HStack(spacing: 0) {
-            Image(systemName: urgency.flushSymbolName)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(urgency.accent)
-                .symbolRenderingMode(.monochrome)
-            Spacer(minLength: spacer)
-            Text(Self.countdownText(secondsToStart: secondsToStart))
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(urgency.timerColor)
-                .monospacedDigit()
-                .lineLimit(1)
+            HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+                Image(systemName: urgency.flushSymbolName)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(urgency.accent)
+                    .symbolRenderingMode(.monochrome)
+                Text(Self.countdownText(secondsToStart: secondsToStart))
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(urgency.timerColor)
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
             Spacer(minLength: spacer)
             MeetingLeadPulseDot(accent: urgency.accent, compact: true)
         }

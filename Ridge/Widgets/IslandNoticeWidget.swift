@@ -173,13 +173,18 @@ final class IslandNoticeWidget: IslandWidget {
             ])
             return
         }
-        let payload = noticeCenter.slots.primary?.id == noticeID
-            ? noticeCenter.slots.primary
-            : noticeCenter.slots.secondary
-        if case .processEnded(let notice) = payload, notice.id == noticeID {
-            ProjectReleaseSession.shared.dismissWatchEnded()
-        } else {
-            noticeCenter.dismiss(id: noticeID)
+        // 一律按 tip id 撤槽。进程结束勿再经 `dismissWatchEnded()`：
+        // 控制台 `lastWatchEnded` 若仍是旧 id（或测试台从未写入），会撤错条，岛上 tip 永不消。
+        let payload: IslandNoticePayload? = {
+            if noticeCenter.slots.primary?.id == noticeID { return noticeCenter.slots.primary }
+            if noticeCenter.slots.secondary?.id == noticeID { return noticeCenter.slots.secondary }
+            return nil
+        }()
+        noticeCenter.dismiss(id: noticeID)
+        var syncedWatchEnded = false
+        if case .processEnded(let notice)? = payload, notice.id == noticeID {
+            ProjectReleaseSession.shared.clearWatchEndedIfMatching(id: noticeID)
+            syncedWatchEnded = true
         }
         dismissTasks[noticeID]?.cancel()
         dismissTasks[noticeID] = nil
@@ -193,6 +198,7 @@ final class IslandNoticeWidget: IslandWidget {
             "id": noticeID,
             "reason": reason,
             "ms": Int(displayedNanoseconds / 1_000_000),
+            "processEndedSync": syncedWatchEnded,
             "remainPrimary": noticeCenter.slots.primary?.id ?? "",
             "remainSecondary": noticeCenter.slots.secondary?.id ?? ""
         ])
@@ -618,26 +624,33 @@ struct PeripheralBatteryNoticeCard: View {
         .clipped()
     }
 
-    /// 仅双槽半块：外图标 | 电量% | 刘海侧电量条；满岛仍走 `fullWingBody` + `statusTint`。
+    /// 半岛：设备图标贴主文案（电量% / 已连接），右侧仅电量条或接入环；满岛仍走 `fullWingBody`。
     private func flushCapsule(side: IslandFlushWingStyle.Side) -> some View {
-        let pct = notice.percent ?? (style == .full ? 100 : 0)
-        let spacer = bareWingContent
-            ? IslandFlushWingStyle.bareContentSpacerMin
-            : CGFloat(4)
+        let pct = notice.percent ?? (style == .full ? 100 : nil)
         let tint = flushTint
+        let primaryLabel: String = {
+            if let pct { return "\(pct)%" }
+            return L10n.PeripheralTip.connectBadge
+        }()
         let row = HStack(spacing: 0) {
-            Image(systemName: notice.kind.systemSymbol)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(style == .connect ? Color.white.opacity(0.85) : tint)
-            Spacer(minLength: spacer)
-            Text("\(pct)%")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundStyle(Color.white.opacity(0.92))
-                .monospacedDigit()
-                .lineLimit(1)
-            Spacer(minLength: spacer)
-            flushBatteryBar(percent: pct, tint: tint)
+            HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+                Image(systemName: notice.kind.systemSymbol)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(style == .connect ? Color.white.opacity(0.85) : tint)
+                Text(primaryLabel)
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.92))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
+            if style == .connect, pct == nil {
+                PeripheralConnectLinkGlyph(size: 14)
+            } else {
+                flushBatteryBar(percent: pct ?? (style == .full ? 100 : 0), tint: tint)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         if bareWingContent {
             return AnyView(row.islandBareFlushWingContent())
         }
@@ -659,7 +672,7 @@ struct PeripheralBatteryNoticeCard: View {
 
     /// 左翼：设备图标 + 名称（对照 HTML 稿，不加电量）。
     private var leftCluster: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
             Image(systemName: notice.kind.systemSymbol)
                 .font(.system(size: compact ? 14 : 15, weight: .medium))
                 .foregroundStyle(Color.white.opacity(0.95))
@@ -671,6 +684,7 @@ struct PeripheralBatteryNoticeCard: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// 右翼对照方案 2：接入 = 电量% + 水平锁链环；满电/低电 = 仅圆环图标。
