@@ -15,7 +15,7 @@ final class ShelfSettings: ObservableObject {
     /// 产品默认：磁吸拖放开启。
     static let magneticDropCaptureDefaultEnabled = true
 
-    /// 磁吸双舱：开启时拖文件进接近区弹出暂存 / 隔空传送；关闭后无双舱与隔空，但仍用同一拖文件接近区入普通货架。
+    /// 磁吸暂存：开启时拖文件进接近区弹出整岛暂存面；关闭后无磁吸暂存面，但仍用同一拖文件接近区入普通货架。
     @Published var magneticDropCaptureEnabled: Bool = ShelfSettings.magneticDropCaptureDefaultEnabled {
         didSet {
             guard magneticDropCaptureEnabled != oldValue else { return }

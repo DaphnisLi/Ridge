@@ -7756,28 +7756,6 @@
         }
       }
     },
-    "shelf.drop_airdrop_detail": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "松手后选择附近设备"
-          }
-        }
-      }
-    },
-    "shelf.drop_airdrop_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "隔空传送"
-          }
-        }
-      }
-    },
     "shelf.drop_hint": {
       "extractionState": "manual",
       "localizations": {
@@ -7949,7 +7927,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "开启后，将文件拖近灵动岛即可暂存入舱或隔空传送；关闭后仍用同一拖放感应区存入货架，但不提供双舱与隔空传送"
+            "value": "开启后，将文件拖近灵动岛即可展开暂存入舱；关闭后仍用同一拖放感应区存入货架，但不弹出磁吸暂存面"
           }
         }
       }

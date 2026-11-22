@@ -958,7 +958,7 @@ final class IslandController: NSObject {
         wasFileDragInProgress = fileDrag
         let shelfEnabled = ControlDeckSettings.shared.isModuleEnabled("shelf")
         // 拖文件接近区与「磁吸拖放」开关无关：开/关都是刘海宽 × ≥3 刘海高。
-        // 开关只控制双舱 / 隔空传送；关闭时仍用同一接近区展开，但只走普通货架投放。
+        // 开关只控制磁吸暂存面；关闭时仍用同一接近区展开，但只走普通货架投放。
         let magnetic = ShelfSettings.shared.magneticDropCaptureEnabled
         let approachArmed = IslandExpandedPanelPolicy.isFileDragApproachEnabled(
             shelfEnabled: shelfEnabled,
@@ -1022,7 +1022,7 @@ final class IslandController: NSObject {
                 ])
             }
         }
-        // 双舱须磁吸开 + 正在拖文件。松手后 isTargeted 常滞后，
+        // 磁吸暂存须磁吸开 + 正在拖文件。松手后 isTargeted 常滞后，
         // 若仍用 wantShelfHold（含裸 targeted）会在 dropComplete 退出后再点亮一次。
         let wantMagneticStaging = IslandExpandedPanelPolicy.isMagneticStagingEnabled(
             shelfEnabled: shelfEnabled,
@@ -1194,7 +1194,7 @@ final class IslandController: NSObject {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
             ControlDeckSettings.shared.focusShelfForDrop()
-            // 双舱仅磁吸 + 仍在拖文件；裸 targeted（松手滞后）不得再点亮。
+            // 磁吸暂存仅磁吸 + 仍在拖文件；裸 targeted（松手滞后）不得再点亮。
             if magnetic, fileDrag {
                 ShelfDropSession.shared.setActive(true, reason: "dropTargeted")
             } else if !fileDrag {
@@ -1218,7 +1218,7 @@ final class IslandController: NSObject {
         let wasPinned = isShelfFileDragPinned
         isShelfDropTargeted = false
         isShelfFileDragPinned = false
-        if reason == "dropComplete" || reason == "airDropComplete" {
+        if reason == "dropComplete" {
             islandExpandedForShelfFileDrag = false
         }
         setShelfDragWindowElevation(false)
@@ -1229,7 +1229,7 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 拖文件左键松开：清双舱钉住；仅当指针已离开展开大面板才强收（大岛内松手须留着）。
+    /// 拖文件左键松开：清磁吸暂存钉住；仅当指针已离开展开大面板才强收（大岛内松手须留着）。
     private func handleShelfFileDragMouseUp(mouse: NSPoint, geometry: NotchGeometry) {
         let hadExpand = islandExpandedForShelfFileDrag
             || isShelfFileDragPinned

@@ -1656,20 +1656,14 @@ enum L10n {
         static var dropActiveDetail: String {
             tr("shelf.drop_active_detail", "已识别拖拽对象 · 准备自动就绪")
         }
-        static var dropAirDropHint: String {
-            tr("shelf.drop_airdrop_hint", "隔空传送")
-        }
-        static var dropAirDropDetail: String {
-            tr("shelf.drop_airdrop_detail", "松手后选择附近设备")
-        }
-        /// 货架设置：双舱磁吸（拖文件接近区开/关相同）。
+        /// 货架设置：磁吸暂存（拖文件接近区开/关相同）。
         static var magneticDropToggle: String {
             tr("shelf.magnetic_drop.toggle", "磁吸拖放")
         }
         static var magneticDropToggleSubtitle: String {
             tr(
                 "shelf.magnetic_drop.toggle_subtitle",
-                "开启后，将文件拖近灵动岛即可暂存入舱或隔空传送；关闭后仍用同一拖放感应区存入货架，但不提供双舱与隔空传送"
+                "开启后，将文件拖近灵动岛即可展开暂存入舱；关闭后仍用同一拖放感应区存入货架，但不弹出磁吸暂存面"
             )
         }
         static var dropMore: String { tr("shelf.drop_more", "继续拖入可追加") }

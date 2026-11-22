@@ -1,21 +1,18 @@
 import AppKit
 import SwiftUI
-import UniformTypeIdentifiers
 
-/// 瞬时暂存区：左栏空态用方案一；整岛拖入用左右双舱（暂存 / 隔空传送）。
+/// 瞬时暂存区：左栏空态用方案一；整岛拖入（磁吸）时整岛暂存入舱（不再提供隔空传送舱）。
 struct ShelfDropStagingView: View {
     var highlighted: Bool = false
-    /// 整岛拖入态（方案三吸附）。
+    /// 整岛拖入态（磁吸吸附）。
     var fillsIsland: Bool = false
     /// 铺满左栏矩形（方案一静息）。
     var fillsContainer: Bool = false
 
     @State private var shelfZoneTargeted = false
-    @State private var airDropZoneTargeted = false
 
     private let accent = Color(red: 0.23, green: 0.51, blue: 0.96)
     private let accentBright = Color(red: 0.039, green: 0.518, blue: 1.0)
-    private let airDropAccent = Color(red: 0.20, green: 0.78, blue: 0.90)
     private let glassHover = Color(red: 0.055, green: 0.106, blue: 0.192)
 
     var body: some View {
@@ -27,7 +24,7 @@ struct ShelfDropStagingView: View {
             }
         }
         .animation(.easeOut(duration: 0.18), value: highlighted || fillsIsland)
-        .animation(.easeOut(duration: 0.12), value: shelfZoneTargeted || airDropZoneTargeted)
+        .animation(.easeOut(duration: 0.12), value: shelfZoneTargeted)
         .accessibilityElement(children: fillsIsland ? .contain : .combine)
         .accessibilityLabel(fillsIsland ? L10n.Shelf.dropActiveHint : L10n.Shelf.dropHint)
         .accessibilityHint(fillsIsland ? L10n.Shelf.dropActiveDetail : L10n.Shelf.dropHintDetail)
@@ -101,7 +98,7 @@ struct ShelfDropStagingView: View {
         }
     }
 
-    // MARK: - 方案三：整岛拖入 · 左暂存 / 右隔空传送
+    // MARK: - 磁吸整岛：仅暂存入舱
 
     private var magneticActiveBody: some View {
         ZStack {
@@ -113,42 +110,22 @@ struct ShelfDropStagingView: View {
                 )
                 .shadow(color: accentBright.opacity(0.22), radius: 28, y: 8)
 
-            HStack(spacing: 10) {
-                dropZone(
-                    title: L10n.Shelf.dropActiveHint,
-                    detail: L10n.Shelf.dropActiveDetail,
-                    symbol: "plus",
-                    tint: accent,
-                    targeted: shelfZoneTargeted,
-                    accessibilityLabel: L10n.Shelf.dropActiveHint
-                )
-                .onDrop(of: [.fileURL], isTargeted: $shelfZoneTargeted) { providers in
-                    AppLog.info("Shelf", "左舱接收拖入（暂存）", ["providers": providers.count])
-                    return ShelfClipboardDeckView.ingestDrop(providers: providers, into: ShelfStore.shared)
-                }
-
-                dropZone(
-                    title: L10n.Shelf.dropAirDropHint,
-                    detail: L10n.Shelf.dropAirDropDetail,
-                    symbol: "dot.radiowaves.left.and.right",
-                    tint: airDropAccent,
-                    targeted: airDropZoneTargeted,
-                    accessibilityLabel: L10n.Shelf.dropAirDropHint
-                )
-                .onDrop(of: [.fileURL], isTargeted: $airDropZoneTargeted) { providers in
-                    AppLog.info("Shelf", "右舱接收拖入（隔空传送）", ["providers": providers.count])
-                    return Self.ingestAirDrop(providers: providers)
-                }
+            dropZone(
+                title: L10n.Shelf.dropActiveHint,
+                detail: L10n.Shelf.dropActiveDetail,
+                symbol: "plus",
+                tint: accent,
+                targeted: shelfZoneTargeted,
+                accessibilityLabel: L10n.Shelf.dropActiveHint
+            )
+            .onDrop(of: [.fileURL], isTargeted: $shelfZoneTargeted) { providers in
+                AppLog.info("Shelf", "磁吸暂存区接收拖入", ["providers": providers.count])
+                return ShelfClipboardDeckView.ingestDrop(providers: providers, into: ShelfStore.shared)
             }
             .padding(10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: shelfZoneTargeted) { _, targeted in
-            if targeted {
-                IslandController.shared?.setShelfDropTargeted(true)
-            }
-        }
-        .onChange(of: airDropZoneTargeted) { _, targeted in
             if targeted {
                 IslandController.shared?.setShelfDropTargeted(true)
             }
@@ -212,76 +189,6 @@ struct ShelfDropStagingView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(detail)
-    }
-
-    // MARK: - AirDrop
-
-    /// 解析拖入文件并唤起系统隔空传送。
-    static func ingestAirDrop(providers: [NSItemProvider]) -> Bool {
-        var claimed = false
-        let group = DispatchGroup()
-        var urls: [URL] = []
-        let lock = NSLock()
-
-        for provider in providers {
-            let typeID: String?
-            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
-                typeID = UTType.fileURL.identifier
-            } else if let first = provider.registeredTypeIdentifiers.first {
-                typeID = first
-            } else {
-                typeID = nil
-            }
-            guard let typeID else { continue }
-            claimed = true
-            group.enter()
-            provider.loadItem(forTypeIdentifier: typeID, options: nil) { item, error in
-                defer { group.leave() }
-                if let error {
-                    AppLog.warn("Shelf", "隔空传送：读取拖入文件失败", [
-                        "error": error.localizedDescription
-                    ])
-                    return
-                }
-                var url: URL?
-                if let data = item as? Data {
-                    url = URL(dataRepresentation: data, relativeTo: nil)
-                } else if let value = item as? URL {
-                    url = value
-                } else if let value = item as? NSURL {
-                    url = value as URL
-                }
-                guard let resolved = url?.standardizedFileURL else { return }
-                lock.lock()
-                urls.append(resolved)
-                lock.unlock()
-            }
-        }
-
-        group.notify(queue: .main) {
-            ShelfDropSession.shared.endAfterDrop(reason: "airDropComplete", markCompleted: true)
-            IslandController.shared?.noteShelfDropFinished(reason: "airDropComplete")
-            guard !urls.isEmpty else {
-                AppLog.warn("Shelf", "隔空传送：无有效文件 URL")
-                return
-            }
-            guard let service = NSSharingService(named: .sendViaAirDrop) else {
-                AppLog.warn("Shelf", "隔空传送：系统服务不可用", ["urls": urls.count])
-                return
-            }
-            guard service.canPerform(withItems: urls) else {
-                AppLog.warn("Shelf", "隔空传送：当前项目不可发送", ["urls": urls.count])
-                return
-            }
-            // 松手后再抢前台，避免拖拽过程中 activate 掐断 Finder；面板需要前台才能弹出。
-            if NSApp.activationPolicy() != .regular {
-                NSApp.setActivationPolicy(.regular)
-            }
-            NSApp.activate(ignoringOtherApps: true)
-            AppLog.warn("Shelf", "隔空传送：唤起系统面板", ["urls": urls.count])
-            service.perform(withItems: urls)
-        }
-        return claimed
     }
 }
 

@@ -106,7 +106,7 @@ enum IslandExpandedPanelPolicy {
         shelfEnabled && isFileDrag
     }
 
-    /// 双舱 / 隔空传送：须磁吸开 + 货架开 + 拖文件。
+    /// 磁吸暂存面：须磁吸开 + 货架开 + 拖文件。
     static func isMagneticStagingEnabled(
         shelfEnabled: Bool,
         magneticEnabled: Bool,

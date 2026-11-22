@@ -101,9 +101,9 @@
 
 - **recurring:** true  
 - **occurrences:** 2+（2026-11-13：投放后双舱再闪；**同日未入舱松手后岛回头再开**）  
-- **症状:** 拖文件出双舱后入舱/隔空完成再闪一次；或拖近展开后**未放暂存区就松手**，岛收起后又自动打开  
+- **症状:** 拖文件出磁吸暂存面后入舱完成再闪一次；或拖近展开后**未放暂存区就松手**，岛收起后又自动打开（历史含右舱隔空完成再闪；隔空舱已移除）  
 - **根因倾向:** ① `isTargeted` 滞后再 `setActive(true)`；② 拖文件 `shelfDropApproach` 展开后松手仍 `retention=true`（大面板）不收；③ 松手后普通悬停立刻再 expand  
-- **防护:** `endAfterDrop` 冷却；双舱须 `fileDrag`；**未入舱松手 `fileDragCanceled` 强收 + `postFileDragHoverSuppress`**；收起悬停仅刘海，接近区仅拖文件  
+- **防护:** `endAfterDrop` 冷却；磁吸暂存须 `fileDrag`；**未入舱松手 `fileDragCanceled` 强收 + `postFileDragHoverSuppress`**；收起悬停仅刘海，接近区仅拖文件  
 - **自动化:** `test_shelfMagneticStagingDouble_*`、`test_shelfFileDragCancel_*`、`test_islandHoverExpand_*`
 
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
