@@ -207,12 +207,12 @@ final class IslandNoticeWidget: IslandWidget {
         }
         Task { @MainActor [weak self] in
             guard let self, self.wantsDisplay else { return }
-            // 会议等无自动收的 tip：设置设计页仅入槽，关设置后再展开。
-            // 约 3s 瞬时 tip（RAM 等）：设置开着也立刻 expand，与悬停无关。
+            // 仅小组件设计 sticky 挡无自动收 tip；其它设置页走正式程序 expand。
+            // 约 3s 瞬时 tip（RAM 等）：设计 sticky 中也立刻 expand，与悬停无关。
             if IslandController.shared?.blocksProgrammaticNoticeExpand == true,
                !payload.expandsDuringSettingsSession
             {
-                AppLog.warn("IslandNotice", "设置设计页中，通知仅入槽不展开，待关闭设置后再展示", [
+                AppLog.warn("IslandNotice", "设计 sticky 中，通知仅入槽不展开，待离开设计页后再展示", [
                     "id": payload.id,
                     "source": payload.sourceTag
                 ])

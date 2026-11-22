@@ -649,6 +649,28 @@ final class RegressionCatalogTests: XCTestCase {
     /// 会议等无自动收的 sticky：设置设计页 / 指针在设置窗禁止强制展开（防连震）。
     /// 约 3s 瞬时 tip：设置开着也要强制展开，与悬停无关。
     func test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand() {
+        // 挡 tip 须「收起会话 + 设计 sticky」；其余设置页走正式程序 expand。
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.settingsBlocksProgrammaticNoticeExpand(
+                sessionActive: true,
+                livePreview: false,
+                designSticky: false
+            )
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.settingsBlocksProgrammaticNoticeExpand(
+                sessionActive: true,
+                livePreview: false,
+                designSticky: true
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.settingsBlocksProgrammaticNoticeExpand(
+                sessionActive: true,
+                livePreview: true,
+                designSticky: true
+            )
+        )
         XCTAssertFalse(
             IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand(
                 isExpanded: false,

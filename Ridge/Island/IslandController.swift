@@ -28,9 +28,14 @@ final class IslandController: NSObject {
     /// 对外别名，供 `IslandNoticeWidget` 等读取悬停态。
     var isHoveringIsland: Bool { isPointerOverIsland }
 
-    /// 设置「小组件 / 控制台」设计页：真岛保持收起，程序 tip 不得抢展开（否则 sticky↔设置窗收起互殴连震）。
+    /// 仅「小组件 / 控制台」设计 sticky 页挡程序 tip 展开（防 sticky↔设置窗连震）。
+    /// 其它设置页开着时 tip 仍走正式程序 expand，与是否测试台无关。
     var blocksProgrammaticNoticeExpand: Bool {
-        isSettingsSessionActive && !isSettingsLivePreview
+        IslandExpandedPanelPolicy.settingsBlocksProgrammaticNoticeExpand(
+            sessionActive: isSettingsSessionActive,
+            livePreview: isSettingsLivePreview,
+            designSticky: isSettingsDesignSticky
+        )
     }
     private var collapseWorkItem: DispatchWorkItem?
     /// 岛内按下拖拽中：保持接收事件，避免穿透把翻页掐断。
@@ -73,7 +78,9 @@ final class IslandController: NSObject {
     private var isSettingsSessionActive = false
     /// 设置窗在前台有焦点时钉住展开；失焦后关掉，岛恢复悬停正常逻辑。
     private var isSettingsLivePreview = false
-    /// 灵动岛设置页要实时预览；小组件 / 控制台设计页保持收起。
+    /// 小组件库 / 控制台设计 sticky：页内预览与真岛 tip 互殴时才挡程序展开。
+    private var isSettingsDesignSticky = false
+    /// 灵动岛设置页要实时预览；其它页默认保持收起（不钉预览）。
     private var settingsPreferLivePreview = true
     /// 展开触感节流：sticky↔收起互殴时禁止连震。
     private var lastExpandHapticAt: Date = .distantPast
@@ -233,6 +240,7 @@ final class IslandController: NSObject {
         collapseWorkItem?.cancel()
         isSettingsLivePreview = false
         isSettingsSessionActive = false
+        isSettingsDesignSticky = false
         settingsPreferLivePreview = true
         fullscreenMonitor.stop()
         displayMonitor.stop()
@@ -248,14 +256,17 @@ final class IslandController: NSObject {
     /// 设置窗打开且钉住展开真岛（仅显式需要实时预览时调用；默认开设置用 `beginSettingsSessionCollapsed`）。
     func beginSettingsSession() {
         isSettingsSessionActive = true
+        isSettingsDesignSticky = false
         settingsPreferLivePreview = true
         setSettingsLivePreview(true)
         AppLog.info("Island", "设置会话：钉住展开预览")
     }
 
-    /// 设置窗打开但保持收起（小组件 / 控制台设计页：页内自有预览，不再展开真岛）。
-    func beginSettingsSessionCollapsed() {
+    /// 设置窗打开但保持收起（页内自有预览，不再钉住展开真岛）。
+    /// - Parameter designSticky: 仅小组件库 / 控制台设计页为 `true`，挡无自动收 tip 的程序展开；其余页 `false`。
+    func beginSettingsSessionCollapsed(designSticky: Bool = false) {
         isSettingsSessionActive = true
+        isSettingsDesignSticky = designSticky
         settingsPreferLivePreview = false
         isSettingsLivePreview = false
         collapseWorkItem?.cancel()
@@ -270,6 +281,8 @@ final class IslandController: NSObject {
         }
         AppLog.warn("Island", "设置会话：保持收起", [
             "expanded": false,
+            "designSticky": designSticky,
+            "blocksNoticeExpand": blocksProgrammaticNoticeExpand,
             "clickThrough": window.ignoresMouseEvents
         ])
     }
@@ -386,6 +399,7 @@ final class IslandController: NSObject {
         isSettingsLivePreview = false
         if forceCollapseOnEnd {
             isSettingsSessionActive = false
+            isSettingsDesignSticky = false
             resetTransientWindowElevation(reason: "settingsClose")
         }
         collapseWorkItem?.cancel()

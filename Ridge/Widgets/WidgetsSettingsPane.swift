@@ -60,8 +60,8 @@ struct WidgetsSettingsPane: View {
         }
         .onAppear {
             settings.reconcile(with: registry)
-            // 小组件设计页用页内预览，真岛保持收起。
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            // 小组件设计 sticky：页内预览；挡会议等无自动收 tip 抢展开。
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: true)
             consumePendingPreviewIfNeeded()
             AppLog.debug("Settings", "小组件库页已显示", [
                 "general": generalEntries.count,
@@ -208,7 +208,7 @@ struct WidgetsSettingsPane: View {
             IslandController.shared?.presentWidgetEnabled(pageID, fromScreenRect: source)
             AppLog.info("Settings", "打开功能磁贴，同步上岛", ["id": id])
         } else {
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: true)
             WidgetRuntime.shared.recompute(reason: "deckModuleDisable")
             AppLog.info("Settings", "关闭功能磁贴，同步下岛", ["id": id])
         }
@@ -275,8 +275,8 @@ struct WidgetsSettingsPane: View {
             AppLog.info("Settings", "打开小组件，同步上岛", ["id": id])
         } else {
             WidgetRuntime.shared.withdrawDisplay(id)
-            // 仍在小组件设计页，保持「不钉住预览」，避免关掉开关后岛被钉死不收。
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            // 仍在小组件设计 sticky，保持「不钉住预览」，避免关掉开关后岛被钉死不收。
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: true)
             WidgetRuntime.shared.recompute(reason: "settingsDisable")
             AppLog.info("Settings", "关闭小组件，同步下岛", ["id": id])
         }

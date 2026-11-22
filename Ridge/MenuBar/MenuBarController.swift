@@ -335,20 +335,24 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         return window
     }
 
-    /// 按当前侧栏页同步岛预览态（复用隐藏窗时 onAppear 不一定再跑）。
-    private func syncIslandPreviewForCurrentSection() {
+    /// 按当前侧栏页同步岛预览态（打开设置 / 侧栏切页共用）。
+    func syncIslandPreviewForCurrentSection() {
         switch SettingsNavigator.shared.section {
-        case .island, .widgets, .general, .about:
+        case .widgets:
             ResourceMonitorSession.shared.setSettingsVisible(false)
-            // 各设置页均用页内预览，打开时不钉住展开真岛。
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            // 仅小组件库设计 sticky 挡无自动收 tip 的程序展开（防连震）。
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: true)
         case .resourceMonitor, .focusInsights:
             ResourceMonitorSession.shared.setSettingsVisible(true)
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: false)
+        case .island, .general, .about:
+            ResourceMonitorSession.shared.setSettingsVisible(false)
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: false)
         #if DEBUG
         case .islandTestLab:
+            // 与灵动岛 / 通用等页相同：非设计 sticky，走正式 tip 展开路径。
             ResourceMonitorSession.shared.setSettingsVisible(false)
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: false)
         #endif
         }
     }

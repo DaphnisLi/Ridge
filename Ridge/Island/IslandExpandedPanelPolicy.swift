@@ -300,7 +300,7 @@ enum IslandExpandedPanelPolicy {
     }
 
     /// 常驻 tip（`keepsExpandedWithoutHover`）未展开时是否强制 expand。
-    /// 会议等无自动收的 tip：设置设计页 / 指针在设置窗上时禁止（避免 sticky↔收起互殴连震）。
+    /// 会议等无自动收的 tip：仅「小组件设计 sticky」或指针在设置窗上时禁止（避免 sticky↔收起互殴）。
     /// 约 3s 瞬时 tip（`expandsDuringSettingsSession`）：设置开着也要补展开，与悬停无关。
     static func shouldForceStickyNoticeExpand(
         isExpanded: Bool,
@@ -314,5 +314,15 @@ enum IslandExpandedPanelPolicy {
         if settingsSessionBlocksIslandTips { return false }
         if pointerOverSettings { return false }
         return true
+    }
+
+    /// 设置会话是否挡程序 tip 展开：须同时「收起会话 + 设计 sticky」。
+    /// 非设计 sticky 的设置页（含测试台）与正式路径一致，不挡程序 expand。
+    static func settingsBlocksProgrammaticNoticeExpand(
+        sessionActive: Bool,
+        livePreview: Bool,
+        designSticky: Bool
+    ) -> Bool {
+        sessionActive && !livePreview && designSticky
     }
 }

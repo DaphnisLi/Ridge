@@ -27,7 +27,7 @@ struct ControlDeckSettingsPane: View {
         .contentMargins(.horizontal, 0, for: .scrollContent)
         .background(SettingsChrome.pageBackground)
         .onAppear {
-            IslandController.shared?.beginSettingsSessionCollapsed()
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: true)
             AppLog.debug("ControlDeck", "控制台设置页已显示", ["enabled": settings.isEnabled])
         }
     }
@@ -81,7 +81,7 @@ struct ControlDeckSettingsPane: View {
                     get: { settings.isModuleEnabled(module.id) },
                     set: { enabled in
                         settings.setModuleEnabled(module.id, enabled)
-                        IslandController.shared?.beginSettingsSessionCollapsed()
+                        IslandController.shared?.beginSettingsSessionCollapsed(designSticky: true)
                     }
                 )
             )

@@ -44,6 +44,9 @@ struct IslandTestLabPane: View {
         }
         .background(SettingsChrome.pageBackground)
         .onAppear {
+            guard MenuBarController.shared?.settingsWindow != nil else { return }
+            // 与其它非小组件库设置页相同：收起会话、非设计 sticky，tip 走正式展开路径。
+            IslandController.shared?.beginSettingsSessionCollapsed(designSticky: false)
             AppLog.info("TestLab", "测试台页已显示")
         }
     }

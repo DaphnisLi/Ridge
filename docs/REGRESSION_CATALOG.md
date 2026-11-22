@@ -30,7 +30,7 @@
 | `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
 | `meeting-tip-stays-after-join` | 点入会后 tip 仍不消失 | ≥3 | 已入会仍贴着会前提示；tick/改选把同一场贴回 | 会话级 `dismissedAfterJoinID` + publish 拒投；`test_meetingTipAfterJoin_*` |
 | `meeting-join-wrong-calendar-url` | 入会打开日程页而非会议室 | ≥2 | 点入会进 Google/Outlook 日程；钉钉丢会议号 | 跳过日程页；先扫平台；钉钉原 https；`test_meetingJoinLink_*` |
-| `settings-session-swallows-transient-notice` | 设置开着 / 不悬停就看不见瞬时 tip | 2 | 改 RAM 阈值仅入槽；必须移入岛才展开 | `expandsDuringSettingsSession`；设置中仍 expand；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
+| `settings-session-swallows-transient-notice` | 设置开着 / 不悬停就看不见 tip | 3 | 改 RAM 阈值仅入槽；测试台创建会议悬停才见 | 仅设计 sticky 挡；`settingsBlocksProgrammaticNoticeExpand`；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
 | `island-notice-layout-matrix` | 岛展示权重 / 左右组合漏测 | 2 | 音乐×专注、C 盖右翼专注、会议盖播放等组合易漏改 | 真值表 32 格 + 全 C 盖专注 + 翼宽 + 权重阶梯；`test_islandNoticeLayoutMatrix_*` |
 | `island-notice-behavior` | 免打扰 / 自动收 / 收岛策略漏测 | 2 | 点免打扰 tip 仍挂；改阈值 mute 不失效；悬停空岛 | `shouldDismissNow` 时钟注入 + Center FIFO + 专注待命；`test_islandNoticeBehavior_*` |
 
@@ -138,12 +138,12 @@
 ### settings-session-swallows-transient-notice — 开着设置改阈值时 tip 入槽但看不见
 
 - **recurring:** true  
-- **occurrences:** 2（2026-11-17：仅入槽不展开；同日：不移入岛就看不见——悬停 `expand(hover)` 绕过设置挡，程序 expand 被挡）  
-- **症状:** 设置「RAM 监控」开着时改阈值 / 告警已触发，岛上没有任何 tip；或必须把鼠标移入灵动岛才出现  
-- **根因倾向:** `blocksProgrammaticNoticeExpand` 挡住 `islandNotice` expand；`expand(hover)` 不走该挡 → 表现为「靠悬停才展示」；`pointerOverSettings` 还会把已展开的 sticky tip 收掉  
-- **防护:** `expandsDuringSettingsSession`（有 `autoDismissNanoseconds` 的瞬时 tip）设置中仍程序 expand；`pointerOverSettings` / `hoverEnd` 不收 `keepsExpandedWithoutHover`；瞬时 tip 计时不因设置会话延后；会议等无自动收的仍挡  
-- **相关代码:** `IslandNoticePayload.expandsDuringSettingsSession`、`IslandNoticeWidget.showThenExpand`、`IslandController.expand` / `collapse`、`IslandExpandedPanelPolicy.shouldForceStickyNoticeExpand`  
-- **自动化:** `test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand`（含瞬时 tip 设置中仍 force expand + RAM `expandsDuringSettingsSession`）  
+- **occurrences:** 3（2026-11-17：仅入槽不展开；同日悬停才见；2026-11-22：岛测试台创建会议同样「入槽不展开、悬停才见」）  
+- **症状:** 设置「RAM 监控」开着时改阈值 / 告警已触发，岛上没有任何 tip；或必须把鼠标移入灵动岛才出现；测试台创建会议同款  
+- **根因倾向:** 曾把任意「收起设置会话」当成 `blocksProgrammaticNoticeExpand`，挡住会议等无自动收 tip 的程序 expand；`expand(hover)` 不走该挡 → 「靠悬停才展示」  
+- **防护:** `blocksProgrammaticNoticeExpand` **仅**小组件库 / 控制台设计 sticky（`designSticky`）；岛测试台 / 普通设置不挡；瞬时 tip 仍靠 `expandsDuringSettingsSession`；`pointerOverSettings` / `hoverEnd` 不收 `keepsExpandedWithoutHover`  
+- **相关代码:** `IslandExpandedPanelPolicy.settingsBlocksProgrammaticNoticeExpand`、`IslandController.beginSettingsSessionCollapsed(designSticky:)`、`IslandNoticeWidget.showThenExpand`  
+- **自动化:** `test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand`（含 designSticky 门闩 + 瞬时 tip force expand）  
 
 ### island-notice-layout-matrix — 岛展示权重 / 左右组合漏测
 

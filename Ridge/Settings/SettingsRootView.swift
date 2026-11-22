@@ -249,6 +249,11 @@ struct SettingsRootView: View {
             idealWidth: SettingsChrome.windowDefaultSize.width,
             idealHeight: SettingsChrome.windowDefaultSize.height
         )
+        .onChange(of: navigator.section) { _, section in
+            // 侧栏切页与打开设置同一套同步，避免从小组件库切走后仍留着 design sticky。
+            MenuBarController.shared?.syncIslandPreviewForCurrentSection()
+            AppLog.info("Settings", "侧栏切页，已同步岛会话", ["section": section.rawValue])
+        }
     }
 
     @ViewBuilder
