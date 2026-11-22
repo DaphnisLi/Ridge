@@ -1332,13 +1332,17 @@ enum L10n {
         static var watchOutcomeUnknown: String {
             tr("projects.deck.watch_outcome_unknown", "已结束")
         }
-        private static func signalName(_ signal: Int32) -> String {
+        private static func knownSignalName(_ signal: Int32) -> String? {
             switch signal {
             case 2: return "SIGINT"
             case 9: return "SIGKILL"
             case 15: return "SIGTERM"
-            default: return "\(signal)"
+            default: return nil
             }
+        }
+
+        private static func signalName(_ signal: Int32) -> String {
+            knownSignalName(signal) ?? "\(signal)"
         }
         static func resourceMemCPU(_ mem: String, _ cpu: String) -> String {
             String(format: tr("projects.deck.resource_mem_cpu_format", "%@ · %@"), mem, cpu)
@@ -1446,6 +1450,7 @@ enum L10n {
             }
             return "\(total)s"
         }
+        /// 岛 tip 右翼短徽标：`exit 0` / `exit 1` / `SIGTERM`；勿用控制台长句。
         static func exitTag(_ outcome: ProjectWatchOutcome) -> String {
             switch outcome {
             case .succeeded:
@@ -1453,7 +1458,10 @@ enum L10n {
             case .failed(let code):
                 return String(format: tr("projects.deck.exit_tag_code_format", "exit %d"), code)
             case .signaled(let signal):
-                return watchOutcomeSignaled(signal)
+                if let name = knownSignalName(signal) {
+                    return name
+                }
+                return String(format: tr("projects.deck.exit_tag_sig_format", "sig %d"), signal)
             case .unknown:
                 return tr("projects.deck.exit_tag_ended", "ended")
             }
@@ -3113,6 +3121,18 @@ enum L10n {
         static var tipDismissManual: String { tr("test_lab.tip.dismiss_manual", "收起取色/OCR") }
         static var galleryTapHint: String {
             tr("test_lab.gallery.tap_hint", "点击样张即可投递到真岛。")
+        }
+
+        static var clearAllTitle: String { tr("test_lab.clear_all.title", "清除测试数据") }
+        static var clearAllSubtitle: String {
+            tr(
+                "test_lab.clear_all.subtitle",
+                "撤掉岛上 tip、假媒体、外设注入、进程监视、测试日历会议，并复位专注与 tip 时长覆盖。"
+            )
+        }
+        static var clearAllAction: String { tr("test_lab.clear_all.action", "一键清除全部测试数据") }
+        static var statusClearedAll: String {
+            tr("test_lab.status.cleared_all", "已清除测试数据")
         }
 
         static var tipDurationTitle: String { tr("test_lab.tip.title", "提示停留时间") }

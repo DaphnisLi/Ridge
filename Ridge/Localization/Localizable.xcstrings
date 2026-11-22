@@ -5436,6 +5436,17 @@
         }
       }
     },
+    "projects.deck.exit_tag_sig_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sig %d"
+          }
+        }
+      }
+    },
     "projects.deck.expand_details": {
       "extractionState": "manual",
       "localizations": {
@@ -10139,6 +10150,50 @@
           "stringUnit": {
             "state": "translated",
             "value": "仅本地 DEBUG 可见。按组件分卡，每卡可投该组件全部上岛状态；页底图鉴同样按组件排列，点击样张上岛。正式包无此页。"
+          }
+        }
+      }
+    },
+    "test_lab.clear_all.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "清除测试数据"
+          }
+        }
+      }
+    },
+    "test_lab.clear_all.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撤掉岛上 tip、假媒体、外设注入、进程监视、测试日历会议，并复位专注与 tip 时长覆盖。"
+          }
+        }
+      }
+    },
+    "test_lab.clear_all.action": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一键清除全部测试数据"
+          }
+        }
+      }
+    },
+    "test_lab.status.cleared_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清除测试数据"
           }
         }
       }

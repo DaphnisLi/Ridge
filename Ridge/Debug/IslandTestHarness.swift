@@ -1,4 +1,5 @@
 #if DEBUG
+import Darwin
 import Foundation
 
 /// 岛测试台中枢：编排专注快进、会议播种、进程、外设、控制台与组合剧本。
@@ -18,6 +19,47 @@ final class IslandTestHarness: ObservableObject {
     func note(_ message: String) {
         statusMessage = message
         AppLog.info("TestLab", message)
+    }
+
+    /// 一键清掉测试台留下的运行时数据（tip / 假媒体 / 外设注入 / 监视 / 测试会议 / 专注快进等）。
+    func clearAllTestData() {
+        AppLog.warn("TestLab", "一键清除测试数据开始")
+
+        IslandNoticeCenter.shared.dismiss(id: nil)
+        MeetingLeadSession.shared.publish(nil, reason: "testLabClearAll")
+
+        setFakeMediaPlaying(false)
+        LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "testLabClearAll")
+
+        BatterySession.shared.debugClearInjectedDevices()
+
+        FocusTimerSession.shared.debugEnterPicking()
+        FocusTimerSession.shared.dismissCompletion()
+
+        let projects = ProjectReleaseSession.shared
+        for watch in projects.watches {
+            projects.stopWatch(watch)
+        }
+        projects.dismissWatchEnded()
+
+        if let pid = lastLaunchedPID {
+            _ = kill(pid, SIGTERM)
+            lastLaunchedPID = nil
+            AppLog.info("TestLab", "已向测试进程发 SIGTERM", ["pid": pid])
+        }
+
+        do {
+            let n = try IslandTestLabMeetingSeeder.cleanupAll()
+            AppLog.info("TestLab", "已清理测试日历会议", ["count": n])
+        } catch {
+            AppLog.warn("TestLab", "清理测试会议失败", ["error": error.localizedDescription])
+        }
+
+        IslandTestLabSettings.shared.resetTipDuration()
+        IslandController.shared?.collapse(reason: "testLabClearAll")
+
+        note(L10n.TestLab.statusClearedAll)
+        AppLog.warn("TestLab", "一键清除测试数据完成")
     }
 
     // MARK: - Media demo

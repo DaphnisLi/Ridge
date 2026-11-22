@@ -73,6 +73,45 @@ final class IslandTestLabTests: XCTestCase {
             XCTAssertFalse(url.absoluteString.isEmpty, platform.rawValue)
         }
     }
+
+    @MainActor
+    func test_clearAllTestDataDismissesNoticesAndResetsTipOverride() {
+        let center = IslandNoticeCenter.shared
+        center.dismiss(id: nil)
+        defer { center.dismiss(id: nil) }
+
+        center.present(
+            .ramPressure(
+                .init(
+                    id: "lab.clear.ram",
+                    ramUsedBytes: 1,
+                    ramPercent: 96,
+                    topAppName: "Xcode",
+                    topAppMemoryBytes: 1
+                )
+            )
+        )
+        XCTAssertNotNil(center.current)
+
+        let defaults = UserDefaults.standard
+        let enabledKey = "debug.islandTestLab.tipOverrideEnabled"
+        let oldEnabled = defaults.object(forKey: enabledKey)
+        defer {
+            if let oldEnabled {
+                defaults.set(oldEnabled, forKey: enabledKey)
+            } else {
+                defaults.removeObject(forKey: enabledKey)
+            }
+        }
+        defaults.set(true, forKey: enabledKey)
+
+        IslandTestHarness.shared.clearAllTestData()
+
+        XCTAssertNil(center.current)
+        XCTAssertNil(center.slots.secondary)
+        XCTAssertFalse(defaults.bool(forKey: enabledKey))
+        XCTAssertEqual(IslandTestHarness.shared.statusMessage, L10n.TestLab.statusClearedAll)
+    }
     #else
     func test_testLabExcludedFromRelease() {
         XCTAssertTrue(true, "Release 不编译测试台类型")

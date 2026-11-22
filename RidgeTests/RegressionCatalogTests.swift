@@ -623,6 +623,15 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(MeetingLeadUrgency.relaxed.flushSeverity, .info)
         XCTAssertEqual(MeetingLeadUrgency.warning.flushSeverity, .warning)
         XCTAssertEqual(MeetingLeadUrgency.critical.flushSeverity, .danger)
+        // 半岛充裕须蓝（info），不得跟满岛绿。
+        XCTAssertEqual(
+            MeetingLeadUrgency.relaxed.flushAccent,
+            IslandFlushWingStyle.Severity.info.accent
+        )
+        XCTAssertNotEqual(
+            MeetingLeadUrgency.relaxed.flushAccent,
+            MeetingLeadUrgency.relaxed.accent
+        )
         XCTAssertEqual(AIUsageStage.abundant.flushSeverity, .info)
         XCTAssertEqual(AIUsageStage.warning.flushSeverity, .warning)
         XCTAssertEqual(AIUsageStage.critical.flushSeverity, .danger)
@@ -1174,6 +1183,15 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(ended.expandsDuringSettingsSession)
         XCTAssertEqual(L10n.Projects.tipDuration(6 * 60 + 12), "6m12s")
         XCTAssertEqual(L10n.Projects.exitTag(.succeeded), "exit 0")
+        XCTAssertEqual(L10n.Projects.exitTag(.failed(code: 1)), "exit 1")
+        XCTAssertEqual(L10n.Projects.exitTag(.signaled(signal: 15)), "SIGTERM")
+        XCTAssertEqual(L10n.Projects.exitTag(.signaled(signal: 9)), "SIGKILL")
+        XCTAssertEqual(L10n.Projects.exitTag(.signaled(signal: 42)), "sig 42")
+        XCTAssertEqual(
+            L10n.Projects.outcomeText(.signaled(signal: 15)),
+            "被信号终止（SIGTERM）",
+            "控制台长文案保留；岛 tip 徽标须短"
+        )
 
         let solo = IslandNoticeSlotPolicy.applying(incoming: ended, to: IslandNoticeSlots())
         XCTAssertEqual(solo?.resolvedLayout, .fullNotice(ended))

@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// 会前提示紧迫度：稿面三态（充裕绿 / 临近琥珀 / 紧急红）。
+/// 会前提示紧迫度：满岛三态（充裕绿 / 临近琥珀 / 紧急红）；半岛半块充裕改蓝。
 enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
     case relaxed
     case warning
@@ -9,7 +9,7 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
-    /// >5 分绿；≤5 且 >2 分琥珀；≤2 分（含已开始）红。
+    /// >5 分充裕；≤5 且 >2 分琥珀；≤2 分（含已开始）红。
     static func resolve(secondsToStart: TimeInterval) -> MeetingLeadUrgency {
         if secondsToStart > 5 * 60 { return .relaxed }
         if secondsToStart > 2 * 60 { return .warning }
@@ -39,8 +39,11 @@ enum MeetingLeadUrgency: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    /// 半块 flush 用日程图标（非视频会议 cam）；满岛三态仍走 `symbolName`。
+    /// 半岛半块：一律日程线框（稿 calendar，非视频 cam / 电波）；满岛仍走 `symbolName`。
     var flushSymbolName: String { "calendar" }
+
+    /// 半岛半块强调色：充裕用 info 蓝，临近/紧急跟满岛琥珀/红。
+    var flushAccent: Color { flushSeverity.accent }
 
     var stageTitle: String {
         switch self {
@@ -197,11 +200,13 @@ struct MeetingIslandCardView: View {
         let spacer = bareWingContent
             ? IslandFlushWingStyle.bareContentSpacerMin
             : CGFloat(4)
+        let flushTint = urgency.flushAccent
         let idleRow = HStack(spacing: 0) {
             HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+                // 半岛日程线框 + 充裕蓝（勿用满岛绿 / video cam）。
                 Image(systemName: urgency.flushSymbolName)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(urgency.accent)
+                    .foregroundStyle(flushTint)
                     .symbolRenderingMode(.monochrome)
                 Text(Self.countdownText(secondsToStart: secondsToStart))
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
@@ -210,7 +215,7 @@ struct MeetingIslandCardView: View {
                     .lineLimit(1)
             }
             Spacer(minLength: spacer)
-            MeetingLeadPulseDot(accent: urgency.accent, compact: true)
+            MeetingLeadPulseDot(accent: flushTint, compact: true)
         }
         .opacity(showsFlushJoinMorph ? 0 : 1)
         .scaleEffect(showsFlushJoinMorph ? 0.95 : 1)

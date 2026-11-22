@@ -18,6 +18,7 @@ struct IslandTestLabPane: View {
                 header
 
                 tipDurationCard
+                clearAllCard
 
                 meetingCard
                 aiCard
@@ -99,6 +100,18 @@ struct IslandTestLabPane: View {
 
             labButton(L10n.TestLab.tipReset) {
                 labSettings.resetTipDuration()
+            }
+        }
+    }
+
+    private var clearAllCard: some View {
+        labCard(
+            title: L10n.TestLab.clearAllTitle,
+            symbol: "trash",
+            subtitle: L10n.TestLab.clearAllSubtitle
+        ) {
+            labButton(L10n.TestLab.clearAllAction, role: .destructive) {
+                harness.clearAllTestData()
             }
         }
     }
