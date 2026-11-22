@@ -549,14 +549,8 @@ struct PeripheralBatteryNoticeCard: View {
         }
     }
 
-    /// 设置预览样张；`flushSide` 时为半岛右翼（无外圈 tip padding）。
-    static func previewSample(
-        style: Style,
-        threshold: Int = 15,
-        compact: Bool = true,
-        flushSide: IslandFlushWingStyle.Side? = nil,
-        bareWingContent: Bool = false
-    ) -> some View {
+    /// 设置预览样张。
+    static func previewSample(style: Style, threshold: Int = 15, compact: Bool = true) -> some View {
         let notice: BatteryPeripheralNotice
         switch style {
         case .low:
@@ -590,22 +584,10 @@ struct PeripheralBatteryNoticeCard: View {
                 detail: L10n.PeripheralTip.connectNoticeDetail
             )
         }
-        let card = PeripheralBatteryNoticeCard(
-            notice: notice,
-            style: style,
-            compact: true,
-            flushSide: flushSide,
-            bareWingContent: bareWingContent
-        )
-        if flushSide != nil {
-            return AnyView(card)
-        }
-        return AnyView(
-            card
-                .padding(.horizontal, IslandChrome.contentHorizontal)
-                .padding(.bottom, IslandChrome.compactTipBottom)
-                .frame(minHeight: compact ? 34 : 40)
-        )
+        return PeripheralBatteryNoticeCard(notice: notice, style: style, compact: true)
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.compactTipBottom)
+            .frame(minHeight: compact ? 34 : 40)
     }
 
     var body: some View {

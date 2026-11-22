@@ -12,7 +12,7 @@ struct MeetingWidgetConfigSection: View {
     @State private var customLink: String = ""
     @State private var customError: String?
     @State private var isRequestingAuth = false
-    @State private var previewSelection = MeetingLeadUrgency.relaxed.rawValue
+    @State private var previewUrgency: MeetingLeadUrgency = .relaxed
     @FocusState private var focusedField: Field?
 
     private enum Field: Hashable {
@@ -104,20 +104,19 @@ struct MeetingWidgetConfigSection: View {
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
                 )
-            } + [.halfIslandTipOption()],
-            selection: $previewSelection
+            },
+            selection: Binding(
+                get: { previewUrgency.rawValue },
+                set: { previewUrgency = MeetingLeadUrgency(rawValue: $0) ?? .relaxed }
+            )
         ) { option in
-            if option.id == "halfIsland" {
-                WidgetSamplePreview.meetingHalfIslandSample(urgency: .warning)
-            } else {
-                let urgency = MeetingLeadUrgency(rawValue: option.id) ?? .relaxed
-                // 预览壳无 IslandChrome：舞台补左右/底，与真岛 notchWing 令牌一致。
-                MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
-                    .padding(.horizontal, IslandChrome.contentHorizontal)
-                    .padding(.bottom, IslandChrome.compactTipBottom)
-                    .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)
-                    .id(urgency.rawValue)
-            }
+            let urgency = MeetingLeadUrgency(rawValue: option.id) ?? .relaxed
+            // 预览壳无 IslandChrome：舞台补左右/底，与真岛 notchWing 令牌一致。
+            MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)
+                .id(urgency.rawValue)
         }
     }
 

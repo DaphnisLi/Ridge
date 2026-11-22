@@ -212,9 +212,7 @@ struct AIUsageIslandCardView: View {
     static func previewSample(
         stage: AIUsageStage = .abundant,
         remainingPercent: Int? = nil,
-        compact: Bool = true,
-        flushSide: IslandFlushWingStyle.Side? = nil,
-        bareWingContent: Bool = false
+        compact: Bool = true
     ) -> AIUsageIslandCardView {
         let settings = AIUsageSettings.shared
         let remaining: Int
@@ -239,9 +237,7 @@ struct AIUsageIslandCardView: View {
             stage: stage,
             resetsAt: Date().addingTimeInterval(resetOffset),
             errorMessage: nil,
-            compact: compact,
-            flushSide: flushSide,
-            bareWingContent: bareWingContent
+            compact: compact
         )
     }
 }

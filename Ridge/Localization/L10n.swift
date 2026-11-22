@@ -368,11 +368,6 @@ enum L10n {
             tr("widgets.configure_link", "配置参数与交互")
         }
         static var libraryEmpty: String { tr("widgets.library.empty", "暂无可用小组件。") }
-        /// 设置预览：与音乐并排时的右翼半块形态（dualFlush）。
-        static var previewHalfIsland: String { tr("widgets.preview.half_island", "半岛") }
-        static var previewHalfIslandBadge: String {
-            tr("widgets.preview.half_island_badge", "并排")
-        }
 
         static func familySectionTitle(_ family: WidgetLibraryFamily) -> String {
             switch family {

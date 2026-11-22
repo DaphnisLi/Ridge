@@ -4,7 +4,7 @@ import SwiftUI
 struct AIUsageWidgetConfigSection: View {
     @ObservedObject private var settings = AIUsageSettings.shared
     @ObservedObject private var session = AIUsageSession.shared
-    @State private var previewSelection = AIUsageStage.abundant.rawValue
+    @State private var previewStage: AIUsageStage = .abundant
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,23 +41,20 @@ struct AIUsageWidgetConfigSection: View {
             options: [
                 stageOption(.abundant, badge: "\(settings.abundantThreshold)%"),
                 stageOption(.warning, badge: "\(settings.warningThreshold)%"),
-                stageOption(.critical, badge: "\(settings.criticalThreshold)%"),
-                .halfIslandTipOption()
+                stageOption(.critical, badge: "\(settings.criticalThreshold)%")
             ],
-            selection: $previewSelection
+            selection: Binding(
+                get: { previewStage.rawValue },
+                set: { previewStage = AIUsageStage(rawValue: $0) ?? .abundant }
+            )
         ) { option in
-            if option.id == "halfIsland" {
-                WidgetSamplePreview.aiUsageHalfIslandSample(stage: .critical)
-                    .id("halfIsland-\(settings.criticalThreshold)")
-            } else {
-                let stage = AIUsageStage(rawValue: option.id) ?? .abundant
-                // 与会议 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
-                AIUsageIslandCardView.previewSample(stage: stage, compact: true)
-                    .padding(.horizontal, IslandChrome.contentHorizontal)
-                    .padding(.bottom, IslandChrome.compactTipBottom)
-                    .frame(minHeight: 34)
-                    .id("\(stage.rawValue)-\(settings.abundantThreshold)-\(settings.warningThreshold)-\(settings.criticalThreshold)")
-            }
+            let stage = AIUsageStage(rawValue: option.id) ?? .abundant
+            // 与会议 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
+            AIUsageIslandCardView.previewSample(stage: stage, compact: true)
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: 34)
+                .id("\(stage.rawValue)-\(settings.abundantThreshold)-\(settings.warningThreshold)-\(settings.criticalThreshold)")
         }
     }
 

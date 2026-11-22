@@ -4,7 +4,6 @@ import SwiftUI
 struct MoveReminderWidgetConfigSection: View {
     @ObservedObject private var settings = MoveReminderSettings.shared
     @ObservedObject private var session = MoveReminderSession.shared
-    @State private var previewSelection = "move"
 
     private let amber = Color(red: 1.0, green: 0.584, blue: 0.0)
 
@@ -56,29 +55,20 @@ struct MoveReminderWidgetConfigSection: View {
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
-                ),
-                .halfIslandTipOption()
+                )
             ],
-            selection: $previewSelection
-        ) { option in
-            if option.id == "halfIsland" {
-                WidgetSamplePreview.moveReminderHalfIslandSample(
-                    activeMinutes: settings.activeTriggerMinutes,
-                    restMinutes: settings.suggestedRestMinutes
-                )
-                .id("half-\(settings.activeTriggerMinutes)-\(settings.suggestedRestMinutes)")
-            } else {
-                // 与会议 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
-                MoveReminderNoticeCard.previewSample(
-                    activeMinutes: settings.activeTriggerMinutes,
-                    restMinutes: settings.suggestedRestMinutes,
-                    compact: true
-                )
-                .padding(.horizontal, IslandChrome.contentHorizontal)
-                .padding(.bottom, IslandChrome.compactTipBottom)
-                .frame(minHeight: 34)
-                .id("\(settings.activeTriggerMinutes)-\(settings.suggestedRestMinutes)")
-            }
+            selection: .constant("move")
+        ) { _ in
+            // 与会议 tip 同款：预览壳无 IslandChrome，舞台只补左右/底。
+            MoveReminderNoticeCard.previewSample(
+                activeMinutes: settings.activeTriggerMinutes,
+                restMinutes: settings.suggestedRestMinutes,
+                compact: true
+            )
+            .padding(.horizontal, IslandChrome.contentHorizontal)
+            .padding(.bottom, IslandChrome.compactTipBottom)
+            .frame(minHeight: 34)
+            .id("\(settings.activeTriggerMinutes)-\(settings.suggestedRestMinutes)")
         }
     }
 
