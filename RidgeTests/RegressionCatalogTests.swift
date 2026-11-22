@@ -1888,6 +1888,11 @@ final class RegressionCatalogTests: XCTestCase {
             "builtin.peripheralTip.low",
             "builtin.peripheralTip.full",
             "builtin.peripheralTip.connect",
+            "builtin.macBatteryTip",
+            "builtin.macBatteryTip.charging",
+            "builtin.macBatteryTip.low",
+            "builtin.macBatteryTip.full",
+            "builtin.macBatteryTip.unplugged",
         ]
         for id in tipIDs {
             XCTAssertTrue(
@@ -2042,8 +2047,10 @@ final class RegressionCatalogTests: XCTestCase {
         let shelf = order.firstIndex(of: "system.controlDeck.shelf")!
         XCTAssertEqual(focus + 1, shelf)
         let peripheral = order.firstIndex(of: "builtin.peripheralTip")!
+        let macBattery = order.firstIndex(of: "builtin.macBatteryTip")!
         let media = order.firstIndex(of: "builtin.media")!
-        XCTAssertEqual(peripheral + 1, media)
+        XCTAssertEqual(peripheral + 1, macBattery)
+        XCTAssertEqual(macBattery + 1, media)
         XCTAssertEqual(media + 1, focus)
         XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
         XCTAssertEqual(order.last, "system.controlDeck.projects")
@@ -2061,6 +2068,7 @@ final class RegressionCatalogTests: XCTestCase {
                 "builtin.colorPick",
                 "builtin.ocrSelect",
                 "builtin.peripheralTip",
+                "builtin.macBatteryTip",
                 "builtin.media",
                 "builtin.focusTimer",
                 "builtin.worldClock",
@@ -2072,6 +2080,7 @@ final class RegressionCatalogTests: XCTestCase {
     func test_widgetLibraryFamily_mapsKnownWidgets() {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.meeting"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.peripheralTip"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.macBatteryTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.copiedNotice"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.media"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.battery"), .live)
@@ -2083,6 +2092,7 @@ final class RegressionCatalogTests: XCTestCase {
     @MainActor
     func test_widgetLibraryFamily_peripheralAndCopiedTipsNeverContentPage() {
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.peripheralTip"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.macBatteryTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.copiedNotice"))
     }
 

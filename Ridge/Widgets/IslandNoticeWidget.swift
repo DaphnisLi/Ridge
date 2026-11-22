@@ -399,6 +399,15 @@ private struct IslandNoticeCardView: View {
                 flushSide: flushSide,
                 bareWingContent: bareWingContent
             )
+        case .macBatteryCharging(let notice),
+             .macBatteryLow(let notice),
+             .macBatteryFull(let notice),
+             .macBatteryUnplugged(let notice):
+            MacBatteryNoticeCard(
+                notice: notice,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
                 // 单独 / 双槽右侧一律现有 Ø32 圆岛；双槽时不要外包 Spacer 黑翼。
@@ -728,9 +737,9 @@ struct PeripheralBatteryNoticeCard: View {
     }
 }
 
-/// 外设 tip 状态环（满岛右翼 / 半岛右侧共用）。
-/// 满电：整环绿 + 闪电（固定）；接入蓝弧 / 低电红弧：按实际电量画进度。
-private struct PeripheralBatteryStatusGlyph: View {
+/// 外设 / 本机电池 tip 状态环（满岛右翼 / 半岛右侧共用）。
+/// 满电：整环绿 + 闪电（固定）；接入/充电蓝弧 / 低电红弧：按实际电量画进度。
+struct PeripheralBatteryStatusGlyph: View {
     let style: PeripheralBatteryNoticeCard.Style
     /// 接入 / 低电按此画弧；满电忽略。
     var percent: Int? = nil

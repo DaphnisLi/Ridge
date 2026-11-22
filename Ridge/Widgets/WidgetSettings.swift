@@ -65,11 +65,16 @@ final class WidgetSettings: ObservableObject {
             if id == "builtin.aiUsage" {
                 AIUsageSession.shared.start()
             }
+            if id == MacBatteryTipWidget.manifest.id {
+                MacBatterySession.shared.start()
+            }
             Task { @MainActor in
                 await WidgetPermissionGate.ensureOnEnable(widgetID: id)
             }
         } else if id == "builtin.moveReminder" {
             MoveReminderSession.shared.stop()
+        } else if id == MacBatteryTipWidget.manifest.id {
+            MacBatterySession.shared.stop()
         }
     }
 
@@ -134,16 +139,23 @@ final class WidgetSettings: ObservableObject {
         AppLog.info("Widget", "已恢复小组件默认设置")
     }
 
-    /// 与注册表对齐；缺失 id 按扁平默认序插入。
+    /// 与注册表对齐；缺失 id 按扁平默认序插入；新进库 id 默认关闭（按需开权限）。
     func reconcile(with registry: WidgetRegistry) {
         let libraryIDs = registry.libraryManifests.map(\.id)
         let known = Set(libraryIDs)
+        let previouslyOrdered = Set(order)
         order = order.filter { known.contains($0) }
         for id in WidgetLibraryLayout.defaultContentOrder where known.contains(id) && !order.contains(id) {
             insertInCanonicalPosition(id)
+            if !previouslyOrdered.contains(id) {
+                disabledIDs.insert(id)
+            }
         }
         for id in libraryIDs where !order.contains(id) {
             order.append(id)
+            if !previouslyOrdered.contains(id) {
+                disabledIDs.insert(id)
+            }
         }
         disabledIDs = disabledIDs.intersection(known)
         pinnedIDs = pinnedIDs.intersection(known)

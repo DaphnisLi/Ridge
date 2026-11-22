@@ -427,6 +427,8 @@ enum L10n {
                 return tr("widgets.category.ocr_select", "框选文字提取")
             case "builtin.peripheralTip":
                 return tr("widgets.category.peripheral_tip", "外设状态")
+            case "builtin.macBatteryTip":
+                return tr("widgets.category.mac_battery_tip", "本机电池")
             case "builtin.copiedNotice":
                 return tr("widgets.category.copied_notice", "剪贴板提示")
             default:
@@ -465,6 +467,8 @@ enum L10n {
                 return tr("widgets.footer.ocr_select", "快捷键唤醒 · 框选识别文字")
             case "builtin.peripheralTip":
                 return tr("widgets.footer.peripheral_tip", "低电 / 满电 / 接入瞬时提示")
+            case "builtin.macBatteryTip":
+                return tr("widgets.footer.mac_battery_tip", "充电中 / 低电 / 充满瞬时提示")
             case "builtin.copiedNotice":
                 return tr("widgets.footer.copied_notice", "复制成功时刘海右侧圆岛提示")
             default:
@@ -488,6 +492,7 @@ enum L10n {
             case "builtin.colorPick": return "eyedropper"
             case "builtin.ocrSelect": return "text.viewfinder"
             case "builtin.peripheralTip": return "battery.25"
+            case "builtin.macBatteryTip": return "laptopcomputer"
             case "builtin.copiedNotice": return "doc.on.clipboard"
             default: return "slider.horizontal.3"
             }
@@ -2366,6 +2371,91 @@ enum L10n {
         }
     }
 
+    // MARK: - Mac battery tip（本机笔记本电池瞬时提示；与外设分通道）
+
+    enum MacBattery {
+        static var widgetName: String { tr("mac_battery.widget.name", "本机电池") }
+        static var widgetSummary: String {
+            tr(
+                "mac_battery.widget.summary",
+                "插电、满电、低电与拔电经瞬时通知提示；台式无内置电池时静默"
+            )
+        }
+
+        static var chargingToggle: String { tr("mac_battery.charging.toggle", "插入电源提醒") }
+        static var chargingSubtitle: String {
+            tr("mac_battery.charging.subtitle", "插入电源时在灵动岛短暂提示（含优化充电已接电未在充）")
+        }
+        static var fullToggle: String { tr("mac_battery.full.toggle", "充满电提醒") }
+        static var fullSubtitle: String {
+            tr("mac_battery.full.subtitle", "本机电池充至 100% 时提示")
+        }
+        static var lowToggle: String { tr("mac_battery.low.toggle", "低电量提醒") }
+        static var lowSubtitle: String {
+            tr("mac_battery.low.subtitle", "未接电且低于设定电量时展开灵动岛预警")
+        }
+        static var lowThreshold: String { tr("mac_battery.low.threshold", "低电阈值") }
+        static var lowThresholdSubtitle: String {
+            tr("mac_battery.low.threshold_subtitle", "电量 ≤ 该百分比且未接电时提醒")
+        }
+        static var unplugToggle: String { tr("mac_battery.unplug.toggle", "拔掉电源提醒") }
+        static var unplugSubtitle: String {
+            tr("mac_battery.unplug.subtitle", "拔掉电源改由电池供电时短暂提示")
+        }
+
+        static var chargingTitle: String { tr("mac_battery.tip.charging_title", "充电中") }
+        static var lowTitle: String { tr("mac_battery.tip.low_title", "电池电量低") }
+        static var fullTitle: String { tr("mac_battery.tip.full_title", "已充满") }
+        static var unplugTitle: String { tr("mac_battery.tip.unplug_title", "已拔掉电源") }
+        static var chargingDetail: String {
+            tr("mac_battery.tip.charging_detail", "本机电池开始充电")
+        }
+        static func lowDetail(_ percent: Int, _ threshold: Int) -> String {
+            String(
+                format: tr(
+                    "mac_battery.tip.low_detail_format",
+                    "本机电量 %d%%，已低于 %d%%"
+                ),
+                percent,
+                threshold
+            )
+        }
+        static var fullDetail: String {
+            tr("mac_battery.tip.full_detail", "本机电池已充满")
+        }
+        static var unplugDetail: String {
+            tr("mac_battery.tip.unplug_detail", "已改由电池供电")
+        }
+
+        static var previewCharging: String { tr("mac_battery.preview.charging", "插电") }
+        static var previewChargingBadge: String {
+            tr("mac_battery.preview.charging_badge", "琥珀")
+        }
+        static var previewFull: String { tr("mac_battery.preview.full", "满电") }
+        static var previewLow: String { tr("mac_battery.preview.low", "低电") }
+        static var previewUnplug: String { tr("mac_battery.preview.unplug", "拔电") }
+
+        static var noBatteryTitle: String {
+            tr("mac_battery.no_battery.title", "未检测到内置电池")
+        }
+        static var noBatterySubtitle: String {
+            tr(
+                "mac_battery.no_battery.subtitle",
+                "台式 Mac 通常无内置电池，本项保持静默，不会上岛提示。"
+            )
+        }
+
+        static var samplePresentTitle: String {
+            tr("mac_battery.sample.present_title", "试投到灵动岛")
+        }
+        static var samplePresentSubtitle: String {
+            tr(
+                "mac_battery.sample.present_subtitle",
+                "不改真实电量状态，直接投递对应形态样张（约 3 秒）。"
+            )
+        }
+    }
+
     // MARK: - Copied notice（复制成功瞬时提示）
 
     enum CopiedNotice {
@@ -3306,6 +3396,32 @@ enum L10n {
             String(format: tr("test_lab.status.peripheral_tip_format", "外设：已投递 %@ tip"), style)
         }
 
+        static var macBatteryTitle: String { tr("test_lab.mac_battery.title", "本机电池") }
+        static var macBatterySubtitle: String {
+            tr(
+                "test_lab.mac_battery.subtitle",
+                "直接投递插电 / 满电 / 低电 / 拔电 tip（与外设分通道；标明为调试）。"
+            )
+        }
+        static var macBatteryTipCharging: String {
+            tr("test_lab.mac_battery.tip_charging", "插电 tip")
+        }
+        static var macBatteryTipFull: String {
+            tr("test_lab.mac_battery.tip_full", "满电 tip")
+        }
+        static var macBatteryTipLow: String {
+            tr("test_lab.mac_battery.tip_low", "低电 tip")
+        }
+        static var macBatteryTipUnplug: String {
+            tr("test_lab.mac_battery.tip_unplug", "拔电 tip")
+        }
+        static func statusMacBatteryTip(_ kind: String) -> String {
+            String(
+                format: tr("test_lab.status.mac_battery_tip_format", "本机电池：已投递 %@ tip"),
+                kind
+            )
+        }
+
         static var deckTitle: String { tr("test_lab.deck.title", "控制台") }
         static var deckSubtitle: String {
             tr("test_lab.deck.subtitle", "开启对应磁贴并展开控制台页。")
@@ -3357,6 +3473,19 @@ enum L10n {
         static var galleryPeripheral: String { tr("test_lab.gallery.peripheral", "外设电量") }
         static var galleryPeripheralFull: String { tr("test_lab.gallery.peripheral_full", "满电") }
         static var galleryPeripheralLow: String { tr("test_lab.gallery.peripheral_low", "低电") }
+        static var galleryMacBattery: String { tr("test_lab.gallery.mac_battery", "本机电池") }
+        static var galleryMacBatteryCharging: String {
+            tr("test_lab.gallery.mac_battery_charging", "充电中")
+        }
+        static var galleryMacBatteryFull: String {
+            tr("test_lab.gallery.mac_battery_full", "充满")
+        }
+        static var galleryMacBatteryLow: String {
+            tr("test_lab.gallery.mac_battery_low", "低电")
+        }
+        static var galleryMacBatteryUnplug: String {
+            tr("test_lab.gallery.mac_battery_unplug", "拔电")
+        }
         static var galleryAI: String { tr("test_lab.gallery.ai", "AI 额度") }
         static var galleryProcess: String { tr("test_lab.gallery.process", "进程结束") }
         static var galleryProcessOK: String { tr("test_lab.gallery.process_ok", "成功") }

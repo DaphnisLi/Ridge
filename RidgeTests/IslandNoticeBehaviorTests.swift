@@ -133,6 +133,18 @@ final class IslandNoticeBehaviorTests: XCTestCase {
                 remainingPercent: 5,
                 stage: .critical,
                 resetsAt: nil
+            ),
+            .macBatteryCharging(
+                .init(id: "mac.c", kind: .charging, percent: 60, threshold: 0, detail: "")
+            ),
+            .macBatteryLow(
+                .init(id: "mac.l", kind: .low, percent: 12, threshold: 20, detail: "")
+            ),
+            .macBatteryFull(
+                .init(id: "mac.f", kind: .full, percent: 100, threshold: 100, detail: "")
+            ),
+            .macBatteryUnplugged(
+                .init(id: "mac.u", kind: .unplugged, percent: 64, threshold: 0, detail: "")
             )
         ]
         for tip in tips {

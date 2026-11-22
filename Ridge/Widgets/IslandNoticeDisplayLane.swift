@@ -318,6 +318,7 @@ extension IslandNoticePayload {
             return .primary
         case .clipboardCaptureHint, .moveReminder, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
+             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .aiUsageAlert, .ramPressure:
             // 非专注 C：靠右半块 / 单独满岛；多条 FIFO。
             return .secondary

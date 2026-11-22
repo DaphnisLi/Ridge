@@ -573,6 +573,7 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.colorPick"
             || widgetID == "builtin.ocrSelect"
             || widgetID == "builtin.peripheralTip"
+            || widgetID == "builtin.macBatteryTip"
             || widgetID == "builtin.copiedNotice"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".shelf"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".volume"
@@ -620,6 +621,8 @@ private struct WidgetPreviewPane: View {
             OCRSelectWidgetConfigSection()
         } else if widgetID == "builtin.peripheralTip" {
             PeripheralTipWidgetConfigSection()
+        } else if widgetID == "builtin.macBatteryTip" {
+            MacBatteryTipWidgetConfigSection()
         } else if widgetID == "builtin.copiedNotice" {
             CopiedNoticeWidgetConfigSection()
         } else if widgetID == ControlDeckSettings.pageIDPrefix + ".shelf" {

@@ -337,7 +337,8 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                     holdHover: !isCopy
                 )
             case .moveReminder, .aiUsageAlert,
-                 .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:
+                 .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
+                 .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged:
                 return Expect(
                     lane: .secondary,
                     autoDismiss: true,
@@ -351,6 +352,19 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             }
         }
 
+        let macCharging = IslandNoticePayload.macBatteryCharging(
+            .init(id: "mac.ch", kind: .charging, percent: 60, threshold: 0, detail: "c")
+        )
+        let macLow = IslandNoticePayload.macBatteryLow(
+            .init(id: "mac.lo", kind: .low, percent: 12, threshold: 20, detail: "l")
+        )
+        let macFull = IslandNoticePayload.macBatteryFull(
+            .init(id: "mac.fu", kind: .full, percent: 100, threshold: 100, detail: "f")
+        )
+        let macUnplug = IslandNoticePayload.macBatteryUnplugged(
+            .init(id: "mac.up", kind: .unplugged, percent: 64, threshold: 0, detail: "u")
+        )
+
         let samples: [IslandNoticePayload] = [
             exclusive,
             ocr,
@@ -363,11 +377,15 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             processEnded,
             peripheralLow,
             peripheralFull,
-            peripheralConnected
+            peripheralConnected,
+            macCharging,
+            macLow,
+            macFull,
+            macUnplug
         ]
 
-        // 12 个样本覆盖全部 case 族；clipboard 两种（copy / 非 copy）。
-        XCTAssertEqual(samples.count, 12)
+        // 16 个样本覆盖全部 case 族；clipboard 两种（copy / 非 copy）；本机电池四态。
+        XCTAssertEqual(samples.count, 16)
 
         for payload in samples {
             let e = expect(for: payload)

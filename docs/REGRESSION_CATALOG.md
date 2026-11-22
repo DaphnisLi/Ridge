@@ -392,6 +392,16 @@
 
 ### process-ended-tip-stale-dismiss — 进程结束 tip 不自动消失
 
+### mac-battery-tip-miss-on-ac — 本机插电看不到 tip
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-22：优化充电 AC attached / not charging；仅认 `isCharging` 边沿；会话未在启动拉起）  
+- **症状:** 已开「本机电池」、笔记本已接电，岛上无充电 tip；日志无 `MacBattery` 投递  
+- **根因倾向:** 把「正在充电」当「插入电源」；优化充电暂停时 `isCharging=false`；未订阅 IOPS 电源变化、启动未 `start` 会话  
+- **防护:** 以 AC 接电边沿触发充电 tip；`IOPSNotification` + AppDelegate 启用时启动会话；设置页可试投样张  
+- **自动化:** 不强制（occurrences=1）
+
+
 - **recurring:** false  
 - **occurrences:** 1（2026-11-22：测试台进程结束 tip 挂住；正式路径在 `lastWatchEnded` 旧 id 时同病）  
 - **症状:** 约 3s 后应自动收的进程结束 tip（含测试台）一直不消  
@@ -400,12 +410,22 @@
 - **相关代码:** `IslandNoticeWidget.finishDismiss`、`ProjectReleaseSession.clearWatchEndedIfMatching`  
 - **自动化建议:** `test_islandNoticeBehavior_processEndedDismissByTipIDNotStaleLocal`（occurrences=1，不强制每次跑）
 
+### mac-battery-tip-miss-on-ac — 本机插电看不到 tip
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-22：优化充电 AC attached / not charging；仅认 `isCharging` 边沿；会话未在启动拉起）  
+- **症状:** 已开「本机电池」、笔记本已接电，岛上无充电 tip；日志无 `MacBattery` 投递  
+- **根因倾向:** 把「正在充电」当「插入电源」；优化充电暂停时 `isCharging=false`；未订阅 IOPS 电源变化、启动未 `start` 会话  
+- **防护:** 以 AC 接电边沿触发充电 tip；`IOPSNotification` + AppDelegate 启用时启动会话；设置页可试投样张  
+- **自动化:** 不强制（occurrences=1）
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-22 | 本机电池 tip：AC 边沿（含优化充电）+ IOPS 监听 + 启动拉起 + 设置试投；catalog `mac-battery-tip-miss-on-ac` |
 | 2026-11-22 | 进程结束 tip 自动收按 tip id 撤槽，勿绑旧 `lastWatchEnded`；catalog `process-ended-tip-stale-dismiss` |
 | 2026-11-19 | 加厚岛逻辑自动化：全 C 盖专注、权重阶梯、翼宽、`shouldDismissNow`、Center FIFO、专注待命；测试台仍归手动 |
 | 2026-11-17 | 免打扰/自动收/收岛策略自动化：`IslandNoticeBehaviorTests` + `IslandNoticeDismissPolicy` |

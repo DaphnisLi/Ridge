@@ -17,6 +17,7 @@ struct IslandStyleGallerySection: View {
             galleryGroup(title: L10n.TestLab.galleryRAM) { tipRAMRows }
             galleryGroup(title: L10n.TestLab.galleryProcess) { tipProcessRows }
             galleryGroup(title: L10n.TestLab.galleryPeripheral) { tipPeripheralRows }
+            galleryGroup(title: L10n.TestLab.galleryMacBattery) { tipMacBatteryRows }
             galleryGroup(title: L10n.TestLab.galleryCapture) { tipCaptureRows }
             galleryGroup(title: L10n.TestLab.galleryMedia) { liveMediaRows }
             galleryGroup(title: L10n.TestLab.galleryFocus) { liveFocusRows }
@@ -121,6 +122,59 @@ struct IslandStyleGallerySection: View {
                 onTap: { harness.presentPeripheralTip(style: .low) }
             ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .low, flushSide: .trailing)
+            }
+        }
+    }
+
+    private var tipMacBatteryRows: some View {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryCharging, half: false),
+                onTap: { harness.presentMacBatteryTip(kind: .charging) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .charging, compact: true)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryCharging, half: true),
+                onTap: { harness.presentMacBatteryTip(kind: .charging) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .charging, flushSide: .trailing)
+            }
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryFull, half: false),
+                onTap: { harness.presentMacBatteryTip(kind: .full) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .full, compact: true)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryFull, half: true),
+                onTap: { harness.presentMacBatteryTip(kind: .full) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .full, flushSide: .trailing)
+            }
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryLow, half: false),
+                onTap: { harness.presentMacBatteryTip(kind: .low) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .low, compact: true)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryLow, half: true),
+                onTap: { harness.presentMacBatteryTip(kind: .low) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .low, flushSide: .trailing)
+            }
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryUnplug, half: false),
+                onTap: { harness.presentMacBatteryTip(kind: .unplugged) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .unplugged, compact: true)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryMacBatteryUnplug, half: true),
+                onTap: { harness.presentMacBatteryTip(kind: .unplugged) }
+            ) {
+                MacBatteryNoticeCard.previewSample(kind: .unplugged, flushSide: .trailing)
             }
         }
     }

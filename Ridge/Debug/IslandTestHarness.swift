@@ -294,6 +294,11 @@ final class IslandTestHarness: ObservableObject {
         case low, full, connect
     }
 
+    func presentMacBatteryTip(kind: MacBatteryNotice.Kind) {
+        MacBatterySession.shared.presentSample(kind: kind)
+        note(L10n.TestLab.statusMacBatteryTip(kind.rawValue))
+    }
+
     // MARK: - Control deck
 
     func openControlDeck(pane: ControlDeckSettings.Pane) {

@@ -26,6 +26,7 @@ struct IslandTestLabPane: View {
                 ramCard
                 processCard
                 peripheralCard
+                macBatteryCard
                 captureCard
                 mediaCard
                 focusCard
@@ -260,6 +261,32 @@ struct IslandTestLabPane: View {
                     harness.injectPeripheralDevice(kind: .keyboard, percent: 100, isLow: false)
                 }),
                 (L10n.TestLab.peripheralClear, { harness.clearPeripheralInjects() })
+            ])
+        }
+    }
+
+    // MARK: Mac battery
+
+    private var macBatteryCard: some View {
+        labCard(
+            title: L10n.TestLab.macBatteryTitle,
+            symbol: "laptopcomputer",
+            subtitle: L10n.TestLab.macBatterySubtitle
+        ) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.macBatteryTipCharging, {
+                    harness.presentMacBatteryTip(kind: .charging)
+                }),
+                (L10n.TestLab.macBatteryTipFull, {
+                    harness.presentMacBatteryTip(kind: .full)
+                }),
+                (L10n.TestLab.macBatteryTipLow, {
+                    harness.presentMacBatteryTip(kind: .low)
+                }),
+                (L10n.TestLab.macBatteryTipUnplug, {
+                    harness.presentMacBatteryTip(kind: .unplugged)
+                })
             ])
         }
     }

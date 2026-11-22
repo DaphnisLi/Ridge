@@ -426,7 +426,12 @@ enum WidgetSamplePreview {
              "builtin.peripheralTip",
              "builtin.peripheralTip.low",
              "builtin.peripheralTip.full",
-             "builtin.peripheralTip.connect":
+             "builtin.peripheralTip.connect",
+             "builtin.macBatteryTip",
+             "builtin.macBatteryTip.charging",
+             "builtin.macBatteryTip.low",
+             "builtin.macBatteryTip.full",
+             "builtin.macBatteryTip.unplugged":
             return true
         default:
             return false
@@ -461,6 +466,14 @@ enum WidgetSamplePreview {
             peripheralTipSample(style: .full, compact: compact)
         case "builtin.peripheralTip.low":
             peripheralTipSample(style: .low, compact: compact)
+        case "builtin.macBatteryTip", "builtin.macBatteryTip.charging":
+            macBatteryTipSample(kind: .charging, compact: compact)
+        case "builtin.macBatteryTip.full":
+            macBatteryTipSample(kind: .full, compact: compact)
+        case "builtin.macBatteryTip.low":
+            macBatteryTipSample(kind: .low, compact: compact)
+        case "builtin.macBatteryTip.unplugged":
+            macBatteryTipSample(kind: .unplugged, compact: compact)
         case "builtin.copiedNotice":
             copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":
@@ -579,6 +592,13 @@ enum WidgetSamplePreview {
             threshold: BatterySettings.shared.lowThresholdPercent,
             compact: compact
         )
+    }
+
+    private static func macBatteryTipSample(
+        kind: MacBatteryNotice.Kind,
+        compact: Bool
+    ) -> some View {
+        MacBatteryNoticeCard.previewSample(kind: kind, compact: compact)
     }
 
     private static func copiedNoticeSample(compact: Bool) -> some View {

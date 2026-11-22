@@ -49,6 +49,7 @@
 		2D0ACB6972E7E69F1F96A9B2 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C0C31143233D22C2EF32D30 /* IOKit.framework */; };
 		2E38DE11FA974BC2FAD59FA7 /* DiagnosticsExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87802C0729680940D587DA92 /* DiagnosticsExporter.swift */; };
 		3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */; };
+		3136C0A85242C51768D85490 /* MacBatteryTipWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E4CDA8B73EF2B82C1C283B /* MacBatteryTipWidgetConfigSection.swift */; };
 		31BA601698C7254D9D844E7E /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 97506CC2D911A4F21E95FDC7 /* InfoPlist.xcstrings */; };
 		3224FD5F78ADC744FF364248 /* StockModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7794C7F4789BBAAB698182 /* StockModels.swift */; };
 		33D8C6FEB0309BE22293CA41 /* IslandExpandedPanelPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */; };
@@ -73,6 +74,7 @@
 		471A0815FAD97EDE07C14EF9 /* MeetingCalendarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AB62581E2656AF6A5CA5A0 /* MeetingCalendarService.swift */; };
 		47615FA33DFBDCCD8D5C75DE /* MoveReminderIdleProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B90FA6C86EB1EF42A7D0C60 /* MoveReminderIdleProbe.swift */; };
 		47A26013C43CDC614CDC613D /* IslandNoticeLayoutMatrixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C17AEA38ECF7C50319EA4E4 /* IslandNoticeLayoutMatrixTests.swift */; };
+		482EB214063E886A663EA5EF /* MacBatteryNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AD9DEF439C2014F2A31986 /* MacBatteryNoticeCard.swift */; };
 		4A5AA554DC8AAEF759AABFC7 /* ProjectShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933BE85FE636DF8CCB0BA833 /* ProjectShell.swift */; };
 		4A7BDA5F437126A3ABB41F0A /* ProjectProcessSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E07CBB405FFB485642B9C0 /* ProjectProcessSupport.swift */; };
 		4AB9FB8E379A6EF2F0FB5DE5 /* CoreAudioProperty.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */; };
@@ -127,6 +129,7 @@
 		89BAB936D8EA48DE26DE3055 /* BatteryWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */; };
 		8C615591370064C19CBBABED /* StockSearchIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1F446438C071BD1E1487B7 /* StockSearchIndex.swift */; };
 		8D524274CFA911CFFF79CD2F /* SystemPrivacyOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AC3AA0CEB857437EF53DCE /* SystemPrivacyOpener.swift */; };
+		8E8C62D638602B6A0212601A /* MacBatterySession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71B538626D9E2DAE53A8CC2 /* MacBatterySession.swift */; };
 		8F5C5FC1E05859305322DE92 /* IslandStyleGallerySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E49E085000DC48C9D18AFDD /* IslandStyleGallerySection.swift */; };
 		90D890B66F172EDA7F680261 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A27A6C65A9BBEFCD11F9F89 /* AppLog.swift */; };
 		9198703E93AAFF286FC6A778 /* SoundModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */; };
@@ -146,7 +149,9 @@
 		9C726E71C4AE6AF7CC2959AC /* ScreenRegionOCRController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8238AE010AEFFF72F8F2351 /* ScreenRegionOCRController.swift */; };
 		9C938FBBA3EA2F69B25F19E4 /* OCRSelectWidgetConfigSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */; };
 		9CD825B58E7198BE54B0D16F /* StockNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5DC410A52187315FA80E61 /* StockNetwork.swift */; };
+		9E0DBB4C1215656FBCE8D9EB /* MacBatteryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1CD796A87160E68D191C86 /* MacBatteryModels.swift */; };
 		9E9C3420E3E847D32E5733ED /* WidgetSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */; };
+		A44407C94CF4DEAFE183B4B8 /* MacBatteryProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD0E95DCE201C37499ABBB7E /* MacBatteryProbe.swift */; };
 		A460C629F56E217E5B978DA1 /* KeystrokePeakHourTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56E612CBA14254D2023C2AFF /* KeystrokePeakHourTests.swift */; };
 		A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5894114050B192E21DBC168B /* IslandContentView.swift */; };
 		A80FF15758CE0883F2BC42A9 /* MeetingLeadTipSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4EE5CAC7104768CA58308B5 /* MeetingLeadTipSelector.swift */; };
@@ -218,9 +223,11 @@
 		F57A8E3B6E53EEEF4BE83B6E /* IslandNoticeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */; };
 		F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C8B0291D49B709283472D /* WidgetGrid.swift */; };
 		F826FAAB19DA3A5042681D75 /* AboutSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882A1231A7741992CA7A5361 /* AboutSettingsPane.swift */; };
+		F87094ED9F9196E986A6EC2B /* MacBatteryTipWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C3D58E55A2392BC7D4860A /* MacBatteryTipWidget.swift */; };
 		F8D4744B0DDC705A39A7DBC0 /* WidgetRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 088CFC576E84896E553FC0DD /* WidgetRegistry.swift */; };
 		FBF5908F3A964F8598572BA1 /* WidgetsSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */; };
 		FC0247F925DDFD25398F70B7 /* ClipboardCopiedIslandView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */; };
+		FCA254339764E59C4F872F1A /* MacBatterySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24ADEEC4CD59DFD9E5582B8A /* MacBatterySettings.swift */; };
 		FE62A60B69C3177462605788 /* AIUsageSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D424EF6227B7F050BF3D294 /* AIUsageSettingsPane.swift */; };
 /* End PBXBuildFile section */
 
@@ -277,6 +284,7 @@
 		210A737567D7541750F62787 /* Onboarding */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Onboarding; path = Ridge/Resources/Onboarding; sourceTree = SOURCE_ROOT; };
 		219033AAD46D1486C7F199CC /* BatteryBluetoothProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBluetoothProbe.swift; sourceTree = "<group>"; };
 		220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerIslandViews.swift; sourceTree = "<group>"; };
+		24ADEEC4CD59DFD9E5582B8A /* MacBatterySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatterySettings.swift; sourceTree = "<group>"; };
 		25BA7561A727AA2541A35C5E /* SoundBluetoothBattery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundBluetoothBattery.swift; sourceTree = "<group>"; };
 		2893E8199FB7A4116AF2E288 /* AppShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellTests.swift; sourceTree = "<group>"; };
 		29BF922104186A14028CD0D8 /* ResourceChipInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceChipInfo.swift; sourceTree = "<group>"; };
@@ -317,6 +325,7 @@
 		4ECEE2ABCF93C94266282B12 /* ProjectRootDiscovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectRootDiscovery.swift; sourceTree = "<group>"; };
 		50603770034DE47EEF814877 /* L10n.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = L10n.swift; sourceTree = "<group>"; };
 		50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringRegressionCoverageTests.swift; sourceTree = "<group>"; };
+		50AD9DEF439C2014F2A31986 /* MacBatteryNoticeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatteryNoticeCard.swift; sourceTree = "<group>"; };
 		51AFEC6EA25956E66AB38E1D /* WorldClockIslandViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockIslandViews.swift; sourceTree = "<group>"; };
 		526499772CB67C8D450F310C /* LiveIslandGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveIslandGate.swift; sourceTree = "<group>"; };
 		52BBAB5CD0303B662378EA87 /* FocusTimerWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerWidget.swift; sourceTree = "<group>"; };
@@ -428,6 +437,7 @@
 		C08722DFEC7CF470A51CEDA7 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		C4EE5CAC7104768CA58308B5 /* MeetingLeadTipSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLeadTipSelector.swift; sourceTree = "<group>"; };
 		C8615C58E4BE6EED80BEDE67 /* GeneralSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsPane.swift; sourceTree = "<group>"; };
+		C9C3D58E55A2392BC7D4860A /* MacBatteryTipWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatteryTipWidget.swift; sourceTree = "<group>"; };
 		CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidget.swift; sourceTree = "<group>"; };
 		CF81826D83D7AA5CA6143F0D /* WidgetSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSettings.swift; sourceTree = "<group>"; };
 		CFBBA87F4C5038B5A9E9F383 /* SoundModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundModels.swift; sourceTree = "<group>"; };
@@ -446,6 +456,7 @@
 		D8452F2F7BC5A89302E0F634 /* WidgetsSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetsSettingsPane.swift; sourceTree = "<group>"; };
 		D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandOpaqueFillView.swift; sourceTree = "<group>"; };
 		DA67CE1C61B9353C800FECA4 /* StockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockSession.swift; sourceTree = "<group>"; };
+		DD1CD796A87160E68D191C86 /* MacBatteryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatteryModels.swift; sourceTree = "<group>"; };
 		DE2DAC872E498304E243C7C7 /* BatterySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySession.swift; sourceTree = "<group>"; };
 		DE2EC5167644AA47B11298CB /* StockYahooClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockYahooClient.swift; sourceTree = "<group>"; };
 		DE3DBF22EFFE6CDF6CF689B7 /* CopiedNoticeWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopiedNoticeWidgetConfigSection.swift; sourceTree = "<group>"; };
@@ -454,6 +465,7 @@
 		E41614B4C1C68B2EB6E3CD56 /* Ridge.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ridge.entitlements; sourceTree = "<group>"; };
 		E520B3028DC6251CECDF23F0 /* ClipboardCopiedIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardCopiedIslandView.swift; sourceTree = "<group>"; };
 		E7160E8B4528C538B4FB9DB5 /* FocusTimerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettings.swift; sourceTree = "<group>"; };
+		E71B538626D9E2DAE53A8CC2 /* MacBatterySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatterySession.swift; sourceTree = "<group>"; };
 		E739BE14AAE020C039073346 /* OnboardingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingController.swift; sourceTree = "<group>"; };
 		E76D4C9AC130438848E5DD30 /* AIUsageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettings.swift; sourceTree = "<group>"; };
 		E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettingsPane.swift; sourceTree = "<group>"; };
@@ -462,10 +474,12 @@
 		F0FF1F1D605CA37715E1F734 /* ResourceMonitorSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSettingsPane.swift; sourceTree = "<group>"; };
 		F71972EE883496F0C9B234D0 /* ResourceAppAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAppAggregator.swift; sourceTree = "<group>"; };
 		F7F58B58374B9DBD4D6B6738 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
+		F8E4CDA8B73EF2B82C1C283B /* MacBatteryTipWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatteryTipWidgetConfigSection.swift; sourceTree = "<group>"; };
 		FA88427516EC5F38E80C0C2B /* OnboardingProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProgress.swift; sourceTree = "<group>"; };
 		FABA8516BFF2A318D78C2E62 /* CursorUsageClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorUsageClient.swift; sourceTree = "<group>"; };
 		FB41CF2662A9CC15202945D7 /* IslandTestLabPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTestLabPane.swift; sourceTree = "<group>"; };
 		FC83119BD730DB321ACA5530 /* StockWidgetConfigSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StockWidgetConfigSection.swift; sourceTree = "<group>"; };
+		FD0E95DCE201C37499ABBB7E /* MacBatteryProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatteryProbe.swift; sourceTree = "<group>"; };
 		FED5C1EC4D4005E271483E13 /* ColorPickTipIslandView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPickTipIslandView.swift; sourceTree = "<group>"; };
 		FF3692E5FD3DAF12863120F4 /* ShelfClipboardSearchField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfClipboardSearchField.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -529,6 +543,13 @@
 				880C963E64D0E720AFA4F20F /* BatterySettings.swift */,
 				2C5A15082C8F4A8C561D61E7 /* BatterySystemProfilerProbe.swift */,
 				93176F37CB7EE4CC525E86D4 /* BatteryWidgetConfigSection.swift */,
+				DD1CD796A87160E68D191C86 /* MacBatteryModels.swift */,
+				50AD9DEF439C2014F2A31986 /* MacBatteryNoticeCard.swift */,
+				FD0E95DCE201C37499ABBB7E /* MacBatteryProbe.swift */,
+				E71B538626D9E2DAE53A8CC2 /* MacBatterySession.swift */,
+				24ADEEC4CD59DFD9E5582B8A /* MacBatterySettings.swift */,
+				C9C3D58E55A2392BC7D4860A /* MacBatteryTipWidget.swift */,
+				F8E4CDA8B73EF2B82C1C283B /* MacBatteryTipWidgetConfigSection.swift */,
 				3C760E298216B7217C9F78B9 /* PeripheralTipWidget.swift */,
 				381BB46A02D1F24D68CC4117 /* PeripheralTipWidgetConfigSection.swift */,
 			);
@@ -1117,6 +1138,13 @@
 				EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */,
 				7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */,
 				36AB046618885204AD5B5B6B /* LoginItemService.swift in Sources */,
+				9E0DBB4C1215656FBCE8D9EB /* MacBatteryModels.swift in Sources */,
+				482EB214063E886A663EA5EF /* MacBatteryNoticeCard.swift in Sources */,
+				A44407C94CF4DEAFE183B4B8 /* MacBatteryProbe.swift in Sources */,
+				8E8C62D638602B6A0212601A /* MacBatterySession.swift in Sources */,
+				FCA254339764E59C4F872F1A /* MacBatterySettings.swift in Sources */,
+				F87094ED9F9196E986A6EC2B /* MacBatteryTipWidget.swift in Sources */,
+				3136C0A85242C51768D85490 /* MacBatteryTipWidgetConfigSection.swift in Sources */,
 				DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */,
 				17D8B756CEA66A2607E3E335 /* MediaIslandCardView.swift in Sources */,
 				72640086A3A43F5FA93E7432 /* MediaNowPlayingWidget.swift in Sources */,

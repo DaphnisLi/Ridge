@@ -8,6 +8,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case peripheralLowBattery(BatteryPeripheralNotice)
     case peripheralFullCharge(BatteryPeripheralNotice)
     case peripheralConnected(BatteryPeripheralNotice)
+    case macBatteryCharging(MacBatteryNotice)
+    case macBatteryLow(MacBatteryNotice)
+    case macBatteryFull(MacBatteryNotice)
+    case macBatteryUnplugged(MacBatteryNotice)
     case clipboardCaptureHint(id: String, text: String, symbol: String)
     case colorPickTip
     case ocrSelectTip
@@ -32,6 +36,11 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .peripheralFullCharge(let notice),
              .peripheralConnected(let notice):
             return notice.id
+        case .macBatteryCharging(let notice),
+             .macBatteryLow(let notice),
+             .macBatteryFull(let notice),
+             .macBatteryUnplugged(let notice):
+            return notice.id
         case .clipboardCaptureHint(let id, _, _):
             return "shelf.capture.\(id)"
         case .colorPickTip: return Self.colorPickTipID
@@ -49,6 +58,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .peripheralLowBattery: return "battery.low"
         case .peripheralFullCharge: return "battery.full"
         case .peripheralConnected: return "battery.connect"
+        case .macBatteryCharging: return "macBattery.charging"
+        case .macBatteryLow: return "macBattery.low"
+        case .macBatteryFull: return "macBattery.full"
+        case .macBatteryUnplugged: return "macBattery.unplugged"
         case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip: return "shelf.capture"
         case .aiUsageAlert: return "aiUsage"
         case .moveReminder: return "moveReminder"
@@ -75,6 +88,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return IslandNoticeAutoDismissPolicy.standardNanoseconds
         case .moveReminder, .ramPressure, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
+             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .aiUsageAlert:
             #if DEBUG
             if let override = IslandTestLabSettings.resolvedTipDurationNanoseconds() {
@@ -93,7 +107,9 @@ enum IslandNoticePayload: Identifiable, Hashable {
             // 「已复制」动效走完即收，悬停不续命。
             return !id.hasPrefix("copy.")
         case .ramPressure, .processEnded, .peripheralLowBattery,
-             .peripheralFullCharge, .peripheralConnected, .aiUsageAlert, .moveReminder, .meetingLead:
+             .peripheralFullCharge, .peripheralConnected,
+             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .aiUsageAlert, .moveReminder, .meetingLead:
             return true
         }
     }
@@ -101,7 +117,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
     var usesNotchWingChrome: Bool {
         switch self {
         case .meetingLead, .aiUsageAlert, .moveReminder, .colorPickTip, .ocrSelectTip,
-             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:
+             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
+             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged:
             return true
         default:
             return false
@@ -138,7 +155,9 @@ enum IslandNoticePayload: Identifiable, Hashable {
     var keepsExpandedWithoutHover: Bool {
         switch self {
         case .meetingLead, .moveReminder, .ramPressure, .processEnded, .colorPickTip, .ocrSelectTip,
-             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected, .aiUsageAlert:
+             .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
+             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .aiUsageAlert:
             return true
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")
