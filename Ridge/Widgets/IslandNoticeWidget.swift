@@ -510,18 +510,6 @@ struct PeripheralBatteryNoticeCard: View {
         Self.cleanedDeviceName(notice.deviceName)
     }
 
-    /// 右翼 pill 文案：低电/满电只显示百分比；接入仍为「已连接」。
-    private var statusText: String {
-        switch style {
-        case .low:
-            return L10n.Battery.tipPercentBadge(notice.percent ?? 0)
-        case .full:
-            return L10n.Battery.tipPercentBadge(notice.percent ?? 100)
-        case .connect:
-            return L10n.PeripheralTip.connectBadge
-        }
-    }
-
     private var accessibilityStatus: String {
         switch style {
         case .low:
@@ -529,20 +517,14 @@ struct PeripheralBatteryNoticeCard: View {
         case .full:
             return L10n.Battery.tipFullAccessibility(notice.percent ?? 100)
         case .connect:
+            if let pct = notice.percent {
+                return "\(L10n.PeripheralTip.connectBadge)，\(L10n.Battery.tipPercentBadge(pct))"
+            }
             return L10n.PeripheralTip.connectBadge
         }
     }
 
-    /// 满岛 tip 原色（红/绿/蓝）；半块 flush 另用 `flushTint`。
-    private var statusTint: Color {
-        switch style {
-        case .low: return Color(.sRGB, red: 0.86, green: 0.22, blue: 0.24, opacity: 1)
-        case .full: return Color(.sRGB, red: 0.18, green: 0.62, blue: 0.34, opacity: 1)
-        case .connect: return Color(.sRGB, red: 0.20, green: 0.48, blue: 0.96, opacity: 1)
-        }
-    }
-
-    /// 仅双槽半块色；禁止改 `statusTint` 迁就 flush 稿。
+    /// 仅双槽半块色。
     private var flushTint: Color {
         switch style {
         case .low:
@@ -550,14 +532,6 @@ struct PeripheralBatteryNoticeCard: View {
             return (pct <= 5 ? IslandFlushWingStyle.Severity.danger : .warning).accent
         case .full: return IslandFlushWingStyle.accentSuccess
         case .connect: return IslandFlushWingStyle.accentInfoSolid
-        }
-    }
-
-    private var statusSymbol: String {
-        switch style {
-        case .low: return "battery.25"
-        case .full: return "battery.100"
-        case .connect: return "link"
         }
     }
 
@@ -621,7 +595,7 @@ struct PeripheralBatteryNoticeCard: View {
             leftCluster
                 .frame(width: wingWidth + notchWidth * 0.35, alignment: .leading)
             Spacer(minLength: 0)
-            statusPill
+            rightCluster
                 .fixedSize(horizontal: true, vertical: false)
         }
         .frame(width: totalWidth, height: barHeight)
@@ -667,49 +641,40 @@ struct PeripheralBatteryNoticeCard: View {
             }
     }
 
+    /// 左翼：设备图标 + 名称（对照 HTML 稿，不加电量）。
     private var leftCluster: some View {
-        HStack(spacing: 7) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.14))
-                Image(systemName: notice.kind.systemSymbol)
-                    .font(.system(size: compact ? 10 : 11, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.92))
-            }
-            .frame(width: compact ? 18 : 20, height: compact ? 18 : 20)
-            .layoutPriority(1)
+        HStack(spacing: 8) {
+            Image(systemName: notice.kind.systemSymbol)
+                .font(.system(size: compact ? 14 : 15, weight: .medium))
+                .foregroundStyle(Color.white.opacity(0.95))
+                .layoutPriority(1)
 
             Text(displayName)
-                .font(.system(size: compact ? 11 : 12, weight: .semibold))
+                .font(.system(size: compact ? 12 : 13, weight: .medium))
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
     }
 
-    private var statusPill: some View {
-        let connectSoft = style == .connect
-        return HStack(spacing: 5) {
-            Image(systemName: statusSymbol)
-                .font(.system(size: compact ? 9 : 10, weight: .semibold))
-            Text(statusText)
-                .font(.system(size: compact ? 10 : 11, weight: .semibold))
-                .monospacedDigit()
-                .lineLimit(1)
+    /// 右翼对照方案 2：接入 = 电量% + 水平锁链环；满电/低电 = 仅圆环图标。
+    @ViewBuilder
+    private var rightCluster: some View {
+        switch style {
+        case .connect:
+            HStack(spacing: 6) {
+                if let pct = notice.percent {
+                    Text(L10n.Battery.tipPercentBadge(pct))
+                        .font(.system(size: 12, weight: .medium, design: .default))
+                        .foregroundStyle(Color.white.opacity(0.90))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                }
+                PeripheralConnectLinkGlyph(size: 18)
+            }
+        case .full, .low:
+            PeripheralBatteryStatusGlyph(style: style, size: 20)
         }
-        // 「已连接」：蓝字 + 浅底描边（旧 tip）；低电/满电仍实心填充。
-        .foregroundStyle(connectSoft ? statusTint : Color.white)
-        .padding(.horizontal, compact ? 8 : 10)
-        .padding(.vertical, compact ? 4 : 5)
-        .background(
-            Capsule(style: .continuous)
-                .fill(connectSoft ? statusTint.opacity(0.14) : statusTint)
-                .shadow(color: statusTint.opacity(connectSoft ? 0.45 : 0.45), radius: 6, y: 0)
-        )
-        .overlay(
-            Capsule(style: .continuous)
-                .strokeBorder(connectSoft ? statusTint.opacity(0.75) : Color.clear, lineWidth: 1)
-        )
     }
 
     private func openBatteryLive(reason: String) {
@@ -732,6 +697,132 @@ struct PeripheralBatteryNoticeCard: View {
         let range = NSRange(trimmed.startIndex..<trimmed.endIndex, in: trimmed)
         return regex.stringByReplacingMatches(in: trimmed, range: range, withTemplate: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+/// 接入态右翼：水平三段锁链环（左 C · 中杠 · 右 C），非 SF `link` 斜向双环。
+private struct PeripheralConnectLinkGlyph: View {
+    var size: CGFloat = 18
+
+    /// HTML `primary-container` ≈ #0070eb
+    private var accent: Color {
+        Color(.sRGB, red: 0.0, green: 0.439, blue: 0.922, opacity: 1)
+    }
+
+    var body: some View {
+        Canvas { context, canvasSize in
+            let w = canvasSize.width
+            let h = canvasSize.height
+            let stroke = w * (2.5 / 24)
+            let style = StrokeStyle(lineWidth: stroke, lineCap: .round, lineJoin: .round)
+
+            // 24×24 比例：左环心 (6.2,12) r≈4.2；中杠 10.2–13.8；右环心 (17.8,12)
+            let sx = w / 24
+            let sy = h / 24
+            let leftCenter = CGPoint(x: 6.2 * sx, y: 12 * sy)
+            let rightCenter = CGPoint(x: 17.8 * sx, y: 12 * sy)
+            let radius = 4.2 * sx
+
+            // 左 C：开口朝右（约 -70° … +70° 走左侧弧）
+            var leftC = Path()
+            leftC.addArc(
+                center: leftCenter,
+                radius: radius,
+                startAngle: .degrees(-70),
+                endAngle: .degrees(70),
+                clockwise: true
+            )
+            context.stroke(leftC, with: .color(accent), style: style)
+
+            // 中杠（与两侧留缝）
+            var bar = Path()
+            bar.move(to: CGPoint(x: 10.2 * sx, y: 12 * sy))
+            bar.addLine(to: CGPoint(x: 13.8 * sx, y: 12 * sy))
+            context.stroke(bar, with: .color(accent), style: style)
+
+            // 右 C：开口朝左
+            var rightC = Path()
+            rightC.addArc(
+                center: rightCenter,
+                radius: radius,
+                startAngle: .degrees(110),
+                endAngle: .degrees(250),
+                clockwise: true
+            )
+            context.stroke(rightC, with: .color(accent), style: style)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
+
+/// 满电 / 低电右翼圆环（对照 HTML：viewBox 24、r=9、stroke 2.5）。
+private struct PeripheralBatteryStatusGlyph: View {
+    let style: PeripheralBatteryNoticeCard.Style
+    var size: CGFloat = 20
+
+    /// HTML `secondary-fixed-dim` ≈ #53e16f
+    private var fullAccent: Color {
+        Color(.sRGB, red: 0.325, green: 0.882, blue: 0.435, opacity: 1)
+    }
+    /// HTML `error` ≈ #ba1a1a
+    private var lowAccent: Color {
+        Color(.sRGB, red: 0.729, green: 0.102, blue: 0.102, opacity: 1)
+    }
+
+    /// SVG 圆周 2π·9 ≈ 56.5；低电 dashoffset=48 → 可见约 15%。
+    private let circumference: CGFloat = 56.5
+    private let lowDashOffset: CGFloat = 48
+    private let ringRadius: CGFloat = 9
+    private let ringLine: CGFloat = 2.5
+
+    var body: some View {
+        Group {
+            switch style {
+            case .full:
+                fullGlyph
+            case .low:
+                lowGlyph
+            case .connect:
+                EmptyView()
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+
+    private var fullGlyph: some View {
+        ZStack {
+            Circle()
+                .stroke(fullAccent, lineWidth: ringLine)
+                .frame(width: ringRadius * 2, height: ringRadius * 2)
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color.white)
+        }
+        .frame(width: size, height: size)
+    }
+
+    private var lowGlyph: some View {
+        let visible = max(circumference - lowDashOffset, 1)
+        let progress = visible / circumference
+        return ZStack {
+            Circle()
+                .stroke(lowAccent.opacity(0.25), lineWidth: ringLine)
+                .frame(width: ringRadius * 2, height: ringRadius * 2)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(
+                    lowAccent,
+                    style: StrokeStyle(lineWidth: ringLine, lineCap: .round)
+                )
+                .frame(width: ringRadius * 2, height: ringRadius * 2)
+                .rotationEffect(.degrees(-90))
+            Text("!")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundStyle(lowAccent)
+        }
+        .frame(width: size, height: size)
     }
 }
 
