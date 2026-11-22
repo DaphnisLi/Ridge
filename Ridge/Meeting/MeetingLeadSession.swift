@@ -55,6 +55,46 @@ final class MeetingLeadSession: ObservableObject {
         openURLHandler = { NSWorkspace.shared.open($0) }
     }
 
+    #if DEBUG
+    /// 测试台：不写日历，直接投递指定紧迫度样张到真岛。
+    func debugPresentSample(urgency: MeetingLeadUrgency) {
+        let seconds: TimeInterval
+        let title: String
+        switch urgency {
+        case .relaxed:
+            seconds = 9 * 60 + 42
+            title = L10n.Meeting.previewSampleTitleRelaxed
+        case .warning:
+            seconds = 4 * 60 + 30
+            title = L10n.Meeting.previewSampleTitleWarning
+        case .critical:
+            seconds = 1 * 60 + 15
+            title = L10n.Meeting.previewSampleTitleCritical
+        }
+        let id = "lab.meeting.\(urgency.rawValue).\(UUID().uuidString.prefix(6))"
+        let start = Date().addingTimeInterval(seconds)
+        publish(
+            Snapshot(
+                meetingID: id,
+                title: title,
+                startDate: start,
+                endDate: start.addingTimeInterval(30 * 60),
+                secondsToStart: seconds,
+                showJoin: true,
+                showAuth: false,
+                joinOpenURL: URL(string: "https://zoom.us/j/123456789"),
+                joinSourceURL: URL(string: "https://zoom.us/j/123456789"),
+                joinPlatform: MeetingPlatform.zoom.rawValue
+            ),
+            reason: "testLab.\(urgency.rawValue)"
+        )
+        AppLog.info("Meeting", "测试台已投递会前样张", [
+            "urgency": urgency.rawValue,
+            "secToStart": Int(seconds)
+        ])
+    }
+    #endif
+
     func clearDismissedAfterJoinIfAbsent(from meetingIDs: Set<String>) {
         guard let dismissed = dismissedAfterJoinID,
               !meetingIDs.contains(dismissed)

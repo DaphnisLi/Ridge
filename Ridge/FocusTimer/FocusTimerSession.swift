@@ -326,6 +326,12 @@ final class FocusTimerSession: ObservableObject {
     // MARK: - DEBUG 测试台快进（仅本地开发）
 
     #if DEBUG
+    /// 一键回到选时态（测试台）。
+    func debugEnterPicking() {
+        cancelActiveSession(reason: "testLabEnterPicking")
+        AppLog.info("FocusTimer", "测试台进入选时")
+    }
+
     /// 一键进入计时中（不依赖真挂钟等待）。
     func debugEnterRunning(minutes: Int = 25) {
         let clamped = min(max(minutes, 1), 180)

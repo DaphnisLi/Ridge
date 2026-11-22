@@ -148,19 +148,44 @@ final class IslandTestHarness: ObservableObject {
     }
 
     func presentProcessEndedTip(success: Bool) {
+        presentProcessEndedTip(outcome: success ? .succeeded : .failed(code: 1))
+    }
+
+    func presentProcessEndedTip(outcome: ProjectWatchOutcome) {
+        let (label, message): (String, String) = {
+            switch outcome {
+            case .succeeded:
+                return ("lab-ok", L10n.TestLab.processEndedSuccess)
+            case .failed:
+                return ("lab-fail", L10n.TestLab.processEndedFailure)
+            case .signaled:
+                return ("lab-sig", L10n.TestLab.processEndedFailure)
+            case .unknown:
+                return ("lab-unk", L10n.TestLab.processEndedFailure)
+            }
+        }()
         let notice = ProjectWatchEndedNotice(
             id: "projects.watch.debug.\(UUID().uuidString.prefix(8))",
             projectName: "Ridge Lab",
-            label: success ? "lab-ok" : "lab-fail",
-            message: success ? L10n.TestLab.processEndedSuccess : L10n.TestLab.processEndedFailure,
+            label: label,
+            message: message,
             endedAt: Date(),
-            outcome: success ? .succeeded : .failed(code: 1),
+            outcome: outcome,
             logPath: nil,
             peakMemoryBytes: 48 * 1024 * 1024,
             durationSeconds: 12
         )
         IslandNoticeCenter.shared.present(.processEnded(notice))
-        note(success ? L10n.TestLab.statusProcessTipOK : L10n.TestLab.statusProcessTipFail)
+        note(L10n.TestLab.statusProcessTip(outcomeLabel(outcome)))
+    }
+
+    private func outcomeLabel(_ outcome: ProjectWatchOutcome) -> String {
+        switch outcome {
+        case .succeeded: return L10n.TestLab.galleryProcessOK
+        case .failed: return L10n.TestLab.galleryProcessFail
+        case .signaled: return L10n.TestLab.galleryProcessSignal
+        case .unknown: return L10n.TestLab.galleryProcessFail
+        }
     }
 
     // MARK: - Peripheral
@@ -250,6 +275,151 @@ final class IslandTestHarness: ObservableObject {
         comboMediaPlusFocus()
         presentProcessEndedTip(success: true)
         note(L10n.TestLab.statusComboMediaFocusC)
+    }
+
+    // MARK: - 全状态上岛（真岛投递）
+
+    func focusEnterPicking() {
+        ensureFocusEnabled()
+        FocusTimerSession.shared.debugEnterPicking()
+        note(L10n.TestLab.statusFocusPicking)
+    }
+
+    func presentMeetingTip(urgency: MeetingLeadUrgency) {
+        WidgetSettings.shared.setEnabled(MeetingCountdownWidget.manifest.id, enabled: true)
+        MeetingLeadSession.shared.debugPresentSample(urgency: urgency)
+        note(L10n.TestLab.statusMeetingTip(urgency.stageTitle))
+    }
+
+    func focusApplyPreviewTab(_ tab: FocusTimerPreviewTab) {
+        switch tab {
+        case .standby:
+            focusEnterRunning(minutes: 25)
+            IslandController.shared?.collapse(reason: "testLabFocusStandby")
+            note(L10n.TestLab.statusFocusStandby)
+        case .picking:
+            focusEnterPicking()
+            IslandController.shared?.expand(reason: "testLabFocusPicking")
+        case .running:
+            focusEnterRunning(minutes: 25)
+            IslandController.shared?.expand(reason: "testLabFocusRunning")
+        case .overtime:
+            focusEnterOvertime()
+            IslandController.shared?.expand(reason: "testLabFocusOvertime")
+        case .completed:
+            focusEnterCompleted()
+            IslandController.shared?.expand(reason: "testLabFocusCompleted")
+        }
+    }
+
+    func presentMediaStandby() {
+        WidgetSettings.shared.setEnabled(MediaNowPlayingWidget.manifest.id, enabled: true)
+        setFakeMediaPlaying(true)
+        IslandController.shared?.collapse(reason: "testLabMediaStandby")
+        note(L10n.TestLab.statusMediaStandby)
+    }
+
+    func presentMediaExpanded() {
+        WidgetSettings.shared.setEnabled(MediaNowPlayingWidget.manifest.id, enabled: true)
+        setFakeMediaPlaying(true)
+        WidgetRuntime.shared.focusForSettings(MediaNowPlayingWidget.manifest.id)
+        IslandController.shared?.expand(reason: "testLabMediaExpanded")
+        note(L10n.TestLab.statusMediaExpanded)
+    }
+
+    func presentAITip(stage: AIUsageStage) {
+        WidgetSettings.shared.setEnabled(AIUsageWidget.manifest.id, enabled: true)
+        let settings = AIUsageSettings.shared
+        let remaining: Int
+        let resetOffset: TimeInterval
+        switch stage {
+        case .abundant:
+            remaining = settings.abundantThreshold
+            resetOffset = 14 * 86_400
+        case .warning:
+            remaining = settings.warningThreshold
+            resetOffset = 9 * 3600
+        case .critical:
+            remaining = settings.criticalThreshold
+            resetOffset = 47 * 60
+        case .unknown:
+            remaining = 0
+            resetOffset = 3600
+        }
+        let id = "aiUsage.lab.\(stage.rawValue).\(UUID().uuidString.prefix(6))"
+        IslandNoticeCenter.shared.present(
+            .aiUsageAlert(
+                id: id,
+                providerName: L10n.AIUsage.providerCursor,
+                remainingPercent: remaining,
+                stage: stage,
+                resetsAt: Date().addingTimeInterval(resetOffset)
+            )
+        )
+        note(L10n.TestLab.statusAITip(stage.label))
+    }
+
+    func presentMoveReminderTip() {
+        WidgetSettings.shared.setEnabled("builtin.moveReminder", enabled: true)
+        let settings = MoveReminderSettings.shared
+        let notice = MoveReminderSession.Notice(
+            id: "moveReminder.lab.\(UUID().uuidString.prefix(6))",
+            activeMinutes: settings.activeTriggerMinutes,
+            restMinutes: settings.suggestedRestMinutes
+        )
+        IslandNoticeCenter.shared.present(.moveReminder(notice))
+        note(L10n.TestLab.statusMoveTip)
+    }
+
+    func presentRAMTip() {
+        let notice = ResourceRAMPressureNotice(
+            id: "resource.ram.lab.\(UUID().uuidString.prefix(6))",
+            ramUsedBytes: 28_000_000_000,
+            ramPercent: 96,
+            topAppName: "Xcode",
+            topAppBundleID: "com.apple.dt.Xcode",
+            topAppMemoryBytes: 4_200_000_000
+        )
+        IslandNoticeCenter.shared.present(.ramPressure(notice))
+        note(L10n.TestLab.statusRAMTip)
+    }
+
+    func presentCopiedTip() {
+        WidgetSettings.shared.setEnabled(ClipboardCopiedNoticeGate.widgetID, enabled: true)
+        let tipID = "copy.text.lab.\(UUID().uuidString)"
+        IslandNoticeCenter.shared.present(
+            .clipboardCaptureHint(
+                id: tipID,
+                text: L10n.Shelf.copied,
+                symbol: "text.alignleft"
+            )
+        )
+        note(L10n.TestLab.statusCopiedTip)
+    }
+
+    func presentColorPickTip() {
+        WidgetSettings.shared.setEnabled("builtin.colorPick", enabled: true)
+        IslandNoticeCenter.shared.present(.colorPickTip)
+        note(L10n.TestLab.statusColorPickTip)
+    }
+
+    func presentOCRTip() {
+        WidgetSettings.shared.setEnabled("builtin.ocrSelect", enabled: true)
+        IslandNoticeCenter.shared.present(.ocrSelectTip)
+        note(L10n.TestLab.statusOCRTip)
+    }
+
+    func dismissManualTips() {
+        IslandNoticeCenter.shared.dismiss(id: IslandNoticePayload.colorPickTipID)
+        IslandNoticeCenter.shared.dismiss(id: IslandNoticePayload.ocrSelectTipID)
+        note(L10n.TestLab.statusManualTipsDismissed)
+    }
+
+    func openPanelWidget(id: WidgetID, title: String) {
+        WidgetSettings.shared.setEnabled(id, enabled: true)
+        WidgetRuntime.shared.focusForSettings(id)
+        IslandController.shared?.expand(reason: "testLabPanel:\(id)")
+        note(L10n.TestLab.statusPanelOpened(title))
     }
 }
 #endif

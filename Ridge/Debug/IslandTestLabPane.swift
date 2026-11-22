@@ -2,6 +2,7 @@
 import SwiftUI
 
 /// 设置侧栏「岛测试台」：仅 DEBUG 编译；Release 无入口。
+/// 工具按组件分卡：每卡覆盖该组件全部可上岛状态。
 struct IslandTestLabPane: View {
     @ObservedObject private var labSettings = IslandTestLabSettings.shared
     @ObservedObject private var harness = IslandTestHarness.shared
@@ -17,11 +18,17 @@ struct IslandTestLabPane: View {
                 header
 
                 tipDurationCard
-                mediaCard
-                focusCard
+
                 meetingCard
+                aiCard
+                moveCard
+                ramCard
                 processCard
                 peripheralCard
+                captureCard
+                mediaCard
+                focusCard
+                worldStocksCard
                 controlDeckCard
                 comboCard
 
@@ -64,7 +71,7 @@ struct IslandTestLabPane: View {
         }
     }
 
-    // MARK: Tip duration
+    // MARK: Tip duration（全局）
 
     private var tipDurationCard: some View {
         labCard(title: L10n.TestLab.tipDurationTitle, symbol: "timer", subtitle: L10n.TestLab.tipDurationSubtitle) {
@@ -93,49 +100,6 @@ struct IslandTestLabPane: View {
         }
     }
 
-    // MARK: Media
-
-    private var mediaCard: some View {
-        labCard(title: L10n.TestLab.mediaTitle, symbol: "music.note", subtitle: L10n.TestLab.mediaSubtitle) {
-            buttonRow([
-                (L10n.TestLab.mediaFakeOn, { harness.setFakeMediaPlaying(true) }),
-                (L10n.TestLab.mediaFakeOff, { harness.setFakeMediaPlaying(false) })
-            ])
-        }
-    }
-
-    // MARK: Focus
-
-    private var focusCard: some View {
-        labCard(title: L10n.TestLab.focusTitle, symbol: "timer.circle", subtitle: L10n.TestLab.focusSubtitle) {
-            Text(focusPhaseLine)
-                .font(SettingsChrome.Font.monoCaption)
-                .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
-                        .fill(SettingsChrome.surfaceContainerLow)
-                )
-
-            buttonGrid([
-                (L10n.TestLab.focusEnterRunning, { harness.focusEnterRunning(minutes: 25) }),
-                (L10n.TestLab.focusEnterOvertime, { harness.focusEnterOvertime() }),
-                (L10n.TestLab.focusEnterCompleted, { harness.focusEnterCompleted() }),
-                (L10n.TestLab.focusAdvance1m, { harness.focusAdvance(byMinutes: 1) }),
-                (L10n.TestLab.focusRemain1m, { harness.focusJumpToRemaining(seconds: 60) }),
-                (L10n.TestLab.focusJumpEnd, { harness.focusJumpToEnd() }),
-                (L10n.TestLab.focusJumpOvertime, { harness.focusJumpIntoOvertime() })
-            ])
-        }
-    }
-
-    private var focusPhaseLine: String {
-        let snap = focus.snapshot
-        return "\(snap.phase.rawValue) · remain \(snap.remainingSeconds)s · elapsed \(snap.elapsedSeconds)s"
-    }
-
     // MARK: Meeting
 
     private var meetingCard: some View {
@@ -152,6 +116,14 @@ struct IslandTestLabPane: View {
                 )
             }
 
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid(
+                MeetingLeadUrgency.allCases.map { urgency in
+                    (urgency.stageTitle, { harness.presentMeetingTip(urgency: urgency) })
+                }
+            )
+
+            sectionLabel(L10n.TestLab.sectionTools)
             VStack(alignment: .leading, spacing: 10) {
                 labeledPicker(L10n.TestLab.meetingPlatform) {
                     Picker("", selection: $harness.selectedMeetingPlatform) {
@@ -186,6 +158,41 @@ struct IslandTestLabPane: View {
         return "+\(sec / 60)m\(sec % 60 == 0 ? "" : "\(sec % 60)s")"
     }
 
+    // MARK: AI
+
+    private var aiCard: some View {
+        labCard(title: L10n.TestLab.aiTitle, symbol: "sparkles", subtitle: L10n.TestLab.aiSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.AIUsage.stageAbundant, { harness.presentAITip(stage: .abundant) }),
+                (L10n.AIUsage.stageWarning, { harness.presentAITip(stage: .warning) }),
+                (L10n.AIUsage.stageCritical, { harness.presentAITip(stage: .critical) })
+            ])
+        }
+    }
+
+    // MARK: Move
+
+    private var moveCard: some View {
+        labCard(title: L10n.TestLab.moveTitle, symbol: "figure.stand", subtitle: L10n.TestLab.moveSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonRow([
+                (L10n.TestLab.tipMove, { harness.presentMoveReminderTip() })
+            ])
+        }
+    }
+
+    // MARK: RAM
+
+    private var ramCard: some View {
+        labCard(title: L10n.TestLab.ramTitle, symbol: "memorychip", subtitle: L10n.TestLab.ramSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonRow([
+                (L10n.TestLab.tipRAM, { harness.presentRAMTip() })
+            ])
+        }
+    }
+
     // MARK: Process
 
     private var processCard: some View {
@@ -195,11 +202,22 @@ struct IslandTestLabPane: View {
                     .font(SettingsChrome.Font.monoCaption)
                     .foregroundStyle(SettingsChrome.onSurfaceVariant)
             }
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.galleryProcessOK, {
+                    harness.presentProcessEndedTip(outcome: .succeeded)
+                }),
+                (L10n.TestLab.galleryProcessFail, {
+                    harness.presentProcessEndedTip(outcome: .failed(code: 1))
+                }),
+                (L10n.TestLab.galleryProcessSignal, {
+                    harness.presentProcessEndedTip(outcome: .signaled(signal: 15))
+                })
+            ])
+            sectionLabel(L10n.TestLab.sectionTools)
             buttonGrid([
                 (L10n.TestLab.processLaunchSleep, { harness.launchSleepAndWatch(seconds: 12) }),
-                (L10n.TestLab.processLaunchDocker, { harness.launchDockerAndWatch(seconds: 15) }),
-                (L10n.TestLab.processTipOK, { harness.presentProcessEndedTip(success: true) }),
-                (L10n.TestLab.processTipFail, { harness.presentProcessEndedTip(success: false) })
+                (L10n.TestLab.processLaunchDocker, { harness.launchDockerAndWatch(seconds: 15) })
             ])
         }
     }
@@ -208,6 +226,13 @@ struct IslandTestLabPane: View {
 
     private var peripheralCard: some View {
         labCard(title: L10n.TestLab.peripheralTitle, symbol: "battery.100", subtitle: L10n.TestLab.peripheralSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.PeripheralTip.connectBadge, { harness.presentPeripheralTip(style: .connect) }),
+                (L10n.TestLab.galleryPeripheralFull, { harness.presentPeripheralTip(style: .full) }),
+                (L10n.TestLab.galleryPeripheralLow, { harness.presentPeripheralTip(style: .low) })
+            ])
+            sectionLabel(L10n.TestLab.sectionTools)
             buttonGrid([
                 (L10n.TestLab.peripheralInjectMouse, {
                     harness.injectPeripheralDevice(kind: .mouse, percent: 12, isLow: true)
@@ -218,10 +243,111 @@ struct IslandTestLabPane: View {
                 (L10n.TestLab.peripheralInjectKeyboard, {
                     harness.injectPeripheralDevice(kind: .keyboard, percent: 100, isLow: false)
                 }),
-                (L10n.TestLab.peripheralClear, { harness.clearPeripheralInjects() }),
-                (L10n.TestLab.peripheralTipLow, { harness.presentPeripheralTip(style: .low) }),
-                (L10n.TestLab.peripheralTipFull, { harness.presentPeripheralTip(style: .full) }),
-                (L10n.TestLab.peripheralTipConnect, { harness.presentPeripheralTip(style: .connect) })
+                (L10n.TestLab.peripheralClear, { harness.clearPeripheralInjects() })
+            ])
+        }
+    }
+
+    // MARK: Capture（取色 / OCR / 已复制）
+
+    private var captureCard: some View {
+        labCard(title: L10n.TestLab.captureTitle, symbol: "eyedropper", subtitle: L10n.TestLab.captureSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.galleryCopied, { harness.presentCopiedTip() }),
+                (L10n.TestLab.galleryColorPick, { harness.presentColorPickTip() }),
+                (L10n.TestLab.galleryOCR, { harness.presentOCRTip() }),
+                (L10n.TestLab.tipDismissManual, { harness.dismissManualTips() })
+            ])
+        }
+    }
+
+    // MARK: Media
+
+    private var mediaCard: some View {
+        labCard(title: L10n.TestLab.mediaTitle, symbol: "music.note", subtitle: L10n.TestLab.mediaSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.galleryMediaStandby, { harness.presentMediaStandby() }),
+                (L10n.TestLab.galleryMediaExpanded, { harness.presentMediaExpanded() })
+            ])
+            sectionLabel(L10n.TestLab.sectionTools)
+            buttonRow([
+                (L10n.TestLab.mediaFakeOn, { harness.setFakeMediaPlaying(true) }),
+                (L10n.TestLab.mediaFakeOff, { harness.setFakeMediaPlaying(false) })
+            ])
+        }
+    }
+
+    // MARK: Focus
+
+    private var focusCard: some View {
+        labCard(title: L10n.TestLab.focusTitle, symbol: "timer.circle", subtitle: L10n.TestLab.focusSubtitle) {
+            Text(focusPhaseLine)
+                .font(SettingsChrome.Font.monoCaption)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: SettingsChrome.Radius.chip, style: .continuous)
+                        .fill(SettingsChrome.surfaceContainerLow)
+                )
+
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid(
+                FocusTimerPreviewTab.allCases.map { tab in
+                    (focusTabTitle(tab), { harness.focusApplyPreviewTab(tab) })
+                }
+            )
+
+            sectionLabel(L10n.TestLab.sectionTools)
+            buttonGrid([
+                (L10n.TestLab.focusAdvance1m, { harness.focusAdvance(byMinutes: 1) }),
+                (L10n.TestLab.focusRemain1m, { harness.focusJumpToRemaining(seconds: 60) }),
+                (L10n.TestLab.focusJumpEnd, { harness.focusJumpToEnd() }),
+                (L10n.TestLab.focusJumpOvertime, { harness.focusJumpIntoOvertime() })
+            ])
+        }
+    }
+
+    private var focusPhaseLine: String {
+        let snap = focus.snapshot
+        return "\(snap.phase.rawValue) · remain \(snap.remainingSeconds)s · elapsed \(snap.elapsedSeconds)s"
+    }
+
+    private func focusTabTitle(_ tab: FocusTimerPreviewTab) -> String {
+        switch tab {
+        case .standby: return L10n.FocusTimer.phaseStandby
+        case .picking: return L10n.FocusTimer.phasePicking
+        case .running: return L10n.FocusTimer.phaseRunning
+        case .overtime: return L10n.FocusTimer.phaseOvertime
+        case .completed: return L10n.FocusTimer.phaseCompleted
+        }
+    }
+
+    // MARK: World clock / Stocks
+
+    private var worldStocksCard: some View {
+        labCard(
+            title: L10n.TestLab.worldStocksTitle,
+            symbol: "globe",
+            subtitle: L10n.TestLab.worldStocksSubtitle
+        ) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.galleryWorldClock, {
+                    harness.openPanelWidget(
+                        id: WorldClockWidget.manifest.id,
+                        title: L10n.TestLab.galleryWorldClock
+                    )
+                }),
+                (L10n.TestLab.galleryStocks, {
+                    harness.openPanelWidget(
+                        id: StockWidget.manifest.id,
+                        title: L10n.TestLab.galleryStocks
+                    )
+                })
             ])
         }
     }
@@ -230,6 +356,7 @@ struct IslandTestLabPane: View {
 
     private var controlDeckCard: some View {
         labCard(title: L10n.TestLab.deckTitle, symbol: "square.grid.2x2", subtitle: L10n.TestLab.deckSubtitle) {
+            sectionLabel(L10n.TestLab.sectionStates)
             buttonGrid(
                 ControlDeckSettings.Pane.allCases.map { pane in
                     (pane.title, { harness.openControlDeck(pane: pane) })
@@ -250,6 +377,12 @@ struct IslandTestLabPane: View {
     }
 
     // MARK: Card chrome
+
+    private func sectionLabel(_ title: String) -> some View {
+        Text(title)
+            .font(SettingsChrome.Font.label)
+            .foregroundStyle(SettingsChrome.onSurfaceVariant)
+    }
 
     @ViewBuilder
     private func labCard<Content: View>(

@@ -3077,8 +3077,42 @@ enum L10n {
         static var pageSubtitle: String {
             tr(
                 "test_lab.page_subtitle",
-                "仅本地 DEBUG 可见。用于调 tip 停留、专注快进、写入真实会议、拉起监视进程与外设调试；正式包无此页。"
+                "仅本地 DEBUG 可见。按组件分卡，每卡可投该组件全部上岛状态；页底图鉴同样按组件排列，点击样张上岛。正式包无此页。"
             )
+        }
+
+        static var sectionStates: String { tr("test_lab.section.states", "上岛状态") }
+        static var sectionTools: String { tr("test_lab.section.tools", "调试工具") }
+
+        static var aiTitle: String { tr("test_lab.ai.title", "AI 额度") }
+        static var aiSubtitle: String {
+            tr("test_lab.ai.subtitle", "三阶额度 tip；与设置阈值同款形态。")
+        }
+        static var moveTitle: String { tr("test_lab.move.title", "久坐提醒") }
+        static var moveSubtitle: String {
+            tr("test_lab.move.subtitle", "触阈后的起身 tip，直接投递样张。")
+        }
+        static var ramTitle: String { tr("test_lab.ram.title", "RAM 高压") }
+        static var ramSubtitle: String {
+            tr("test_lab.ram.subtitle", "内存压力 tip（双翼 flush）。")
+        }
+        static var captureTitle: String { tr("test_lab.capture.title", "取色 / OCR / 已复制") }
+        static var captureSubtitle: String {
+            tr("test_lab.capture.subtitle", "引导 tip 与「已复制」圆岛；取色 / OCR 需手动收。")
+        }
+        static var worldStocksTitle: String { tr("test_lab.world_stocks.title", "世界时钟 / 股价") }
+        static var worldStocksSubtitle: String {
+            tr("test_lab.world_stocks.subtitle", "展开对应内容面板。")
+        }
+
+        static var meetingSampleTip: String { tr("test_lab.meeting.sample_tip", "样张上岛（不写日历）") }
+        static var processTipSignal: String { tr("test_lab.process.tip_signal", "直接投递信号 tip") }
+        static var focusEnterPicking: String { tr("test_lab.focus.enter_picking", "进入选时") }
+        static var tipMove: String { tr("test_lab.tip.move", "久坐 tip") }
+        static var tipRAM: String { tr("test_lab.tip.ram", "RAM tip") }
+        static var tipDismissManual: String { tr("test_lab.tip.dismiss_manual", "收起取色/OCR") }
+        static var galleryTapHint: String {
+            tr("test_lab.gallery.tap_hint", "点击样张即可投递到真岛。")
         }
 
         static var tipDurationTitle: String { tr("test_lab.tip.title", "提示停留时间") }
@@ -3094,14 +3128,14 @@ enum L10n {
 
         static var mediaTitle: String { tr("test_lab.media.title", "媒体") }
         static var mediaSubtitle: String {
-            tr("test_lab.media.subtitle", "注入引导用假「正在播放」，便于测左音乐 + 右专注 / C。")
+            tr("test_lab.media.subtitle", "待命 / 展开两态上岛；可开关假「正在播放」。")
         }
         static var mediaFakeOn: String { tr("test_lab.media.on", "开启假播放") }
         static var mediaFakeOff: String { tr("test_lab.media.off", "关闭假播放") }
 
-        static var focusTitle: String { tr("test_lab.focus.title", "专注快进") }
+        static var focusTitle: String { tr("test_lab.focus.title", "专注") }
         static var focusSubtitle: String {
-            tr("test_lab.focus.subtitle", "不必真等 25 分钟；直接切态或跳剩余时间。")
+            tr("test_lab.focus.subtitle", "五态上岛；下方工具可快进剩余时间。")
         }
         static var focusEnterRunning: String { tr("test_lab.focus.enter_running", "进入计时 25m") }
         static var focusEnterOvertime: String { tr("test_lab.focus.enter_overtime", "进入加时") }
@@ -3123,12 +3157,14 @@ enum L10n {
             String(format: tr("test_lab.status.focus_remain_format", "专注：跳到还剩 %d 秒"), seconds)
         }
         static var statusFocusEnded: String { tr("test_lab.status.focus_ended", "专注：已跳到结束") }
+        static var statusFocusPicking: String { tr("test_lab.status.focus_picking", "专注：已进入选时") }
+        static var statusFocusStandby: String { tr("test_lab.status.focus_standby", "专注：已进入待命（收起）") }
 
-        static var meetingTitle: String { tr("test_lab.meeting.title", "会议 · 真实日历") }
+        static var meetingTitle: String { tr("test_lab.meeting.title", "会议") }
         static var meetingSubtitle: String {
             tr(
                 "test_lab.meeting.subtitle",
-                "写入系统日历真实事件（多平台入会链接 × 紧迫度）。标题带 [Ridge Lab]，可一键清理。"
+                "三态样张直接上岛；也可写入系统日历真实事件（标题带 [Ridge Lab]）后清理。"
             )
         }
         static var meetingNeedAuth: String { tr("test_lab.meeting.need_auth", "需要日历权限") }
@@ -3191,6 +3227,28 @@ enum L10n {
         static var statusProcessTipFail: String {
             tr("test_lab.status.process_tip_fail", "进程：已投递失败结束 tip")
         }
+        static func statusProcessTip(_ label: String) -> String {
+            String(format: tr("test_lab.status.process_tip_format", "进程：已投递 %@ tip"), label)
+        }
+        static func statusMeetingTip(_ urgency: String) -> String {
+            String(format: tr("test_lab.status.meeting_tip_format", "会议：已投递 %@ 样张 tip"), urgency)
+        }
+        static func statusAITip(_ stage: String) -> String {
+            String(format: tr("test_lab.status.ai_tip_format", "AI：已投递 %@ tip"), stage)
+        }
+        static var statusMoveTip: String { tr("test_lab.status.move_tip", "久坐：已投递 tip") }
+        static var statusRAMTip: String { tr("test_lab.status.ram_tip", "RAM：已投递高压 tip") }
+        static var statusCopiedTip: String { tr("test_lab.status.copied_tip", "已复制：已投递圆岛 tip") }
+        static var statusColorPickTip: String { tr("test_lab.status.color_pick_tip", "取色：已投递引导 tip") }
+        static var statusOCRTip: String { tr("test_lab.status.ocr_tip", "OCR：已投递引导 tip") }
+        static var statusManualTipsDismissed: String {
+            tr("test_lab.status.manual_tips_dismissed", "已收起取色 / OCR tip")
+        }
+        static func statusPanelOpened(_ title: String) -> String {
+            String(format: tr("test_lab.status.panel_opened_format", "面板：已打开 %@"), title)
+        }
+        static var statusMediaStandby: String { tr("test_lab.status.media_standby", "媒体：假播放待命（收起）") }
+        static var statusMediaExpanded: String { tr("test_lab.status.media_expanded", "媒体：假播放展开") }
 
         static var peripheralTitle: String { tr("test_lab.peripheral.title", "外设") }
         static var peripheralSubtitle: String {
@@ -3264,12 +3322,9 @@ enum L10n {
         static var gallerySubtitle: String {
             tr(
                 "test_lab.gallery.subtitle",
-                "当前组件真样式全量展出（与设置预览同款假数据）；有半岛的 tip 与整岛并排放，半岛只画自身半翼。仅本地 DEBUG 可见。"
+                "按组件分卡展出真样式（与设置预览同款假数据）；有半岛的 tip 与整岛并排，半岛只画自身半翼。点击样张可投到真岛。"
             )
         }
-        static var galleryGroupTips: String { tr("test_lab.gallery.group_tips", "瞬时提示") }
-        static var galleryGroupLive: String { tr("test_lab.gallery.group_live", "实况与面板") }
-        static var galleryGroupDeck: String { tr("test_lab.gallery.group_deck", "控制台磁贴") }
 
         static func galleryLabelFull(_ name: String) -> String {
             String(format: tr("test_lab.gallery.label_full_format", "%@ · 整岛"), name)

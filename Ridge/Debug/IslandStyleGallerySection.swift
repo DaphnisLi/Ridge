@@ -2,32 +2,29 @@
 import SwiftUI
 
 /// 岛测试台下方「样式图鉴」：用与设置预览相同的假数据组件，把当前真样式全状态铺开。
-/// 仅 DEBUG；Release 无此类型。
+/// 点击样张会经 `IslandTestHarness` 投到真岛。仅 DEBUG；Release 无此类型。
 struct IslandStyleGallerySection: View {
+    private var harness: IslandTestHarness { .shared }
+
     var body: some View {
         VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
             galleryHeader
 
-            galleryGroup(title: L10n.TestLab.galleryGroupTips) {
-                tipMeetingRows
-                tipPeripheralRows
-                tipAIRows
-                tipProcessRows
-                tipMiscRows
-            }
-
-            galleryGroup(title: L10n.TestLab.galleryGroupLive) {
-                liveMediaRows
-                liveFocusRows
-                liveWorldAndStocks
-            }
-
-            galleryGroup(title: L10n.TestLab.galleryGroupDeck) {
-                deckRows
-            }
+            // 按组件分卡，与上方测试工具分区一致。
+            galleryGroup(title: L10n.TestLab.galleryMeeting) { tipMeetingRows }
+            galleryGroup(title: L10n.TestLab.galleryAI) { tipAIRows }
+            galleryGroup(title: L10n.TestLab.galleryMove) { tipMoveRows }
+            galleryGroup(title: L10n.TestLab.galleryRAM) { tipRAMRows }
+            galleryGroup(title: L10n.TestLab.galleryProcess) { tipProcessRows }
+            galleryGroup(title: L10n.TestLab.galleryPeripheral) { tipPeripheralRows }
+            galleryGroup(title: L10n.TestLab.galleryCapture) { tipCaptureRows }
+            galleryGroup(title: L10n.TestLab.galleryMedia) { liveMediaRows }
+            galleryGroup(title: L10n.TestLab.galleryFocus) { liveFocusRows }
+            galleryGroup(title: L10n.TestLab.galleryWorldStocks) { liveWorldAndStocks }
+            galleryGroup(title: L10n.TestLab.galleryDeck) { deckRows }
         }
         .onAppear {
-            AppLog.info("TestLab", "样式图鉴已显示")
+            AppLog.info("TestLab", "样式图鉴已显示（按组件）")
         }
     }
 
@@ -51,6 +48,9 @@ struct IslandStyleGallerySection: View {
                         .font(SettingsChrome.Font.caption)
                         .foregroundStyle(SettingsChrome.onSurfaceVariant)
                         .fixedSize(horizontal: false, vertical: true)
+                    Text(L10n.TestLab.galleryTapHint)
+                        .font(SettingsChrome.Font.footnote)
+                        .foregroundStyle(SettingsChrome.primary)
                 }
             }
         }
@@ -59,15 +59,21 @@ struct IslandStyleGallerySection: View {
     // MARK: - Tips（每态整岛 + 半岛并排；半岛只画自身半翼）
 
     private var tipMeetingRows: some View {
-        // 两列：整岛 | 半岛，按紧迫度成对排布。
-        galleryRow(title: L10n.TestLab.galleryMeeting, columns: 2) {
+        // 两列：整岛 | 半岛，按紧迫度成对排布；点击均投同一紧迫度样张。
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
             ForEach(MeetingLeadUrgency.allCases) { urgency in
-                tipCell(label: pairedLabel(urgency.stageTitle, half: false)) {
+                tipCell(
+                    label: pairedLabel(urgency.stageTitle, half: false),
+                    onTap: { harness.presentMeetingTip(urgency: urgency) }
+                ) {
                     MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
                         .padding(.bottom, IslandChrome.compactTipBottom)
                 }
-                flushCell(label: pairedLabel(urgency.stageTitle, half: true)) {
+                flushCell(
+                    label: pairedLabel(urgency.stageTitle, half: true),
+                    onTap: { harness.presentMeetingTip(urgency: urgency) }
+                ) {
                     MeetingIslandCardView.previewSample(
                         urgency: urgency,
                         compact: true,
@@ -79,37 +85,61 @@ struct IslandStyleGallerySection: View {
     }
 
     private var tipPeripheralRows: some View {
-        galleryRow(title: L10n.TestLab.galleryPeripheral, columns: 2) {
-            tipCell(label: pairedLabel(L10n.PeripheralTip.connectBadge, half: false)) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.PeripheralTip.connectBadge, half: false),
+                onTap: { harness.presentPeripheralTip(style: .connect) }
+            ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .connect, compact: true)
             }
-            flushCell(label: pairedLabel(L10n.PeripheralTip.connectBadge, half: true)) {
+            flushCell(
+                label: pairedLabel(L10n.PeripheralTip.connectBadge, half: true),
+                onTap: { harness.presentPeripheralTip(style: .connect) }
+            ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .connect, flushSide: .trailing)
             }
-            tipCell(label: pairedLabel(L10n.TestLab.galleryPeripheralFull, half: false)) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryPeripheralFull, half: false),
+                onTap: { harness.presentPeripheralTip(style: .full) }
+            ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .full, compact: true)
             }
-            flushCell(label: pairedLabel(L10n.TestLab.galleryPeripheralFull, half: true)) {
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryPeripheralFull, half: true),
+                onTap: { harness.presentPeripheralTip(style: .full) }
+            ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .full, flushSide: .trailing)
             }
-            tipCell(label: pairedLabel(L10n.TestLab.galleryPeripheralLow, half: false)) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryPeripheralLow, half: false),
+                onTap: { harness.presentPeripheralTip(style: .low) }
+            ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .low, compact: true)
             }
-            flushCell(label: pairedLabel(L10n.TestLab.galleryPeripheralLow, half: true)) {
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryPeripheralLow, half: true),
+                onTap: { harness.presentPeripheralTip(style: .low) }
+            ) {
                 PeripheralBatteryNoticeCard.previewSample(style: .low, flushSide: .trailing)
             }
         }
     }
 
     private var tipAIRows: some View {
-        galleryRow(title: L10n.TestLab.galleryAI, columns: 2) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
             ForEach([AIUsageStage.abundant, .warning, .critical], id: \.rawValue) { stage in
-                tipCell(label: pairedLabel(stage.label, half: false)) {
+                tipCell(
+                    label: pairedLabel(stage.label, half: false),
+                    onTap: { harness.presentAITip(stage: stage) }
+                ) {
                     AIUsageIslandCardView.previewSample(stage: stage, compact: true)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
                         .padding(.bottom, IslandChrome.compactTipBottom)
                 }
-                flushCell(label: pairedLabel(stage.label, half: true)) {
+                flushCell(
+                    label: pairedLabel(stage.label, half: true),
+                    onTap: { harness.presentAITip(stage: stage) }
+                ) {
                     AIUsageIslandCardView.previewSample(stage: stage, flushSide: .trailing)
                 }
             }
@@ -117,82 +147,121 @@ struct IslandStyleGallerySection: View {
     }
 
     private var tipProcessRows: some View {
-        galleryRow(title: L10n.TestLab.galleryProcess, columns: 2) {
-            tipCell(label: pairedLabel(L10n.TestLab.galleryProcessOK, half: false)) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryProcessOK, half: false),
+                onTap: { harness.presentProcessEndedTip(outcome: .succeeded) }
+            ) {
                 ProcessEndedNoticeCard.previewSample(outcome: .succeeded)
             }
-            flushCell(label: pairedLabel(L10n.TestLab.galleryProcessOK, half: true)) {
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryProcessOK, half: true),
+                onTap: { harness.presentProcessEndedTip(outcome: .succeeded) }
+            ) {
                 ProcessEndedNoticeCard.previewSample(outcome: .succeeded, flushSide: .trailing)
             }
-            tipCell(label: pairedLabel(L10n.TestLab.galleryProcessFail, half: false)) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryProcessFail, half: false),
+                onTap: { harness.presentProcessEndedTip(outcome: .failed(code: 1)) }
+            ) {
                 ProcessEndedNoticeCard.previewSample(outcome: .failed(code: 1))
             }
-            flushCell(label: pairedLabel(L10n.TestLab.galleryProcessFail, half: true)) {
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryProcessFail, half: true),
+                onTap: { harness.presentProcessEndedTip(outcome: .failed(code: 1)) }
+            ) {
                 ProcessEndedNoticeCard.previewSample(outcome: .failed(code: 1), flushSide: .trailing)
             }
-            tipCell(label: pairedLabel(L10n.TestLab.galleryProcessSignal, half: false)) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryProcessSignal, half: false),
+                onTap: { harness.presentProcessEndedTip(outcome: .signaled(signal: 15)) }
+            ) {
                 ProcessEndedNoticeCard.previewSample(outcome: .signaled(signal: 15))
             }
-            flushCell(label: pairedLabel(L10n.TestLab.galleryProcessSignal, half: true)) {
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryProcessSignal, half: true),
+                onTap: { harness.presentProcessEndedTip(outcome: .signaled(signal: 15)) }
+            ) {
                 ProcessEndedNoticeCard.previewSample(outcome: .signaled(signal: 15), flushSide: .trailing)
             }
         }
     }
 
-    private var tipMiscRows: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            galleryRow(title: L10n.TestLab.galleryMove, columns: 2) {
-                tipCell(label: pairedLabel(L10n.TestLab.galleryMove, half: false)) {
-                    MoveReminderNoticeCard.previewSample(
-                        activeMinutes: MoveReminderSettings.shared.activeTriggerMinutes,
-                        restMinutes: MoveReminderSettings.shared.suggestedRestMinutes,
-                        compact: true
-                    )
+    private var tipMoveRows: some View {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryMove, half: false),
+                onTap: { harness.presentMoveReminderTip() }
+            ) {
+                MoveReminderNoticeCard.previewSample(
+                    activeMinutes: MoveReminderSettings.shared.activeTriggerMinutes,
+                    restMinutes: MoveReminderSettings.shared.suggestedRestMinutes,
+                    compact: true
+                )
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryMove, half: true),
+                onTap: { harness.presentMoveReminderTip() }
+            ) {
+                MoveReminderNoticeCard.previewSample(
+                    activeMinutes: MoveReminderSettings.shared.activeTriggerMinutes,
+                    restMinutes: MoveReminderSettings.shared.suggestedRestMinutes,
+                    compact: true,
+                    flushSide: .trailing
+                )
+            }
+        }
+    }
+
+    private var tipRAMRows: some View {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryRAM, half: false),
+                onTap: { harness.presentRAMTip() }
+            ) {
+                RAMPressureNoticeCard.previewSample()
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryRAM, half: true),
+                onTap: { harness.presentRAMTip() }
+            ) {
+                RAMPressureNoticeCard.previewSample(flushSide: .trailing)
+            }
+        }
+    }
+
+    private var tipCaptureRows: some View {
+        galleryRow(title: L10n.TestLab.sectionStates) {
+            tipCell(
+                label: L10n.TestLab.galleryColorPick,
+                onTap: { harness.presentColorPickTip() }
+            ) {
+                ColorPickTipIslandView(compact: true)
                     .padding(.horizontal, IslandChrome.contentHorizontal)
                     .padding(.bottom, IslandChrome.compactTipBottom)
-                }
-                flushCell(label: pairedLabel(L10n.TestLab.galleryMove, half: true)) {
-                    MoveReminderNoticeCard.previewSample(
-                        activeMinutes: MoveReminderSettings.shared.activeTriggerMinutes,
-                        restMinutes: MoveReminderSettings.shared.suggestedRestMinutes,
-                        compact: true,
-                        flushSide: .trailing
+            }
+            tipCell(
+                label: L10n.TestLab.galleryOCR,
+                onTap: { harness.presentOCRTip() }
+            ) {
+                OCRSelectTipIslandView(compact: true)
+                    .padding(.horizontal, IslandChrome.contentHorizontal)
+                    .padding(.bottom, IslandChrome.compactTipBottom)
+            }
+            tipCell(
+                label: L10n.TestLab.galleryCopied,
+                hugs: true,
+                outline: .circle,
+                stageMinHeight: 72,
+                onTap: { harness.presentCopiedTip() }
+            ) {
+                ClipboardCopiedIslandView(compact: true, animationToken: "gallery.copied")
+                    .frame(
+                        width: IslandChrome.notchRightOrbDiameter,
+                        height: IslandChrome.notchRightOrbDiameter
                     )
-                }
-            }
-
-            galleryRow(title: L10n.TestLab.galleryRAM, columns: 2) {
-                tipCell(label: pairedLabel(L10n.TestLab.galleryRAM, half: false)) {
-                    RAMPressureNoticeCard.previewSample()
-                }
-                flushCell(label: pairedLabel(L10n.TestLab.galleryRAM, half: true)) {
-                    RAMPressureNoticeCard.previewSample(flushSide: .trailing)
-                }
-            }
-
-            galleryRow(title: L10n.TestLab.galleryCapture) {
-                tipCell(label: L10n.TestLab.galleryColorPick) {
-                    ColorPickTipIslandView(compact: true)
-                        .padding(.horizontal, IslandChrome.contentHorizontal)
-                        .padding(.bottom, IslandChrome.compactTipBottom)
-                }
-                tipCell(label: L10n.TestLab.galleryOCR) {
-                    OCRSelectTipIslandView(compact: true)
-                        .padding(.horizontal, IslandChrome.contentHorizontal)
-                        .padding(.bottom, IslandChrome.compactTipBottom)
-                }
-                tipCell(
-                    label: L10n.TestLab.galleryCopied,
-                    hugs: true,
-                    outline: .circle,
-                    stageMinHeight: 72
-                ) {
-                    ClipboardCopiedIslandView(compact: true, animationToken: "gallery.copied")
-                        .frame(
-                            width: IslandChrome.notchRightOrbDiameter,
-                            height: IslandChrome.notchRightOrbDiameter
-                        )
-                }
             }
         }
     }
@@ -200,13 +269,21 @@ struct IslandStyleGallerySection: View {
     // MARK: - Live
 
     private var liveMediaRows: some View {
-        galleryRow(title: L10n.TestLab.galleryMedia, columns: 2) {
-            panelCell(label: L10n.TestLab.galleryMediaStandby, maxWidth: SettingsIslandPreviewWidth.standby) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            panelCell(
+                label: L10n.TestLab.galleryMediaStandby,
+                maxWidth: SettingsIslandPreviewWidth.standby,
+                onTap: { harness.presentMediaStandby() }
+            ) {
                 MediaCompactStandbyView.previewSample(animatedEqualizer: false)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
             }
-            panelCell(label: L10n.TestLab.galleryMediaExpanded, maxWidth: SettingsIslandPreviewWidth.expanded) {
+            panelCell(
+                label: L10n.TestLab.galleryMediaExpanded,
+                maxWidth: SettingsIslandPreviewWidth.expanded,
+                onTap: { harness.presentMediaExpanded() }
+            ) {
                 MediaIslandCardView.previewSample(animatedEqualizer: false)
                     .padding(.horizontal, MediaPreviewChrome.expandedHorizontal)
                     .padding(.top, MediaPreviewChrome.expandedTop)
@@ -216,14 +293,15 @@ struct IslandStyleGallerySection: View {
     }
 
     private var liveFocusRows: some View {
-        galleryRow(title: L10n.TestLab.galleryFocus, columns: 2) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
             ForEach(FocusTimerPreviewTab.allCases) { tab in
                 panelCell(
                     label: focusTabTitle(tab),
                     maxWidth: tab.isCompact
                         ? SettingsIslandPreviewWidth.standby
                         : SettingsIslandPreviewWidth.expanded,
-                    hugs: false
+                    hugs: false,
+                    onTap: { harness.focusApplyPreviewTab(tab) }
                 ) {
                     FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
                         .padding(
@@ -240,13 +318,32 @@ struct IslandStyleGallerySection: View {
     }
 
     private var liveWorldAndStocks: some View {
-        galleryRow(title: L10n.TestLab.galleryWorldStocks, columns: 2) {
-            panelCell(label: L10n.TestLab.galleryWorldClock, maxWidth: 420, hugs: false) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            panelCell(
+                label: L10n.TestLab.galleryWorldClock,
+                maxWidth: 420,
+                hugs: false,
+                onTap: {
+                    harness.openPanelWidget(
+                        id: WorldClockWidget.manifest.id,
+                        title: L10n.TestLab.galleryWorldClock
+                    )
+                }
+            ) {
                 WorldClockIslandView.previewSample()
                     .padding(.horizontal, IslandChrome.contentHorizontal)
                     .padding(.vertical, 10)
             }
-            panelCell(label: L10n.TestLab.galleryStocks, hugs: true) {
+            panelCell(
+                label: L10n.TestLab.galleryStocks,
+                hugs: true,
+                onTap: {
+                    harness.openPanelWidget(
+                        id: StockWidget.manifest.id,
+                        title: L10n.TestLab.galleryStocks
+                    )
+                }
+            ) {
                 StockIslandView.previewSample(compact: true)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 8)
@@ -257,33 +354,37 @@ struct IslandStyleGallerySection: View {
     // MARK: - Control deck
 
     private var deckRows: some View {
-        galleryRow(title: L10n.TestLab.galleryDeck, columns: 2) {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
             panelCell(
                 label: L10n.TestLab.galleryDeckBattery,
                 maxWidth: NotchGeometry.controlDeckPreferredWidth,
                 hugs: false,
-                contentProvidesOpaqueShell: true
+                contentProvidesOpaqueShell: true,
+                onTap: { harness.openControlDeck(pane: .battery) }
             ) {
                 WidgetSamplePreview.content(for: "system.controlDeck.battery", compact: false)
             }
             panelCell(
                 label: L10n.TestLab.galleryDeckVolume,
                 maxWidth: NotchGeometry.controlDeckPreferredWidth,
-                hugs: false
+                hugs: false,
+                onTap: { harness.openControlDeck(pane: .volume) }
             ) {
                 WidgetSamplePreview.content(for: "system.controlDeck.volume", compact: false)
             }
             panelCell(
                 label: L10n.TestLab.galleryDeckProjects,
                 maxWidth: NotchGeometry.controlDeckPreferredWidth,
-                hugs: false
+                hugs: false,
+                onTap: { harness.openControlDeck(pane: .projects) }
             ) {
                 WidgetSamplePreview.content(for: "system.controlDeck.projects", compact: false)
             }
             panelCell(
                 label: L10n.TestLab.galleryDeckShelf,
                 maxWidth: NotchGeometry.controlDeckPreferredWidth,
-                hugs: false
+                hugs: false,
+                onTap: { harness.openControlDeck(pane: .shelf) }
             ) {
                 WidgetSamplePreview.content(for: "system.controlDeck.shelf", compact: false)
             }
@@ -334,9 +435,10 @@ struct IslandStyleGallerySection: View {
         hugs: Bool = true,
         outline: IslandOutlineStyle = .panel,
         stageMinHeight: CGFloat = 72,
+        onTap: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        galleryCell(label: label, stageMinHeight: stageMinHeight) {
+        galleryCell(label: label, stageMinHeight: stageMinHeight, onTap: onTap) {
             WidgetIslandPreviewShell(
                 compact: true,
                 outlineStyle: outline,
@@ -351,9 +453,10 @@ struct IslandStyleGallerySection: View {
     /// 半岛样张：卡片自带 flush 黑胶囊，不再套满岛预览壳，也不画并排另一侧。
     private func flushCell<Content: View>(
         label: String,
+        onTap: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        galleryCell(label: label, stageMinHeight: 56) {
+        galleryCell(label: label, stageMinHeight: 56, onTap: onTap) {
             content()
                 .fixedSize(horizontal: true, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -365,9 +468,10 @@ struct IslandStyleGallerySection: View {
         maxWidth: CGFloat? = nil,
         hugs: Bool = true,
         contentProvidesOpaqueShell: Bool = false,
+        onTap: (() -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        galleryCell(label: label, stageMinHeight: 120) {
+        galleryCell(label: label, stageMinHeight: 120, onTap: onTap) {
             WidgetIslandPreviewShell(
                 compact: false,
                 hugsContent: hugs,
@@ -379,9 +483,11 @@ struct IslandStyleGallerySection: View {
         }
     }
 
+    @ViewBuilder
     private func galleryCell<Content: View>(
         label: String,
         stageMinHeight: CGFloat,
+        onTap: (() -> Void)?,
         @ViewBuilder island: @escaping () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -389,15 +495,32 @@ struct IslandStyleGallerySection: View {
                 .font(SettingsChrome.Font.footnote)
                 .foregroundStyle(SettingsChrome.onSurfaceVariant)
                 .lineLimit(1)
-            island()
-                .frame(maxWidth: .infinity, minHeight: stageMinHeight, alignment: .top)
-                .padding(.vertical, 10)
-                .padding(.horizontal, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: SettingsChrome.Radius.card, style: .continuous)
-                        .fill(SettingsChrome.surfaceContainer)
-                )
-                .allowsHitTesting(false)
+            if let onTap {
+                Button(action: onTap) {
+                    island()
+                        .frame(maxWidth: .infinity, minHeight: stageMinHeight, alignment: .top)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: SettingsChrome.Radius.card, style: .continuous)
+                                .fill(SettingsChrome.surfaceContainer)
+                        )
+                        .contentShape(Rectangle())
+                        .allowsHitTesting(false)
+                }
+                .buttonStyle(.plain)
+                .help(L10n.TestLab.galleryTapHint)
+            } else {
+                island()
+                    .frame(maxWidth: .infinity, minHeight: stageMinHeight, alignment: .top)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: SettingsChrome.Radius.card, style: .continuous)
+                            .fill(SettingsChrome.surfaceContainer)
+                    )
+                    .allowsHitTesting(false)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
