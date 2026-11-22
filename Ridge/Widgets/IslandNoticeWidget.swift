@@ -510,12 +510,24 @@ struct PeripheralBatteryNoticeCard: View {
         Self.cleanedDeviceName(notice.deviceName)
     }
 
+    /// 右翼 pill 文案：低电/满电只显示百分比；接入仍为「已连接」。
     private var statusText: String {
         switch style {
         case .low:
-            return L10n.Battery.tipLowBadge(notice.percent ?? 0)
+            return L10n.Battery.tipPercentBadge(notice.percent ?? 0)
         case .full:
-            return L10n.Battery.tipFullBadge(notice.percent ?? 100)
+            return L10n.Battery.tipPercentBadge(notice.percent ?? 100)
+        case .connect:
+            return L10n.PeripheralTip.connectBadge
+        }
+    }
+
+    private var accessibilityStatus: String {
+        switch style {
+        case .low:
+            return L10n.Battery.tipLowAccessibility(notice.percent ?? 0)
+        case .full:
+            return L10n.Battery.tipFullAccessibility(notice.percent ?? 100)
         case .connect:
             return L10n.PeripheralTip.connectBadge
         }
@@ -601,7 +613,7 @@ struct PeripheralBatteryNoticeCard: View {
         .contentShape(Rectangle())
         .onTapGesture { openBatteryLive(reason: "\(style)NoticeTap") }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(displayName)，\(statusText)")
+        .accessibilityLabel("\(displayName)，\(accessibilityStatus)")
     }
 
     private var fullWingBody: some View {

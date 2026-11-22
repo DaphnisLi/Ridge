@@ -2258,19 +2258,30 @@ enum L10n {
         static var tipSampleFullFooter: String {
             tr("battery.tip.sample_full_footer", "已达满电状态")
         }
-        static func tipLowBadge(_ percent: Int) -> String {
+        /// 低电 / 满电右翼 pill 只显示百分比，不再附「电量低」「满电」。
+        static func tipPercentBadge(_ percent: Int) -> String {
             String(
                 format: String(
-                    localized: "battery.tip.low_badge_format",
+                    localized: "battery.tip.percent_badge_format",
+                    defaultValue: "%d%%"
+                ),
+                percent
+            )
+        }
+        /// 无障碍：仍说明低电 / 满电语义。
+        static func tipLowAccessibility(_ percent: Int) -> String {
+            String(
+                format: String(
+                    localized: "battery.tip.low_a11y_format",
                     defaultValue: "%d%% 电量低"
                 ),
                 percent
             )
         }
-        static func tipFullBadge(_ percent: Int = 100) -> String {
+        static func tipFullAccessibility(_ percent: Int = 100) -> String {
             String(
                 format: String(
-                    localized: "battery.tip.full_badge_format",
+                    localized: "battery.tip.full_a11y_format",
                     defaultValue: "%d%% 满电"
                 ),
                 percent

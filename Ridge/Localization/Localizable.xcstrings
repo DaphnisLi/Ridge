@@ -1277,7 +1277,18 @@
         }
       }
     },
-    "battery.tip.full_badge_format": {
+    "battery.tip.percent_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d%%"
+          }
+        }
+      }
+    },
+    "battery.tip.full_a11y_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
@@ -1288,7 +1299,7 @@
         }
       }
     },
-    "battery.tip.low_badge_format": {
+    "battery.tip.low_a11y_format": {
       "extractionState": "manual",
       "localizations": {
         "zh-Hans": {
