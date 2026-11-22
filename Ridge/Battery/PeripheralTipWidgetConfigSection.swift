@@ -77,11 +77,16 @@ struct PeripheralTipWidgetConfigSection: View {
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
-                )
+                ),
+                .halfIslandTipOption()
             ],
             selection: $previewSelection
         ) { option in
-            WidgetSamplePreview.content(for: "builtin.peripheralTip.\(option.id)", compact: true)
+            if option.id == "halfIsland" {
+                WidgetSamplePreview.peripheralHalfIslandSample(style: .low)
+            } else {
+                WidgetSamplePreview.content(for: "builtin.peripheralTip.\(option.id)", compact: true)
+            }
         }
     }
 

@@ -3,6 +3,7 @@ import SwiftUI
 /// 「已复制」提示设置：岛样张 + 触感反馈（总开关在小组件库）。
 struct CopiedNoticeWidgetConfigSection: View {
     @ObservedObject private var settings = CopiedNoticeSettings.shared
+    @State private var previewSelection = "copied"
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,11 +51,16 @@ struct CopiedNoticeWidgetConfigSection: View {
                     outlineStyle: .circle,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
-                )
+                ),
+                .halfIslandTipOption()
             ],
-            selection: .constant("copied")
-        ) { _ in
-            WidgetSamplePreview.content(for: "builtin.copiedNotice", compact: true)
+            selection: $previewSelection
+        ) { option in
+            if option.id == "halfIsland" {
+                WidgetSamplePreview.copiedHalfIslandSample()
+            } else {
+                WidgetSamplePreview.content(for: "builtin.copiedNotice", compact: true)
+            }
         }
     }
 }

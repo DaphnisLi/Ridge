@@ -9714,6 +9714,28 @@
         }
       }
     },
+    "widgets.preview.half_island": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半岛"
+          }
+        }
+      }
+    },
+    "widgets.preview.half_island_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "并排"
+          }
+        }
+      }
+    },
     "widgets.library.intro": {
       "extractionState": "manual",
       "localizations": {
