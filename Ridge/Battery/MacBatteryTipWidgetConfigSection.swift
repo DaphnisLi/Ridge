@@ -61,7 +61,7 @@ struct MacBatteryTipWidgetConfigSection: View {
                 tipOption(
                     id: "charging",
                     title: L10n.MacBattery.previewCharging,
-                    badge: L10n.MacBattery.previewChargingBadge,
+                    badge: "78%",
                     symbol: "bolt.fill",
                     tint: SettingsChrome.primary
                 ),

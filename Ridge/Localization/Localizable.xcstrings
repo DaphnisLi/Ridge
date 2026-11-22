@@ -3367,17 +3367,6 @@
         }
       }
     },
-    "mac_battery.preview.charging_badge": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "电量"
-          }
-        }
-      }
-    },
     "mac_battery.preview.full": {
       "extractionState": "manual",
       "localizations": {

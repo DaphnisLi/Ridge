@@ -2411,9 +2411,6 @@ enum L10n {
         }
 
         static var previewCharging: String { tr("mac_battery.preview.charging", "插电") }
-        static var previewChargingBadge: String {
-            tr("mac_battery.preview.charging_badge", "电量")
-        }
         static var previewFull: String { tr("mac_battery.preview.full", "满电") }
         static var previewLow: String { tr("mac_battery.preview.low", "低电") }
         static var previewUnplug: String { tr("mac_battery.preview.unplug", "拔电") }
