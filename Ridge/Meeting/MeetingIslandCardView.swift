@@ -376,10 +376,11 @@ struct MeetingIslandCardView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
-    /// 设置 / 库卡样张。
+    /// 设置 / 库卡 / 图鉴样张。`flushSide` 非 nil 时只出半岛自身半翼。
     static func previewSample(
         urgency: MeetingLeadUrgency = .relaxed,
-        compact: Bool = false
+        compact: Bool = false,
+        flushSide: IslandFlushWingStyle.Side? = nil
     ) -> MeetingIslandCardView {
         let seconds: TimeInterval
         let title: String
@@ -400,6 +401,7 @@ struct MeetingIslandCardView: View {
             showJoin: true,
             showAuth: false,
             compact: compact,
+            flushSide: flushSide,
             previewNotchWidth: compact ? 100 : 110
         )
     }

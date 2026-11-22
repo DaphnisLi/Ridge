@@ -4,6 +4,10 @@ import Foundation
 enum IslandNoticeAutoDismissPolicy {
     /// 非会议类瞬时 tip 统一停留时长。
     static let standardNanoseconds: UInt64 = 3_000_000_000
+    /// 「已复制」圆岛：入场 + 定格（`IslandChrome.notchRightOrbAutoDismissNanoseconds`），勿再等 3s。
+    static var copiedNoticeNanoseconds: UInt64 {
+        IslandChrome.notchRightOrbAutoDismissNanoseconds
+    }
     /// 悬停 / 设置挡住时的轮询间隔。
     static let pollNanoseconds: UInt64 = 100_000_000
 

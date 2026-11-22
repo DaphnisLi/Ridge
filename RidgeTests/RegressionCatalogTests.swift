@@ -566,10 +566,14 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(copied.usesNotchWingChrome)
         // Cmd+C 后指针常不在岛上：须保持展开至自动收起，否则展开中途就被 hoverEnd 收掉。
         XCTAssertTrue(copied.keepsExpandedWithoutHover)
-        // 非专注 C 统一约 3s（含已复制圆岛）。
-        XCTAssertEqual(copied.autoDismissNanoseconds, 3_000_000_000)
+        // 「已复制」= 入场 + 定格（约 1.4s），不悬停续命。
+        XCTAssertEqual(
+            copied.autoDismissNanoseconds,
+            IslandChrome.notchRightOrbAutoDismissNanoseconds
+        )
+        XCTAssertEqual(IslandChrome.notchRightOrbEntranceNanoseconds, 900_000_000)
         XCTAssertEqual(IslandChrome.notchRightOrbLingerNanoseconds, 500_000_000)
-        XCTAssertTrue(copied.holdsWhileHovering)
+        XCTAssertFalse(copied.holdsWhileHovering)
 
         XCTAssertEqual(orb.width, IslandChrome.notchRightOrbDiameter)
         XCTAssertEqual(orb.height, IslandChrome.notchRightOrbDiameter)

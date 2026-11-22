@@ -535,8 +535,13 @@ struct PeripheralBatteryNoticeCard: View {
         }
     }
 
-    /// 设置预览样张。
-    static func previewSample(style: Style, threshold: Int = 15, compact: Bool = true) -> some View {
+    /// 设置 / 图鉴样张。`flushSide` 非 nil 时只出半岛自身半翼（带黑胶囊），不叠满岛边距。
+    static func previewSample(
+        style: Style,
+        threshold: Int = 15,
+        compact: Bool = true,
+        flushSide: IslandFlushWingStyle.Side? = nil
+    ) -> some View {
         let notice: BatteryPeripheralNotice
         switch style {
         case .low:
@@ -570,10 +575,21 @@ struct PeripheralBatteryNoticeCard: View {
                 detail: L10n.PeripheralTip.connectNoticeDetail
             )
         }
-        return PeripheralBatteryNoticeCard(notice: notice, style: style, compact: true)
-            .padding(.horizontal, IslandChrome.contentHorizontal)
-            .padding(.bottom, IslandChrome.compactTipBottom)
-            .frame(minHeight: compact ? 34 : 40)
+        let card = PeripheralBatteryNoticeCard(
+            notice: notice,
+            style: style,
+            compact: true,
+            flushSide: flushSide
+        )
+        if flushSide != nil {
+            return AnyView(card)
+        }
+        return AnyView(
+            card
+                .padding(.horizontal, IslandChrome.contentHorizontal)
+                .padding(.bottom, IslandChrome.compactTipBottom)
+                .frame(minHeight: compact ? 34 : 40)
+        )
     }
 
     var body: some View {
@@ -828,10 +844,40 @@ private struct PeripheralBatteryStatusGlyph: View {
 
 /// RAM 高压 tip：单独紧凑双翼贴刘海——左 `● 96% RAM`，右 App 名+内存（无图标）；悬停右翼切免打扰+管理。
 /// 与 B/专注并排 = 右翼半块。程序 expand + 约 3s。禁止一键杀进程。根视图禁止外圈 padding。
-private struct RAMPressureNoticeCard: View {
+struct RAMPressureNoticeCard: View {
     let notice: ResourceRAMPressureNotice
     var flushSide: IslandFlushWingStyle.Side? = nil
     var bareWingContent: Bool = false
+
+    #if DEBUG
+    /// 测试台样式图鉴假数据。`flushSide` 时只出半岛自身半翼。
+    static func previewSample(
+        compact: Bool = true,
+        flushSide: IslandFlushWingStyle.Side? = nil
+    ) -> some View {
+        _ = compact
+        let card = RAMPressureNoticeCard(
+            notice: ResourceRAMPressureNotice(
+                id: "preview.ram",
+                ramUsedBytes: 28_000_000_000,
+                ramPercent: 96,
+                topAppName: "Xcode",
+                topAppBundleID: "com.apple.dt.Xcode",
+                topAppMemoryBytes: 4_200_000_000
+            ),
+            flushSide: flushSide,
+            bareWingContent: flushSide != nil
+        )
+        if let flushSide {
+            return AnyView(
+                IslandFlushWingCapsule(side: flushSide, width: IslandChrome.dualFlushCompactWingWidth) {
+                    card
+                }
+            )
+        }
+        return AnyView(card)
+    }
+    #endif
 
     @State private var localHover = false
 
@@ -1011,10 +1057,52 @@ private struct RAMPressureNoticeCard: View {
 
 /// 进程监视结束 tip（C）：稿「Sequoia 双翼」——左 `>_`+短名+状态点，右 exit 徽标+耗时。
 /// 单独上岛左右 flush；与 B/专注并排时只占右翼。根视图禁止外圈 padding。
-private struct ProcessEndedNoticeCard: View {
+struct ProcessEndedNoticeCard: View {
     let notice: ProjectWatchEndedNotice?
     var flushSide: IslandFlushWingStyle.Side? = nil
     var bareWingContent: Bool = false
+
+    #if DEBUG
+    /// 测试台样式图鉴假数据。`flushSide` 时只出半岛自身半翼。
+    static func previewSample(
+        outcome: ProjectWatchOutcome,
+        compact: Bool = true,
+        flushSide: IslandFlushWingStyle.Side? = nil
+    ) -> some View {
+        _ = compact
+        let (message, codeHint): (String, String) = {
+            switch outcome {
+            case .succeeded: return (L10n.TestLab.processEndedSuccess, "ok")
+            case .failed: return (L10n.TestLab.processEndedFailure, "fail")
+            case .signaled: return (L10n.TestLab.processEndedFailure, "sig")
+            case .unknown: return (L10n.TestLab.processEndedFailure, "unk")
+            }
+        }()
+        let card = ProcessEndedNoticeCard(
+            notice: ProjectWatchEndedNotice(
+                id: "preview.process.\(codeHint)",
+                projectName: "Ridge Lab",
+                label: "dev server",
+                message: message,
+                endedAt: Date(),
+                outcome: outcome,
+                logPath: nil,
+                peakMemoryBytes: 120_000_000,
+                durationSeconds: 42
+            ),
+            flushSide: flushSide,
+            bareWingContent: flushSide != nil
+        )
+        if let flushSide {
+            return AnyView(
+                IslandFlushWingCapsule(side: flushSide, width: IslandChrome.dualFlushCompactWingWidth) {
+                    card
+                }
+            )
+        }
+        return AnyView(card)
+    }
+    #endif
 
     private var outcome: ProjectWatchOutcome {
         notice?.outcome ?? .unknown

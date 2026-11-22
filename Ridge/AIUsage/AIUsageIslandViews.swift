@@ -208,11 +208,12 @@ struct AIUsageIslandCardView: View {
         return L10n.AIUsage.resetInMinutesLeading(minutes)
     }
 
-    /// 设置预览样张：百分比默认取用户当前档位阈值；三档对应重置三档文案。
+    /// 设置 / 图鉴样张：百分比默认取用户当前档位阈值；`flushSide` 时只出半岛自身半翼。
     static func previewSample(
         stage: AIUsageStage = .abundant,
         remainingPercent: Int? = nil,
-        compact: Bool = true
+        compact: Bool = true,
+        flushSide: IslandFlushWingStyle.Side? = nil
     ) -> AIUsageIslandCardView {
         let settings = AIUsageSettings.shared
         let remaining: Int
@@ -237,7 +238,8 @@ struct AIUsageIslandCardView: View {
             stage: stage,
             resetsAt: Date().addingTimeInterval(resetOffset),
             errorMessage: nil,
-            compact: compact
+            compact: compact,
+            flushSide: flushSide
         )
     }
 }

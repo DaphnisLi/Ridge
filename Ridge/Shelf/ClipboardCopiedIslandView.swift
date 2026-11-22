@@ -174,7 +174,8 @@ struct ClipboardCopiedIslandView: View {
         }
 
         AppLog.info("CopiedNotice", "圆岛方案02入场完成", [
-            "tokenPrefix": String(animationToken.prefix(24))
+            "tokenPrefix": String(animationToken.prefix(24)),
+            "dismissMs": Int(IslandChrome.notchRightOrbAutoDismissNanoseconds / 1_000_000)
         ])
     }
 }

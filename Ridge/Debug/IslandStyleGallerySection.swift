@@ -1,0 +1,420 @@
+#if DEBUG
+import SwiftUI
+
+/// 岛测试台下方「样式图鉴」：用与设置预览相同的假数据组件，把当前真样式全状态铺开。
+/// 仅 DEBUG；Release 无此类型。
+struct IslandStyleGallerySection: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
+            galleryHeader
+
+            galleryGroup(title: L10n.TestLab.galleryGroupTips) {
+                tipMeetingRows
+                tipPeripheralRows
+                tipAIRows
+                tipProcessRows
+                tipMiscRows
+            }
+
+            galleryGroup(title: L10n.TestLab.galleryGroupLive) {
+                liveMediaRows
+                liveFocusRows
+                liveWorldAndStocks
+            }
+
+            galleryGroup(title: L10n.TestLab.galleryGroupDeck) {
+                deckRows
+            }
+        }
+        .onAppear {
+            AppLog.info("TestLab", "样式图鉴已显示")
+        }
+    }
+
+    private var galleryHeader: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(SettingsChrome.primary.opacity(0.12))
+                    Image(systemName: "rectangle.grid.3x2")
+                        .font(SettingsChrome.Font.iconInline)
+                        .foregroundStyle(SettingsChrome.primary)
+                }
+                .frame(width: 28, height: 28)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.TestLab.galleryTitle)
+                        .font(SettingsChrome.Font.sectionTitle)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Text(L10n.TestLab.gallerySubtitle)
+                        .font(SettingsChrome.Font.caption)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    // MARK: - Tips（每态整岛 + 半岛并排；半岛只画自身半翼）
+
+    private var tipMeetingRows: some View {
+        // 两列：整岛 | 半岛，按紧迫度成对排布。
+        galleryRow(title: L10n.TestLab.galleryMeeting, columns: 2) {
+            ForEach(MeetingLeadUrgency.allCases) { urgency in
+                tipCell(label: pairedLabel(urgency.stageTitle, half: false)) {
+                    MeetingIslandCardView.previewSample(urgency: urgency, compact: true)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                        .padding(.bottom, IslandChrome.compactTipBottom)
+                }
+                flushCell(label: pairedLabel(urgency.stageTitle, half: true)) {
+                    MeetingIslandCardView.previewSample(
+                        urgency: urgency,
+                        compact: true,
+                        flushSide: .leading
+                    )
+                }
+            }
+        }
+    }
+
+    private var tipPeripheralRows: some View {
+        galleryRow(title: L10n.TestLab.galleryPeripheral, columns: 2) {
+            tipCell(label: pairedLabel(L10n.PeripheralTip.connectBadge, half: false)) {
+                PeripheralBatteryNoticeCard.previewSample(style: .connect, compact: true)
+            }
+            flushCell(label: pairedLabel(L10n.PeripheralTip.connectBadge, half: true)) {
+                PeripheralBatteryNoticeCard.previewSample(style: .connect, flushSide: .trailing)
+            }
+            tipCell(label: pairedLabel(L10n.TestLab.galleryPeripheralFull, half: false)) {
+                PeripheralBatteryNoticeCard.previewSample(style: .full, compact: true)
+            }
+            flushCell(label: pairedLabel(L10n.TestLab.galleryPeripheralFull, half: true)) {
+                PeripheralBatteryNoticeCard.previewSample(style: .full, flushSide: .trailing)
+            }
+            tipCell(label: pairedLabel(L10n.TestLab.galleryPeripheralLow, half: false)) {
+                PeripheralBatteryNoticeCard.previewSample(style: .low, compact: true)
+            }
+            flushCell(label: pairedLabel(L10n.TestLab.galleryPeripheralLow, half: true)) {
+                PeripheralBatteryNoticeCard.previewSample(style: .low, flushSide: .trailing)
+            }
+        }
+    }
+
+    private var tipAIRows: some View {
+        galleryRow(title: L10n.TestLab.galleryAI, columns: 2) {
+            ForEach([AIUsageStage.abundant, .warning, .critical], id: \.rawValue) { stage in
+                tipCell(label: pairedLabel(stage.label, half: false)) {
+                    AIUsageIslandCardView.previewSample(stage: stage, compact: true)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                        .padding(.bottom, IslandChrome.compactTipBottom)
+                }
+                flushCell(label: pairedLabel(stage.label, half: true)) {
+                    AIUsageIslandCardView.previewSample(stage: stage, flushSide: .trailing)
+                }
+            }
+        }
+    }
+
+    private var tipProcessRows: some View {
+        galleryRow(title: L10n.TestLab.galleryProcess, columns: 2) {
+            tipCell(label: pairedLabel(L10n.TestLab.galleryProcessOK, half: false)) {
+                ProcessEndedNoticeCard.previewSample(outcome: .succeeded)
+            }
+            flushCell(label: pairedLabel(L10n.TestLab.galleryProcessOK, half: true)) {
+                ProcessEndedNoticeCard.previewSample(outcome: .succeeded, flushSide: .trailing)
+            }
+            tipCell(label: pairedLabel(L10n.TestLab.galleryProcessFail, half: false)) {
+                ProcessEndedNoticeCard.previewSample(outcome: .failed(code: 1))
+            }
+            flushCell(label: pairedLabel(L10n.TestLab.galleryProcessFail, half: true)) {
+                ProcessEndedNoticeCard.previewSample(outcome: .failed(code: 1), flushSide: .trailing)
+            }
+            tipCell(label: pairedLabel(L10n.TestLab.galleryProcessSignal, half: false)) {
+                ProcessEndedNoticeCard.previewSample(outcome: .signaled(signal: 15))
+            }
+            flushCell(label: pairedLabel(L10n.TestLab.galleryProcessSignal, half: true)) {
+                ProcessEndedNoticeCard.previewSample(outcome: .signaled(signal: 15), flushSide: .trailing)
+            }
+        }
+    }
+
+    private var tipMiscRows: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            galleryRow(title: L10n.TestLab.galleryMove, columns: 2) {
+                tipCell(label: pairedLabel(L10n.TestLab.galleryMove, half: false)) {
+                    MoveReminderNoticeCard.previewSample(
+                        activeMinutes: MoveReminderSettings.shared.activeTriggerMinutes,
+                        restMinutes: MoveReminderSettings.shared.suggestedRestMinutes,
+                        compact: true
+                    )
+                    .padding(.horizontal, IslandChrome.contentHorizontal)
+                    .padding(.bottom, IslandChrome.compactTipBottom)
+                }
+                flushCell(label: pairedLabel(L10n.TestLab.galleryMove, half: true)) {
+                    MoveReminderNoticeCard.previewSample(
+                        activeMinutes: MoveReminderSettings.shared.activeTriggerMinutes,
+                        restMinutes: MoveReminderSettings.shared.suggestedRestMinutes,
+                        compact: true,
+                        flushSide: .trailing
+                    )
+                }
+            }
+
+            galleryRow(title: L10n.TestLab.galleryRAM, columns: 2) {
+                tipCell(label: pairedLabel(L10n.TestLab.galleryRAM, half: false)) {
+                    RAMPressureNoticeCard.previewSample()
+                }
+                flushCell(label: pairedLabel(L10n.TestLab.galleryRAM, half: true)) {
+                    RAMPressureNoticeCard.previewSample(flushSide: .trailing)
+                }
+            }
+
+            galleryRow(title: L10n.TestLab.galleryCapture) {
+                tipCell(label: L10n.TestLab.galleryColorPick) {
+                    ColorPickTipIslandView(compact: true)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                        .padding(.bottom, IslandChrome.compactTipBottom)
+                }
+                tipCell(label: L10n.TestLab.galleryOCR) {
+                    OCRSelectTipIslandView(compact: true)
+                        .padding(.horizontal, IslandChrome.contentHorizontal)
+                        .padding(.bottom, IslandChrome.compactTipBottom)
+                }
+                tipCell(
+                    label: L10n.TestLab.galleryCopied,
+                    hugs: true,
+                    outline: .circle,
+                    stageMinHeight: 72
+                ) {
+                    ClipboardCopiedIslandView(compact: true, animationToken: "gallery.copied")
+                        .frame(
+                            width: IslandChrome.notchRightOrbDiameter,
+                            height: IslandChrome.notchRightOrbDiameter
+                        )
+                }
+            }
+        }
+    }
+
+    // MARK: - Live
+
+    private var liveMediaRows: some View {
+        galleryRow(title: L10n.TestLab.galleryMedia, columns: 2) {
+            panelCell(label: L10n.TestLab.galleryMediaStandby, maxWidth: SettingsIslandPreviewWidth.standby) {
+                MediaCompactStandbyView.previewSample(animatedEqualizer: false)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+            }
+            panelCell(label: L10n.TestLab.galleryMediaExpanded, maxWidth: SettingsIslandPreviewWidth.expanded) {
+                MediaIslandCardView.previewSample(animatedEqualizer: false)
+                    .padding(.horizontal, MediaPreviewChrome.expandedHorizontal)
+                    .padding(.top, MediaPreviewChrome.expandedTop)
+                    .padding(.bottom, MediaPreviewChrome.expandedBottom)
+            }
+        }
+    }
+
+    private var liveFocusRows: some View {
+        galleryRow(title: L10n.TestLab.galleryFocus, columns: 2) {
+            ForEach(FocusTimerPreviewTab.allCases) { tab in
+                panelCell(
+                    label: focusTabTitle(tab),
+                    maxWidth: tab.isCompact
+                        ? SettingsIslandPreviewWidth.standby
+                        : SettingsIslandPreviewWidth.expanded,
+                    hugs: false
+                ) {
+                    FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
+                        .padding(
+                            .horizontal,
+                            tab.isCompact ? 8 : IslandChrome.contentHorizontal
+                        )
+                        .padding(
+                            .vertical,
+                            tab.isCompact ? 6 : IslandChrome.contentBottom
+                        )
+                }
+            }
+        }
+    }
+
+    private var liveWorldAndStocks: some View {
+        galleryRow(title: L10n.TestLab.galleryWorldStocks, columns: 2) {
+            panelCell(label: L10n.TestLab.galleryWorldClock, maxWidth: 420, hugs: false) {
+                WorldClockIslandView.previewSample()
+                    .padding(.horizontal, IslandChrome.contentHorizontal)
+                    .padding(.vertical, 10)
+            }
+            panelCell(label: L10n.TestLab.galleryStocks, hugs: true) {
+                StockIslandView.previewSample(compact: true)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 8)
+            }
+        }
+    }
+
+    // MARK: - Control deck
+
+    private var deckRows: some View {
+        galleryRow(title: L10n.TestLab.galleryDeck, columns: 2) {
+            panelCell(
+                label: L10n.TestLab.galleryDeckBattery,
+                maxWidth: NotchGeometry.controlDeckPreferredWidth,
+                hugs: false,
+                contentProvidesOpaqueShell: true
+            ) {
+                WidgetSamplePreview.content(for: "system.controlDeck.battery", compact: false)
+            }
+            panelCell(
+                label: L10n.TestLab.galleryDeckVolume,
+                maxWidth: NotchGeometry.controlDeckPreferredWidth,
+                hugs: false
+            ) {
+                WidgetSamplePreview.content(for: "system.controlDeck.volume", compact: false)
+            }
+            panelCell(
+                label: L10n.TestLab.galleryDeckProjects,
+                maxWidth: NotchGeometry.controlDeckPreferredWidth,
+                hugs: false
+            ) {
+                WidgetSamplePreview.content(for: "system.controlDeck.projects", compact: false)
+            }
+            panelCell(
+                label: L10n.TestLab.galleryDeckShelf,
+                maxWidth: NotchGeometry.controlDeckPreferredWidth,
+                hugs: false
+            ) {
+                WidgetSamplePreview.content(for: "system.controlDeck.shelf", compact: false)
+            }
+        }
+    }
+
+    // MARK: - Layout helpers
+
+    private func galleryGroup<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        SettingsCard {
+            VStack(alignment: .leading, spacing: SettingsChrome.Spacing.cardInner) {
+                Text(title)
+                    .font(SettingsChrome.Font.cardTitle)
+                    .foregroundStyle(SettingsChrome.onSurface)
+                content()
+            }
+            .padding(SettingsChrome.Spacing.cardPadding)
+        }
+    }
+
+    private func galleryRow<Content: View>(
+        title: String,
+        columns: Int = 3,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(SettingsChrome.Font.label)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: 10),
+                    count: columns
+                ),
+                alignment: .leading,
+                spacing: 10
+            ) {
+                content()
+            }
+        }
+    }
+
+    private func tipCell<Content: View>(
+        label: String,
+        hugs: Bool = true,
+        outline: IslandOutlineStyle = .panel,
+        stageMinHeight: CGFloat = 72,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        galleryCell(label: label, stageMinHeight: stageMinHeight) {
+            WidgetIslandPreviewShell(
+                compact: true,
+                outlineStyle: outline,
+                hugsContent: hugs
+            ) {
+                content()
+            }
+            .fixedSize(horizontal: true, vertical: true)
+        }
+    }
+
+    /// 半岛样张：卡片自带 flush 黑胶囊，不再套满岛预览壳，也不画并排另一侧。
+    private func flushCell<Content: View>(
+        label: String,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        galleryCell(label: label, stageMinHeight: 56) {
+            content()
+                .fixedSize(horizontal: true, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+    }
+
+    private func panelCell<Content: View>(
+        label: String,
+        maxWidth: CGFloat? = nil,
+        hugs: Bool = true,
+        contentProvidesOpaqueShell: Bool = false,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        galleryCell(label: label, stageMinHeight: 120) {
+            WidgetIslandPreviewShell(
+                compact: false,
+                hugsContent: hugs,
+                contentProvidesOpaqueShell: contentProvidesOpaqueShell
+            ) {
+                content()
+            }
+            .frame(maxWidth: maxWidth)
+        }
+    }
+
+    private func galleryCell<Content: View>(
+        label: String,
+        stageMinHeight: CGFloat,
+        @ViewBuilder island: @escaping () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(SettingsChrome.Font.footnote)
+                .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                .lineLimit(1)
+            island()
+                .frame(maxWidth: .infinity, minHeight: stageMinHeight, alignment: .top)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: SettingsChrome.Radius.card, style: .continuous)
+                        .fill(SettingsChrome.surfaceContainer)
+                )
+                .allowsHitTesting(false)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func focusTabTitle(_ tab: FocusTimerPreviewTab) -> String {
+        switch tab {
+        case .standby: return L10n.FocusTimer.phaseStandby
+        case .picking: return L10n.FocusTimer.phasePicking
+        case .running: return L10n.FocusTimer.phaseRunning
+        case .overtime: return L10n.FocusTimer.phaseOvertime
+        case .completed: return L10n.FocusTimer.phaseCompleted
+        }
+    }
+
+    /// 同态整岛 / 半岛标签：`从容 · 整岛` / `从容 · 半岛`。
+    private func pairedLabel(_ base: String, half: Bool) -> String {
+        half ? L10n.TestLab.galleryLabelHalf(base) : L10n.TestLab.galleryLabelFull(base)
+    }
+}
+#endif

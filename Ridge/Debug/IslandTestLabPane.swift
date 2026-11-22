@@ -25,6 +25,8 @@ struct IslandTestLabPane: View {
                 controlDeckCard
                 comboCard
 
+                IslandStyleGallerySection()
+
                 if !harness.statusMessage.isEmpty {
                     statusBanner
                 }

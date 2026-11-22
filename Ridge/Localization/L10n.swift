@@ -3257,6 +3257,56 @@ enum L10n {
         static var statusFakeMediaOff: String {
             tr("test_lab.status.fake_media_off", "媒体：假播放已关")
         }
+
+        // MARK: Style gallery（测试台下方真样式图鉴）
+
+        static var galleryTitle: String { tr("test_lab.gallery.title", "样式图鉴") }
+        static var gallerySubtitle: String {
+            tr(
+                "test_lab.gallery.subtitle",
+                "当前组件真样式全量展出（与设置预览同款假数据）；有半岛的 tip 与整岛并排放，半岛只画自身半翼。仅本地 DEBUG 可见。"
+            )
+        }
+        static var galleryGroupTips: String { tr("test_lab.gallery.group_tips", "瞬时提示") }
+        static var galleryGroupLive: String { tr("test_lab.gallery.group_live", "实况与面板") }
+        static var galleryGroupDeck: String { tr("test_lab.gallery.group_deck", "控制台磁贴") }
+
+        static func galleryLabelFull(_ name: String) -> String {
+            String(format: tr("test_lab.gallery.label_full_format", "%@ · 整岛"), name)
+        }
+        static func galleryLabelHalf(_ name: String) -> String {
+            String(format: tr("test_lab.gallery.label_half_format", "%@ · 半岛"), name)
+        }
+
+        static var galleryMeeting: String { tr("test_lab.gallery.meeting", "会议") }
+        static var galleryPeripheral: String { tr("test_lab.gallery.peripheral", "外设电量") }
+        static var galleryPeripheralFull: String { tr("test_lab.gallery.peripheral_full", "满电") }
+        static var galleryPeripheralLow: String { tr("test_lab.gallery.peripheral_low", "低电") }
+        static var galleryAI: String { tr("test_lab.gallery.ai", "AI 额度") }
+        static var galleryProcess: String { tr("test_lab.gallery.process", "进程结束") }
+        static var galleryProcessOK: String { tr("test_lab.gallery.process_ok", "成功") }
+        static var galleryProcessFail: String { tr("test_lab.gallery.process_fail", "失败") }
+        static var galleryProcessSignal: String { tr("test_lab.gallery.process_signal", "信号终止") }
+        static var galleryMove: String { tr("test_lab.gallery.move", "久坐提醒") }
+        static var galleryRAM: String { tr("test_lab.gallery.ram", "RAM 高压") }
+        static var galleryCapture: String { tr("test_lab.gallery.capture", "取色 / OCR / 已复制") }
+        static var galleryColorPick: String { tr("test_lab.gallery.color_pick", "取色") }
+        static var galleryOCR: String { tr("test_lab.gallery.ocr", "OCR") }
+        static var galleryCopied: String { tr("test_lab.gallery.copied", "已复制") }
+
+        static var galleryMedia: String { tr("test_lab.gallery.media", "媒体") }
+        static var galleryMediaStandby: String { tr("test_lab.gallery.media_standby", "待命") }
+        static var galleryMediaExpanded: String { tr("test_lab.gallery.media_expanded", "展开") }
+        static var galleryFocus: String { tr("test_lab.gallery.focus", "专注") }
+        static var galleryWorldStocks: String { tr("test_lab.gallery.world_stocks", "世界时钟 / 股价") }
+        static var galleryWorldClock: String { tr("test_lab.gallery.world_clock", "世界时钟") }
+        static var galleryStocks: String { tr("test_lab.gallery.stocks", "股价") }
+
+        static var galleryDeck: String { tr("test_lab.gallery.deck", "控制台") }
+        static var galleryDeckBattery: String { tr("test_lab.gallery.deck_battery", "电量") }
+        static var galleryDeckVolume: String { tr("test_lab.gallery.deck_volume", "音量") }
+        static var galleryDeckProjects: String { tr("test_lab.gallery.deck_projects", "项目") }
+        static var galleryDeckShelf: String { tr("test_lab.gallery.deck_shelf", "货架") }
     }
 
     // MARK: - Helpers

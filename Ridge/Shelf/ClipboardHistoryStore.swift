@@ -240,11 +240,9 @@ final class ClipboardHistoryStore: ObservableObject {
             AppLog.debug("Clipboard", "采集成功提示刚投递，跳过轮询重复提示")
             return
         }
-        // 设置设计页真岛保持收起：上岛会与 pointerOverSettings 收起互殴连震，且提示看不见。
-        if IslandController.shared?.blocksProgrammaticNoticeExpand == true
-            || MenuBarController.shared?.isSettingsPresented == true
-        {
-            AppLog.info("Clipboard", "设置窗打开，跳过复制上岛提示", [
+        // 仅小组件库「设计页 sticky」挡上岛（连震防护）。普通设置 / 岛测试台开着仍应提示。
+        if IslandController.shared?.blocksProgrammaticNoticeExpand == true {
+            AppLog.info("Clipboard", "设置设计页中，跳过复制上岛提示", [
                 "category": item.category.rawValue
             ])
             return

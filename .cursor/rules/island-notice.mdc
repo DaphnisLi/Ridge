@@ -17,7 +17,7 @@ alwaysApply: true
 | 载荷 | `IslandNoticePayload` 枚举；新场景加 case + 卡片渲染 |
 | 库 / 设置 | 不进小组件库、不可 pin、不进排序 |
 | 分页 | **禁止**左右滑动；展示期间不参与翻页点 |
-| 停留 | 非专注 C **统一约 3s** 自动收起；指针在岛上时不自动收，离开后再收。取色 / OCR 手动收。**会议**不走 3s：按设置「开始后保留提示」（开始即关 / 开始后 N 分钟 / 直到结束）由 `MeetingLeadSession` 撤 |
+| 停留 | 非专注 C **统一约 3s** 自动收起；指针在岛上时不自动收，离开后再收。**已复制**（`copy.*`）跟入场+定格约 **1.4s** 收、不悬停续命。取色 / OCR 手动收。**会议**不走 3s：按设置「开始后保留提示」由 `MeetingLeadSession` 撤 |
 | C 队列 | 非专注 C **同时只展示一条**；后来的 FIFO 入队，前一条收起后再出。专注是常驻左翼，不占这条队列 |
 | 收岛 | 通知撤回时若指针不在岛上，**一并 collapse**，禁止留下展开空态/其它页闪一下 |
 
@@ -47,7 +47,7 @@ alwaysApply: true
 - **禁止**再写外圈 `.padding(.vertical/…)` / `.padding(.horizontal/…)` 去「离岛边」
 - **禁止**把 HTML 稿的 `px-4 py-2` 原样叠到 SwiftUI 根上（稿面 padding ≠ 岛壳边距）
 - 卡片内部控件间距可以用；根视图只排内容，由 chrome / `usesNotchWingChrome` / `usesNotchRightOrbChrome` / `usesShortBelowNotchChrome` 定外距
-- 「已复制」（`copy.*`）：刘海右侧 Ø32 圆形微岛（方案 02 流光向心）；`usesNotchRightOrbChrome`；预备 `prepareNotchRightOrbLayout`；禁再走下方短胶囊
+- 「已复制」（`copy.*`）：刘海右侧 Ø32 圆形微岛（方案 02 流光向心）；`usesNotchRightOrbChrome`；预备 `prepareNotchRightOrbLayout`；禁再走下方短胶囊；停留 `notchRightOrbAutoDismissNanoseconds`（约 1.4s），勿套默认 3s；普通设置开着仍提示，仅设计 sticky 跳过
 
 ## 禁止
 

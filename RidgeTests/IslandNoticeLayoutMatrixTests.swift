@@ -333,7 +333,8 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                     notchWing: false,
                     dualFlushSolo: false,
                     rightOrb: isCopy,
-                    holdHover: true
+                    // 「已复制」动效结束即收，不悬停续命；其它剪贴板 hint 仍保活。
+                    holdHover: !isCopy
                 )
             case .moveReminder, .aiUsageAlert,
                  .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:

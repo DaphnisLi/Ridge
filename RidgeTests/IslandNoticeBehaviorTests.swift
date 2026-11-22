@@ -56,12 +56,21 @@ final class IslandNoticeBehaviorTests: XCTestCase {
         )
 
         XCTAssertEqual(IslandNoticeAutoDismissPolicy.standardNanoseconds, 3_000_000_000)
+        XCTAssertEqual(
+            IslandNoticeAutoDismissPolicy.copiedNoticeNanoseconds,
+            IslandChrome.notchRightOrbAutoDismissNanoseconds
+        )
+        XCTAssertEqual(
+            IslandNoticeAutoDismissPolicy.copiedNoticeNanoseconds,
+            IslandChrome.notchRightOrbEntranceNanoseconds
+                + IslandChrome.notchRightOrbLingerNanoseconds
+        )
         XCTAssertEqual(IslandNoticeAutoDismissPolicy.pollNanoseconds, 100_000_000)
     }
 
     func test_islandNoticeBehavior_everyAutoDismissTipUsesStandardDuration() {
         let tips: [IslandNoticePayload] = [
-            .clipboardCaptureHint(id: "copy.b", text: "x", symbol: "doc"),
+            .clipboardCaptureHint(id: "paste.hint", text: "x", symbol: "doc"),
             .moveReminder(.init(id: "m", activeMinutes: 30, restMinutes: 5)),
             .ramPressure(
                 .init(
@@ -134,6 +143,18 @@ final class IslandNoticeBehaviorTests: XCTestCase {
             )
             XCTAssertTrue(tip.expandsDuringSettingsSession, tip.sourceTag)
         }
+
+        let copied = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.b",
+            text: "x",
+            symbol: "doc"
+        )
+        XCTAssertEqual(
+            IslandNoticeAutoDismissPolicy.nanoseconds(for: copied),
+            IslandNoticeAutoDismissPolicy.copiedNoticeNanoseconds
+        )
+        XCTAssertTrue(copied.expandsDuringSettingsSession)
+        XCTAssertFalse(copied.holdsWhileHovering)
 
         for manual in [
             IslandNoticePayload.meetingLead(meetingID: "m1"),

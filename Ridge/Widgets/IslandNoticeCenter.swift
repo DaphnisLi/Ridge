@@ -56,13 +56,24 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
-    /// 非专注提示统一约 3s；会议 / 取色 / OCR 仍手动收。
+    /// 多数瞬时 tip 约 3s；「已复制」跟入场动效约 1.05s；会议 / 取色 / OCR 仍手动收。
     /// DEBUG 测试台可覆盖停留时长（`IslandTestLabSettings`）。
     var autoDismissNanoseconds: UInt64? {
         switch self {
         case .colorPickTip, .ocrSelectTip, .meetingLead:
             return nil
-        case .clipboardCaptureHint, .moveReminder, .ramPressure, .processEnded,
+        case .clipboardCaptureHint(let id, _, _):
+            // 「已复制」固定跟圆岛入场+定格，不受测试台 tip 时长覆盖（否则会闪没或拖太久）。
+            if id.hasPrefix("copy.") {
+                return IslandNoticeAutoDismissPolicy.copiedNoticeNanoseconds
+            }
+            #if DEBUG
+            if let override = IslandTestLabSettings.resolvedTipDurationNanoseconds() {
+                return override
+            }
+            #endif
+            return IslandNoticeAutoDismissPolicy.standardNanoseconds
+        case .moveReminder, .ramPressure, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .aiUsageAlert:
             #if DEBUG
@@ -78,7 +89,10 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .colorPickTip, .ocrSelectTip:
             return false
-        case .clipboardCaptureHint, .ramPressure, .processEnded, .peripheralLowBattery,
+        case .clipboardCaptureHint(let id, _, _):
+            // 「已复制」动效走完即收，悬停不续命。
+            return !id.hasPrefix("copy.")
+        case .ramPressure, .processEnded, .peripheralLowBattery,
              .peripheralFullCharge, .peripheralConnected, .aiUsageAlert, .moveReminder, .meetingLead:
             return true
         }
