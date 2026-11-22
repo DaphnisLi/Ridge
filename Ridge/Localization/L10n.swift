@@ -2382,27 +2382,10 @@ enum L10n {
             )
         }
 
-        static var chargingToggle: String { tr("mac_battery.charging.toggle", "插入电源提醒") }
-        static var chargingSubtitle: String {
-            tr("mac_battery.charging.subtitle", "插入电源时在灵动岛短暂提示（含优化充电已接电未在充）")
-        }
-        static var fullToggle: String { tr("mac_battery.full.toggle", "充满电提醒") }
-        static var fullSubtitle: String {
-            tr("mac_battery.full.subtitle", "本机电池充至 100% 时提示")
-        }
-        static var lowToggle: String { tr("mac_battery.low.toggle", "低电量提醒") }
-        static var lowSubtitle: String {
-            tr("mac_battery.low.subtitle", "未接电且低于设定电量时展开灵动岛预警")
-        }
         static var lowThreshold: String { tr("mac_battery.low.threshold", "低电阈值") }
         static var lowThresholdSubtitle: String {
             tr("mac_battery.low.threshold_subtitle", "电量 ≤ 该百分比且未接电时提醒")
         }
-        static var unplugToggle: String { tr("mac_battery.unplug.toggle", "拔掉电源提醒") }
-        static var unplugSubtitle: String {
-            tr("mac_battery.unplug.subtitle", "拔掉电源改由电池供电时短暂提示")
-        }
-
         static var chargingTitle: String { tr("mac_battery.tip.charging_title", "充电中") }
         static var lowTitle: String { tr("mac_battery.tip.low_title", "电池电量低") }
         static var fullTitle: String { tr("mac_battery.tip.full_title", "已充满") }
@@ -2429,7 +2412,7 @@ enum L10n {
 
         static var previewCharging: String { tr("mac_battery.preview.charging", "插电") }
         static var previewChargingBadge: String {
-            tr("mac_battery.preview.charging_badge", "琥珀")
+            tr("mac_battery.preview.charging_badge", "电量")
         }
         static var previewFull: String { tr("mac_battery.preview.full", "满电") }
         static var previewLow: String { tr("mac_battery.preview.low", "低电") }
@@ -2445,15 +2428,6 @@ enum L10n {
             )
         }
 
-        static var samplePresentTitle: String {
-            tr("mac_battery.sample.present_title", "试投到灵动岛")
-        }
-        static var samplePresentSubtitle: String {
-            tr(
-                "mac_battery.sample.present_subtitle",
-                "不改真实电量状态，直接投递对应形态样张（约 3 秒）。"
-            )
-        }
     }
 
     // MARK: - Copied notice（复制成功瞬时提示）

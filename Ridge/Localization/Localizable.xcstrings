@@ -3312,61 +3312,6 @@
         }
       }
     },
-    "mac_battery.charging.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "插入电源时在灵动岛短暂提示（含优化充电已接电未在充）"
-          }
-        }
-      }
-    },
-    "mac_battery.charging.toggle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "插入电源提醒"
-          }
-        }
-      }
-    },
-    "mac_battery.full.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "本机电池充至 100% 时提示"
-          }
-        }
-      }
-    },
-    "mac_battery.full.toggle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "充满电提醒"
-          }
-        }
-      }
-    },
-    "mac_battery.low.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未接电且低于设定电量时展开灵动岛预警"
-          }
-        }
-      }
-    },
     "mac_battery.low.threshold": {
       "extractionState": "manual",
       "localizations": {
@@ -3385,17 +3330,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "电量 ≤ 该百分比且未接电时提醒"
-          }
-        }
-      }
-    },
-    "mac_battery.low.toggle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "低电量提醒"
           }
         }
       }
@@ -3439,7 +3373,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "琥珀"
+            "value": "电量"
           }
         }
       }
@@ -3473,28 +3407,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "拔电"
-          }
-        }
-      }
-    },
-    "mac_battery.sample.present_subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "不改真实电量状态，直接投递对应形态样张（约 3 秒）。"
-          }
-        }
-      }
-    },
-    "mac_battery.sample.present_title": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "试投到灵动岛"
           }
         }
       }
@@ -3583,28 +3495,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "已拔掉电源"
-          }
-        }
-      }
-    },
-    "mac_battery.unplug.subtitle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拔掉电源改由电池供电时短暂提示"
-          }
-        }
-      }
-    },
-    "mac_battery.unplug.toggle": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "拔掉电源提醒"
           }
         }
       }

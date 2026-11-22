@@ -117,9 +117,10 @@ final class MacBatterySession: ObservableObject {
             return
         }
 
+        // 四态均随小组件总开关；无分项开关。
+
         // 1 插电：电池 → AC（含优化充电「已接电未在充」）。
-        if settings.chargingAlertEnabled,
-           !wasOnAC,
+        if !wasOnAC,
            snap.isOnAC,
            !snap.isCharged,
            snap.percent < 100
@@ -133,8 +134,7 @@ final class MacBatterySession: ObservableObject {
         }
 
         // 2 满电：接电且满电 / isCharged。
-        if settings.fullChargeAlertEnabled,
-           snap.isOnAC,
+        if snap.isOnAC,
            (snap.isCharged || snap.percent >= 100),
            !fullArmed
         {
@@ -148,8 +148,7 @@ final class MacBatterySession: ObservableObject {
         }
 
         // 3 低电：未接电且 ≤ 阈值。
-        if settings.lowAlertEnabled,
-           !snap.isOnAC,
+        if !snap.isOnAC,
            snap.percent <= threshold,
            !lowArmed
         {
@@ -162,9 +161,8 @@ final class MacBatterySession: ObservableObject {
             )
         }
 
-        // 4 拔电：AC → 电池；若同时触低电，仍投拔电，低电由上支路另投（FIFO）。
-        if settings.unplugAlertEnabled,
-           wasOnAC,
+        // 4 拔电：AC → 电池；若同时触低电，低电由上支路另投（FIFO）。
+        if wasOnAC,
            !snap.isOnAC
         {
             present(
