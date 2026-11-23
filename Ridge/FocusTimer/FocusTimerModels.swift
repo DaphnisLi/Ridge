@@ -1,23 +1,26 @@
 import Foundation
 
-/// 灵动岛番茄倒计时运行态（选时 / 计时 / 顺延 / 终局）。
-/// 计时与加时岛上只走待命胶囊（含操作钮），不再有悬停展开面板。
+/// 灵动岛番茄运行态（选时 / 倒计时 / 加时 / 正计时 / 终局）。
+/// 倒计时·加时·正计时岛上只走待命胶囊，不再有悬停展开面板。
 enum FocusTimerPhase: String, Equatable {
     /// 未起钟：选预设或自定义分钟。
     case picking
-    /// 计时中：岛上为蓝环待命胶囊。
+    /// 倒计时中：岛上为蓝环待命胶囊。
     case running
     /// 已加时：岛上为黄环待命胶囊（同布局）。
     case overtime
-    /// 时间到：填写备注并结算。
+    /// 正计时累加中（可暂停；岛上为绿环待命胶囊）。
+    case countUp
+    /// 时间到 / 手动结束：填写备注并结算。
     case completed
 }
 
-/// 设置页预览 Tab：选时 / 待命 / 加时待命 / 终局（无「计时展开」）。
+/// 设置页预览 Tab：选时 / 倒计时待命 / 加时 / 正计时 / 终局。
 enum FocusTimerPreviewTab: String, CaseIterable, Identifiable {
     case standby
     case picking
     case overtime
+    case countUp
     case completed
 
     var id: String { rawValue }
@@ -27,18 +30,22 @@ enum FocusTimerPreviewTab: String, CaseIterable, Identifiable {
         case .standby: return .running
         case .picking: return .picking
         case .overtime: return .overtime
+        case .countUp: return .countUp
         case .completed: return .completed
         }
     }
 
-    /// 计时中两态均为待命胶囊壳。
-    var isCompact: Bool { self == .standby || self == .overtime }
+    /// 计时中态均为待命胶囊壳。
+    var isCompact: Bool {
+        self == .standby || self == .overtime || self == .countUp
+    }
 }
 
 enum FocusTimerKind: String, Codable, Hashable {
     case preset
     case custom
     case overtimeSprint
+    case countUp
 }
 
 struct FocusTimerPreset: Identifiable, Codable, Equatable, Hashable {
@@ -171,8 +178,16 @@ struct FocusTimerSnapshot: Equatable {
     var noteDraft: String
     var customMinutes: Int
     var selectedPresetID: String?
+    /// 仅正计时：暂停中不累加。
+    var isPaused: Bool
+
+    var isCountUp: Bool { phase == .countUp }
 
     var progress: Double {
+        if isCountUp {
+            // 绿环按当前分钟内秒数走动，示意「在走」。
+            return Double(elapsedSeconds % 60) / 60.0
+        }
         let total = max(plannedSeconds + overtimeSeconds, 1)
         return min(1, Double(elapsedSeconds) / Double(total))
     }
@@ -188,7 +203,8 @@ struct FocusTimerSnapshot: Equatable {
         remainingSeconds: 15 * 60,
         noteDraft: "",
         customMinutes: 25,
-        selectedPresetID: nil
+        selectedPresetID: nil,
+        isPaused: false
     )
 
     static let runningStandbyPreview = FocusTimerSnapshot(
@@ -199,7 +215,8 @@ struct FocusTimerSnapshot: Equatable {
         remainingSeconds: 23 * 60 + 42,
         noteDraft: "",
         customMinutes: 30,
-        selectedPresetID: "tomato"
+        selectedPresetID: "tomato",
+        isPaused: false
     )
 
     static let overtimePreview = FocusTimerSnapshot(
@@ -210,18 +227,32 @@ struct FocusTimerSnapshot: Equatable {
         remainingSeconds: 4 * 60 + 30,
         noteDraft: "",
         customMinutes: 30,
-        selectedPresetID: "tomato"
+        selectedPresetID: "tomato",
+        isPaused: false
+    )
+
+    static let countUpPreview = FocusTimerSnapshot(
+        phase: .countUp,
+        plannedSeconds: 0,
+        overtimeSeconds: 0,
+        elapsedSeconds: 1 * 3600 + 27 * 60 + 32,
+        remainingSeconds: 0,
+        noteDraft: "",
+        customMinutes: 25,
+        selectedPresetID: nil,
+        isPaused: false
     )
 
     static let completedPreview = FocusTimerSnapshot(
         phase: .completed,
-        plannedSeconds: 30 * 60,
-        overtimeSeconds: 10 * 60,
-        elapsedSeconds: 40 * 60,
+        plannedSeconds: 25 * 60,
+        overtimeSeconds: 1 * 60,
+        elapsedSeconds: 25 * 60,
         remainingSeconds: 0,
-        noteDraft: L10n.FocusTimer.previewNote,
-        customMinutes: 30,
-        selectedPresetID: "tomato"
+        noteDraft: "",
+        customMinutes: 25,
+        selectedPresetID: "tomato",
+        isPaused: false
     )
 }
 
@@ -231,6 +262,26 @@ enum FocusTimerFormatting {
         let m = s / 60
         let r = s % 60
         return String(format: "%02d:%02d", m, r)
+    }
+
+    /// 正计时显示：秒 → 分:秒 → 时:分:秒；岛宽以分秒为基准，出小时再加宽。
+    static func countUpClock(_ totalSeconds: Int) -> String {
+        let s = max(0, totalSeconds)
+        let h = s / 3600
+        let m = (s % 3600) / 60
+        let r = s % 60
+        if h > 0 {
+            return String(format: "%02d:%02d:%02d", h, m, r)
+        }
+        if m > 0 {
+            return String(format: "%02d:%02d", m, r)
+        }
+        return String(format: "%02d", r)
+    }
+
+    /// 正计时是否已进入「时分秒」档（驱动岛宽）。
+    static func countUpShowsHours(_ totalSeconds: Int) -> Bool {
+        totalSeconds >= 3600
     }
 
     static func compactDuration(_ minutes: Int) -> String {

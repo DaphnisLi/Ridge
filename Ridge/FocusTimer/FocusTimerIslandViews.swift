@@ -13,30 +13,43 @@ enum FocusTimerCompactMetrics {
 /// 番茄面板下限：选时走内容 `fixedSize` + IslandChrome；
 /// 计时 / 加时不走展开面板；仅终局锁最小宽高。
 enum FocusTimerContentSize {
-    /// 终局备注行需要的内容宽；其它态不锁宽，由内容撑开。
-    static let completedContentWidth: CGFloat = 480
+    /// 终局单行（绿勾 + 时长 + 备注 + 回车）内容宽。
+    static let completedContentWidth: CGFloat = 460
+    /// 终局顶距：贴近刘海（同媒体展开），禁止再用 `expandedTopInset` 把单行压到岛底。
+    static let completedTopInset: CGFloat = 6
+    /// 终局底距：与顶距接近，单行视觉居中。
+    static let completedBottomInset: CGFloat = 8
 
     static func minimumContentHeight(phase: FocusTimerPhase) -> CGFloat {
         switch phase {
-        case .picking, .running, .overtime:
+        case .picking, .running, .overtime, .countUp:
             return 28
         case .completed:
-            // 标题行 ≈26 + 分隔 + 备注行 36；贴内容高度，底边不再虚空。
-            return 68
+            // 单行终局 ≈ 备注行高，勿再按双行虚高。
+            return FocusTimerCompletedView.noteRowHeight
         }
     }
 
-    /// 展开首帧 / Preference 下限（宽仅终局抬升；计时/加时不展开）。
+    /// 展开首帧 / Preference 下限（宽仅终局抬升；计时/加时/正计时不展开）。
     static func panelSize(phase: FocusTimerPhase, notchHeight: CGFloat) -> CGSize {
-        let height = IslandChrome.expandedTopInset(notchHeight: notchHeight)
-            + minimumContentHeight(phase: phase)
-            + IslandChrome.contentBottom
+        let height: CGFloat = {
+            switch phase {
+            case .completed:
+                return completedTopInset
+                    + minimumContentHeight(phase: phase)
+                    + completedBottomInset
+            case .picking, .running, .overtime, .countUp:
+                return IslandChrome.expandedTopInset(notchHeight: notchHeight)
+                    + minimumContentHeight(phase: phase)
+                    + IslandChrome.contentBottom
+            }
+        }()
         let width: CGFloat = {
             switch phase {
             case .completed:
                 return completedContentWidth + IslandChrome.horizontalInsetTotal
-            case .picking, .running, .overtime:
-                // 选时种子宽；计时/加时若误走展开亦用待命宽量级。
+            case .picking, .running, .overtime, .countUp:
+                // 选时种子宽；计时/加时/正计时若误走展开亦用待命宽量级。
                 return 360 + IslandChrome.horizontalInsetTotal
             }
         }()
@@ -59,6 +72,7 @@ struct FocusTimerIslandCardView: View {
     var onStartCountUp: () -> Void = {}
     var onExtend: () -> Void = {}
     var onFinishEarly: () -> Void = {}
+    var onToggleCountUpPause: () -> Void = {}
     var onNoteChange: (String) -> Void = { _ in }
     var onSave: () -> Void = {}
     var presets: [FocusTimerPreset] = FocusTimerPreset.defaults
@@ -66,13 +80,14 @@ struct FocusTimerIslandCardView: View {
 
     var body: some View {
         Group {
-            if snapshot.phase == .running || snapshot.phase == .overtime {
-                // 计时 / 加时：一律待命胶囊（含 +Nm / 停止），不区分悬停展开。
+            if snapshot.phase == .running || snapshot.phase == .overtime || snapshot.phase == .countUp {
+                // 计时 / 加时 / 正计时：一律待命胶囊，不区分悬停展开。
                 FocusTimerStandbyView(
                     snapshot: snapshot,
                     extendStepMinutes: extendStepMinutes,
                     onExtend: onExtend,
-                    onFinishEarly: onFinishEarly
+                    onFinishEarly: onFinishEarly,
+                    onTogglePause: onToggleCountUpPause
                 )
             } else if snapshot.phase == .completed {
                 // 只锁宽；高度跟内容走，避免虚高把底边距撑大。
@@ -101,7 +116,7 @@ struct FocusTimerIslandCardView: View {
                 onStart: onStart,
                 onStartCountUp: onStartCountUp
             )
-        case .running, .overtime:
+        case .running, .overtime, .countUp:
             EmptyView()
         case .completed:
             FocusTimerCompletedView(
@@ -119,6 +134,7 @@ struct FocusTimerIslandCardView: View {
             case .picking: return .pickingPreview
             case .running: return .runningStandbyPreview
             case .overtime: return .overtimePreview
+            case .countUp: return .countUpPreview
             case .completed: return .completedPreview
             }
         }()
@@ -142,21 +158,48 @@ struct FocusTimerStandbyView: View {
     var extendStepMinutes: Int = 5
     var onExtend: () -> Void = {}
     var onFinishEarly: () -> Void = {}
+    var onTogglePause: () -> Void = {}
 
     private var isOvertime: Bool { snapshot.phase == .overtime }
-    /// 常规蓝 / 加时黄；半块 flush 另用 `flushAccent`，禁止串色。
+    private var isCountUp: Bool { snapshot.isCountUp }
+    /// 正计时绿 / 加时黄 / 倒计时蓝；半块 flush 另用 `flushAccent`，禁止串色。
     private var ringColor: Color {
-        isOvertime
+        if isCountUp {
+            return Color(red: 0.45, green: 0.92, blue: 0.58)
+        }
+        return isOvertime
             ? Color(red: 0.98, green: 0.75, blue: 0.14)
             : Color(red: 0.0, green: 0.44, blue: 0.92)
     }
     private var ringIconColor: Color {
-        isOvertime
+        if isCountUp {
+            return Color(red: 0.45, green: 0.92, blue: 0.58)
+        }
+        return isOvertime
             ? Color(red: 1.0, green: 0.84, blue: 0.40)
             : Color.white.opacity(0.95)
     }
+    private var ringFill: Color? {
+        isCountUp ? Color(red: 0.10, green: 0.28, blue: 0.18) : nil
+    }
+    private var ringIcon: String {
+        if isCountUp { return "timer" }
+        return isOvertime ? "alarm.fill" : "hourglass"
+    }
     private var flushAccent: Color {
-        isOvertime ? IslandFlushWingStyle.accentWarning : IslandFlushWingStyle.accentInfo
+        if isCountUp { return Color(red: 0.45, green: 0.92, blue: 0.58) }
+        return isOvertime ? IslandFlushWingStyle.accentWarning : IslandFlushWingStyle.accentInfo
+    }
+    private var clockText: String {
+        isCountUp
+            ? FocusTimerFormatting.countUpClock(snapshot.elapsedSeconds)
+            : FocusTimerFormatting.clock(snapshot.remainingSeconds)
+    }
+    private var statusLabel: String {
+        if isCountUp {
+            return snapshot.isPaused ? L10n.FocusTimer.paused : L10n.FocusTimer.countUpMode
+        }
+        return isOvertime ? L10n.FocusTimer.overtimeBadge : L10n.FocusTimer.focusing
     }
 
     var body: some View {
@@ -168,53 +211,69 @@ struct FocusTimerStandbyView: View {
     }
 
     private var fullStandbyBody: some View {
-        // 左：环+剩余；右：+Nm / 停止；中空。加时仅环色改黄。
+        // 倒计时：左环+剩余，右 +Nm / 停止；正计时：左绿环+已过，右暂停 / 停止。
         // 左右 padding 写在内容内，外层勿再叠，否则固定岛宽会被吃掉导致芯片裁切。
         HStack(spacing: 0) {
             HStack(spacing: 8) {
                 FocusTimerProgressRing(
                     progress: snapshot.progress,
                     stroke: ringColor,
-                    icon: "hourglass",
-                    iconColor: ringIconColor
+                    icon: ringIcon,
+                    iconColor: ringIconColor,
+                    fill: ringFill
                 )
-                Text(FocusTimerFormatting.clock(snapshot.remainingSeconds))
+                Text(clockText)
                     .font(.system(size: 15, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color.white)
                     .monospacedDigit()
                     .lineLimit(1)
+                    .minimumScaleFactor(1)
+                    // 正计时：先按分秒占位，出小时再加宽；禁止随「仅秒」文案缩列导致被裁。
+                    .frame(
+                        minWidth: isCountUp
+                            ? NotchGeometry.focusTimerCountUpClockMinWidth(
+                                elapsedSeconds: snapshot.elapsedSeconds
+                            )
+                            : nil,
+                        alignment: .leading
+                    )
                     .fixedSize(horizontal: true, vertical: false)
             }
-            .layoutPriority(1)
-            Spacer(minLength: 20)
+            .layoutPriority(2)
+            Spacer(minLength: 16)
             HStack(spacing: 8) {
-                FocusTimerStandbyExtendButton(minutes: extendStepMinutes, action: onExtend)
-                FocusTimerStandbyStopButton(action: onFinishEarly)
+                if isCountUp {
+                    FocusTimerStandbyPauseButton(
+                        isPaused: snapshot.isPaused,
+                        action: onTogglePause
+                    )
+                    FocusTimerStandbyStopButton(action: onFinishEarly)
+                } else {
+                    FocusTimerStandbyExtendButton(minutes: extendStepMinutes, action: onExtend)
+                    FocusTimerStandbyStopButton(action: onFinishEarly)
+                }
             }
             .fixedSize(horizontal: true, vertical: false)
-            .layoutPriority(2)
+            .layoutPriority(1)
         }
         .padding(.horizontal, NotchGeometry.focusTimerStandbyHorizontalPadding)
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(
-            "\(isOvertime ? L10n.FocusTimer.overtimeBadge : L10n.FocusTimer.focusing)，\(FocusTimerFormatting.clock(snapshot.remainingSeconds))"
-        )
+        .accessibilityLabel("\(statusLabel)，\(clockText)")
     }
 
     private func wingLeadContent(bare: Bool) -> some View {
-        let clock = FocusTimerFormatting.clock(snapshot.remainingSeconds)
         // 仅双槽半块：外图标 | 时长 | 刘海侧指示点。
         let spacer = bare
             ? IslandFlushWingStyle.bareContentSpacerMin
             : CGFloat(4)
         let row = HStack(spacing: 0) {
             HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
-                Image(systemName: isOvertime ? "alarm.fill" : "hourglass")
+                Image(systemName: ringIcon)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(flushAccent)
                     .symbolRenderingMode(.hierarchical)
-                Text(clock)
+                Text(clockText)
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color.white.opacity(0.95))
                     .monospacedDigit()
@@ -222,11 +281,11 @@ struct FocusTimerStandbyView: View {
             }
             Spacer(minLength: spacer)
             Circle()
-                .fill(Color.white.opacity(isOvertime ? 0.55 : 0.40))
+                .fill(Color.white.opacity(isOvertime || isCountUp ? 0.55 : 0.40))
                 .frame(width: 4, height: 4)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(isOvertime ? L10n.FocusTimer.overtimeBadge : L10n.FocusTimer.focusing)，\(clock)")
+        .accessibilityLabel("\(statusLabel)，\(clockText)")
 
         if bare {
             return AnyView(row.islandBareFlushWingContent())
@@ -774,148 +833,113 @@ private struct FocusTimerNoteField: NSViewRepresentable {
     }
 }
 
-// MARK: - 3. 终局收拢
+// MARK: - 3. 终局收拢（单行：绿勾 · 时长 · | · 备注 · 回车）
 
-private struct FocusTimerCompletedView: View {
+struct FocusTimerCompletedView: View {
     let snapshot: FocusTimerSnapshot
     let onNoteChange: (String) -> Void
     let onSave: () -> Void
     @State private var draft: String = ""
 
-    /// 备注行 /「完成命名」统一高度（与早期稿面灰底高度一致）。
-    static let noteRowHeight: CGFloat = 36
+    /// 单行终局内容高（与稿面矮胶囊对齐）。
+    static let noteRowHeight: CGFloat = 32
 
-    private let green = Color(red: 0.325, green: 0.882, blue: 0.435)
-    private let amberText = Color(red: 1.0, green: 0.75, blue: 0.35)
+    private let green = Color(red: 0.22, green: 0.78, blue: 0.42)
+    private let muted = Color.white.opacity(0.45)
 
-    /// 总专注展示实际已过分钟。
+    /// 主时长：实际已过分钟（至少 1）。
     private var actualFocusMinutes: Int {
-        max(1, snapshot.elapsedSeconds / 60)
+        max(1, (snapshot.elapsedSeconds + 59) / 60)
+    }
+
+    private var overtimeMinutes: Int {
+        max(0, snapshot.overtimeMinutes)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .center, spacing: 8) {
-                HStack(spacing: 6) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(green)
-                    Text(L10n.FocusTimer.completedTitle)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white)
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(green)
-                            .frame(width: 6, height: 6)
-                        Text(L10n.FocusTimer.autoArchivedBadge)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(green)
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(green.opacity(0.15))
-                            .overlay(
-                                Capsule(style: .continuous)
-                                    .stroke(green.opacity(0.22), lineWidth: 1)
-                            )
-                    )
-                }
-                Spacer(minLength: 8)
-                HStack(spacing: 4) {
-                    Text(L10n.FocusTimer.baseMinutes(snapshot.plannedMinutes))
-                        .foregroundStyle(Color.white.opacity(0.45))
-                    if snapshot.overtimeMinutes > 0 {
-                        Text("+")
-                            .foregroundStyle(Color.white.opacity(0.45))
-                        Text(L10n.FocusTimer.overtimeMinutesLabel(snapshot.overtimeMinutes))
-                            .fontWeight(.bold)
-                            .foregroundStyle(amberText)
-                        Text("=")
-                            .foregroundStyle(Color.white.opacity(0.45))
-                    }
-                    Text(L10n.FocusTimer.totalFocus(actualFocusMinutes))
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(green)
-                }
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
-            }
-            .padding(.bottom, 4)
-            .overlay(alignment: .bottom) {
-                Rectangle()
-                    .fill(Color.white.opacity(0.10))
-                    .frame(height: 1)
-            }
-
-            // 稿面：左侧输入框吃满剩余宽度；右侧「完成命名」按内容收窄，勿均分。
-            HStack(alignment: .center, spacing: 8) {
+        HStack(alignment: .center, spacing: 10) {
+            // 左：绿勾圆 + 25m (+1m)
+            HStack(spacing: 8) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.white.opacity(0.10))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                        )
-
-                    HStack(alignment: .center, spacing: 8) {
-                        FocusTimerNoteField(
-                            text: $draft,
-                            placeholder: L10n.FocusTimer.notePlaceholder,
-                            onSubmit: commitSave
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                        if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            HStack(alignment: .center, spacing: 3) {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(green)
-                                Text(L10n.FocusTimer.defaultTimeNameHint)
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(Color.white.opacity(0.40))
-                                    .lineLimit(1)
-                            }
-                            .fixedSize(horizontal: true, vertical: true)
-                            .allowsHitTesting(false)
-                        }
-                    }
-                    .padding(.horizontal, 12)
+                    Circle()
+                        .fill(green)
+                        .frame(width: 22, height: 22)
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white)
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: Self.noteRowHeight)
-                .layoutPriority(1)
+                .accessibilityHidden(true)
 
-                Button(action: commitSave) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(FocusTimerFormatting.compactDuration(actualFocusMinutes))
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                    if overtimeMinutes > 0 {
+                        Text(L10n.FocusTimer.completedOvertimeParen(overtimeMinutes))
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .foregroundStyle(muted)
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                }
+            }
+            .layoutPriority(2)
+
+            // 竖分割
+            Rectangle()
+                .fill(Color.white.opacity(0.18))
+                .frame(width: 1, height: 18)
+
+            // 中：列表笔标 + 备注输入
+            HStack(spacing: 6) {
+                Image(systemName: "list.bullet.clipboard")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(muted)
+                    .accessibilityHidden(true)
+                FocusTimerNoteField(
+                    text: $draft,
+                    placeholder: L10n.FocusTimer.notePlaceholder,
+                    onSubmit: commitSave
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity)
+            .layoutPriority(1)
+
+            // 右：回车提交
+            Button(action: commitSave) {
+                Image(systemName: "return")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.92))
+                    .frame(width: 28, height: 28)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
                             .fill(Color.white.opacity(0.12))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                    .stroke(Color.white.opacity(0.10), lineWidth: 1)
                             )
-                        HStack(alignment: .center, spacing: 4) {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(green)
-                            Text(L10n.FocusTimer.saveRecord)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white)
-                        }
-                        .padding(.horizontal, 12)
-                    }
-                    .frame(height: Self.noteRowHeight)
-                    .fixedSize(horizontal: true, vertical: false)
-                }
-                .buttonStyle(.plain)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.FocusTimer.saveRecord)
+            .layoutPriority(2)
         }
-        // 勿 maxHeight: .infinity，否则吃满虚高面板，底边空一大截。
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: Self.noteRowHeight)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(
+            "\(L10n.FocusTimer.completedTitle)，\(FocusTimerFormatting.compactDuration(actualFocusMinutes))"
+        )
         .onAppear {
             draft = snapshot.noteDraft
-            // 不主动 makeFirstResponder；离开岛时 collapse 会卸焦。勿再用 refusesFirstResponder。
-            AppLog.warn("FocusTimer", "终局备注区已显示（默认不聚焦）")
+            // 不主动 makeFirstResponder；离开岛时 collapse 会卸焦。
+            AppLog.warn("FocusTimer", "终局单行备注区已显示（默认不聚焦）")
         }
     }
 
@@ -975,9 +999,36 @@ private struct FocusTimerStandbyStopButton: View {
                                 .stroke(Color.white.opacity(0.10), lineWidth: 1)
                         )
                 )
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.FocusTimer.finishEarly)
+    }
+}
+
+/// 正计时待命：暂停 / 继续圆钮（在结束钮左侧）。
+private struct FocusTimerStandbyPauseButton: View {
+    let isPaused: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(Color.white.opacity(0.90))
+                .frame(width: 26, height: 26)
+                .background(
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                        )
+                )
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isPaused ? L10n.FocusTimer.resume : L10n.FocusTimer.pause)
     }
 }
 
@@ -988,11 +1039,16 @@ private struct FocusTimerProgressRing: View {
     let stroke: Color
     let icon: String
     let iconColor: Color
+    var fill: Color? = nil
 
     var body: some View {
         let d = FocusTimerCompactMetrics.progressRingDiameter
         let line = FocusTimerCompactMetrics.progressRingLineWidth
         ZStack {
+            if let fill {
+                Circle()
+                    .fill(fill)
+            }
             Circle()
                 .stroke(Color.white.opacity(0.15), lineWidth: line)
             Circle()

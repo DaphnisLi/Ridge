@@ -106,6 +106,23 @@ struct IslandNoticeSlots: Equatable {
         }
     }
 
+    /// 当前满岛翼 tip 是否外设窄翼（预备宽 / 可点区抬升须对齐，禁止再抬成会议翼）。
+    var anyUsesCompactPeripheralWing: Bool {
+        switch resolvedLayout {
+        case .fullNotice(let p):
+            return p.usesCompactPeripheralWing
+        default:
+            return false
+        }
+    }
+
+    /// 当前翼 tip 预备单侧翼宽。
+    var wingTipPreparedWingWidth: CGFloat {
+        anyUsesCompactPeripheralWing
+            ? IslandChrome.preparedPeripheralWingWidth
+            : IslandChrome.preparedWingWidth
+    }
+
     /// 任意 `.dual` 都走贴刘海左右 flush；单独进程结束等走 dualFlush 双翼。
     var usesDualFlushChrome: Bool {
         if case .dual = resolvedLayout { return true }

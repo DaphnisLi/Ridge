@@ -281,17 +281,20 @@ enum IslandExpandedPanelPolicy {
         return now.timeIntervalSince(lastScrollAt) < grace
     }
 
-    /// 翼 tip（会议 / 久坐等）可点区：不得窄于预备双翼宽，否则右翼按钮落在 interactive 外点穿。
+    /// 翼 tip（会议 / 久坐 / 外设等）可点区：不得窄于该 tip 的预备双翼宽，否则右翼控件落在 interactive 外点穿。
+    /// - Parameter wingWidth: 会议等用 `preparedWingWidth`；外设满岛用 `preparedPeripheralWingWidth`（勿混抬）。
     static func wingTipInteractivePanelSize(
         current: CGSize,
         notchWidth: CGFloat,
         notchHeight: CGFloat,
-        usesNotchWingChrome: Bool
+        usesNotchWingChrome: Bool,
+        wingWidth: CGFloat = IslandChrome.preparedWingWidth
     ) -> CGSize {
         guard usesNotchWingChrome else { return current }
         let prepared = IslandChrome.preparedWingTipPanelSize(
             notchWidth: notchWidth,
-            notchHeight: notchHeight
+            notchHeight: notchHeight,
+            wingWidth: wingWidth
         )
         return CGSize(
             width: max(current.width, prepared.width),

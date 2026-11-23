@@ -24,11 +24,34 @@ struct NotchGeometry: Equatable {
     static var focusTimerCompactHeight: CGFloat { compactIslandHeight }
     /// 待命内容左右内边距；与 `focusTimerStandbyWidth` 配套，禁止再在外层叠 padding 吃掉宽度。
     static let focusTimerStandbyHorizontalPadding: CGFloat = 10
+    /// 正计时待命基准宽：与倒计时待命同档，保证 `MM:SS` + 暂停/结束不被裁；不足 1 分也按分秒占位。
+    static var focusTimerCountUpCompactWidth: CGFloat { focusTimerCompactWidth }
+    /// 正计时进入「时分秒」后额外宽度（`HH:` 三位）。
+    static let focusTimerCountUpHoursExtraWidth: CGFloat = 48
+    /// 正计时分秒文案最小占位（15pt mono `00:00`）；仅秒显示时也不缩。
+    static let focusTimerCountUpClockMinWidthMMSS: CGFloat = 52
+    /// 正计时时分秒文案最小占位（`00:00:00`）。
+    static let focusTimerCountUpClockMinWidthHHMMSS: CGFloat = 80
 
     /// 待命岛宽随顺延芯片变：`+10m` / `+15m` 比 `+5m` 多一位数字，加宽避免右簇被裁。
     static func focusTimerStandbyWidth(extendStepMinutes: Int) -> CGFloat {
         let extraDigits = max(0, String(max(extendStepMinutes, 0)).count - 1)
         return focusTimerCompactWidth + CGFloat(extraDigits) * 24
+    }
+
+    /// 正计时待命岛宽：始终按分秒档占位；≥1h 再加宽，禁止随秒级文案缩窄。
+    static func focusTimerCountUpStandbyWidth(elapsedSeconds: Int) -> CGFloat {
+        let hoursExtra = FocusTimerFormatting.countUpShowsHours(elapsedSeconds)
+            ? focusTimerCountUpHoursExtraWidth
+            : 0
+        return focusTimerCountUpCompactWidth + hoursExtra
+    }
+
+    /// 正计时左侧时钟列最小宽：分秒档 / 时分秒档。
+    static func focusTimerCountUpClockMinWidth(elapsedSeconds: Int) -> CGFloat {
+        FocusTimerFormatting.countUpShowsHours(elapsedSeconds)
+            ? focusTimerCountUpClockMinWidthHHMMSS
+            : focusTimerCountUpClockMinWidthMMSS
     }
     /// 正在播放常驻小岛：左封面歌名、右律动条+时长（略宽于番茄，避免歌名挤）。
     static let mediaCompactWidth: CGFloat = 380

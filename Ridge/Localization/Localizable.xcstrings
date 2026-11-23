@@ -2537,7 +2537,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "记录已入库，点击添加标题（可选）"
+            "value": "添加备注…"
+          }
+        }
+      }
+    },
+    "focus_timer.completed_overtime_paren_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(+%dm)"
           }
         }
       }
@@ -9483,6 +9494,160 @@
         }
       }
     },
+    "test_lab.focus.advance_5m": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快进 +5 分"
+          }
+        }
+      }
+    },
+    "test_lab.focus.shared_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共用"
+          }
+        }
+      }
+    },
+    "test_lab.focus.countdown_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "倒计时"
+          }
+        }
+      }
+    },
+    "test_lab.focus.countdown_tools": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "倒计时 · 加时工具"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_tools": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 · 加时工具"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_enter_zero": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 · 从 0"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_enter_mmss": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 · 分秒档"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_enter_hhmmss": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 · 时分秒档"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_advance_1m": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 +1 分"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_advance_5m": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 +5 分"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_advance_1h": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时 +1 时"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停 / 继续"
+          }
+        }
+      }
+    },
+    "test_lab.focus.count_up_finish": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "结束正计时"
+          }
+        }
+      }
+    },
     "test_lab.focus.enter_completed": {
       "extractionState": "manual",
       "localizations": {
@@ -9566,7 +9731,62 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "五态上岛；下方工具可快进剩余时间。"
+            "value": "倒计时与正计时分开测；各自可加分/加时快进。"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_count_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "专注：已进入正计时"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_count_up_advance_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时：加 %d 分"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_count_up_advance_hours_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时：加 %d 时"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_count_up_paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时：已暂停"
+          }
+        }
+      }
+    },
+    "test_lab.status.focus_count_up_resumed": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时：已继续"
           }
         }
       }
@@ -12207,6 +12427,61 @@
           "stringUnit": {
             "state": "translated",
             "value": "正计时"
+          }
+        }
+      }
+    },
+    "focus_timer.phase.count_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时"
+          }
+        }
+      }
+    },
+    "focus_timer.count_up_session_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时专注"
+          }
+        }
+      }
+    },
+    "focus_timer.pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停"
+          }
+        }
+      }
+    },
+    "focus_timer.resume": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        }
+      }
+    },
+    "focus_timer.paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已暂停"
           }
         }
       }

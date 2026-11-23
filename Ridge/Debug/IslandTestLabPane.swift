@@ -337,35 +337,74 @@ struct IslandTestLabPane: View {
                         .fill(SettingsChrome.surfaceContainerLow)
                 )
 
-            sectionLabel(L10n.TestLab.sectionStates)
-            buttonGrid(
-                FocusTimerPreviewTab.allCases.map { tab in
-                    (focusTabTitle(tab), { harness.focusApplyPreviewTab(tab) })
-                }
-            )
+            // 共用选时入口（倒计时 / 正计时都从这里起钟）。
+            sectionLabel(L10n.TestLab.focusSharedSection)
+            buttonGrid([
+                (L10n.FocusTimer.phasePicking, {
+                    harness.focusApplyPreviewTab(.picking)
+                })
+            ])
 
-            sectionLabel(L10n.TestLab.sectionTools)
+            // 倒计时：态与加时/快进工具独立，勿与正计时混用。
+            sectionLabel(L10n.TestLab.focusCountdownSection)
+            buttonGrid([
+                (L10n.FocusTimer.phaseStandby, {
+                    harness.focusApplyPreviewTab(.standby)
+                }),
+                (L10n.FocusTimer.phaseOvertime, {
+                    harness.focusApplyPreviewTab(.overtime)
+                }),
+                (L10n.FocusTimer.phaseCompleted, {
+                    harness.focusApplyPreviewTab(.completed)
+                })
+            ])
+            sectionLabel(L10n.TestLab.focusCountdownTools)
             buttonGrid([
                 (L10n.TestLab.focusAdvance1m, { harness.focusAdvance(byMinutes: 1) }),
+                (L10n.TestLab.focusAdvance5m, { harness.focusAdvance(byMinutes: 5) }),
                 (L10n.TestLab.focusRemain1m, { harness.focusJumpToRemaining(seconds: 60) }),
-                (L10n.TestLab.focusJumpEnd, { harness.focusJumpToEnd() }),
-                (L10n.TestLab.focusJumpOvertime, { harness.focusJumpIntoOvertime() })
+                (L10n.TestLab.focusJumpOvertime, { harness.focusJumpIntoOvertime() }),
+                (L10n.TestLab.focusJumpEnd, { harness.focusJumpToEnd() })
+            ])
+
+            // 正计时：单独态与加分/加时；验收时分秒档用 +1 时。
+            sectionLabel(L10n.TestLab.focusCountUpSection)
+            buttonGrid([
+                (L10n.TestLab.focusCountUpEnterMMSS, {
+                    harness.focusEnterCountUp(elapsedSeconds: 90)
+                }),
+                (L10n.TestLab.focusCountUpEnterHHMMSS, {
+                    harness.focusEnterCountUp(elapsedSeconds: 1 * 3600 + 27 * 60 + 32)
+                }),
+                (L10n.TestLab.focusCountUpEnterZero, {
+                    harness.focusEnterCountUp(elapsedSeconds: 0)
+                })
+            ])
+            sectionLabel(L10n.TestLab.focusCountUpTools)
+            buttonGrid([
+                (L10n.TestLab.focusCountUpAdvance1m, {
+                    harness.focusCountUpAdvance(byMinutes: 1)
+                }),
+                (L10n.TestLab.focusCountUpAdvance5m, {
+                    harness.focusCountUpAdvance(byMinutes: 5)
+                }),
+                (L10n.TestLab.focusCountUpAdvance1h, {
+                    harness.focusCountUpAdvance(byHours: 1)
+                }),
+                (L10n.TestLab.focusCountUpPause, {
+                    harness.focusCountUpTogglePause()
+                }),
+                (L10n.TestLab.focusCountUpFinish, {
+                    harness.focusCountUpFinish()
+                })
             ])
         }
     }
 
     private var focusPhaseLine: String {
         let snap = focus.snapshot
-        return "\(snap.phase.rawValue) · remain \(snap.remainingSeconds)s · elapsed \(snap.elapsedSeconds)s"
-    }
-
-    private func focusTabTitle(_ tab: FocusTimerPreviewTab) -> String {
-        switch tab {
-        case .standby: return L10n.FocusTimer.phaseStandby
-        case .picking: return L10n.FocusTimer.phasePicking
-        case .overtime: return L10n.FocusTimer.phaseOvertime
-        case .completed: return L10n.FocusTimer.phaseCompleted
-        }
+        let pause = snap.isPaused ? " · paused" : ""
+        return "\(snap.phase.rawValue) · remain \(snap.remainingSeconds)s · elapsed \(snap.elapsedSeconds)s\(pause)"
     }
 
     // MARK: World clock / Stocks

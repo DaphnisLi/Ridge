@@ -2887,6 +2887,7 @@ enum L10n {
         static var phasePicking: String { tr("focus_timer.phase.picking", "选时") }
         static var phaseRunning: String { tr("focus_timer.phase.running", "计时中") }
         static var phaseOvertime: String { tr("focus_timer.phase.overtime", "加时中") }
+        static var phaseCountUp: String { tr("focus_timer.phase.count_up", "正计时") }
         static var phaseCompleted: String { tr("focus_timer.phase.completed", "完成") }
         static var tabBadgeCustom: String { tr("focus_timer.tab.badge_custom", "自选") }
         static var tabBadgeSummary: String { tr("focus_timer.tab.badge_summary", "总结") }
@@ -2904,6 +2905,12 @@ enum L10n {
         static var countdownMode: String { tr("focus_timer.mode.countdown", "倒计时") }
         /// 选时态：正计时入口按钮。
         static var countUpMode: String { tr("focus_timer.mode.count_up", "正计时") }
+        static var countUpSessionTitle: String {
+            tr("focus_timer.count_up_session_title", "正计时专注")
+        }
+        static var pause: String { tr("focus_timer.pause", "暂停") }
+        static var resume: String { tr("focus_timer.resume", "继续") }
+        static var paused: String { tr("focus_timer.paused", "已暂停") }
         static var remaining: String { tr("focus_timer.remaining", "剩余") }
         static var finishEarly: String { tr("focus_timer.finish_early", "结束") }
         static var finishDone: String { tr("focus_timer.finish_done", "完成收工") }
@@ -2916,7 +2923,11 @@ enum L10n {
             tr("focus_timer.auto_archived_badge", "已自动归档")
         }
         static var notePlaceholder: String {
-            tr("focus_timer.note_placeholder", "记录已入库，点击添加标题（可选）")
+            tr("focus_timer.note_placeholder", "添加备注…")
+        }
+        /// 终局加时旁注，如 `(+1m)`。
+        static func completedOvertimeParen(_ minutes: Int) -> String {
+            String(format: tr("focus_timer.completed_overtime_paren_format", "(+%dm)"), minutes)
         }
         static var defaultTimeNameHint: String {
             tr("focus_timer.default_time_name_hint", "默认按时间命名")
@@ -3220,15 +3231,58 @@ enum L10n {
 
         static var focusTitle: String { tr("test_lab.focus.title", "专注") }
         static var focusSubtitle: String {
-            tr("test_lab.focus.subtitle", "五态上岛；下方工具可快进剩余时间。")
+            tr(
+                "test_lab.focus.subtitle",
+                "倒计时与正计时分开测；各自可加分/加时快进。"
+            )
+        }
+        static var focusSharedSection: String {
+            tr("test_lab.focus.shared_section", "共用")
+        }
+        static var focusCountdownSection: String {
+            tr("test_lab.focus.countdown_section", "倒计时")
+        }
+        static var focusCountdownTools: String {
+            tr("test_lab.focus.countdown_tools", "倒计时 · 加时工具")
+        }
+        static var focusCountUpSection: String {
+            tr("test_lab.focus.count_up_section", "正计时")
+        }
+        static var focusCountUpTools: String {
+            tr("test_lab.focus.count_up_tools", "正计时 · 加时工具")
         }
         static var focusEnterRunning: String { tr("test_lab.focus.enter_running", "进入计时 25m") }
         static var focusEnterOvertime: String { tr("test_lab.focus.enter_overtime", "进入加时") }
         static var focusEnterCompleted: String { tr("test_lab.focus.enter_completed", "进入终局") }
         static var focusAdvance1m: String { tr("test_lab.focus.advance_1m", "快进 +1 分") }
+        static var focusAdvance5m: String { tr("test_lab.focus.advance_5m", "快进 +5 分") }
         static var focusRemain1m: String { tr("test_lab.focus.remain_1m", "跳到还剩 1 分") }
         static var focusJumpEnd: String { tr("test_lab.focus.jump_end", "跳到结束") }
         static var focusJumpOvertime: String { tr("test_lab.focus.jump_overtime", "跳进加时") }
+        static var focusCountUpEnterZero: String {
+            tr("test_lab.focus.count_up_enter_zero", "正计时 · 从 0")
+        }
+        static var focusCountUpEnterMMSS: String {
+            tr("test_lab.focus.count_up_enter_mmss", "正计时 · 分秒档")
+        }
+        static var focusCountUpEnterHHMMSS: String {
+            tr("test_lab.focus.count_up_enter_hhmmss", "正计时 · 时分秒档")
+        }
+        static var focusCountUpAdvance1m: String {
+            tr("test_lab.focus.count_up_advance_1m", "正计时 +1 分")
+        }
+        static var focusCountUpAdvance5m: String {
+            tr("test_lab.focus.count_up_advance_5m", "正计时 +5 分")
+        }
+        static var focusCountUpAdvance1h: String {
+            tr("test_lab.focus.count_up_advance_1h", "正计时 +1 时")
+        }
+        static var focusCountUpPause: String {
+            tr("test_lab.focus.count_up_pause", "暂停 / 继续")
+        }
+        static var focusCountUpFinish: String {
+            tr("test_lab.focus.count_up_finish", "结束正计时")
+        }
 
         static func statusFocusRunning(_ minutes: Int) -> String {
             String(format: tr("test_lab.status.focus_running_format", "专注：已进入计时 %d 分"), minutes)
@@ -3244,6 +3298,27 @@ enum L10n {
         static var statusFocusEnded: String { tr("test_lab.status.focus_ended", "专注：已跳到结束") }
         static var statusFocusPicking: String { tr("test_lab.status.focus_picking", "专注：已进入选时") }
         static var statusFocusStandby: String { tr("test_lab.status.focus_standby", "专注：已进入待命（收起）") }
+        static var statusFocusCountUp: String {
+            tr("test_lab.status.focus_count_up", "专注：已进入正计时")
+        }
+        static func statusFocusCountUpAdvance(_ minutes: Int) -> String {
+            String(
+                format: tr("test_lab.status.focus_count_up_advance_format", "正计时：加 %d 分"),
+                minutes
+            )
+        }
+        static func statusFocusCountUpAdvanceHours(_ hours: Int) -> String {
+            String(
+                format: tr("test_lab.status.focus_count_up_advance_hours_format", "正计时：加 %d 时"),
+                hours
+            )
+        }
+        static var statusFocusCountUpPaused: String {
+            tr("test_lab.status.focus_count_up_paused", "正计时：已暂停")
+        }
+        static var statusFocusCountUpResumed: String {
+            tr("test_lab.status.focus_count_up_resumed", "正计时：已继续")
+        }
 
         static var meetingTitle: String { tr("test_lab.meeting.title", "会议") }
         static var meetingSubtitle: String {

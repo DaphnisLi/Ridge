@@ -16,7 +16,10 @@ struct FocusTimerWidgetConfigSection: View {
     }
 
     private var boardCustoms: [FocusTimerRecord] {
-        boardRecords.filter { $0.kind == .custom && $0.overtimeMinutes == 0 }
+        // 正计时无独立栏，归入「自定义」列便于事后补标题。
+        boardRecords.filter {
+            ($0.kind == .custom || $0.kind == .countUp) && $0.overtimeMinutes == 0
+        }
     }
 
     private var boardOvers: [FocusTimerRecord] {
@@ -74,11 +77,21 @@ struct FocusTimerWidgetConfigSection: View {
                     .horizontal,
                     tab.isCompact ? 8 : IslandChrome.contentHorizontal
                 )
-                .padding(
-                    .vertical,
-                    tab.isCompact ? 6 : IslandChrome.contentBottom
-                )
+                .padding(.top, previewTopPadding(tab))
+                .padding(.bottom, previewBottomPadding(tab))
         }
+    }
+
+    private func previewTopPadding(_ tab: FocusTimerPreviewTab) -> CGFloat {
+        if tab.isCompact { return 6 }
+        if tab == .completed { return FocusTimerContentSize.completedTopInset }
+        return IslandChrome.contentBottom
+    }
+
+    private func previewBottomPadding(_ tab: FocusTimerPreviewTab) -> CGFloat {
+        if tab.isCompact { return 6 }
+        if tab == .completed { return FocusTimerContentSize.completedBottomInset }
+        return IslandChrome.contentBottom
     }
 
     private func stageOption(_ tab: FocusTimerPreviewTab) -> SettingsIslandStageOption {
@@ -92,9 +105,9 @@ struct FocusTimerWidgetConfigSection: View {
             maxIslandWidth: tab.isCompact
                 ? SettingsIslandPreviewWidth.standby
                 : SettingsIslandPreviewWidth.expanded,
-            hugsContent: false,
-            bottomRadius: tab.isCompact ? 20 : 24,
-            minStageHeight: tab.isCompact ? 120 : 148,
+            hugsContent: tab == .completed,
+            bottomRadius: tab.isCompact || tab == .completed ? 20 : 24,
+            minStageHeight: tab.isCompact ? 120 : (tab == .completed ? 100 : 148),
             compactShell: tab.isCompact
         )
     }
@@ -104,6 +117,7 @@ struct FocusTimerWidgetConfigSection: View {
         case .standby: return L10n.FocusTimer.phaseStandby
         case .picking: return L10n.FocusTimer.phasePicking
         case .overtime: return L10n.FocusTimer.phaseOvertime
+        case .countUp: return L10n.FocusTimer.phaseCountUp
         case .completed: return L10n.FocusTimer.phaseCompleted
         }
     }
@@ -113,7 +127,8 @@ struct FocusTimerWidgetConfigSection: View {
         case .standby: return "23:42"
         case .picking: return L10n.FocusTimer.tabBadgeCustom
         case .overtime: return "+10m"
-        case .completed: return L10n.FocusTimer.tabBadgeSummary
+        case .countUp: return "1:27:32"
+        case .completed: return "25m"
         }
     }
 
@@ -122,6 +137,7 @@ struct FocusTimerWidgetConfigSection: View {
         case .standby: return "hourglass"
         case .picking: return "slider.horizontal.3"
         case .overtime: return "alarm.fill"
+        case .countUp: return "timer"
         case .completed: return "checkmark.seal.fill"
         }
     }
@@ -131,6 +147,7 @@ struct FocusTimerWidgetConfigSection: View {
         case .standby: return SettingsChrome.primary
         case .picking: return Color(red: 0.30, green: 0.29, blue: 0.79)
         case .overtime: return Color(red: 0.85, green: 0.47, blue: 0.02)
+        case .countUp: return Color(red: 0.20, green: 0.70, blue: 0.40)
         case .completed: return SettingsChrome.secondary
         }
     }

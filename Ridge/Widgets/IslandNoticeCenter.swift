@@ -125,6 +125,16 @@ enum IslandNoticePayload: Identifiable, Hashable {
         }
     }
 
+    /// 外设满岛：翼宽比会议收窄，设备名滚动。
+    var usesCompactPeripheralWing: Bool {
+        switch self {
+        case .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:
+            return true
+        default:
+            return false
+        }
+    }
+
     /// 单独上岛时走左右 flush（RAM / 进程结束双翼贴刘海）；勿抬会议双翼宽。
     var usesDualFlushSoloChrome: Bool {
         switch self {
@@ -321,6 +331,8 @@ final class IslandNoticeCenter: ObservableObject {
                 IslandController.shared?.prepareNotchRightOrbLayout(reason: "present:\(p.id)")
             } else if p.usesShortBelowNotchChrome {
                 IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(p.id)")
+            } else if p.usesCompactPeripheralWing {
+                IslandController.shared?.preparePeripheralWingNoticeLayout(reason: "present:\(p.id)")
             } else if next.anyUsesNotchWingChrome {
                 IslandController.shared?.prepareMeetingWingNoticeLayout(reason: "present:\(p.id)")
             }

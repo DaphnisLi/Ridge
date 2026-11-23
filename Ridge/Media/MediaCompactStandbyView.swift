@@ -81,10 +81,13 @@ struct MediaCompactStandbyView: View {
             HStack(spacing: 0) {
                 HStack(spacing: leftClusterSpacing) {
                     artworkThumb
-                    MediaCompactTitleMarquee(
+                    IslandCompactTitleMarquee(
                         text: title.isEmpty ? L10n.Media.widgetName : title,
                         animated: animatedEqualizer,
-                        visibleWidth: titleBudget
+                        visibleWidth: titleBudget,
+                        fontSize: 12,
+                        fontWeight: .semibold,
+                        logTag: "Media"
                     )
                 }
                 .frame(width: wing, alignment: .leading)
@@ -164,108 +167,6 @@ struct MediaCompactStandbyView: View {
     }
 }
 
-/// 收起态歌名横向轮播：`visibleWidth` 仅为刘海左侧可见翼宽（不含被挡段）。
-private struct MediaCompactTitleMarquee: View {
-    let text: String
-    var animated: Bool = true
-    /// 左翼内真正露出来的宽度（封面已扣除）。
-    var visibleWidth: CGFloat
-    /// 滚动速度（pt/s）。
-    var speed: CGFloat = 28
-    /// 两段文案间距。
-    var gap: CGFloat = 28
-    /// 滚到头尾后的停顿。
-    var holdSeconds: TimeInterval = 1.4
-
-    @State private var textWidth: CGFloat = 0
-    @State private var didLogMarquee = false
-
-    private var boxWidth: CGFloat { max(0, visibleWidth) }
-
-    private var needsMarquee: Bool {
-        animated && textWidth > 0 && boxWidth > 0 && textWidth > boxWidth + 1
-    }
-
-    var body: some View {
-        TimelineView(
-            .animation(minimumInterval: 1.0 / 30.0, paused: !needsMarquee)
-        ) { context in
-            let offset = marqueeOffset(at: context.date)
-            HStack(spacing: gap) {
-                titleLabel
-                if needsMarquee {
-                    titleLabel
-                }
-            }
-            .offset(x: offset)
-        }
-        .frame(width: boxWidth, height: 16, alignment: .leading)
-        .clipped()
-        .background(alignment: .leading) {
-            titleLabel
-                .fixedSize(horizontal: true, vertical: false)
-                .opacity(0)
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: MediaCompactTitleWidthKey.self,
-                            value: proxy.size.width
-                        )
-                    }
-                )
-        }
-        .onPreferenceChange(MediaCompactTitleWidthKey.self) { width in
-            textWidth = width
-            logMarqueeIfNeeded()
-        }
-        .onChange(of: text) { _, _ in
-            didLogMarquee = false
-            logMarqueeIfNeeded()
-        }
-        .onChange(of: visibleWidth) { _, _ in
-            didLogMarquee = false
-            logMarqueeIfNeeded()
-        }
-    }
-
-    private var titleLabel: some View {
-        Text(text)
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.white)
-            .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
-    }
-
-    private func marqueeOffset(at date: Date) -> CGFloat {
-        guard needsMarquee else { return 0 }
-        let cycle = textWidth + gap
-        guard cycle > 1, speed > 0 else { return 0 }
-        let scrollDuration = TimeInterval(cycle / speed)
-        let total = holdSeconds + scrollDuration
-        guard total > 0 else { return 0 }
-        let phase = date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: total)
-        if phase < holdSeconds { return 0 }
-        let progress = (phase - holdSeconds) / scrollDuration
-        return -CGFloat(progress) * cycle
-    }
-
-    private func logMarqueeIfNeeded() {
-        guard needsMarquee, !didLogMarquee else { return }
-        didLogMarquee = true
-        AppLog.debug("Media", "收起态歌名启动轮播", [
-            "textW": Int(textWidth),
-            "visibleW": Int(boxWidth),
-            "len": text.count
-        ])
-    }
-}
-
-private struct MediaCompactTitleWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
 
 /// 收起态右侧三柱律动：播放跳动，暂停静止。
 struct MediaCompactEqualizerBars: View {

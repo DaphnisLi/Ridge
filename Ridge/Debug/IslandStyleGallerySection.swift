@@ -347,27 +347,48 @@ struct IslandStyleGallerySection: View {
     }
 
     private var liveFocusRows: some View {
-        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
-            ForEach(FocusTimerPreviewTab.allCases) { tab in
-                panelCell(
-                    label: focusTabTitle(tab),
-                    maxWidth: tab.isCompact
-                        ? SettingsIslandPreviewWidth.standby
-                        : SettingsIslandPreviewWidth.expanded,
-                    hugs: false,
-                    onTap: { harness.focusApplyPreviewTab(tab) }
-                ) {
-                    FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
-                        .padding(
-                            .horizontal,
-                            tab.isCompact ? 8 : IslandChrome.contentHorizontal
-                        )
-                        .padding(
-                            .vertical,
-                            tab.isCompact ? 6 : IslandChrome.contentBottom
-                        )
+        // 倒计时 / 正计时分开展示，避免混测。
+        VStack(alignment: .leading, spacing: 12) {
+            galleryRow(title: L10n.TestLab.focusCountdownSection, columns: 2) {
+                ForEach(countdownPreviewTabs) { tab in
+                    focusPreviewCell(tab)
                 }
             }
+            galleryRow(title: L10n.TestLab.focusCountUpSection, columns: 2) {
+                ForEach(countUpPreviewTabs) { tab in
+                    focusPreviewCell(tab)
+                }
+            }
+        }
+    }
+
+    private var countdownPreviewTabs: [FocusTimerPreviewTab] {
+        [.picking, .standby, .overtime, .completed]
+    }
+
+    private var countUpPreviewTabs: [FocusTimerPreviewTab] {
+        [.countUp]
+    }
+
+    @ViewBuilder
+    private func focusPreviewCell(_ tab: FocusTimerPreviewTab) -> some View {
+        panelCell(
+            label: focusTabTitle(tab),
+            maxWidth: tab.isCompact
+                ? SettingsIslandPreviewWidth.standby
+                : SettingsIslandPreviewWidth.expanded,
+            hugs: false,
+            onTap: { harness.focusApplyPreviewTab(tab) }
+        ) {
+            FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
+                .padding(
+                    .horizontal,
+                    tab.isCompact ? 8 : IslandChrome.contentHorizontal
+                )
+                .padding(
+                    .vertical,
+                    tab.isCompact ? 6 : IslandChrome.contentBottom
+                )
         }
     }
 
@@ -584,6 +605,7 @@ struct IslandStyleGallerySection: View {
         case .standby: return L10n.FocusTimer.phaseStandby
         case .picking: return L10n.FocusTimer.phasePicking
         case .overtime: return L10n.FocusTimer.phaseOvertime
+        case .countUp: return L10n.FocusTimer.phaseCountUp
         case .completed: return L10n.FocusTimer.phaseCompleted
         }
     }

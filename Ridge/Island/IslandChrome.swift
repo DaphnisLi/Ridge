@@ -59,8 +59,10 @@ enum IslandChrome {
         notchRightOrbEntranceNanoseconds + notchRightOrbLingerNanoseconds
     }
 
-    /// 翼 tip 单侧翼宽（与 `prepareMeetingWingNoticeLayout` 一致）。
+    /// 翼 tip 单侧翼宽（会议等与 `prepareMeetingWingNoticeLayout` 一致）。
     static let preparedWingWidth: CGFloat = 98
+    /// 外设满岛 tip 单侧翼宽：比会议收一档；长设备名在左翼内滚动。
+    static let preparedPeripheralWingWidth: CGFloat = 78
 
     /// 短 tip 上岛前强制面板尺寸（遗留；「已复制」已改圆岛）。
     static func preparedShortTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
@@ -86,13 +88,17 @@ enum IslandChrome {
             && abs(size.height - notchRightOrbDiameter) <= slop
     }
 
-    /// 翼 tip 上岛前强制面板尺寸。
-    static func preparedWingTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
+    /// 翼 tip 上岛前强制面板尺寸。外设满岛用更窄 `preparedPeripheralWingWidth`。
+    static func preparedWingTipPanelSize(
+        notchWidth: CGFloat,
+        notchHeight: CGFloat,
+        wingWidth: CGFloat = preparedWingWidth
+    ) -> CGSize {
         let notchW = max(notchWidth, 110)
         let height = compactTipTopInset
             + max(notchHeight, 32)
             + compactTipBottom
-        let width = preparedWingWidth * 2 + notchW + horizontalInsetTotal
+        let width = wingWidth * 2 + notchW + horizontalInsetTotal
         return CGSize(width: width, height: height)
     }
 

@@ -105,6 +105,7 @@ private struct FocusTimerLiveView: View {
             onStartCountUp: { session.startCountUpTimer() },
             onExtend: { session.extend() },
             onFinishEarly: { session.finishEarly() },
+            onToggleCountUpPause: { session.toggleCountUpPause() },
             // 仅在「完成命名」时经 onNoteChange 写入；逐字回写会整卡刷新打断 field editor。
             onNoteChange: { session.noteDraft = $0 },
             onSave: { session.saveCompletion(note: nil) },

@@ -16,9 +16,9 @@ final class FocusTimerSession: ObservableObject {
     /// 小组件是否启用（由 Widget 同步）。启用且空闲时保持选时态上岛。
     @Published private(set) var isWidgetEnabled = false
 
-    /// 收起岛左右待命：仅计时 / 顺延中。
+    /// 收起岛左右待命：倒计时 / 加时 / 正计时。
     var showsCompactStandby: Bool {
-        isWidgetEnabled && (phase == .running || phase == .overtime)
+        isWidgetEnabled && (phase == .running || phase == .overtime || phase == .countUp)
     }
 
     /// 需要争夺岛展示。
@@ -31,6 +31,10 @@ final class FocusTimerSession: ObservableObject {
     private var plannedSeconds = 0
     private var overtimeSeconds = 0
     private var elapsedSeconds = 0
+    private var isPaused = false
+    /// 正计时暂停累计：墙钟结算时扣除暂停时长。
+    private var pausedAccumulatedSeconds = 0
+    private var pauseStartedAt: Date?
     private var startedAt: Date?
     private var sessionTitle: String = ""
     private var sessionKind: FocusTimerKind = .preset
@@ -85,9 +89,27 @@ final class FocusTimerSession: ObservableObject {
         startTimer(minutes: customMinutes, title: L10n.FocusTimer.customSessionTitle, kind: .custom)
     }
 
-    /// 选时态「正计时」入口；会话累加逻辑尚未接上，仅打点便于验收点击。
+    /// 选时态「正计时」：从 0 纯累加，无目标时长、不自动收工。
     func startCountUpTimer() {
-        AppLog.info("FocusTimer", "正计时入口已点（累加会话待接）")
+        if phase == .completed {
+            pendingRecordID = nil
+        }
+        selectedPresetID = nil
+        plannedSeconds = 0
+        overtimeSeconds = 0
+        elapsedSeconds = 0
+        isPaused = false
+        pausedAccumulatedSeconds = 0
+        pauseStartedAt = nil
+        startedAt = Date()
+        sessionTitle = L10n.FocusTimer.countUpSessionTitle
+        sessionKind = .countUp
+        phase = .countUp
+        noteDraft = ""
+        startTicking()
+        publishSnapshot()
+        AppLog.info("FocusTimer", "开始正计时")
+        IslandHaptics.play(IslandSettings.shared.hapticIntensity)
     }
 
     func startTimer(minutes: Int? = nil, title: String? = nil, kind: FocusTimerKind? = nil) {
@@ -101,6 +123,9 @@ final class FocusTimerSession: ObservableObject {
         plannedSeconds = clamped * 60
         overtimeSeconds = 0
         elapsedSeconds = 0
+        isPaused = false
+        pausedAccumulatedSeconds = 0
+        pauseStartedAt = nil
         startedAt = Date()
         sessionTitle = title
             ?? preset?.title
@@ -132,8 +157,29 @@ final class FocusTimerSession: ObservableObject {
         IslandHaptics.play(IslandSettings.shared.hapticIntensity)
     }
 
+    /// 正计时暂停 / 继续。
+    func toggleCountUpPause() {
+        guard phase == .countUp else { return }
+        if isPaused {
+            if let pauseStartedAt {
+                pausedAccumulatedSeconds += max(0, Int(Date().timeIntervalSince(pauseStartedAt)))
+            }
+            pauseStartedAt = nil
+            isPaused = false
+            startTicking()
+            AppLog.info("FocusTimer", "正计时继续", ["elapsed": elapsedSeconds])
+        } else {
+            isPaused = true
+            pauseStartedAt = Date()
+            stopTicking()
+            AppLog.info("FocusTimer", "正计时暂停", ["elapsed": elapsedSeconds])
+        }
+        publishSnapshot()
+        IslandHaptics.play(IslandSettings.shared.hapticIntensity)
+    }
+
     func finishEarly() {
-        guard phase == .running || phase == .overtime else { return }
+        guard phase == .running || phase == .overtime || phase == .countUp else { return }
         complete(reason: "finishEarly")
     }
 
@@ -187,6 +233,12 @@ final class FocusTimerSession: ObservableObject {
     }
 
     private func handleTick() {
+        if phase == .countUp {
+            guard !isPaused else { return }
+            elapsedSeconds += 1
+            publishSnapshot()
+            return
+        }
         guard phase == .running || phase == .overtime else { return }
         elapsedSeconds += 1
         if remainingSeconds() <= 0 {
@@ -202,11 +254,20 @@ final class FocusTimerSession: ObservableObject {
 
     private func complete(reason: String) {
         stopTicking()
-        // 归零前判断是否提前结束（钳制 elapsed 之后 remaining 恒为 0）。
-        let endedEarly = remainingSeconds() > 0
-        elapsedSeconds = min(elapsedSeconds, plannedSeconds + overtimeSeconds)
+        let wasCountUp = phase == .countUp
+        // 正计时若停在暂停态，把末段暂停并入累计，避免墙钟虚高。
+        if wasCountUp, isPaused, let pauseStartedAt {
+            pausedAccumulatedSeconds += max(0, Int(Date().timeIntervalSince(pauseStartedAt)))
+            self.pauseStartedAt = nil
+        }
+        // 倒计时：归零前判断是否提前结束（钳制 elapsed 之后 remaining 恒为 0）。
+        let endedEarly = wasCountUp ? false : remainingSeconds() > 0
+        if !wasCountUp {
+            elapsedSeconds = min(elapsedSeconds, plannedSeconds + overtimeSeconds)
+        }
+        isPaused = false
         // 一结束就落库；备注可稍后点「保存」写入，不点也不丢本条计时。
-        pendingRecordID = finalizeRecord(note: "", endedEarly: endedEarly)
+        pendingRecordID = finalizeRecord(note: "", endedEarly: endedEarly, isCountUp: wasCountUp)
         noteDraft = ""
         phase = .completed
         publishSnapshot()
@@ -215,6 +276,7 @@ final class FocusTimerSession: ObservableObject {
             "elapsed": elapsedSeconds,
             "overtime": overtimeSeconds,
             "endedEarly": endedEarly,
+            "countUp": wasCountUp,
             "id": pendingRecordID.map { String($0.uuidString.prefix(8)) } ?? "nil"
         ])
         IslandHaptics.play(IslandSettings.shared.hapticIntensity)
@@ -229,47 +291,77 @@ final class FocusTimerSession: ObservableObject {
     }
 
     @discardableResult
-    private func finalizeRecord(note: String, endedEarly: Bool) -> UUID? {
+    private func finalizeRecord(note: String, endedEarly: Bool, isCountUp: Bool) -> UUID? {
         guard let startedAt else { return nil }
-        let plannedMin = max(1, plannedSeconds / 60)
-        let overtimeMin = overtimeSeconds / 60
         let endedAt = Date()
-        // 实际专注：优先墙钟（开始→结束）；与滴答取较大值，避免后台节流少记。
-        // 提前结束绝不用计划时长顶替（10 分计划、5 分收工 → 记 5）。
-        let wallSec = max(0, Int(endedAt.timeIntervalSince(startedAt)))
         let tickSec = max(0, elapsedSeconds)
-        let scheduleSec = plannedSeconds + overtimeSeconds
-        let rawSec = max(wallSec, tickSec)
-        let actualSec = endedEarly
-            ? min(rawSec, max(scheduleSec - 1, 0))
-            : min(rawSec, scheduleSec)
-        let elapsedMin = max(1, actualSec / 60)
         let id = UUID()
-        let record = FocusTimerRecord(
-            id: id,
-            // 备注为空则记为未命名，设置看板可事后补填；不再用预设名顶替。
-            title: note,
-            kind: overtimeMin > 0 ? .overtimeSprint : sessionKind,
-            plannedMinutes: plannedMin,
-            overtimeMinutes: overtimeMin,
-            elapsedMinutes: elapsedMin,
-            startedAt: startedAt,
-            endedAt: endedAt,
-            note: note,
-            // 提前结束不算「按时」。
-            completedOnTime: !endedEarly && overtimeMin == 0,
-            endedEarly: endedEarly
-        )
+        let record: FocusTimerRecord
+        if isCountUp {
+            // 正计时：计划=实际；扣暂停后的墙钟与滴答取较大值。
+            var wallSec = max(0, Int(endedAt.timeIntervalSince(startedAt)) - pausedAccumulatedSeconds)
+            wallSec = max(0, wallSec)
+            let actualSec = max(tickSec, wallSec)
+            let elapsedMin = max(1, (actualSec + 59) / 60)
+            record = FocusTimerRecord(
+                id: id,
+                title: note,
+                kind: .countUp,
+                plannedMinutes: elapsedMin,
+                overtimeMinutes: 0,
+                elapsedMinutes: elapsedMin,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                note: note,
+                completedOnTime: true,
+                endedEarly: false
+            )
+            AppLog.info("FocusTimer", "结算正计时工时", [
+                "elapsedMin": elapsedMin,
+                "wallSec": wallSec,
+                "tickSec": tickSec,
+                "pausedSec": pausedAccumulatedSeconds
+            ])
+        } else {
+            let plannedMin = max(1, plannedSeconds / 60)
+            let overtimeMin = overtimeSeconds / 60
+            // 实际专注：优先墙钟（开始→结束）；与滴答取较大值，避免后台节流少记。
+            // 提前结束绝不用计划时长顶替（10 分计划、5 分收工 → 记 5）。
+            let wallSec = max(0, Int(endedAt.timeIntervalSince(startedAt)))
+            let scheduleSec = plannedSeconds + overtimeSeconds
+            let rawSec = max(wallSec, tickSec)
+            let actualSec = endedEarly
+                ? min(rawSec, max(scheduleSec - 1, 0))
+                : min(rawSec, scheduleSec)
+            let elapsedMin = max(1, actualSec / 60)
+            record = FocusTimerRecord(
+                id: id,
+                // 备注为空则记为未命名，设置看板可事后补填；不再用预设名顶替。
+                title: note,
+                kind: overtimeMin > 0 ? .overtimeSprint : sessionKind,
+                plannedMinutes: plannedMin,
+                overtimeMinutes: overtimeMin,
+                elapsedMinutes: elapsedMin,
+                startedAt: startedAt,
+                endedAt: endedAt,
+                note: note,
+                // 提前结束不算「按时」。
+                completedOnTime: !endedEarly && overtimeMin == 0,
+                endedEarly: endedEarly
+            )
+            AppLog.info("FocusTimer", "结算实际工时", [
+                "elapsedMin": elapsedMin,
+                "plannedMin": plannedMin,
+                "overtimeMin": overtimeMin,
+                "endedEarly": endedEarly,
+                "wallSec": wallSec,
+                "tickSec": tickSec
+            ])
+        }
         settings.appendRecord(record)
-        AppLog.info("FocusTimer", "结算实际工时", [
-            "elapsedMin": elapsedMin,
-            "plannedMin": plannedMin,
-            "overtimeMin": overtimeMin,
-            "endedEarly": endedEarly,
-            "wallSec": wallSec,
-            "tickSec": tickSec
-        ])
         self.startedAt = nil
+        pausedAccumulatedSeconds = 0
+        pauseStartedAt = nil
         return id
     }
 
@@ -279,6 +371,9 @@ final class FocusTimerSession: ObservableObject {
         plannedSeconds = 0
         overtimeSeconds = 0
         elapsedSeconds = 0
+        isPaused = false
+        pausedAccumulatedSeconds = 0
+        pauseStartedAt = nil
         startedAt = nil
         pendingRecordID = nil
         noteDraft = ""
@@ -298,6 +393,9 @@ final class FocusTimerSession: ObservableObject {
         plannedSeconds = 0
         overtimeSeconds = 0
         elapsedSeconds = 0
+        isPaused = false
+        pausedAccumulatedSeconds = 0
+        pauseStartedAt = nil
         startedAt = nil
         pendingRecordID = nil
         noteDraft = ""
@@ -312,7 +410,7 @@ final class FocusTimerSession: ObservableObject {
                 return customMinutes * 60
             case .running, .overtime:
                 return remainingSeconds()
-            case .completed:
+            case .countUp, .completed:
                 return 0
             }
         }()
@@ -324,7 +422,8 @@ final class FocusTimerSession: ObservableObject {
             remainingSeconds: remaining,
             noteDraft: noteDraft,
             customMinutes: customMinutes,
-            selectedPresetID: selectedPresetID
+            selectedPresetID: selectedPresetID,
+            isPaused: isPaused
         )
     }
 
@@ -342,6 +441,15 @@ final class FocusTimerSession: ObservableObject {
         let clamped = min(max(minutes, 1), 180)
         startTimer(minutes: clamped, title: "Lab \(clamped)m", kind: .custom)
         AppLog.info("FocusTimer", "测试台进入计时", ["minutes": clamped])
+    }
+
+    /// 一键进入正计时（可注入已过秒数，便于验收时分秒档岛宽）。
+    func debugEnterCountUp(elapsedSeconds: Int = 90) {
+        startCountUpTimer()
+        let clamped = max(0, elapsedSeconds)
+        self.elapsedSeconds = clamped
+        publishSnapshot()
+        AppLog.info("FocusTimer", "测试台进入正计时", ["elapsed": clamped])
     }
 
     /// 一键进入加时态。
@@ -363,20 +471,42 @@ final class FocusTimerSession: ObservableObject {
         AppLog.info("FocusTimer", "测试台进入终局")
     }
 
-    /// 快进若干分钟（增加 elapsed）。
+    /// 快进若干分钟（增加 elapsed）。倒计时 / 加时 / 正计时均可；正计时不自动收工。
     func debugAdvance(byMinutes minutes: Int) {
+        let addMin = min(max(minutes, 1), 24 * 60)
+        let add = addMin * 60
+        if phase == .countUp {
+            elapsedSeconds += add
+            publishSnapshot()
+            AppLog.info("FocusTimer", "测试台正计时加时", [
+                "addMin": addMin,
+                "elapsed": elapsedSeconds
+            ])
+            return
+        }
         guard phase == .running || phase == .overtime else {
             AppLog.warn("FocusTimer", "测试台快进忽略：非计时态", ["phase": phase.rawValue])
             return
         }
-        let add = min(max(minutes, 1), 180) * 60
         elapsedSeconds += add
         if remainingSeconds() <= 0 {
             complete(reason: "testLabAdvanceEnd")
         } else {
             publishSnapshot()
         }
-        AppLog.info("FocusTimer", "测试台快进", ["addSec": add, "remain": remainingSeconds()])
+        AppLog.info("FocusTimer", "测试台倒计时快进", [
+            "addMin": addMin,
+            "remain": remainingSeconds()
+        ])
+    }
+
+    /// 正计时加若干小时（测试台；便于验收时分秒档岛宽）。
+    func debugAdvanceCountUp(byHours hours: Int) {
+        if phase != .countUp {
+            debugEnterCountUp(elapsedSeconds: elapsedSeconds)
+        }
+        let addH = min(max(hours, 1), 24)
+        debugAdvance(byMinutes: addH * 60)
     }
 
     /// 跳到还剩指定秒数。

@@ -102,7 +102,12 @@ final class IslandTestHarness: ObservableObject {
 
     func focusAdvance(byMinutes minutes: Int) {
         ensureFocusEnabled()
-        FocusTimerSession.shared.debugAdvance(byMinutes: minutes)
+        let session = FocusTimerSession.shared
+        // 倒计时工具：若不在倒计时态，先进入计时再快进。
+        if session.phase != .running && session.phase != .overtime {
+            session.debugEnterRunning(minutes: 25)
+        }
+        session.debugAdvance(byMinutes: minutes)
         note(L10n.TestLab.statusFocusAdvance(minutes))
     }
 
@@ -122,6 +127,57 @@ final class IslandTestHarness: ObservableObject {
         ensureFocusEnabled()
         FocusTimerSession.shared.debugJumpIntoOvertime()
         note(L10n.TestLab.statusFocusOvertime)
+    }
+
+    func focusEnterCountUp(elapsedSeconds: Int = 90) {
+        ensureFocusEnabled()
+        FocusTimerSession.shared.debugEnterCountUp(elapsedSeconds: elapsedSeconds)
+        IslandController.shared?.collapse(reason: "testLabFocusCountUp")
+        note(L10n.TestLab.statusFocusCountUp)
+    }
+
+    /// 正计时加时：不在正计时态时先进入，再加分钟。
+    func focusCountUpAdvance(byMinutes minutes: Int) {
+        ensureFocusEnabled()
+        let session = FocusTimerSession.shared
+        if session.phase != .countUp {
+            session.debugEnterCountUp(elapsedSeconds: session.snapshot.elapsedSeconds)
+            IslandController.shared?.collapse(reason: "testLabFocusCountUp")
+        }
+        session.debugAdvance(byMinutes: minutes)
+        note(L10n.TestLab.statusFocusCountUpAdvance(minutes))
+    }
+
+    func focusCountUpAdvance(byHours hours: Int) {
+        ensureFocusEnabled()
+        FocusTimerSession.shared.debugAdvanceCountUp(byHours: hours)
+        IslandController.shared?.collapse(reason: "testLabFocusCountUp")
+        note(L10n.TestLab.statusFocusCountUpAdvanceHours(hours))
+    }
+
+    func focusCountUpTogglePause() {
+        ensureFocusEnabled()
+        let session = FocusTimerSession.shared
+        if session.phase != .countUp {
+            session.debugEnterCountUp(elapsedSeconds: 90)
+            IslandController.shared?.collapse(reason: "testLabFocusCountUp")
+        }
+        session.toggleCountUpPause()
+        note(
+            session.snapshot.isPaused
+                ? L10n.TestLab.statusFocusCountUpPaused
+                : L10n.TestLab.statusFocusCountUpResumed
+        )
+    }
+
+    func focusCountUpFinish() {
+        ensureFocusEnabled()
+        let session = FocusTimerSession.shared
+        if session.phase != .countUp {
+            session.debugEnterCountUp(elapsedSeconds: 90)
+        }
+        session.finishEarly()
+        note(L10n.TestLab.statusFocusEnded)
     }
 
     // MARK: - Meeting
@@ -351,6 +407,8 @@ final class IslandTestHarness: ObservableObject {
             focusEnterOvertime()
             IslandController.shared?.collapse(reason: "testLabFocusOvertime")
             note(L10n.TestLab.statusFocusOvertime)
+        case .countUp:
+            focusEnterCountUp(elapsedSeconds: 1 * 3600 + 27 * 60 + 32)
         case .completed:
             focusEnterCompleted()
             IslandController.shared?.expand(reason: "testLabFocusCompleted")

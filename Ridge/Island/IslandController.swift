@@ -197,8 +197,10 @@ final class IslandController: NSObject {
             .sink { [weak self] phase in
                 AppLog.info("Island", "番茄计时态切换，刷新收起尺寸", ["phase": phase.rawValue])
                 self?.viewModel.allowPanelShrink(for: 0.7, reason: "focusPhase")
-                // 计时 / 加时只保留待命胶囊：起钟或顺延后若仍展开则收起。
-                if phase == .running || phase == .overtime, self?.viewModel.isExpanded == true {
+                // 计时 / 加时 / 正计时只保留待命胶囊：起钟后若仍展开则收起。
+                if phase == .running || phase == .overtime || phase == .countUp,
+                   self?.viewModel.isExpanded == true
+                {
                     self?.collapse(reason: "focusTimerStandby")
                 }
                 // 终局等比进行中更高：立刻套画布，避免 Preference 仍按 80pt 矮框裁掉备注热区。
@@ -732,10 +734,32 @@ final class IslandController: NSObject {
 
     /// 会议翼 tip 上岛前强制宽面板：否则可点区停在刘海/短条，右翼「进入」点穿到下层。
     func prepareMeetingWingNoticeLayout(reason: String) {
+        prepareWingTipNoticeLayout(
+            wingWidth: IslandChrome.preparedWingWidth,
+            reason: reason,
+            logLabel: "会议翼"
+        )
+    }
+
+    /// 外设满岛 tip：翼宽收窄，长设备名在卡内滚动。
+    func preparePeripheralWingNoticeLayout(reason: String) {
+        prepareWingTipNoticeLayout(
+            wingWidth: IslandChrome.preparedPeripheralWingWidth,
+            reason: reason,
+            logLabel: "外设翼"
+        )
+    }
+
+    private func prepareWingTipNoticeLayout(
+        wingWidth: CGFloat,
+        reason: String,
+        logLabel: String
+    ) {
         let notchW = max(viewModel.notchWidth, 110)
         let size = IslandChrome.preparedWingTipPanelSize(
             notchWidth: viewModel.notchWidth,
-            notchHeight: viewModel.notchHeight
+            notchHeight: viewModel.notchHeight,
+            wingWidth: wingWidth
         )
         viewModel.forcePanelSize(size, reason: reason)
         if viewModel.isExpanded {
@@ -744,10 +768,11 @@ final class IslandController: NSObject {
             // 尚未展开时也先写可点框，避免首击落在刘海外被 HitTest 放行。
             updateInteractiveFrame(expanded: true)
         }
-        AppLog.warn("Island", "会议翼通知布局已预备", [
+        AppLog.warn("Island", "\(logLabel)通知布局已预备", [
             "reason": reason,
             "w": Int(size.width),
             "h": Int(size.height),
+            "wingW": Int(wingWidth),
             "notchW": Int(notchW)
         ])
     }
@@ -917,11 +942,13 @@ final class IslandController: NSObject {
             expand(reason: "noticeSticky:\(notice?.sourceTag ?? "dual")")
         }
         if noticeSlots.anyKeepsExpandedWithoutHover, noticeSlots.anyUsesNotchWingChrome {
+            let wingW = noticeSlots.wingTipPreparedWingWidth
             let floored = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
                 current: viewModel.panelSize,
                 notchWidth: geometry.notchWidth,
                 notchHeight: geometry.notchHeight,
-                usesNotchWingChrome: true
+                usesNotchWingChrome: true,
+                wingWidth: wingW
             )
             if floored.width - viewModel.panelSize.width > 0.5
                 || floored.height - viewModel.panelSize.height > 0.5
@@ -929,6 +956,8 @@ final class IslandController: NSObject {
                 let notice = noticeSlots.current
                 AppLog.warn("Island", "常驻翼 tip 可点区过窄，抬回预备双翼宽", [
                     "notice": notice?.id ?? "",
+                    "wingW": Int(wingW),
+                    "peripheral": noticeSlots.anyUsesCompactPeripheralWing,
                     "fromW": Int(viewModel.panelSize.width),
                     "fromH": Int(viewModel.panelSize.height),
                     "toW": Int(floored.width),
@@ -1475,11 +1504,14 @@ final class IslandController: NSObject {
             notchHeight: geometry.notchHeight
         )
         // 翼 tip：可点区至少预备双翼宽，避免 panel 误缩后右翼按钮点穿。
+        // 外设窄翼须用 peripheral 预备宽，禁止抬成会议翼导致左右空一边。
+        let noticeSlots = IslandNoticeCenter.shared.slots
         let interactivePanel = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
             current: viewModel.panelSize,
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight,
-            usesNotchWingChrome: IslandNoticeCenter.shared.slots.anyUsesNotchWingChrome
+            usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome,
+            wingWidth: noticeSlots.wingTipPreparedWingWidth
         )
         let panelOffsetX = currentPanelHorizontalOffset(panel: interactivePanel)
         let retentionOffsetX = currentPanelHorizontalOffset(panel: retentionSize)
@@ -1942,12 +1974,14 @@ final class IslandController: NSObject {
         let windowFrame = window.frame
         let isExpanded = expanded ?? viewModel.isExpanded
         // 展开 / 收起 / 待命一律以内容（或收起几何）写入的 panelSize 为准；
-        // 翼 tip 额外抬到预备双翼宽，保证右翼按钮落在 HitTest 内。
+        // 翼 tip 额外抬到该 tip 预备双翼宽（外设用窄翼），保证右翼按钮落在 HitTest 内。
+        let noticeSlots = IslandNoticeCenter.shared.slots
         let panel = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
             current: viewModel.panelSize,
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight,
-            usesNotchWingChrome: IslandNoticeCenter.shared.slots.anyUsesNotchWingChrome
+            usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome,
+            wingWidth: noticeSlots.wingTipPreparedWingWidth
         )
         let offsetX = currentPanelHorizontalOffset(panel: panel)
         // 面板在窗内水平居中（圆岛再加右偏）、贴顶（AppKit 原点左下）。

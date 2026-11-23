@@ -601,6 +601,19 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertLessThan(orb.width, wing.width)
         XCTAssertEqual(IslandChrome.notchRightOrbGap, 2)
         XCTAssertEqual(IslandChrome.preparedWingWidth, 98)
+        XCTAssertEqual(IslandChrome.preparedPeripheralWingWidth, 78)
+        XCTAssertLessThan(
+            IslandChrome.preparedPeripheralWingWidth,
+            IslandChrome.preparedWingWidth,
+            "外设满岛翼宽须窄于会议翼，长设备名靠滚动"
+        )
+        let meetingWing = IslandChrome.preparedWingTipPanelSize(notchWidth: 160, notchHeight: 32)
+        let peripheralWing = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: 160,
+            notchHeight: 32,
+            wingWidth: IslandChrome.preparedPeripheralWingWidth
+        )
+        XCTAssertLessThan(peripheralWing.width, meetingWing.width)
         let clamped = IslandPanelSizing.clamp(
             orb,
             notchWidth: 160,
@@ -1079,6 +1092,63 @@ final class RegressionCatalogTests: XCTestCase {
             usesNotchWingChrome: false
         )
         XCTAssertEqual(untouched.width, 200, accuracy: 0.5)
+    }
+
+    /// peripheral-wing-floor-meeting-width：外设窄翼可点区抬升须用 peripheral 预备宽，禁止抬成会议翼（否则左右空一边）。
+    func test_peripheralWingFloorMeetingWidth_interactiveUsesCompactWing() {
+        let notice = BatteryPeripheralNotice(
+            id: "test.peripheral.floor",
+            deviceID: "d-floor",
+            deviceName: "Magic Mouse",
+            kind: .mouse,
+            percent: 42,
+            threshold: 20,
+            detail: "low"
+        )
+        let peripheral = IslandNoticePayload.peripheralLowBattery(notice)
+        XCTAssertTrue(peripheral.usesNotchWingChrome)
+        XCTAssertTrue(peripheral.usesCompactPeripheralWing)
+
+        let slots = IslandNoticeSlots(secondary: peripheral)
+        XCTAssertEqual(slots.resolvedLayout, .fullNotice(peripheral))
+        XCTAssertTrue(slots.anyUsesNotchWingChrome)
+        XCTAssertTrue(slots.anyUsesCompactPeripheralWing)
+        XCTAssertEqual(slots.wingTipPreparedWingWidth, IslandChrome.preparedPeripheralWingWidth)
+
+        let notchW: CGFloat = 160
+        let notchH: CGFloat = 32
+        let peripheralPrepared = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchW,
+            notchHeight: notchH,
+            wingWidth: IslandChrome.preparedPeripheralWingWidth
+        )
+        let meetingPrepared = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchW,
+            notchHeight: notchH
+        )
+        XCTAssertLessThan(peripheralPrepared.width, meetingPrepared.width)
+
+        // 已是外设预备宽时，地板不得再抬成会议宽。
+        let floored = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+            current: peripheralPrepared,
+            notchWidth: notchW,
+            notchHeight: notchH,
+            usesNotchWingChrome: true,
+            wingWidth: slots.wingTipPreparedWingWidth
+        )
+        XCTAssertEqual(floored.width, peripheralPrepared.width, accuracy: 0.5)
+        XCTAssertLessThan(floored.width, meetingPrepared.width)
+
+        // 误缩时只抬回外设预备宽，仍窄于会议。
+        let rescued = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
+            current: CGSize(width: notchW - 7, height: notchH),
+            notchWidth: notchW,
+            notchHeight: notchH,
+            usesNotchWingChrome: true,
+            wingWidth: IslandChrome.preparedPeripheralWingWidth
+        )
+        XCTAssertEqual(rescued.width, peripheralPrepared.width, accuracy: 0.5)
+        XCTAssertLessThan(rescued.width, meetingPrepared.width)
     }
 
     /// meeting-tip-preemption：会议 tip 在场时，次档不得整岛替换（改走副槽并排）。
@@ -2215,6 +2285,49 @@ final class RegressionCatalogTests: XCTestCase {
             NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 10)
                 - NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 5),
             20
+        )
+        // 正计时：分秒档与倒计时待命同宽，避免 MM:SS 被裁；出小时再加宽；不足 1 分仍按分秒占位。
+        XCTAssertEqual(
+            NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 45),
+            NotchGeometry.focusTimerCompactWidth,
+            accuracy: 0.5
+        )
+        XCTAssertEqual(
+            NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 90),
+            NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 45),
+            accuracy: 0.5
+        )
+        XCTAssertEqual(
+            NotchGeometry.focusTimerCountUpClockMinWidth(elapsedSeconds: 45),
+            NotchGeometry.focusTimerCountUpClockMinWidthMMSS,
+            accuracy: 0.5
+        )
+        XCTAssertEqual(
+            NotchGeometry.focusTimerCountUpClockMinWidth(elapsedSeconds: 3600),
+            NotchGeometry.focusTimerCountUpClockMinWidthHHMMSS,
+            accuracy: 0.5
+        )
+        XCTAssertGreaterThan(
+            NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 3600),
+            NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 3599)
+        )
+        XCTAssertEqual(
+            NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 3600)
+                - NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 3599),
+            NotchGeometry.focusTimerCountUpHoursExtraWidth,
+            accuracy: 0.5
+        )
+        XCTAssertEqual(
+            FocusTimerFormatting.countUpClock(45),
+            "45"
+        )
+        XCTAssertEqual(
+            FocusTimerFormatting.countUpClock(90),
+            "01:30"
+        )
+        XCTAssertEqual(
+            FocusTimerFormatting.countUpClock(1 * 3600 + 27 * 60 + 32),
+            "01:27:32"
         )
         // 专注左环须与媒体封面同径；库卡待命外框 290×30（详情另走 standby）。
         XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)

@@ -52,11 +52,18 @@ struct IslandContentView: View {
             )
             return CGSize(width: NotchGeometry.pixelAlign(dual.width), height: height)
         }
-        // 番茄计时中：收起态加宽，左右翼展示待命倒计时；宽随 +Nm 芯片位数伸缩。
+        // 番茄计时中：收起态加宽；倒计时随 +Nm，正计时按分秒/时分秒伸缩。
         if focusTimer.showsCompactStandby {
-            let focusW = NotchGeometry.focusTimerStandbyWidth(
-                extendStepMinutes: focusTimerSettings.extendStepMinutes
-            )
+            let focusW: CGFloat = {
+                if focusTimer.snapshot.isCountUp {
+                    return NotchGeometry.focusTimerCountUpStandbyWidth(
+                        elapsedSeconds: focusTimer.snapshot.elapsedSeconds
+                    )
+                }
+                return NotchGeometry.focusTimerStandbyWidth(
+                    extendStepMinutes: focusTimerSettings.extendStepMinutes
+                )
+            }()
             return CGSize(
                 width: NotchGeometry.pixelAlign(
                     max(viewModel.notchWidth * NotchGeometry.compactScale, focusW)
@@ -278,6 +285,7 @@ struct IslandContentView: View {
         .animation(islandSpring, value: viewModel.panelSize)
         .animation(islandSpring, value: focusTimer.showsCompactStandby)
         .animation(islandSpring, value: focusTimer.snapshot.remainingSeconds)
+        .animation(islandSpring, value: focusTimer.snapshot.elapsedSeconds)
         .animation(islandSpring, value: focusTimerSettings.extendStepMinutes)
         .animation(islandSpring, value: showsMediaCompactStandby)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
@@ -332,6 +340,18 @@ struct IslandContentView: View {
                 "minutes": minutes,
                 "width": Int(NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: minutes))
             ])
+        }
+        .onChange(of: focusTimer.snapshot.elapsedSeconds) { _, elapsed in
+            guard focusTimer.snapshot.isCountUp else { return }
+            // 跨过 1h 时加宽；允许缩宽以免卡在旧宽。
+            viewModel.allowPanelShrink(for: 0.6, reason: "focusCountUpHours")
+            syncCompactPanelSizeIfNeeded()
+            if FocusTimerFormatting.countUpShowsHours(elapsed) {
+                AppLog.debug("FocusTimer", "正计时进入时分秒档，岛宽已加宽", [
+                    "elapsed": elapsed,
+                    "width": Int(NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: elapsed))
+                ])
+            }
         }
         .onChange(of: showsMediaCompactStandby) { _, active in
             syncCompactPanelSizeIfNeeded()
@@ -425,10 +445,12 @@ private struct IslandBody: View {
     }
 
     private var hidesPageDots: Bool {
-        // 瞬时通知不参与翻页点；媒体展开态也不画角点（左右滑仍可翻页）。
+        // 瞬时通知不参与翻页点；媒体展开 / 番茄终局单行也不画角点（避免顶空）。
         usesNotchWingTip || usesDualFlushTip || usesShortBelowNotchTip || usesNotchRightOrbTip
             || runtime.isTransientNoticePage
             || runtime.activeID == LiveIslandGate.mediaID
+            || (runtime.activeID == FocusTimerWidget.manifest.id
+                && focusTimer.phase == .completed)
     }
 
     private var showsMediaCompactStandby: Bool {
@@ -500,15 +522,23 @@ private struct IslandBody: View {
                     .allowsHitTesting(false)
                 }
             } else if focusTimer.showsCompactStandby {
-                // 宽随 +Nm 位数伸缩；内边距在 StandbyView 内，此处勿再叠 padding。
-                let standbyW = NotchGeometry.focusTimerStandbyWidth(
-                    extendStepMinutes: focusTimerSettings.extendStepMinutes
-                )
+                // 倒计时随 +Nm；正计时按分秒占位、出小时加宽；内边距在 StandbyView 内。
+                let standbyW: CGFloat = {
+                    if focusTimer.snapshot.isCountUp {
+                        return NotchGeometry.focusTimerCountUpStandbyWidth(
+                            elapsedSeconds: focusTimer.snapshot.elapsedSeconds
+                        )
+                    }
+                    return NotchGeometry.focusTimerStandbyWidth(
+                        extendStepMinutes: focusTimerSettings.extendStepMinutes
+                    )
+                }()
                 FocusTimerStandbyView(
                     snapshot: focusTimer.snapshot,
                     extendStepMinutes: focusTimerSettings.extendStepMinutes,
                     onExtend: { FocusTimerSession.shared.extend() },
-                    onFinishEarly: { FocusTimerSession.shared.finishEarly() }
+                    onFinishEarly: { FocusTimerSession.shared.finishEarly() },
+                    onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
                 )
                     .frame(
                         width: standbyW,
@@ -572,12 +602,23 @@ private struct IslandBody: View {
         {
             return MediaExpandedContentSize.topInset
         }
+        // 番茄终局单行：勿用 expandedTopInset，否则顶空一大截、内容贴底。
+        if chromeSurface == .expanded,
+           runtime.activeID == FocusTimerWidget.manifest.id,
+           focusTimer.phase == .completed
+        {
+            return FocusTimerContentSize.completedTopInset
+        }
         return chromeInsets.top
     }
 
     private var contentBottomInset: CGFloat {
-        // 番茄完成态略收底距；其余一律走 IslandChrome 固定令牌。
-        if chromeSurface == .expanded, focusTimer.phase == .completed { return 8 }
+        if chromeSurface == .expanded,
+           runtime.activeID == FocusTimerWidget.manifest.id,
+           focusTimer.phase == .completed
+        {
+            return FocusTimerContentSize.completedBottomInset
+        }
         return chromeInsets.bottom
     }
 }

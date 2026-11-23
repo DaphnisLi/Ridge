@@ -587,7 +587,17 @@ final class IslandNoticeBehaviorTests: XCTestCase {
         XCTAssertEqual(focus.phase, .overtime)
         XCTAssertTrue(focus.showsCompactStandby)
 
-        focus.debugJumpToEnd()
+        focus.debugEnterCountUp(elapsedSeconds: 90)
+        XCTAssertEqual(focus.phase, .countUp)
+        XCTAssertTrue(focus.showsCompactStandby)
+        XCTAssertFalse(focus.snapshot.isPaused)
+
+        focus.toggleCountUpPause()
+        XCTAssertTrue(focus.snapshot.isPaused)
+        focus.toggleCountUpPause()
+        XCTAssertFalse(focus.snapshot.isPaused)
+
+        focus.finishEarly()
         XCTAssertEqual(focus.phase, .completed)
         XCTAssertFalse(focus.showsCompactStandby)
         focus.dismissCompletion()

@@ -114,6 +114,7 @@
 		76D3179459C8FDDA4736C1CA /* ProjectCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FCC45D78F6B0A15A446663A /* ProjectCatalog.swift */; };
 		7703E4BBE8120975F8113B74 /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB7C1F7313C031668C690CC2 /* WorldClockWidget.swift */; };
 		797C697356CC11AE2118BDB3 /* AIUsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696174AF0446BACA3704883A /* AIUsageModels.swift */; };
+		7A3EF794A668B5A64BB078D1 /* IslandCompactTitleMarquee.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7E3CD101454924696388BBE /* IslandCompactTitleMarquee.swift */; };
 		7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 526499772CB67C8D450F310C /* LiveIslandGate.swift */; };
 		7D53F94FFAA82414B7BEE949 /* ResourceSystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10F9966DA96BF28D53ACA35 /* ResourceSystemMetrics.swift */; };
 		7DA42C24437D2B2B5FD2F358 /* IslandTestLabTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0B371F5248ECFDAEDF6F42 /* IslandTestLabTests.swift */; };
@@ -468,6 +469,7 @@
 		E71B538626D9E2DAE53A8CC2 /* MacBatterySession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBatterySession.swift; sourceTree = "<group>"; };
 		E739BE14AAE020C039073346 /* OnboardingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingController.swift; sourceTree = "<group>"; };
 		E76D4C9AC130438848E5DD30 /* AIUsageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageSettings.swift; sourceTree = "<group>"; };
+		E7E3CD101454924696388BBE /* IslandCompactTitleMarquee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandCompactTitleMarquee.swift; sourceTree = "<group>"; };
 		E9A1639E438B12C944E29A6E /* FocusTimerSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSettingsPane.swift; sourceTree = "<group>"; };
 		EA3E6DDED58E63C51D36AB96 /* RegressionCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegressionCatalogTests.swift; sourceTree = "<group>"; };
 		EE0D5C6F4586A20CFA8FC4A1 /* AppIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIdentity.swift; sourceTree = "<group>"; };
@@ -611,6 +613,7 @@
 				BED55417055983E937B47576 /* DisplayMonitor.swift */,
 				20D594544D4E7A03AA8E4A49 /* FullscreenMonitor.swift */,
 				AAF925D8FB9DFE6C1E3D55A1 /* IslandChrome.swift */,
+				E7E3CD101454924696388BBE /* IslandCompactTitleMarquee.swift */,
 				5894114050B192E21DBC168B /* IslandContentView.swift */,
 				1073E52F82BA9EE649BA7890 /* IslandController.swift */,
 				585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */,
@@ -1110,6 +1113,7 @@
 				46543EB57A64C3055AEE5217 /* GlobalHotKeyCenter.swift in Sources */,
 				27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */,
 				3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */,
+				7A3EF794A668B5A64BB078D1 /* IslandCompactTitleMarquee.swift in Sources */,
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
 				E59A496FD81531E2776FEC8D /* IslandController.swift in Sources */,
 				089B80CDF812C21F5E851F43 /* IslandExpandedPanelPolicy.swift in Sources */,

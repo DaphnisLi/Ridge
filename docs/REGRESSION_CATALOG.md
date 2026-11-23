@@ -340,6 +340,16 @@
 - **相关代码:** `OnboardingProgress`、`OnboardingController.requestNextPermission`、`WidgetPermissionGate.ensureBluetooth`  
 - **自动化:** 不强制（occurrences=1）
 
+### peripheral-wing-floor-meeting-width — 外设收窄后左右间距仍不对
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-23：翼宽已收窄，但岛面一侧空档、左右不对称）  
+- **症状:** 外设满岛 tip 视觉上仍偏宽或右/左缘空一大截；设备名与电量% 离岛边不对齐  
+- **根因倾向:** `preparePeripheralWingNoticeLayout` 用 78 翼宽，但 `wingTipInteractivePanelSize` / `noticeWingFloor` 默认抬成会议 98 翼；卡片右簇只 `.padding(.trailing)`、未占满右翼 frame  
+- **防护:** `slots.wingTipPreparedWingWidth` 区分外设/会议；地板与 interactive 传该翼宽；满岛卡左右对称 `bareContentLeading`，右簇 `frame(width: wingWidth, alignment: .trailing)`  
+- **相关代码:** `IslandExpandedPanelPolicy.wingTipInteractivePanelSize`、`IslandNoticeDisplaySlots`、`IslandController`、`PeripheralBatteryNoticeCard`  
+- **自动化:** `RegressionCatalogTests.test_peripheralWingFloorMeetingWidth_interactiveUsesCompactWing`（occurrences=1 不进 recurring 闸，但须覆盖混抬）
+
 ### bluetooth-hid-input-monitoring — 开蓝牙外设电量却弹出输入监控
 
 - **recurring:** false  

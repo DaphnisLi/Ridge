@@ -517,9 +517,17 @@ struct PeripheralBatteryNoticeCard: View {
         return max(envNotchHeight, 32)
     }
 
-    private var wingWidth: CGFloat { compact ? 96 : 104 }
+    /// 与 `IslandChrome.preparedPeripheralWingWidth` 对齐；设置样张略收。
+    private var wingWidth: CGFloat {
+        compact ? 70 : IslandChrome.preparedPeripheralWingWidth
+    }
 
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
+
+    private let deviceIconSide: CGFloat = 15
+    private let leftClusterSpacing: CGFloat = IslandFlushWingStyle.iconLabelSpacing
+    /// 左右翼内容离岛外缘的内边距（对称；勿只给右翼 trailing）。
+    private let wingEdgeInset: CGFloat = IslandFlushWingStyle.bareContentLeading
 
     private var displayName: String {
         Self.cleanedDeviceName(notice.deviceName)
@@ -622,14 +630,19 @@ struct PeripheralBatteryNoticeCard: View {
     }
 
     private var fullWingBody: some View {
+        // 左右翼等宽贴刘海；外缘对称 inset；设备名只在左翼内滚动。
         HStack(spacing: 0) {
             leftCluster
-                .frame(width: wingWidth + notchWidth * 0.35, alignment: .leading)
-            Spacer(minLength: 0)
-            // 右翼电量%+环再离外缘一点，勿贴死岛右沿。
+                .padding(.leading, wingEdgeInset)
+                .frame(width: wingWidth, alignment: .leading)
+                .clipped()
+            Color.clear
+                .frame(width: notchWidth)
+                .accessibilityHidden(true)
             rightCluster
-                .fixedSize(horizontal: true, vertical: false)
-                .padding(.trailing, compact ? 16 : 20)
+                .padding(.trailing, wingEdgeInset)
+                .frame(width: wingWidth, alignment: .trailing)
+                .clipped()
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
@@ -666,19 +679,28 @@ struct PeripheralBatteryNoticeCard: View {
         return AnyView(IslandFlushWingCapsule(side: side) { row })
     }
 
-    /// 左翼：设备图标 + 名称（电量一律在右翼，与接入同口径）。
+    /// 左翼：设备图标 + 名称；展不开则横向轮播（同音乐歌名）。
     private var leftCluster: some View {
-        HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
+        // 翼内可用宽 = 翼宽 − 外缘 inset − 图标 − 间距。
+        let titleBudget = max(
+            0,
+            wingWidth - wingEdgeInset - deviceIconSide - leftClusterSpacing
+        )
+        return HStack(spacing: leftClusterSpacing) {
             Image(systemName: notice.kind.systemSymbol)
                 .font(.system(size: compact ? 14 : 15, weight: .medium))
                 .foregroundStyle(Color.white.opacity(0.95))
+                .frame(width: deviceIconSide, alignment: .center)
                 .layoutPriority(1)
 
-            Text(displayName)
-                .font(.system(size: compact ? 12 : 13, weight: .medium))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            IslandCompactTitleMarquee(
+                text: displayName,
+                animated: true,
+                visibleWidth: titleBudget,
+                fontSize: compact ? 12 : 13,
+                fontWeight: .medium,
+                logTag: "IslandNotice"
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -686,13 +708,14 @@ struct PeripheralBatteryNoticeCard: View {
     /// 右翼：电量% + 状态环（接入蓝弧 / 满电绿闪 / 低电红弧；按实际电量画弧）。
     @ViewBuilder
     private var rightCluster: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             if let pct = rightWingPercent {
                 Text(L10n.Battery.tipPercentBadge(pct))
                     .font(.system(size: 12, weight: .medium, design: .default))
                     .foregroundStyle(Color.white.opacity(0.90))
                     .monospacedDigit()
                     .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             PeripheralBatteryStatusGlyph(
                 style: style,
@@ -700,6 +723,7 @@ struct PeripheralBatteryNoticeCard: View {
                 size: 20
             )
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     /// 满电默认 100；低电用通知值；接入仅在读得到时显示。
