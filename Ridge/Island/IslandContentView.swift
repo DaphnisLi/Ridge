@@ -602,12 +602,12 @@ private struct IslandBody: View {
         {
             return MediaExpandedContentSize.topInset
         }
-        // 番茄终局单行：勿用 expandedTopInset，否则顶空一大截、内容贴底。
+        // 番茄终局单行：顶距须躲开刘海（与展开页同令牌），禁止固定 6 把内容顶进盲区。
         if chromeSurface == .expanded,
            runtime.activeID == FocusTimerWidget.manifest.id,
            focusTimer.phase == .completed
         {
-            return FocusTimerContentSize.completedTopInset
+            return FocusTimerContentSize.completedTopInset(notchHeight: notchHeight)
         }
         return chromeInsets.top
     }

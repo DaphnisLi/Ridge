@@ -526,8 +526,6 @@ struct PeripheralBatteryNoticeCard: View {
 
     private let deviceIconSide: CGFloat = 15
     private let leftClusterSpacing: CGFloat = IslandFlushWingStyle.iconLabelSpacing
-    /// 左右翼内容离岛外缘的内边距（对称；勿只给右翼 trailing）。
-    private let wingEdgeInset: CGFloat = IslandFlushWingStyle.bareContentLeading
 
     private var displayName: String {
         Self.cleanedDeviceName(notice.deviceName)
@@ -630,19 +628,17 @@ struct PeripheralBatteryNoticeCard: View {
     }
 
     private var fullWingBody: some View {
-        // 左右翼等宽贴刘海；外缘对称 inset；设备名只在左翼内滚动。
+        // 左右翼等宽贴刘海；外缘只靠壳层 `notchWingTip` horizontal，禁止再叠 leading/trailing。
+        // 设备名只在左翼内滚动（同会议 tip：卡根零外圈 padding）。
         HStack(spacing: 0) {
             leftCluster
-                .padding(.leading, wingEdgeInset)
                 .frame(width: wingWidth, alignment: .leading)
                 .clipped()
             Color.clear
                 .frame(width: notchWidth)
                 .accessibilityHidden(true)
             rightCluster
-                .padding(.trailing, wingEdgeInset)
-                .frame(width: wingWidth, alignment: .trailing)
-                .clipped()
+                .fixedSize(horizontal: true, vertical: false)
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
@@ -681,11 +677,8 @@ struct PeripheralBatteryNoticeCard: View {
 
     /// 左翼：设备图标 + 名称；展不开则横向轮播（同音乐歌名）。
     private var leftCluster: some View {
-        // 翼内可用宽 = 翼宽 − 外缘 inset − 图标 − 间距。
-        let titleBudget = max(
-            0,
-            wingWidth - wingEdgeInset - deviceIconSide - leftClusterSpacing
-        )
+        // 翼内可用宽 = 翼宽 − 图标 − 间距（外缘 inset 只在壳层，勿再扣）。
+        let titleBudget = max(0, wingWidth - deviceIconSide - leftClusterSpacing)
         return HStack(spacing: leftClusterSpacing) {
             Image(systemName: notice.kind.systemSymbol)
                 .font(.system(size: compact ? 14 : 15, weight: .medium))
@@ -723,7 +716,6 @@ struct PeripheralBatteryNoticeCard: View {
                 size: 20
             )
         }
-        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     /// 满电默认 100；低电用通知值；接入仅在读得到时显示。

@@ -20,7 +20,7 @@
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
 | `island-hover-retention` | 岛悬停热区退化 | ≥8 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区** | 收起悬停仅刘海；拖文件才用接近区；展开地板 + 中下点用例 |
-| `island-chrome-double-padding` | 岛边距叠两层 | ≥3 | 内容根再加 padding / tip 误用大底距；左右底边距应变固定令牌 | `IslandChrome.insets`；`RegressionCatalogTests.test_islandChromeDoublePadding_*` |
+| `island-chrome-double-padding` | 岛边距叠两层 | ≥4 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bareContentLeading 左右空档过大** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 peripheralWingTip） |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
@@ -52,11 +52,11 @@
 ### island-chrome-double-padding — 岛边距叠两层
 
 - **recurring:** true  
-- **occurrences:** 3+（通知卡 / 多 widget 反复翻车；**2026-11-10 会前提示 tip 根上再叠 nudge，左右底距偏大**）  
+- **occurrences:** 4+（通知卡 / 多 widget 反复翻车；2026-11-10 会前提示 tip 根上再叠 nudge；**2026-11-23 外设满岛 tip 卡内再叠 bareContentLeading，左右空档过大**）  
 - **症状:** 下边距过大，左右离岛边过宽，或 tip 误用展开页大底距  
-- **根因倾向:** 根视图 `.padding(.vertical/.horizontal)` / HTML `px/py` / 翼 tip `nudgeInward` 再叠 `IslandChrome`；或未标 `usesNotchWingChrome` 退回 `contentBottom`  
-- **防护:** 左右/底只走 `IslandChrome.insets(for:)`；widget/通知卡根视图只排内容；会议 tip 禁根上外圈 padding  
-- **自动化:** `RegressionCatalogTests.test_islandChromeDoublePadding_*`（令牌固定值 + 各 surface 左右/底 inset + `meetingLead` 须 wing chrome）
+- **根因倾向:** 根视图 `.padding(.vertical/.horizontal)` / HTML `px/py` / 翼 tip `nudgeInward` / **满岛翼卡再叠 `bareContentLeading`** 叠 `IslandChrome`；或未标 `usesNotchWingChrome` 退回 `contentBottom`  
+- **防护:** 左右/底只走 `IslandChrome.insets(for:)`；widget/通知卡根视图只排内容；会议/外设满岛 tip 禁根上外圈 padding；`bareContentLeading` 仅 dualFlush bare  
+- **自动化:** `RegressionCatalogTests.test_islandChromeDoublePadding_*`（令牌 + surface inset + `peripheralWingTipOuterInsetIsChromeOnly`）
 
 ### settings-preview-live-data — 设置预览用真数据
 
@@ -340,15 +340,25 @@
 - **相关代码:** `OnboardingProgress`、`OnboardingController.requestNextPermission`、`WidgetPermissionGate.ensureBluetooth`  
 - **自动化:** 不强制（occurrences=1）
 
-### peripheral-wing-floor-meeting-width — 外设收窄后左右间距仍不对
+### focus-completed-clipped-by-notch — 终局单行被刘海裁切 / 边距不对称
 
 - **recurring:** false  
-- **occurrences:** 1（2026-11-23：翼宽已收窄，但岛面一侧空档、左右不对称）  
+- **occurrences:** 2（2026-11-23：① 顶距 6 被摄像头挡 + `(+Nm)`；② 行内 leading 未撑满，右缘空档大于左/底 chrome 14）  
+- **症状:** 终局贴顶被遮；或左右不对称、右侧多一截黑边  
+- **根因倾向:** `completedTopInset=6`；HStack `alignment: .leading` + 备注 NSView 未吃满剩余宽  
+- **防护:** 顶距 `expandedTopInset`；左右/底 = `contentHorizontal`/`contentBottom`；行内撑满、回车 `fixedSize` 贴右  
+- **相关代码:** `FocusTimerContentSize`、`FocusTimerCompletedView`、`IslandContentView` chrome insets  
+- **自动化:** `RegressionCatalogTests.test_focusCompletedClippedByNotch_topInsetClearsNotch`
+
+### peripheral-wing-floor-meeting-width — 外设收窄后左右间距仍不对
+
+- **recurring:** false（外缘叠距并入 `island-chrome-double-padding`）  
+- **occurrences:** 2（2026-11-23：① 地板抬成会议翼；② 卡内再叠 bareContentLeading，左右空档过大）  
 - **症状:** 外设满岛 tip 视觉上仍偏宽或右/左缘空一大截；设备名与电量% 离岛边不对齐  
-- **根因倾向:** `preparePeripheralWingNoticeLayout` 用 78 翼宽，但 `wingTipInteractivePanelSize` / `noticeWingFloor` 默认抬成会议 98 翼；卡片右簇只 `.padding(.trailing)`、未占满右翼 frame  
-- **防护:** `slots.wingTipPreparedWingWidth` 区分外设/会议；地板与 interactive 传该翼宽；满岛卡左右对称 `bareContentLeading`，右簇 `frame(width: wingWidth, alignment: .trailing)`  
-- **相关代码:** `IslandExpandedPanelPolicy.wingTipInteractivePanelSize`、`IslandNoticeDisplaySlots`、`IslandController`、`PeripheralBatteryNoticeCard`  
-- **自动化:** `RegressionCatalogTests.test_peripheralWingFloorMeetingWidth_interactiveUsesCompactWing`（occurrences=1 不进 recurring 闸，但须覆盖混抬）
+- **根因倾向:** ① `wingTipInteractivePanelSize` 默认抬会议 98 翼；② 满岛卡再叠 `bareContentLeading` 与壳层 horizontal 叠两层  
+- **防护:** `wingTipPreparedWingWidth`；卡根零外缘 padding（同会议 tip）；外缘只靠 `notchWingTip` chrome  
+- **相关代码:** `IslandExpandedPanelPolicy.wingTipInteractivePanelSize`、`IslandNoticeSlots`、`IslandController`、`PeripheralBatteryNoticeCard`  
+- **自动化:** `test_peripheralWingFloorMeetingWidth_*` + `test_islandChromeDoublePadding_peripheralWingTipOuterInsetIsChromeOnly`
 
 ### bluetooth-hid-input-monitoring — 开蓝牙外设电量却弹出输入监控
 

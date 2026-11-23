@@ -15,10 +15,16 @@ enum FocusTimerCompactMetrics {
 enum FocusTimerContentSize {
     /// 终局单行（绿勾 + 时长 + 备注 + 回车）内容宽。
     static let completedContentWidth: CGFloat = 460
-    /// 终局顶距：贴近刘海（同媒体展开），禁止再用 `expandedTopInset` 把单行压到岛底。
-    static let completedTopInset: CGFloat = 6
-    /// 终局底距：与顶距接近，单行视觉居中。
-    static let completedBottomInset: CGFloat = 8
+    /// 终局顶距：须躲开刘海盲区，禁止用固定 6 把单行顶进摄像头区。
+    static func completedTopInset(notchHeight: CGFloat) -> CGFloat {
+        IslandChrome.expandedTopInset(notchHeight: notchHeight)
+    }
+    /// 设置预览无刘海：只保留「刘海下沿 → 内容」的可见间隙。
+    static var completedPreviewTopInset: CGFloat {
+        IslandChrome.previewExpandedVisibleTopInset()
+    }
+    /// 终局底距：与展开页统一，避免单行贴底。
+    static let completedBottomInset: CGFloat = IslandChrome.contentBottom
 
     static func minimumContentHeight(phase: FocusTimerPhase) -> CGFloat {
         switch phase {
@@ -35,7 +41,7 @@ enum FocusTimerContentSize {
         let height: CGFloat = {
             switch phase {
             case .completed:
-                return completedTopInset
+                return completedTopInset(notchHeight: notchHeight)
                     + minimumContentHeight(phase: phase)
                     + completedBottomInset
             case .picking, .running, .overtime, .countUp:
@@ -90,9 +96,9 @@ struct FocusTimerIslandCardView: View {
                     onTogglePause: onToggleCountUpPause
                 )
             } else if snapshot.phase == .completed {
-                // 只锁宽；高度跟内容走，避免虚高把底边距撑大。
+                // 锁内容宽；行内撑满，回车钮贴右，左右只留壳层 contentHorizontal。
                 phaseBody
-                    .frame(width: FocusTimerContentSize.completedContentWidth, alignment: .topLeading)
+                    .frame(width: FocusTimerContentSize.completedContentWidth)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 // 选时：内容固有尺寸，左右底边距走 IslandChrome，勿再锁死宽。
@@ -847,18 +853,16 @@ struct FocusTimerCompletedView: View {
     private let green = Color(red: 0.22, green: 0.78, blue: 0.42)
     private let muted = Color.white.opacity(0.45)
 
-    /// 主时长：实际已过分钟（至少 1）。
+    /// 主时长：实际已过分钟（至少 1）；岛上不展示加时括号旁注。
     private var actualFocusMinutes: Int {
         max(1, (snapshot.elapsedSeconds + 59) / 60)
     }
 
-    private var overtimeMinutes: Int {
-        max(0, snapshot.overtimeMinutes)
-    }
-
     var body: some View {
+        // 整行撑满内容宽：左簇 / 分割 / 备注伸缩 / 回车贴右。
+        // 外缘左右底只靠 IslandChrome（14），禁止再 leading 对齐留下右侧空档。
         HStack(alignment: .center, spacing: 10) {
-            // 左：绿勾圆 + 25m (+1m)
+            // 左：绿勾圆 + 真实时长（仅 Xm）
             HStack(spacing: 8) {
                 ZStack {
                     Circle()
@@ -870,31 +874,19 @@ struct FocusTimerCompletedView: View {
                 }
                 .accessibilityHidden(true)
 
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(FocusTimerFormatting.compactDuration(actualFocusMinutes))
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.white)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                    if overtimeMinutes > 0 {
-                        Text(L10n.FocusTimer.completedOvertimeParen(overtimeMinutes))
-                            .font(.system(size: 12, weight: .medium, design: .monospaced))
-                            .foregroundStyle(muted)
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .fixedSize(horizontal: true, vertical: false)
-                    }
-                }
+                Text(FocusTimerFormatting.compactDuration(actualFocusMinutes))
+                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
-            .layoutPriority(2)
+            .fixedSize(horizontal: true, vertical: false)
 
-            // 竖分割
             Rectangle()
                 .fill(Color.white.opacity(0.18))
                 .frame(width: 1, height: 18)
 
-            // 中：列表笔标 + 备注输入
             HStack(spacing: 6) {
                 Image(systemName: "list.bullet.clipboard")
                     .font(.system(size: 13, weight: .semibold))
@@ -905,12 +897,10 @@ struct FocusTimerCompletedView: View {
                     placeholder: L10n.FocusTimer.notePlaceholder,
                     onSubmit: commitSave
                 )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minWidth: 96, maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity)
-            .layoutPriority(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 右：回车提交
             Button(action: commitSave) {
                 Image(systemName: "return")
                     .font(.system(size: 12, weight: .semibold))
@@ -928,18 +918,21 @@ struct FocusTimerCompletedView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(L10n.FocusTimer.saveRecord)
-            .layoutPriority(2)
+            .fixedSize(horizontal: true, vertical: false)
         }
+        .frame(maxWidth: .infinity, alignment: .center)
         .frame(height: Self.noteRowHeight)
-        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(
             "\(L10n.FocusTimer.completedTitle)，\(FocusTimerFormatting.compactDuration(actualFocusMinutes))"
         )
         .onAppear {
             draft = snapshot.noteDraft
-            // 不主动 makeFirstResponder；离开岛时 collapse 会卸焦。
-            AppLog.warn("FocusTimer", "终局单行备注区已显示（默认不聚焦）")
+            AppLog.warn("FocusTimer", "终局单行备注区已显示（默认不聚焦）", [
+                "contentW": Int(FocusTimerContentSize.completedContentWidth),
+                "chromeH": Int(IslandChrome.contentHorizontal),
+                "chromeBottom": Int(IslandChrome.contentBottom)
+            ])
         }
     }
 

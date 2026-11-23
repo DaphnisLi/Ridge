@@ -84,7 +84,7 @@ struct FocusTimerWidgetConfigSection: View {
 
     private func previewTopPadding(_ tab: FocusTimerPreviewTab) -> CGFloat {
         if tab.isCompact { return 6 }
-        if tab == .completed { return FocusTimerContentSize.completedTopInset }
+        if tab == .completed { return FocusTimerContentSize.completedPreviewTopInset }
         return IslandChrome.contentBottom
     }
 

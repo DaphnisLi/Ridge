@@ -834,6 +834,50 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(orb.horizontal, 0)
     }
 
+    /// 外设满岛翼 tip：外缘只计壳层 horizontal 一次；预备宽 = 内容宽 + horizontalInsetTotal。
+    /// 卡根再叠 bareContentLeading / trailing = 左右空档过大（2026-11-23 复发）。
+    func test_islandChromeDoublePadding_peripheralWingTipOuterInsetIsChromeOnly() {
+        let notchW: CGFloat = 160
+        let notchH: CGFloat = 32
+        let wingInsets = IslandChrome.insets(for: .notchWingTip, notchHeight: notchH)
+        XCTAssertEqual(wingInsets.horizontal, IslandChrome.contentHorizontal)
+
+        let wingW = IslandChrome.preparedPeripheralWingWidth
+        let contentW = wingW * 2 + max(notchW, 110)
+        let prepared = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchW,
+            notchHeight: notchH,
+            wingWidth: wingW
+        )
+        XCTAssertEqual(
+            prepared.width,
+            contentW + IslandChrome.horizontalInsetTotal,
+            accuracy: 0.5,
+            "预备面板已含左右 chrome；卡内禁止再叠外缘 padding"
+        )
+        // bareContentLeading 只给 dualFlush bare，不得当成满岛翼 tip 外缘。
+        XCTAssertEqual(IslandFlushWingStyle.bareContentLeading, 10)
+        XCTAssertGreaterThan(
+            IslandChrome.contentHorizontal + IslandFlushWingStyle.bareContentLeading,
+            IslandChrome.contentHorizontal,
+            "叠两层会大于壳层令牌——测试锁定「禁止叠」契约"
+        )
+
+        let peripheral = IslandNoticePayload.peripheralConnected(
+            BatteryPeripheralNotice(
+                id: "pad.test",
+                deviceID: "d",
+                deviceName: "Mouse",
+                kind: .mouse,
+                percent: 51,
+                threshold: 0,
+                detail: "c"
+            )
+        )
+        XCTAssertTrue(peripheral.usesNotchWingChrome)
+        XCTAssertTrue(peripheral.usesCompactPeripheralWing)
+    }
+
     func test_islandChrome_meetingUsesNotchWing_copiedUsesRightOrb() {
         // 会议 / AI / 久坐 / 取色 / 框选：左右翼贴刘海；「已复制」为刘海右侧圆岛。
         let meeting = IslandNoticePayload.meetingLead(meetingID: "test-meeting")
@@ -1092,6 +1136,37 @@ final class RegressionCatalogTests: XCTestCase {
             usesNotchWingChrome: false
         )
         XCTAssertEqual(untouched.width, 200, accuracy: 0.5)
+    }
+
+    /// focus-completed-clipped-by-notch：终局顶距躲开刘海；左右/底与展开页令牌一致。
+    func test_focusCompletedClippedByNotch_topInsetClearsNotch() {
+        let notchH: CGFloat = 32
+        let top = FocusTimerContentSize.completedTopInset(notchHeight: notchH)
+        let expanded = IslandChrome.expandedTopInset(notchHeight: notchH)
+        XCTAssertEqual(top, expanded, accuracy: 0.5)
+        XCTAssertGreaterThan(top, notchH, "终局内容须落在刘海下沿之下")
+        XCTAssertEqual(
+            FocusTimerContentSize.completedBottomInset,
+            IslandChrome.contentBottom,
+            accuracy: 0.5
+        )
+        // 左右 / 底同一令牌 14；面板宽 = 内容宽 + 左右 chrome，禁止行内 leading 空出右缘。
+        let expandedInsets = IslandChrome.insets(for: .expanded, notchHeight: notchH)
+        XCTAssertEqual(expandedInsets.horizontal, IslandChrome.contentHorizontal)
+        XCTAssertEqual(expandedInsets.bottom, IslandChrome.contentBottom)
+        XCTAssertEqual(IslandChrome.contentHorizontal, 14)
+        let panel = FocusTimerContentSize.panelSize(phase: .completed, notchHeight: notchH)
+        XCTAssertEqual(
+            panel.width,
+            FocusTimerContentSize.completedContentWidth + IslandChrome.horizontalInsetTotal,
+            accuracy: 0.5
+        )
+        XCTAssertEqual(
+            panel.height,
+            top + FocusTimerCompletedView.noteRowHeight + FocusTimerContentSize.completedBottomInset,
+            accuracy: 0.5
+        )
+        XCTAssertLessThan(FocusTimerContentSize.completedPreviewTopInset, top)
     }
 
     /// peripheral-wing-floor-meeting-width：外设窄翼可点区抬升须用 peripheral 预备宽，禁止抬成会议翼（否则左右空一边）。
