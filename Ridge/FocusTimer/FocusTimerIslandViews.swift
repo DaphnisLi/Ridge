@@ -8,6 +8,8 @@ enum FocusTimerCompactMetrics {
     static let progressRingDiameter: CGFloat = 22
     static let progressRingLineWidth: CGFloat = 2.5
     static let progressRingIconPointSize: CGFloat = 9
+    /// 满岛待命相对顶边略下移，避免贴顶发挤。
+    static let standbyTopNudge: CGFloat = 2
 }
 
 /// 番茄面板下限：选时走内容 `fixedSize` + IslandChrome；
@@ -257,7 +259,9 @@ struct FocusTimerStandbyView: View {
             .layoutPriority(1)
         }
         .padding(.horizontal, NotchGeometry.focusTimerStandbyHorizontalPadding)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        // 相对垂直居中再略下移，加大与顶边的空隙。
+        .padding(.top, FocusTimerCompactMetrics.standbyTopNudge)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(statusLabel)，\(clockText)")
     }

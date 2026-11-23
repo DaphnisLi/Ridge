@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 嵌入「番茄倒计时」配置页：对齐稿面——四态 Tab 舞台 + 三栏看板 + 预设。
+/// 嵌入「番茄倒计时」配置页：四态 Tab 舞台 + 今日倒计时/正计时双栏 + 预设。
 struct FocusTimerWidgetConfigSection: View {
     @ObservedObject private var settings = FocusTimerSettings.shared
     @State private var previewTab: FocusTimerPreviewTab = .standby
@@ -8,22 +8,17 @@ struct FocusTimerWidgetConfigSection: View {
     @State private var editingRecordID: UUID?
     @State private var titleDraft: String = ""
 
-    /// 仅今日真实记录；无记录时三栏走空态。
+    /// 今日全部真实记录。
     private var boardRecords: [FocusTimerRecord] { settings.todayRecords }
 
-    private var boardPresets: [FocusTimerRecord] {
-        boardRecords.filter { $0.kind == .preset && $0.overtimeMinutes == 0 }
+    /// 倒计时栏：预设 / 自定义 / 加时（非正计时）。
+    private var countdownRecords: [FocusTimerRecord] {
+        boardRecords.filter { $0.kind != .countUp }
     }
 
-    private var boardCustoms: [FocusTimerRecord] {
-        // 正计时无独立栏，归入「自定义」列便于事后补标题。
-        boardRecords.filter {
-            ($0.kind == .custom || $0.kind == .countUp) && $0.overtimeMinutes == 0
-        }
-    }
-
-    private var boardOvers: [FocusTimerRecord] {
-        boardRecords.filter { $0.kind == .overtimeSprint || $0.overtimeMinutes > 0 }
+    /// 正计时栏。
+    private var countUpRecords: [FocusTimerRecord] {
+        boardRecords.filter { $0.kind == .countUp }
     }
 
     private var boardFocusMinutes: Int {
@@ -32,14 +27,17 @@ struct FocusTimerWidgetConfigSection: View {
 
     private var boardOvertimeMinutes: Int { settings.todayOvertimeMinutes }
 
+    /// 正计时栏强调色（稿面绿点 / 角标）。
+    private var countUpTint: Color { Color(red: 0.20, green: 0.70, blue: 0.40) }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
                     islandStageCard
-                    // 稿面：概览 5 + 预设 7 并排，再接三栏记录。
+                    // 概览 + 预设并排，再接今日倒计时 | 正计时双栏。
                     overviewAndPresetsRow
-                    historyMatrix
+                    historyBoard
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
                 .padding(.top, 16)
@@ -83,7 +81,10 @@ struct FocusTimerWidgetConfigSection: View {
     }
 
     private func previewTopPadding(_ tab: FocusTimerPreviewTab) -> CGFloat {
-        if tab.isCompact { return 6 }
+        // 待命胶囊：与真岛一致略加大顶距。
+        if tab.isCompact {
+            return 6 + FocusTimerCompactMetrics.standbyTopNudge
+        }
         // 终局翼 tip：顶 0（贴刘海），与真岛 notchWingTip 一致。
         if tab == .completed { return FocusTimerContentSize.completedPreviewTopInset }
         return IslandChrome.contentBottom
@@ -317,86 +318,78 @@ struct FocusTimerWidgetConfigSection: View {
         )
     }
 
-    // MARK: - 三栏看板
+    // MARK: - 今日看板（左倒计时 · 右正计时）
 
-    private var historyMatrix: some View {
+    private var historyBoard: some View {
         HStack(alignment: .top, spacing: SettingsChrome.Spacing.stack) {
             historyColumn(
-                title: L10n.FocusTimer.colPreset,
-                badge: L10n.FocusTimer.colPresetBadge(boardPresets.count),
+                title: L10n.FocusTimer.historyCountdownTitle,
+                badge: L10n.FocusTimer.historyCountdownBadge(countdownRecords.count),
                 tint: SettingsChrome.primary,
-                records: boardPresets,
-                style: .preset
+                badgeForeground: SettingsChrome.onSurfaceVariant,
+                badgeBackground: SettingsChrome.surfaceContainer,
+                records: countdownRecords,
+                emptyTitle: L10n.FocusTimer.historyEmptyCountdownTitle,
+                emptyHint: L10n.FocusTimer.historyEmptyCountdownHint,
+                emptySymbol: "stopwatch",
+                isCountUp: false
             )
             historyColumn(
-                title: L10n.FocusTimer.colCustom,
-                badge: L10n.FocusTimer.colCustomBadge(boardCustoms.count),
-                tint: Color(red: 0.30, green: 0.29, blue: 0.79),
-                records: boardCustoms,
-                style: .custom
-            )
-            historyColumn(
-                title: L10n.FocusTimer.colOvertime,
-                badge: L10n.FocusTimer.colOvertimeBadge(boardOvers.count),
-                tint: Color(red: 0.96, green: 0.62, blue: 0.04),
-                records: boardOvers,
-                style: .overtime
+                title: L10n.FocusTimer.historyCountUpTitle,
+                badge: L10n.FocusTimer.historyCountUpBadge(countUpRecords.count),
+                tint: countUpTint,
+                badgeForeground: Color(red: 0.12, green: 0.42, blue: 0.28),
+                badgeBackground: Color(red: 0.86, green: 0.96, blue: 0.90),
+                records: countUpRecords,
+                emptyTitle: L10n.FocusTimer.historyEmptyCountUpTitle,
+                emptyHint: L10n.FocusTimer.historyEmptyCountUpHint,
+                emptySymbol: "timer",
+                isCountUp: true
             )
         }
     }
-
-    private enum ColumnStyle { case preset, custom, overtime }
 
     private func historyColumn(
         title: String,
         badge: String,
         tint: Color,
+        badgeForeground: Color,
+        badgeBackground: Color,
         records: [FocusTimerRecord],
-        style: ColumnStyle
+        emptyTitle: String,
+        emptyHint: String,
+        emptySymbol: String,
+        isCountUp: Bool
     ) -> some View {
-        let isOvertime = style == .overtime
-        let isCustom = style == .custom
-        return VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 8) {
                 Circle().fill(tint).frame(width: 10, height: 10)
                 Text(title)
                     .font(SettingsChrome.Font.sectionTitle)
-                    .fontWeight(isOvertime ? .bold : .semibold)
+                    .fontWeight(.semibold)
                     .foregroundStyle(SettingsChrome.onSurface)
                 Spacer(minLength: 4)
-                HStack(spacing: 4) {
-                    if isOvertime {
-                        Image(systemName: "trophy.fill")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    Text(badge)
-                        .font(SettingsChrome.Font.monoCaption)
-                        .fontWeight(isCustom || isOvertime ? .semibold : .regular)
-                }
-                .foregroundStyle(
-                    isOvertime
-                        ? Color(red: 0.45, green: 0.27, blue: 0.0)
-                        : (isCustom ? tint : SettingsChrome.onSurfaceVariant)
-                )
-                .padding(.horizontal, isOvertime ? 10 : 8)
-                .padding(.vertical, 3)
-                .background(
-                    Capsule()
-                        .fill(
-                            isOvertime
-                                ? Color(red: 1.0, green: 0.92, blue: 0.78)
-                                : SettingsChrome.surfaceContainer
-                        )
-                )
+                Text(badge)
+                    .font(SettingsChrome.Font.monoCaption)
+                    .fontWeight(isCountUp ? .semibold : .regular)
+                    .foregroundStyle(badgeForeground)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(badgeBackground))
             }
 
             SettingsHairline.flush
 
             if records.isEmpty {
-                historyEmptyState(style: style, tint: tint)
+                historyEmptyState(
+                    tint: tint,
+                    symbol: emptySymbol,
+                    title: emptyTitle,
+                    hint: emptyHint
+                )
             } else {
-                ForEach(Array(records.prefix(4).enumerated()), id: \.element.id) { index, record in
-                    historyRow(record, index: index, style: style, tint: tint)
+                ForEach(Array(records.prefix(8))) { record in
+                    historyRow(record, tint: tint, isCountUp: isCountUp)
                 }
             }
         }
@@ -405,41 +398,17 @@ struct FocusTimerWidgetConfigSection: View {
         .background(
             RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
                 .fill(SettingsChrome.cardBackground)
-                .shadow(color: .black.opacity(isOvertime ? 0.08 : 0.04), radius: isOvertime ? 8 : 6, y: 2)
-                .overlay {
-                    if isOvertime {
-                        RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
-                            .strokeBorder(Color(red: 0.33, green: 0.88, blue: 0.44).opacity(0.35), lineWidth: 2)
-                    }
-                }
+                .shadow(color: .black.opacity(0.04), radius: 6, y: 2)
         )
     }
 
-    /// 三栏空态：色块图标 + 主副文案（对齐稿面；栏目标题不动）。
-    private func historyEmptyState(style: ColumnStyle, tint: Color) -> some View {
-        let symbol: String = {
-            switch style {
-            case .preset: return "stopwatch"
-            case .custom: return "slider.horizontal.3"
-            case .overtime: return "alarm.badge.plus"
-            }
-        }()
-        let title: String = {
-            switch style {
-            case .preset: return L10n.FocusTimer.historyEmptyPresetTitle
-            case .custom: return L10n.FocusTimer.historyEmptyCustomTitle
-            case .overtime: return L10n.FocusTimer.historyEmptyOvertimeTitle
-            }
-        }()
-        let hint: String = {
-            switch style {
-            case .preset: return L10n.FocusTimer.historyEmptyPresetHint
-            case .custom: return L10n.FocusTimer.historyEmptyCustomHint
-            case .overtime: return L10n.FocusTimer.historyEmptyOvertimeHint
-            }
-        }()
-
-        return VStack(spacing: 10) {
+    private func historyEmptyState(
+        tint: Color,
+        symbol: String,
+        title: String,
+        hint: String
+    ) -> some View {
+        VStack(spacing: 10) {
             Image(systemName: symbol)
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(tint.opacity(0.85))
@@ -466,23 +435,24 @@ struct FocusTimerWidgetConfigSection: View {
     @ViewBuilder
     private func historyRow(
         _ record: FocusTimerRecord,
-        index: Int,
-        style: ColumnStyle,
-        tint: Color
+        tint: Color,
+        isCountUp: Bool
     ) -> some View {
         if record.isUntitled || editingRecordID == record.id {
             FocusTimerTitleBackfillCard(
                 record: record,
-                badgeText: rowBadge(record, index: index, style: style),
-                badgeTint: badgeForeground(style: style, tint: tint),
-                barTint: style == .overtime ? Color(red: 0.96, green: 0.62, blue: 0.04) : tint,
+                barTint: tint,
+                style: isCountUp ? .countUp : .countdown,
                 suggestedTitles: suggestedTitles(excluding: record.id),
                 isEditing: editingRecordID == record.id,
                 draft: $titleDraft,
                 onBeginEdit: {
                     editingRecordID = record.id
                     titleDraft = ""
-                    AppLog.debug("FocusTimer", "看板进入补填", ["id": String(record.id.uuidString.prefix(8))])
+                    AppLog.debug("FocusTimer", "看板进入补填", [
+                        "id": String(record.id.uuidString.prefix(8)),
+                        "countUp": isCountUp
+                    ])
                 },
                 onSave: { title in
                     saveBoardTitle(recordID: record.id, title: title)
@@ -494,8 +464,10 @@ struct FocusTimerWidgetConfigSection: View {
                     titleDraft = ""
                 }
             )
+        } else if isCountUp {
+            namedCountUpRow(record)
         } else {
-            namedHistoryRow(record, index: index, style: style, tint: tint)
+            namedHistoryRow(record)
         }
     }
 
@@ -507,27 +479,30 @@ struct FocusTimerWidgetConfigSection: View {
         settings.updateRecordTitle(id: recordID, title: title)
     }
 
-    private func namedHistoryRow(
-        _ record: FocusTimerRecord,
-        index _: Int,
-        style: ColumnStyle,
-        tint: Color
-    ) -> some View {
-        // 稿面：左上计划时长 / 中标题 / 右上实际时长；二行时段+状态；进度条；顺延时底行 +加时与达成率。
+    private func namedHistoryRow(_ record: FocusTimerRecord) -> some View {
+        // 左上实际时长 · 中标题 · 右上加时（无加时不展示）；二行时段+状态；进度条（无底行达成%/加时）。
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                plannedMinutesBadge(record, style: style, tint: tint)
+                Text(FocusTimerFormatting.clock(record.totalMinutes * 60))
+                    .font(SettingsChrome.Font.monoEmphasis)
+                    .foregroundStyle(
+                        record.endedEarly ? SettingsChrome.error : SettingsChrome.onSurface
+                    )
+                    .monospacedDigit()
+                    .fixedSize(horizontal: true, vertical: false)
                 Text(record.title)
                     .font(SettingsChrome.Font.rowTitle)
                     .fontWeight(.semibold)
                     .foregroundStyle(SettingsChrome.onSurface)
                     .lineLimit(1)
                 Spacer(minLength: 4)
-                Text(FocusTimerFormatting.clock(record.totalMinutes * 60))
-                    .font(SettingsChrome.Font.monoEmphasis)
-                    .foregroundStyle(
-                        record.endedEarly ? SettingsChrome.error : SettingsChrome.onSurface
-                    )
+                if record.overtimeMinutes > 0 {
+                    Text(L10n.FocusTimer.overtimePlusMinutes(record.overtimeMinutes))
+                        .font(SettingsChrome.Font.monoCaption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(SettingsChrome.secondary)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
             }
 
             HStack(spacing: 6) {
@@ -539,18 +514,6 @@ struct FocusTimerWidgetConfigSection: View {
             }
 
             recordProgressBar(record: record)
-
-            if record.overtimeMinutes > 0 {
-                HStack(spacing: 6) {
-                    Text(L10n.FocusTimer.overtimePlusMinutes(record.overtimeMinutes))
-                        .font(SettingsChrome.Font.monoCaption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(SettingsChrome.secondary)
-                    Spacer(minLength: 4)
-                    achievementChip(percent: record.achievementPercent, endedEarly: record.endedEarly)
-                }
-                .padding(.top, 2)
-            }
         }
         .padding(14)
         .background(
@@ -559,26 +522,52 @@ struct FocusTimerWidgetConfigSection: View {
         )
     }
 
-    private func plannedMinutesBadge(
-        _ record: FocusTimerRecord,
-        style: ColumnStyle,
-        tint: Color
-    ) -> some View {
-        let isCustom = style == .custom
-        return Text(L10n.FocusTimer.badgePlannedMinutes(record.plannedMinutes))
+    /// 正计时具名行：左「秒表」+ 标题 / 时段；右大字实际时长。
+    private func namedCountUpRow(_ record: FocusTimerRecord) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    countUpStopwatchBadge
+                    Text(record.title)
+                        .font(SettingsChrome.Font.rowTitle)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                        .lineLimit(1)
+                }
+                Text(timeRange(record))
+                    .font(SettingsChrome.Font.footnote)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+            }
+            Spacer(minLength: 8)
+            Text(FocusTimerFormatting.countUpClock(Self.wallSeconds(record)))
+                .font(.system(size: 22, weight: .bold, design: .monospaced))
+                .foregroundStyle(SettingsChrome.onSurface)
+                .monospacedDigit()
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(SettingsChrome.surfaceContainerLow)
+        )
+    }
+
+    private var countUpStopwatchBadge: some View {
+        Text(L10n.FocusTimer.historyCountUpStopwatchBadge)
             .font(SettingsChrome.Font.monoCaption)
             .fontWeight(.semibold)
-            .foregroundStyle(isCustom ? tint : SettingsChrome.onSurface)
+            .foregroundStyle(Color(red: 0.12, green: 0.42, blue: 0.28))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(
-                        isCustom
-                            ? tint.opacity(0.15)
-                            : SettingsChrome.surfaceContainer
-                    )
+                Capsule()
+                    .fill(Color(red: 0.86, green: 0.96, blue: 0.90))
             )
+    }
+
+    /// 正计时展示用墙钟秒数（保留时分秒精度）。
+    private static func wallSeconds(_ record: FocusTimerRecord) -> Int {
+        max(0, Int(record.endedAt.timeIntervalSince(record.startedAt)))
     }
 
     private func statusChip(endedEarly: Bool) -> some View {
@@ -594,27 +583,6 @@ struct FocusTimerWidgetConfigSection: View {
             .fontWeight(.medium)
         }
         .foregroundStyle(endedEarly ? SettingsChrome.error : SettingsChrome.secondary)
-    }
-
-    private func achievementChip(percent: Int, endedEarly: Bool) -> some View {
-        Text(L10n.FocusTimer.achievePercent(percent))
-            .font(SettingsChrome.Font.monoCaption)
-            .fontWeight(.bold)
-            .foregroundStyle(
-                endedEarly
-                    ? SettingsChrome.error
-                    : Color(red: 0.45, green: 0.27, blue: 0.0)
-            )
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(
-                Capsule()
-                    .fill(
-                        endedEarly
-                            ? SettingsChrome.error.opacity(0.12)
-                            : Color(red: 1.0, green: 0.90, blue: 0.70).opacity(0.85)
-                    )
-            )
     }
 
     /// 准时：满条绿；提前：红条按实际/计划比例；顺延准时：蓝+琥珀渐变分段。
@@ -688,28 +656,6 @@ struct FocusTimerWidgetConfigSection: View {
             }
         }
         .frame(height: 10)
-    }
-
-    private func rowBadge(_ record: FocusTimerRecord, index: Int, style: ColumnStyle) -> String {
-        // 补填卡与具名行统一：左上角展示开钟计划时长。
-        _ = index
-        _ = style
-        return L10n.FocusTimer.badgePlannedMinutes(record.plannedMinutes)
-    }
-
-    private func badgeForeground(style: ColumnStyle, tint: Color) -> Color {
-        switch style {
-        case .custom: return tint
-        case .overtime: return SettingsChrome.onSurface
-        case .preset: return SettingsChrome.onSurface
-        }
-    }
-
-    private func badgeBackground(style: ColumnStyle, tint: Color) -> Color {
-        switch style {
-        case .custom: return tint.opacity(0.15)
-        default: return SettingsChrome.surfaceContainer
-        }
     }
 
     private func timeRange(_ record: FocusTimerRecord) -> String {

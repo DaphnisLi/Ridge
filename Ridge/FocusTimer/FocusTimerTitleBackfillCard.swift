@@ -3,10 +3,14 @@ import SwiftUI
 
 /// 事后补填标题：待填 / 输入保存；快捷标签来自历史标题频次。
 struct FocusTimerTitleBackfillCard: View {
+    enum Style {
+        case countdown
+        case countUp
+    }
+
     let record: FocusTimerRecord
-    var badgeText: String
-    var badgeTint: Color
     var barTint: Color
+    var style: Style = .countdown
     /// 历史高频标题；空则不展示快捷行。
     var suggestedTitles: [String] = []
     var isEditing: Bool
@@ -17,12 +21,18 @@ struct FocusTimerTitleBackfillCard: View {
 
     @FocusState private var titleFieldFocused: Bool
 
+    private var wallSeconds: Int {
+        max(0, Int(record.endedAt.timeIntervalSince(record.startedAt)))
+    }
+
     var body: some View {
         Group {
             if isEditing {
                 editingBody
+            } else if style == .countUp {
+                countUpPendingBody
             } else {
-                pendingBody
+                countdownPendingBody
             }
         }
         .onChange(of: isEditing) { _, editing in
@@ -34,39 +44,28 @@ struct FocusTimerTitleBackfillCard: View {
         }
     }
 
-    // MARK: - 待填
+    // MARK: - 倒计时待填
 
-    private var pendingBody: some View {
+    private var countdownPendingBody: some View {
+        // 左上实际时长 · 中补填 · 右上加时（无则不展示）；无底行达成%/加时。
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                badgeChip(badgeText, tint: badgeTint)
-                HStack(spacing: 4) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 10, weight: .semibold))
-                    Text(L10n.FocusTimer.fillTitleAction)
-                        .font(SettingsChrome.Font.footnote)
-                        .fontWeight(.semibold)
-                }
-                .foregroundStyle(SettingsChrome.primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(SettingsChrome.primary.opacity(0.08))
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .strokeBorder(
-                                    SettingsChrome.primary.opacity(0.45),
-                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])
-                                )
-                        )
-                )
-                Spacer(minLength: 4)
                 Text(FocusTimerFormatting.clock(record.totalMinutes * 60))
                     .font(SettingsChrome.Font.monoEmphasis)
                     .foregroundStyle(
                         record.endedEarly ? SettingsChrome.error : SettingsChrome.onSurface
                     )
+                    .monospacedDigit()
+                    .fixedSize(horizontal: true, vertical: false)
+                fillTitlePill
+                Spacer(minLength: 4)
+                if record.overtimeMinutes > 0 {
+                    Text(L10n.FocusTimer.overtimePlusMinutes(record.overtimeMinutes))
+                        .font(SettingsChrome.Font.monoCaption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(SettingsChrome.secondary)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
             }
 
             HStack(spacing: 6) {
@@ -89,51 +88,83 @@ struct FocusTimerTitleBackfillCard: View {
             }
 
             pendingProgressBar
-
-            if record.overtimeMinutes > 0 {
-                HStack(spacing: 6) {
-                    Text(L10n.FocusTimer.overtimePlusMinutes(record.overtimeMinutes))
-                        .font(SettingsChrome.Font.monoCaption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(SettingsChrome.secondary)
-                    Spacer(minLength: 4)
-                    Text(L10n.FocusTimer.achievePercent(record.achievementPercent))
-                        .font(SettingsChrome.Font.monoCaption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(
-                            record.endedEarly
-                                ? SettingsChrome.error
-                                : Color(red: 0.45, green: 0.27, blue: 0.0)
-                        )
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(
-                            Capsule()
-                                .fill(
-                                    record.endedEarly
-                                        ? SettingsChrome.error.opacity(0.12)
-                                        : Color(red: 1.0, green: 0.90, blue: 0.70).opacity(0.85)
-                                )
-                        )
-                }
-            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(dashedCardBackground)
+        .onTapGesture(perform: onBeginEdit)
+    }
+
+    // MARK: - 正计时待填（稿面：左秒表+补填 / 时段，右大字时长）
+
+    private var countUpPendingBody: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Text(L10n.FocusTimer.historyCountUpStopwatchBadge)
+                        .font(SettingsChrome.Font.monoCaption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color(red: 0.12, green: 0.42, blue: 0.28))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule().fill(Color(red: 0.86, green: 0.96, blue: 0.90))
+                        )
+                    fillTitlePill
+                }
+                Text(shortTimeRangeText)
+                    .font(SettingsChrome.Font.footnote)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
+            }
+            Spacer(minLength: 8)
+            Text(FocusTimerFormatting.countUpClock(wallSeconds))
+                .font(.system(size: 22, weight: .bold, design: .monospaced))
+                .foregroundStyle(SettingsChrome.onSurface)
+                .monospacedDigit()
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(dashedCardBackground)
+        .onTapGesture(perform: onBeginEdit)
+    }
+
+    private var fillTitlePill: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "pencil")
+                .font(.system(size: 10, weight: .semibold))
+            Text(L10n.FocusTimer.fillTitleAction)
+                .font(SettingsChrome.Font.footnote)
+                .fontWeight(.semibold)
+        }
+        .foregroundStyle(SettingsChrome.primary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(SettingsChrome.surfaceContainerLow)
+            Capsule(style: .continuous)
+                .fill(SettingsChrome.primary.opacity(0.08))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    Capsule(style: .continuous)
                         .strokeBorder(
-                            SettingsChrome.primary.opacity(0.22),
-                            style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                            SettingsChrome.primary.opacity(0.45),
+                            style: StrokeStyle(lineWidth: 1, dash: [4, 3])
                         )
                 )
         )
-        // 点整张待填卡即进入编辑并聚焦输入框，无需再点一次。
-        .onTapGesture(perform: onBeginEdit)
+    }
+
+    private var dashedCardBackground: some View {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(SettingsChrome.surfaceContainerLow)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(
+                        SettingsChrome.primary.opacity(0.22),
+                        style: StrokeStyle(lineWidth: 1, dash: [5, 4])
+                    )
+            )
     }
 
     private var pendingProgressBar: some View {
@@ -196,11 +227,37 @@ struct FocusTimerTitleBackfillCard: View {
     private var editingBody: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                badgeChip(badgeText, tint: badgeTint)
-                Spacer(minLength: 4)
-                Text(FocusTimerFormatting.clock(record.totalMinutes * 60))
-                    .font(SettingsChrome.Font.monoEmphasis)
-                    .foregroundStyle(SettingsChrome.onSurface)
+                if style == .countUp {
+                    Text(L10n.FocusTimer.historyCountUpStopwatchBadge)
+                        .font(SettingsChrome.Font.monoCaption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Color(red: 0.12, green: 0.42, blue: 0.28))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(
+                            Capsule().fill(Color(red: 0.86, green: 0.96, blue: 0.90))
+                        )
+                    Spacer(minLength: 4)
+                    Text(FocusTimerFormatting.countUpClock(wallSeconds))
+                        .font(.system(size: 20, weight: .bold, design: .monospaced))
+                        .foregroundStyle(SettingsChrome.onSurface)
+                        .monospacedDigit()
+                        .fixedSize(horizontal: true, vertical: false)
+                } else {
+                    Text(FocusTimerFormatting.clock(record.totalMinutes * 60))
+                        .font(SettingsChrome.Font.monoEmphasis)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                        .monospacedDigit()
+                        .fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: 4)
+                    if record.overtimeMinutes > 0 {
+                        Text(L10n.FocusTimer.overtimePlusMinutes(record.overtimeMinutes))
+                            .font(SettingsChrome.Font.monoCaption)
+                            .fontWeight(.bold)
+                            .foregroundStyle(SettingsChrome.secondary)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                }
             }
 
             VStack(alignment: .leading, spacing: 8) {
@@ -349,19 +406,6 @@ struct FocusTimerTitleBackfillCard: View {
         f.locale = Locale(identifier: "zh_CN")
         f.dateFormat = "HH:mm"
         return "\(f.string(from: record.startedAt)) - \(f.string(from: record.endedAt))"
-    }
-
-    private func badgeChip(_ text: String, tint: Color) -> some View {
-        Text(text)
-            .font(SettingsChrome.Font.monoCaption)
-            .fontWeight(.semibold)
-            .foregroundStyle(tint)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(tint.opacity(0.14))
-            )
     }
 }
 

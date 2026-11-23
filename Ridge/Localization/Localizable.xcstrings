@@ -12485,6 +12485,105 @@
           }
         }
       }
+    },
+    "focus_timer.history.countdown_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "倒计时"
+          }
+        }
+      }
+    },
+    "focus_timer.history.countdown_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d 条"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.countdown_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日暂无倒计时记录"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.countdown_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成一次计时后自动在此归档"
+          }
+        }
+      }
+    },
+    "focus_timer.history.count_up_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时"
+          }
+        }
+      }
+    },
+    "focus_timer.history.count_up_badge_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "共 %d 轮"
+          }
+        }
+      }
+    },
+    "focus_timer.history.count_up_stopwatch_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "秒表"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.count_up_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日暂无正计时记录"
+          }
+        }
+      }
+    },
+    "focus_timer.history_empty.count_up_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点选时岛「正计时」起钟后在此归档"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

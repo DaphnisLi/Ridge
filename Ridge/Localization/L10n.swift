@@ -3037,6 +3037,34 @@ enum L10n {
         static func colOvertimeBadge(_ count: Int) -> String {
             String(format: tr("focus_timer.col.overtime_badge_format", "%d 轮顺延"), count)
         }
+        /// 设置看板：左倒计时 / 右正计时。
+        static var historyCountdownTitle: String {
+            tr("focus_timer.history.countdown_title", "倒计时")
+        }
+        static func historyCountdownBadge(_ count: Int) -> String {
+            String(format: tr("focus_timer.history.countdown_badge_format", "%d 条"), count)
+        }
+        static var historyCountUpTitle: String {
+            tr("focus_timer.history.count_up_title", "正计时")
+        }
+        static func historyCountUpBadge(_ count: Int) -> String {
+            String(format: tr("focus_timer.history.count_up_badge_format", "共 %d 轮"), count)
+        }
+        static var historyCountUpStopwatchBadge: String {
+            tr("focus_timer.history.count_up_stopwatch_badge", "秒表")
+        }
+        static var historyEmptyCountdownTitle: String {
+            tr("focus_timer.history_empty.countdown_title", "今日暂无倒计时记录")
+        }
+        static var historyEmptyCountdownHint: String {
+            tr("focus_timer.history_empty.countdown_hint", "完成一次计时后自动在此归档")
+        }
+        static var historyEmptyCountUpTitle: String {
+            tr("focus_timer.history_empty.count_up_title", "今日暂无正计时记录")
+        }
+        static var historyEmptyCountUpHint: String {
+            tr("focus_timer.history_empty.count_up_hint", "点选时岛「正计时」起钟后在此归档")
+        }
         static var historyEmptyPresetTitle: String {
             tr("focus_timer.history_empty.preset_title", "今日暂无预设倒计时记录")
         }
