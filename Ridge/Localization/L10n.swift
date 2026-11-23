@@ -248,6 +248,20 @@ enum L10n {
         static var bluetoothSubtitle: String {
             tr("privacy_hub.bluetooth_subtitle", "用于在灵动岛实时显示蓝牙外设电量")
         }
+        static var locationTitle: String { tr("privacy_hub.location_title", "定位（Wi‑Fi 名称）") }
+        static var locationSubtitle: String {
+            tr(
+                "privacy_hub.location_subtitle",
+                "用于读取当前 Wi‑Fi 名称；开启「网络与 VPN」提示时申请，不用于追踪位置"
+            )
+        }
+        static var fullDiskTitle: String { tr("privacy_hub.full_disk_title", "完全磁盘访问") }
+        static var fullDiskSubtitle: String {
+            tr(
+                "privacy_hub.full_disk_subtitle",
+                "用于读取系统 Focus 模式名称、图标与结束时间；开启「系统专注模式」提示时申请"
+            )
+        }
         static var pendingBadge: String { tr("privacy_hub.pending_badge", "待授权") }
         static var goAuthorize: String { tr("privacy_hub.go_authorize", "前往授权") }
         static var notAuthorized: String { tr("privacy_hub.not_authorized", "未授权") }
@@ -431,6 +445,8 @@ enum L10n {
                 return tr("widgets.category.mac_battery_tip", "本机电池")
             case "builtin.networkLinkTip":
                 return tr("widgets.category.network_link_tip", "网络与 VPN")
+            case "builtin.systemFocusTip":
+                return tr("widgets.category.system_focus_tip", "系统专注模式")
             case "builtin.copiedNotice":
                 return tr("widgets.category.copied_notice", "剪贴板提示")
             default:
@@ -473,6 +489,8 @@ enum L10n {
                 return tr("widgets.footer.mac_battery_tip", "充电中 / 低电 / 充满瞬时提示")
             case "builtin.networkLinkTip":
                 return tr("widgets.footer.network_link_tip", "Wi‑Fi / 以太网 / VPN 通断瞬时提示")
+            case "builtin.systemFocusTip":
+                return tr("widgets.footer.system_focus_tip", "Focus / 勿扰开·关·切换瞬时提示")
             case "builtin.copiedNotice":
                 return tr("widgets.footer.copied_notice", "复制成功时刘海右侧圆岛提示")
             default:
@@ -498,6 +516,7 @@ enum L10n {
             case "builtin.peripheralTip": return "battery.25"
             case "builtin.macBatteryTip": return "laptopcomputer"
             case "builtin.networkLinkTip": return "wifi"
+            case "builtin.systemFocusTip": return "moon.fill"
             case "builtin.copiedNotice": return "doc.on.clipboard"
             default: return "slider.horizontal.3"
             }
@@ -2438,6 +2457,57 @@ enum L10n {
 
     }
 
+    // MARK: - System Focus tip（系统 Focus / 勿扰；与专注计时无关）
+
+    enum SystemFocus {
+        static var widgetName: String { tr("system_focus.widget.name", "系统专注模式") }
+        static var widgetSummary: String {
+            tr(
+                "system_focus.widget.summary",
+                "Focus / 勿扰开、关或切换时瞬时提示；与专注计时无关"
+            )
+        }
+
+        static var openedBadge: String { tr("system_focus.badge.opened", "已打开") }
+        static var closedBadge: String { tr("system_focus.badge.closed", "已关闭") }
+        static func untilTime(_ time: String) -> String {
+            String(format: tr("system_focus.badge.until_format", "直到 %@"), time)
+        }
+
+        static var previewOnUntil: String { tr("system_focus.preview.on_until", "已开（有结束）") }
+        static var previewOnOpened: String { tr("system_focus.preview.on_opened", "已开（无结束）") }
+        static var previewOff: String { tr("system_focus.preview.off", "已关闭") }
+
+        static var fallbackDoNotDisturb: String {
+            tr("system_focus.fallback.dnd", "勿扰模式")
+        }
+        static var fallbackWork: String { tr("system_focus.fallback.work", "工作") }
+        static var fallbackPersonal: String { tr("system_focus.fallback.personal", "个人") }
+        static var fallbackSleep: String { tr("system_focus.fallback.sleep", "睡眠") }
+        static var fallbackDriving: String { tr("system_focus.fallback.driving", "驾驶") }
+        static var fallbackFitness: String { tr("system_focus.fallback.fitness", "健身") }
+        static var fallbackGaming: String { tr("system_focus.fallback.gaming", "游戏") }
+        static var fallbackMindfulness: String { tr("system_focus.fallback.mindfulness", "正念") }
+        static var fallbackReading: String { tr("system_focus.fallback.reading", "阅读") }
+        static var fallbackGeneric: String { tr("system_focus.fallback.generic", "专注模式") }
+
+        static var diskAccessTitle: String {
+            tr("system_focus.disk.title", "完全磁盘访问")
+        }
+        static var diskAccessDesc: String {
+            tr(
+                "system_focus.disk.desc",
+                "系统将 Focus 状态存在受保护目录。授权后 Ridge 才能读取模式名称、图标与结束时间。"
+            )
+        }
+        static var diskAccessGrantedDesc: String {
+            tr("system_focus.disk.granted", "已可读取系统 Focus 状态。")
+        }
+        static var diskAccessAllow: String {
+            tr("system_focus.disk.allow", "打开完全磁盘访问")
+        }
+    }
+
     // MARK: - Network / VPN tip（主路径与 VPN；非常驻网速页）
 
     enum NetworkLink {
@@ -2485,13 +2555,6 @@ enum L10n {
         }
         static var previewVPNDisconnected: String {
             tr("network_link.preview.vpn_disconnected", "VPN 断开")
-        }
-
-        static var settingsFootnote: String {
-            tr(
-                "network_link.settings.footnote",
-                "只提示最终落点。连接态右翼只显示网关延迟。Wi‑Fi 名称需系统「定位」权限（macOS 限制，不追踪位置）。Clash 等系统代理通常读不到节点名，会尽量显示客户端名称，否则为「VPN」。不做常驻网速页。"
-            )
         }
 
         static var locationAccessTitle: String {
@@ -3616,6 +3679,22 @@ enum L10n {
             )
         }
 
+        static var systemFocusTitle: String { tr("test_lab.system_focus.title", "系统专注模式") }
+        static var systemFocusSubtitle: String {
+            tr(
+                "test_lab.system_focus.subtitle",
+                "直接投递开/关 tip（真机需完全磁盘访问才能读名与结束时间）。"
+            )
+        }
+        static var systemFocusTipOn: String { tr("test_lab.system_focus.tip_on", "已打开（有结束）") }
+        static var systemFocusTipOff: String { tr("test_lab.system_focus.tip_off", "已关闭") }
+        static func statusSystemFocusTip(_ kind: String) -> String {
+            String(
+                format: tr("test_lab.status.system_focus_tip_format", "系统 Focus：已投递 %@ tip"),
+                kind
+            )
+        }
+
         static var deckTitle: String { tr("test_lab.deck.title", "控制台") }
         static var deckSubtitle: String {
             tr("test_lab.deck.subtitle", "开启对应磁贴并展开控制台页。")
@@ -3679,6 +3758,15 @@ enum L10n {
         }
         static var galleryMacBatteryUnplug: String {
             tr("test_lab.gallery.mac_battery_unplug", "拔电")
+        }
+        static var gallerySystemFocus: String {
+            tr("test_lab.gallery.system_focus", "系统专注")
+        }
+        static var gallerySystemFocusOn: String {
+            tr("test_lab.gallery.system_focus_on", "已打开")
+        }
+        static var gallerySystemFocusOff: String {
+            tr("test_lab.gallery.system_focus_off", "已关闭")
         }
         static var galleryAI: String { tr("test_lab.gallery.ai", "AI 额度") }
         static var galleryProcess: String { tr("test_lab.gallery.process", "进程结束") }

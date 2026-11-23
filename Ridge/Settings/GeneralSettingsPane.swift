@@ -11,17 +11,21 @@ struct GeneralSettingsPane: View {
     @State private var screenCaptureOK = CGPreflightScreenCaptureAccess()
     @State private var inputOK = ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess
     @State private var bluetoothOK = false
+    @State private var locationOK = false
+    @State private var fullDiskOK = false
 
     private var grantedCount: Int {
         [
             calendar.authStatus == .authorized,
             screenCaptureOK,
             inputOK,
-            bluetoothOK
+            bluetoothOK,
+            locationOK,
+            fullDiskOK
         ].filter(\.self).count
     }
 
-    private let permissionTotal = 4
+    private let permissionTotal = 6
 
     var body: some View {
         ScrollView {
@@ -179,6 +183,36 @@ struct GeneralSettingsPane: View {
                         SystemPrivacyOpener.open(anchor: "Privacy_Bluetooth")
                         refreshPermissions()
                     }
+                    SettingsHairline()
+                    permissionRow(
+                        symbol: "location.fill",
+                        title: L10n.PrivacyHub.locationTitle,
+                        subtitle: L10n.PrivacyHub.locationSubtitle,
+                        granted: locationOK
+                    ) {
+                        Task { @MainActor in
+                            _ = await WidgetPermissionGate.ensureOne(
+                                .location,
+                                reason: "generalSettings"
+                            )
+                            refreshPermissions()
+                        }
+                    }
+                    SettingsHairline()
+                    permissionRow(
+                        symbol: "internaldrive",
+                        title: L10n.PrivacyHub.fullDiskTitle,
+                        subtitle: L10n.PrivacyHub.fullDiskSubtitle,
+                        granted: fullDiskOK
+                    ) {
+                        Task { @MainActor in
+                            _ = await WidgetPermissionGate.ensureOne(
+                                .fullDiskAccess,
+                                reason: "generalSettings"
+                            )
+                            refreshPermissions()
+                        }
+                    }
                 }
             }
         }
@@ -269,5 +303,7 @@ struct GeneralSettingsPane: View {
             default: return false
             }
         }()
+        locationOK = NetworkLinkLocationAccess.shared.isAuthorized
+        fullDiskOK = SystemFocusStoreReader.canReadStore()
     }
 }

@@ -5,12 +5,17 @@ import Foundation
 
 /// 小组件 / 控制台磁贴开关打开时：按能力校验并申请系统权限（每次开启都走一遍）。
 /// 无对应权限需求的 id 直接跳过；已授权则只记日志不重复打扰。
+/// 首次引导批量开功能时，按所选小组件汇总权限队列逐项申请。
 enum WidgetPermissionGate {
     enum Need: String, CaseIterable, Codable {
         case calendar
         case screenCapture
         case bluetooth
         case inputMonitoring
+        /// Wi‑Fi SSID（网络 tip）。
+        case location
+        /// 系统 Focus 模式名 / 图标 / 结束时间。
+        case fullDiskAccess
     }
 
     /// 单次申请结果：引导第 3 步据此决定是否进入「等待重开」。
@@ -33,6 +38,10 @@ enum WidgetPermissionGate {
             return CBManager.authorization == .allowedAlways
         case .inputMonitoring:
             return ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess
+        case .location:
+            return NetworkLinkLocationAccess.shared.isAuthorized
+        case .fullDiskAccess:
+            return SystemFocusStoreReader.canReadStore()
         }
     }
 
@@ -43,6 +52,8 @@ enum WidgetPermissionGate {
         case .screenCapture: return L10n.PrivacyHub.screenCaptureTitle
         case .bluetooth: return L10n.PrivacyHub.bluetoothTitle
         case .inputMonitoring: return L10n.PrivacyHub.inputMonitoringTitle
+        case .location: return L10n.PrivacyHub.locationTitle
+        case .fullDiskAccess: return L10n.PrivacyHub.fullDiskTitle
         }
     }
 
@@ -53,6 +64,8 @@ enum WidgetPermissionGate {
         case .screenCapture: return L10n.PrivacyHub.screenCaptureSubtitle
         case .bluetooth: return L10n.PrivacyHub.bluetoothSubtitle
         case .inputMonitoring: return L10n.PrivacyHub.inputMonitoringSubtitle
+        case .location: return L10n.PrivacyHub.locationSubtitle
+        case .fullDiskAccess: return L10n.PrivacyHub.fullDiskSubtitle
         }
     }
 
@@ -70,6 +83,10 @@ enum WidgetPermissionGate {
             return [.screenCapture]
         case "builtin.peripheralTip":
             return [.bluetooth]
+        case "builtin.networkLinkTip":
+            return [.location]
+        case "builtin.systemFocusTip":
+            return [.fullDiskAccess]
         default:
             return []
         }
@@ -140,6 +157,10 @@ enum WidgetPermissionGate {
                 ResourceMonitorSession.shared.refreshInputMonitoringStatus()
             case .calendar:
                 MeetingCalendarService.shared.start()
+            case .location:
+                NetworkLinkSession.shared.refresh(reason: "locationAlreadyAuthorized:\(reason)")
+            case .fullDiskAccess:
+                SystemFocusSession.shared.recheckAccess(reason: "fullDiskAlreadyAuthorized:\(reason)")
             }
             return .satisfied
         }
@@ -152,6 +173,10 @@ enum WidgetPermissionGate {
             return await ensureBluetooth(reason: reason)
         case .inputMonitoring:
             return ensureInputMonitoringAccess(reason: reason)
+        case .location:
+            return await ensureLocation(reason: reason)
+        case .fullDiskAccess:
+            return ensureFullDiskAccess(reason: reason)
         }
     }
 
@@ -255,6 +280,49 @@ enum WidgetPermissionGate {
         if granted || isSatisfied(.inputMonitoring) {
             return .satisfied
         }
+        return .awaitingSystemSettingsRelaunch
+    }
+
+    @MainActor
+    private static func ensureLocation(reason: String) async -> EnsureOutcome {
+        let access = NetworkLinkLocationAccess.shared
+        AppLog.warn("PrivacyHub", "申请定位权限（Wi‑Fi 名称）", [
+            "reason": reason,
+            "status": NetworkLinkLocationAccess.describe(access.status)
+        ])
+        if access.isAuthorized {
+            NetworkLinkSession.shared.refresh(reason: "locationGateSatisfied:\(reason)")
+            return .satisfied
+        }
+        if access.isDeniedOrRestricted {
+            access.openSystemPrivacySettings()
+            return .awaitingSystemSettingsRelaunch
+        }
+        let granted = await access.requestAccessAwaitingResult(reason: reason)
+        if granted || isSatisfied(.location) {
+            AppLog.warn("PrivacyHub", "定位权限已授予", ["reason": reason])
+            return .satisfied
+        }
+        if access.isDeniedOrRestricted {
+            access.openSystemPrivacySettings()
+            return .awaitingSystemSettingsRelaunch
+        }
+        AppLog.warn("PrivacyHub", "定位权限仍待用户确认", [
+            "reason": reason,
+            "status": NetworkLinkLocationAccess.describe(access.status)
+        ])
+        return .stillNeeded
+    }
+
+    @MainActor
+    private static func ensureFullDiskAccess(reason: String) -> EnsureOutcome {
+        if SystemFocusStoreReader.canReadStore() {
+            SystemFocusSession.shared.recheckAccess(reason: "fullDiskGateSatisfied:\(reason)")
+            return .satisfied
+        }
+        AppLog.warn("PrivacyHub", "打开完全磁盘访问（系统 Focus tip）", ["reason": reason])
+        SystemPrivacyOpener.open(anchor: "Privacy_AllFiles")
+        // 授权后 TCC 对已运行进程常需重开；与录屏同口径。
         return .awaitingSystemSettingsRelaunch
     }
 

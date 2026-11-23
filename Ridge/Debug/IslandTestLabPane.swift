@@ -28,6 +28,7 @@ struct IslandTestLabPane: View {
                 peripheralCard
                 macBatteryCard
                 networkLinkCard
+                systemFocusCard
                 captureCard
                 mediaCard
                 focusCard
@@ -316,6 +317,26 @@ struct IslandTestLabPane: View {
                 }),
                 (L10n.TestLab.networkLinkTipVPNOff, {
                     harness.presentNetworkLinkTip(kind: .vpnDisconnected)
+                })
+            ])
+        }
+    }
+
+    // MARK: System Focus
+
+    private var systemFocusCard: some View {
+        labCard(
+            title: L10n.TestLab.systemFocusTitle,
+            symbol: "moon.fill",
+            subtitle: L10n.TestLab.systemFocusSubtitle
+        ) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.systemFocusTipOn, {
+                    harness.presentSystemFocusTip(kind: .on)
+                }),
+                (L10n.TestLab.systemFocusTipOff, {
+                    harness.presentSystemFocusTip(kind: .off)
                 })
             ])
         }

@@ -10022,6 +10022,39 @@
         }
       }
     },
+    "test_lab.gallery.system_focus": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "系统专注"
+          }
+        }
+      }
+    },
+    "test_lab.gallery.system_focus_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已打开"
+          }
+        }
+      }
+    },
+    "test_lab.gallery.system_focus_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已关闭"
+          }
+        }
+      }
+    },
     "test_lab.gallery.media": {
       "extractionState": "manual",
       "localizations": {

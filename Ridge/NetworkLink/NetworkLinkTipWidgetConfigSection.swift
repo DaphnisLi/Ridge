@@ -12,13 +12,6 @@ struct NetworkLinkTipWidgetConfigSection: View {
                 VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
                     locationPermissionCard
                     previewStage
-                    SettingsCard {
-                        Text(L10n.NetworkLink.settingsFootnote)
-                            .font(SettingsChrome.Font.body)
-                            .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(SettingsChrome.Spacing.cardPadding)
-                    }
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
                 .padding(.top, 16)

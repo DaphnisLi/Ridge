@@ -378,6 +378,11 @@ final class IslandTestHarness: ObservableObject {
         AppLog.info("TestLab", "已投递网络 tip", ["kind": kind.rawValue])
     }
 
+    func presentSystemFocusTip(kind: SystemFocusTipKind) {
+        SystemFocusSession.shared.presentSample(kind: kind)
+        note(L10n.TestLab.statusSystemFocusTip(kind.rawValue))
+    }
+
     // MARK: - Control deck
 
     func openControlDeck(pane: ControlDeckSettings.Pane) {

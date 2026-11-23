@@ -60,6 +60,29 @@ final class NetworkLinkLocationAccess: NSObject, ObservableObject, CLLocationMan
         promptForAuthorization(reason: "settings", openSettingsIfNoPrompt: true)
     }
 
+    /// 开关 / 引导闸门：弹授权并短暂等待结果；已拒绝则开系统定位页。
+    @discardableResult
+    func requestAccessAwaitingResult(reason: String) async -> Bool {
+        status = manager.authorizationStatus
+        if isAuthorized { return true }
+        if isDeniedOrRestricted || !CLLocationManager.locationServicesEnabled() {
+            openSystemPrivacySettings()
+            return false
+        }
+        promptForAuthorization(reason: reason, openSettingsIfNoPrompt: false)
+        for _ in 0..<50 {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            status = manager.authorizationStatus
+            if isAuthorized { return true }
+            if isDeniedOrRestricted {
+                openSystemPrivacySettings()
+                return false
+            }
+        }
+        status = manager.authorizationStatus
+        return isAuthorized
+    }
+
     /// Wi‑Fi tip 路径：仅在 `notDetermined` 时尝试一次，不强制跳系统设置。
     func ensureAuthorizedIfNeeded(reason: String) {
         status = manager.authorizationStatus

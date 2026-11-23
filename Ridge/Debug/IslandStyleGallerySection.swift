@@ -18,6 +18,7 @@ struct IslandStyleGallerySection: View {
             galleryGroup(title: L10n.TestLab.galleryProcess) { tipProcessRows }
             galleryGroup(title: L10n.TestLab.galleryPeripheral) { tipPeripheralRows }
             galleryGroup(title: L10n.TestLab.galleryMacBattery) { tipMacBatteryRows }
+            galleryGroup(title: L10n.TestLab.gallerySystemFocus) { tipSystemFocusRows }
             galleryGroup(title: L10n.TestLab.galleryCapture) { tipCaptureRows }
             galleryGroup(title: L10n.TestLab.galleryMedia) { liveMediaRows }
             galleryGroup(title: L10n.TestLab.galleryFocus) { liveFocusRows }
@@ -175,6 +176,35 @@ struct IslandStyleGallerySection: View {
                 onTap: { harness.presentMacBatteryTip(kind: .unplugged) }
             ) {
                 MacBatteryNoticeCard.previewSample(kind: .unplugged, flushSide: .trailing)
+            }
+        }
+    }
+
+    private var tipSystemFocusRows: some View {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.gallerySystemFocusOn, half: false),
+                onTap: { harness.presentSystemFocusTip(kind: .on) }
+            ) {
+                SystemFocusNoticeCard.previewSample(preview: .onOpened, compact: true)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.gallerySystemFocusOn, half: true),
+                onTap: { harness.presentSystemFocusTip(kind: .on) }
+            ) {
+                SystemFocusNoticeCard.previewSample(preview: .onOpened, flushSide: .trailing)
+            }
+            tipCell(
+                label: pairedLabel(L10n.TestLab.gallerySystemFocusOff, half: false),
+                onTap: { harness.presentSystemFocusTip(kind: .off) }
+            ) {
+                SystemFocusNoticeCard.previewSample(preview: .off, compact: true)
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.gallerySystemFocusOff, half: true),
+                onTap: { harness.presentSystemFocusTip(kind: .off) }
+            ) {
+                SystemFocusNoticeCard.previewSample(preview: .off, flushSide: .trailing)
             }
         }
     }

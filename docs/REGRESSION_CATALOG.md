@@ -465,8 +465,8 @@
 - **occurrences:** 1（2026-11-23：默认关 + 仅 `NWPathMonitor`；Clash 系统代理不改 path；空闲 `utun` 误判）  
 - **症状:** 切换 Wi‑Fi 或 Clash/VPN 后岛上无网络 tip；日志无 `NetworkLink`  
 - **根因倾向:** tip 默认关且启动未拉会话；系统代理通断不走 path；`availableInterfaces` 含常驻 `utun`  
-- **防护:** 上线一次性默认开；AppDelegate 启用时 `start`；`SCDynamicStore` 订主接口+Proxies；VPN=主接口隧道 **或** 系统代理  
-- **相关代码:** `NetworkLinkSession` / `NetworkLinkMonitor` / `WidgetSettings.networkLinkTipShipOn`  
+- **防护:** **默认关**；用户打开开关时 `WidgetPermissionGate` 申请定位；启用时 `start`；`SCDynamicStore` 订主接口+Proxies；VPN=主接口隧道 **或** 系统代理  
+- **相关代码:** `NetworkLinkSession` / `NetworkLinkMonitor` / `WidgetPermissionGate.location`  
 - **自动化:** `NetworkLinkTipPolicyTests`（occurrences=1，不强制每次跑）
 
 ### network-link-name-miss — Wi‑Fi / VPN 名称读不到
@@ -479,12 +479,26 @@
 - **相关代码:** `NetworkLinkLocationAccess` / `NetworkLinkMetrics` / `NetworkLinkTipWidgetConfigSection`  
 - **自动化:** 不强制（occurrences=2 但难自动化系统弹窗，暂不标 recurring）
 
+### system-focus-tip-miss — Focus 开/关无 tip 或无名无图标
+
+- **recurring:** false  
+- **occurrences:** 2（2026-11-23：落地时确认公开 API 仅布尔；DoNotDisturb DB 需完全磁盘访问。同日：自定义「你好模式」等 tip 无图标，日志 `symbol=emoji.face.grinning` / `rocket.fill`）  
+- **症状:** 切换系统 Focus 后岛上无 tip，或只有笼统文案、无模式名/图标/结束时间；部分模式有名无图标  
+- **根因倾向:** 未授完全磁盘访问读不了 `~/Library/DoNotDisturb/DB`；未启动会话；与专注计时混淆；`symbolImageName` 常为**私有** SF Symbol（`emoji.*`、部分内置如 `rocket.fill`），公开 `Image(systemName:)` 空白  
+- **防护:** **默认关**；打开开关 / 引导批量开时申请完全磁盘访问；启用时 `start`；未授权不投 tip；与 `FocusTimerSession` 隔离；图标经 `SystemFocusSymbol` 公开→私有 CoreGlyphs→回退  
+- **相关代码:** `SystemFocusSession` / `SystemFocusStoreReader` / `SystemFocusSymbol` / `WidgetPermissionGate.fullDiskAccess`  
+- **自动化:** `test_systemFocusTip_detailAndOffSymbol`（含私有符号解析；occurrences=2 但未标 recurring——私有 API 依赖系统 glyph 包）
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-23 | Focus tip 半岛方案 03（模式色光点 / 关态空心环）；C 类 secondary |
+| 2026-11-23 | Focus 自定义/私有图标走私有 CoreGlyphs；catalog `system-focus-tip-miss` occurrences=2 |
+| 2026-11-23 | 撤回 tip「上线默认开」；网络/Focus 默认关，打开再申请定位/完全磁盘访问 |
+| 2026-11-23 | 系统 Focus tip 落地；catalog `system-focus-tip-miss` |
 | 2026-11-23 | 网络 tip：定位读 SSID + 代理客户端名回退；catalog `network-link-name-miss` |
 | 2026-11-23 | 网络 tip 翼宽锁定 `preparedWingWidth`；补 `wingTipCardsMatchPreparedWingWidth`；catalog double-padding +1 |
 | 2026-11-23 | 网络 tip：默认开 + 系统代理/主接口侦测；catalog `network-link-tip-miss` |

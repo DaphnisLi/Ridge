@@ -17,6 +17,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case networkVPNConnected(NetworkLinkNotice)
     case networkWifiDisconnected(NetworkLinkNotice)
     case networkVPNDisconnected(NetworkLinkNotice)
+    case systemFocusOn(SystemFocusNotice)
+    case systemFocusOff(SystemFocusNotice)
     case clipboardCaptureHint(id: String, text: String, symbol: String)
     case colorPickTip
     case ocrSelectTip
@@ -52,6 +54,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .networkWifiDisconnected(let notice),
              .networkVPNDisconnected(let notice):
             return notice.id
+        case .systemFocusOn(let notice), .systemFocusOff(let notice):
+            return notice.id
         case .clipboardCaptureHint(let id, _, _):
             return "shelf.capture.\(id)"
         case .colorPickTip: return Self.colorPickTipID
@@ -78,6 +82,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .networkVPNConnected: return "network.vpnConnected"
         case .networkWifiDisconnected: return "network.wifiDisconnected"
         case .networkVPNDisconnected: return "network.vpnDisconnected"
+        case .systemFocusOn: return "systemFocus.on"
+        case .systemFocusOff: return "systemFocus.off"
         case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip: return "shelf.capture"
         case .aiUsageAlert: return "aiUsage"
         case .moveReminder: return "moveReminder"
@@ -107,6 +113,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
+             .systemFocusOn, .systemFocusOff,
              .aiUsageAlert:
             #if DEBUG
             if let override = IslandTestLabSettings.resolvedTipDurationNanoseconds() {
@@ -129,6 +136,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
+             .systemFocusOn, .systemFocusOff,
              .aiUsageAlert, .moveReminder, .meetingLead:
             return true
         }
@@ -140,7 +148,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
-             .networkWifiDisconnected, .networkVPNDisconnected:
+             .networkWifiDisconnected, .networkVPNDisconnected,
+             .systemFocusOn, .systemFocusOff:
             return true
         default:
             return false
@@ -202,6 +211,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
+             .systemFocusOn, .systemFocusOff,
              .aiUsageAlert:
             return true
         case .clipboardCaptureHint(let id, _, _):

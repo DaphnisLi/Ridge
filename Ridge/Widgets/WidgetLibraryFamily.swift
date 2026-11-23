@@ -25,6 +25,7 @@ enum WidgetLibraryLayout {
         "builtin.peripheralTip",
         "builtin.macBatteryTip",
         "builtin.networkLinkTip",
+        "builtin.systemFocusTip",
         "builtin.media",
         "builtin.focusTimer",
         "system.controlDeck.shelf",
@@ -69,6 +70,7 @@ enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
              "builtin.peripheralTip",
              "builtin.macBatteryTip",
              "builtin.networkLinkTip",
+             "builtin.systemFocusTip",
              "builtin.copiedNotice":
             return .tip
         case "system.controlDeck.battery",

@@ -437,7 +437,12 @@ enum WidgetSamplePreview {
              "builtin.networkLinkTip.wiredConnected",
              "builtin.networkLinkTip.vpnConnected",
              "builtin.networkLinkTip.wifiDisconnected",
-             "builtin.networkLinkTip.vpnDisconnected":
+             "builtin.networkLinkTip.vpnDisconnected",
+             "builtin.systemFocusTip",
+             "builtin.systemFocusTip.onUntil",
+             "builtin.systemFocusTip.onOpened",
+             "builtin.systemFocusTip.on",
+             "builtin.systemFocusTip.off":
             return true
         default:
             return false
@@ -490,6 +495,12 @@ enum WidgetSamplePreview {
             networkLinkTipSample(kind: .wifiDisconnected, compact: compact)
         case "builtin.networkLinkTip.vpnDisconnected":
             networkLinkTipSample(kind: .vpnDisconnected, compact: compact)
+        case "builtin.systemFocusTip", "builtin.systemFocusTip.onUntil", "builtin.systemFocusTip.on":
+            systemFocusTipSample(preview: .onUntil, compact: compact)
+        case "builtin.systemFocusTip.onOpened":
+            systemFocusTipSample(preview: .onOpened, compact: compact)
+        case "builtin.systemFocusTip.off":
+            systemFocusTipSample(preview: .off, compact: compact)
         case "builtin.copiedNotice":
             copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":
@@ -615,6 +626,13 @@ enum WidgetSamplePreview {
         compact: Bool
     ) -> some View {
         NetworkLinkNoticeCard.previewSample(kind: kind, compact: compact)
+    }
+
+    private static func systemFocusTipSample(
+        preview: SystemFocusNoticeCard.PreviewVariant,
+        compact: Bool
+    ) -> some View {
+        SystemFocusNoticeCard.previewSample(preview: preview, compact: compact)
     }
 
     private static func copiedNoticeSample(compact: Bool) -> some View {

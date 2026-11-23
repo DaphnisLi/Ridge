@@ -418,6 +418,12 @@ private struct IslandNoticeCardView: View {
                 flushSide: flushSide,
                 bareWingContent: bareWingContent
             )
+        case .systemFocusOn(let notice), .systemFocusOff(let notice):
+            SystemFocusNoticeCard(
+                notice: notice,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
                 // 单独 / 双槽右侧一律现有 Ø32 圆岛；双槽时不要外包 Spacer 黑翼。

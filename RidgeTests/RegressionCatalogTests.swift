@@ -844,6 +844,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertLessThan(networkWing, meetingWing)
         XCTAssertEqual(NetworkLinkNoticeCard.liveWingWidth, networkWing)
         XCTAssertEqual(MacBatteryNoticeCard.liveWingWidth, meetingWing)
+        XCTAssertEqual(SystemFocusNoticeCard.liveWingWidth, meetingWing)
         XCTAssertEqual(MeetingIslandCardView.liveWingWidth, meetingWing)
         XCTAssertEqual(
             PeripheralBatteryNoticeCard.liveWingWidth,
@@ -2150,6 +2151,10 @@ final class RegressionCatalogTests: XCTestCase {
             "builtin.networkLinkTip.vpnConnected",
             "builtin.networkLinkTip.wifiDisconnected",
             "builtin.networkLinkTip.vpnDisconnected",
+            "builtin.systemFocusTip",
+            "builtin.systemFocusTip.onUntil",
+            "builtin.systemFocusTip.onOpened",
+            "builtin.systemFocusTip.off",
         ]
         for id in tipIDs {
             XCTAssertTrue(
@@ -2306,10 +2311,12 @@ final class RegressionCatalogTests: XCTestCase {
         let peripheral = order.firstIndex(of: "builtin.peripheralTip")!
         let macBattery = order.firstIndex(of: "builtin.macBatteryTip")!
         let network = order.firstIndex(of: "builtin.networkLinkTip")!
+        let systemFocus = order.firstIndex(of: "builtin.systemFocusTip")!
         let media = order.firstIndex(of: "builtin.media")!
         XCTAssertEqual(peripheral + 1, macBattery)
         XCTAssertEqual(macBattery + 1, network)
-        XCTAssertEqual(network + 1, media)
+        XCTAssertEqual(network + 1, systemFocus)
+        XCTAssertEqual(systemFocus + 1, media)
         XCTAssertEqual(media + 1, focus)
         XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
         XCTAssertEqual(order.last, "system.controlDeck.projects")
@@ -2329,6 +2336,7 @@ final class RegressionCatalogTests: XCTestCase {
                 "builtin.peripheralTip",
                 "builtin.macBatteryTip",
                 "builtin.networkLinkTip",
+                "builtin.systemFocusTip",
                 "builtin.media",
                 "builtin.focusTimer",
                 "builtin.worldClock",
@@ -2342,6 +2350,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.peripheralTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.macBatteryTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.networkLinkTip"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.systemFocusTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.copiedNotice"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.media"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.battery"), .live)
@@ -2355,7 +2364,46 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.peripheralTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.macBatteryTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.networkLinkTip"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.systemFocusTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.copiedNotice"))
+    }
+
+    func test_systemFocusTip_detailAndOffSymbol() {
+        XCTAssertEqual(SystemFocusPalette.offSymbol(from: "moon.fill"), "moon.slash.fill")
+        XCTAssertEqual(SystemFocusPalette.offSymbol(from: "brain.head.profile"), "brain.head.profile.slash")
+        // 自定义表情图标无 slash；关闭态沿用原名。
+        XCTAssertEqual(SystemFocusPalette.offSymbol(from: "emoji.face.grinning"), "emoji.face.grinning")
+        // 私有符号（游戏火箭等）公开 Image(systemName:) 为空，须走私有 CoreGlyphs。
+        XCTAssertTrue(SystemFocusSymbol.canResolve("emoji.face.grinning"))
+        XCTAssertTrue(SystemFocusSymbol.canResolve("rocket.fill"))
+        let emojiImg = SystemFocusSymbol.nsImage(named: "emoji.face.grinning", pointSize: 14)
+        XCTAssertGreaterThan(emojiImg.size.width, 0)
+        let until = SystemFocusNoticeCard.previewNotice(preview: .onUntil)
+        XCTAssertEqual(until.kind, .on)
+        XCTAssertTrue(until.detail.contains("18:00"))
+        let opened = SystemFocusNoticeCard.previewNotice(preview: .onOpened)
+        XCTAssertEqual(opened.detail, L10n.SystemFocus.openedBadge)
+        XCTAssertEqual(opened.name, L10n.SystemFocus.fallbackSleep)
+        XCTAssertEqual(opened.symbolImageName, "bed.double.fill")
+        let off = SystemFocusNoticeCard.previewNotice(preview: .off)
+        XCTAssertEqual(off.kind, .off)
+        XCTAssertEqual(off.detail, L10n.SystemFocus.closedBadge)
+        XCTAssertEqual(off.name, L10n.SystemFocus.fallbackSleep)
+        let onPayload = IslandNoticePayload.systemFocusOn(until)
+        XCTAssertTrue(onPayload.usesNotchWingChrome)
+        XCTAssertFalse(onPayload.usesNetworkLinkWing)
+        // C 类：secondary 队列，可与音乐/专注并排成半岛。
+        XCTAssertEqual(onPayload.displayLane, .secondary)
+        // 内置勿扰：库内英文名不得直接上岛。
+        XCTAssertEqual(L10n.SystemFocus.fallbackDoNotDisturb, "勿扰模式")
+        XCTAssertEqual(until.name, L10n.SystemFocus.fallbackDoNotDisturb)
+        // 睡眠 tint → mint；开启态用模式色。
+        let mint = SystemFocusPalette.accent(for: "systemMintColor", active: true)
+        XCTAssertNotEqual(mint, SystemFocusPalette.activeAccent)
+        XCTAssertEqual(
+            SystemFocusPalette.accent(for: "systemMintColor", active: false),
+            SystemFocusPalette.offIcon
+        )
     }
 
     func test_islandNoticePayload_peripheralConnectedIsTransient() {

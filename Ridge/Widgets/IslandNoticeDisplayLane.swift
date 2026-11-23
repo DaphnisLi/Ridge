@@ -352,6 +352,7 @@ extension IslandNoticePayload {
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
+             .systemFocusOn, .systemFocusOff,
              .aiUsageAlert, .ramPressure:
             // 非专注 C：靠右半块 / 单独满岛；多条 FIFO。
             return .secondary

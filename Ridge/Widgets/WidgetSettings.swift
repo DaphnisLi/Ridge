@@ -24,8 +24,8 @@ final class WidgetSettings: ObservableObject {
         static let flatLibraryOrderMigrated = "widget.libraryFlatOrder.v4"
         /// 小组件默认全关（升 v 号再强制一次）。
         static let defaultOffMigrated = "widget.defaultOff.v2"
-        /// 网络 tip 无 TCC：上线时一次性默认打开（用户仍可关）。
-        static let networkLinkTipShipOn = "widget.networkLinkTip.shipOn.v1"
+        /// 历史：网络 / 系统 Focus tip 曾「上线默认开」；撤回后一律默认关。
+        static let revokeShipOnTips = "widget.revokeShipOnTips.v1"
     }
 
     /// 用户排序：越靠前 priority 越高。仅含 `showsInLibrary` 的 id。
@@ -73,6 +73,9 @@ final class WidgetSettings: ObservableObject {
             if id == NetworkLinkTipWidget.manifest.id {
                 NetworkLinkSession.shared.start()
             }
+            if id == SystemFocusTipWidget.manifest.id {
+                SystemFocusSession.shared.start()
+            }
             Task { @MainActor in
                 await WidgetPermissionGate.ensureOnEnable(widgetID: id)
             }
@@ -82,6 +85,8 @@ final class WidgetSettings: ObservableObject {
             MacBatterySession.shared.stop()
         } else if id == NetworkLinkTipWidget.manifest.id {
             NetworkLinkSession.shared.stop()
+        } else if id == SystemFocusTipWidget.manifest.id {
+            SystemFocusSession.shared.stop()
         }
     }
 
@@ -234,17 +239,22 @@ final class WidgetSettings: ObservableObject {
             ])
         }
 
-        // 网络 tip 无需额外权限；上线后一次性打开，避免「切了网没反应」。
-        if !defaults.bool(forKey: Key.networkLinkTipShipOn) {
-            let id = "builtin.networkLinkTip"
-            disabledIDs.remove(id)
-            if !order.contains(id) {
-                insertInCanonicalPosition(id)
+        // 撤回曾「上线默认开」的 tip：产品约定全部功能默认关，由用户打开再申请权限。
+        if !defaults.bool(forKey: Key.revokeShipOnTips) {
+            let shipped = ["builtin.networkLinkTip", "builtin.systemFocusTip"]
+            for id in shipped {
+                disabledIDs.insert(id)
+                pinnedIDs.remove(id)
             }
             defaults.set(Array(disabledIDs), forKey: Key.disabled)
-            defaults.set(order, forKey: Key.order)
-            defaults.set(true, forKey: Key.networkLinkTipShipOn)
-            AppLog.warn("Widget", "已默认打开网络 tip", ["id": id])
+            defaults.set(Array(pinnedIDs), forKey: Key.pinned)
+            defaults.set(true, forKey: Key.revokeShipOnTips)
+            // 清掉旧 shipOn 标记，避免旧构建再写开。
+            defaults.removeObject(forKey: "widget.networkLinkTip.shipOn.v1")
+            defaults.removeObject(forKey: "widget.systemFocusTip.shipOn.v1")
+            AppLog.warn("Widget", "已撤回 tip 上线默认开，恢复默认全关", [
+                "ids": shipped.joined(separator: ",")
+            ])
         }
 
         // 确保 ControlDeck 迁移先跑（清掉旧 combo 键）。

@@ -150,7 +150,27 @@ final class IslandNoticeBehaviorTests: XCTestCase {
             .networkWiredConnected(.init(id: "net.e", kind: .wiredConnected, title: "以太网", detail: "12ms")),
             .networkVPNConnected(.init(id: "net.v", kind: .vpnConnected, title: "VPN", detail: "24ms")),
             .networkWifiDisconnected(.init(id: "net.wo", kind: .wifiDisconnected, title: "Cafe", detail: "断开", ssid: "Cafe")),
-            .networkVPNDisconnected(.init(id: "net.vo", kind: .vpnDisconnected, title: "VPN", detail: "断开"))
+            .networkVPNDisconnected(.init(id: "net.vo", kind: .vpnDisconnected, title: "VPN", detail: "断开")),
+            .systemFocusOn(
+                .init(
+                    id: "sf.on",
+                    kind: .on,
+                    name: "勿扰模式",
+                    symbolImageName: "moon.fill",
+                    tintColorName: "systemIndigoColor",
+                    detail: "已打开"
+                )
+            ),
+            .systemFocusOff(
+                .init(
+                    id: "sf.off",
+                    kind: .off,
+                    name: "勿扰模式",
+                    symbolImageName: "moon.fill",
+                    tintColorName: "systemIndigoColor",
+                    detail: "已关闭"
+                )
+            )
         ]
         for tip in tips {
             XCTAssertEqual(

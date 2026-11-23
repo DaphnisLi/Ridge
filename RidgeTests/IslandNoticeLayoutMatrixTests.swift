@@ -340,7 +340,8 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                  .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
                  .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
                  .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
-                 .networkWifiDisconnected, .networkVPNDisconnected:
+                 .networkWifiDisconnected, .networkVPNDisconnected,
+                 .systemFocusOn, .systemFocusOff:
                 return Expect(
                     lane: .secondary,
                     autoDismiss: true,
@@ -381,6 +382,26 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
         let netVPNOff = IslandNoticePayload.networkVPNDisconnected(
             .init(id: "net.vpnOff", kind: .vpnDisconnected, title: "VPN", detail: "断开")
         )
+        let focusOn = IslandNoticePayload.systemFocusOn(
+            .init(
+                id: "sf.on",
+                kind: .on,
+                name: "勿扰模式",
+                symbolImageName: "moon.fill",
+                tintColorName: "systemIndigoColor",
+                detail: "直到 18:00"
+            )
+        )
+        let focusOff = IslandNoticePayload.systemFocusOff(
+            .init(
+                id: "sf.off",
+                kind: .off,
+                name: "勿扰模式",
+                symbolImageName: "moon.fill",
+                tintColorName: "systemIndigoColor",
+                detail: "已关闭"
+            )
+        )
 
         let samples: [IslandNoticePayload] = [
             exclusive,
@@ -403,11 +424,13 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             netWired,
             netVPN,
             netWifiOff,
-            netVPNOff
+            netVPNOff,
+            focusOn,
+            focusOff
         ]
 
-        // 21 个样本覆盖全部 case 族；clipboard 两种；本机电池四态；网络五态。
-        XCTAssertEqual(samples.count, 21)
+        // 23 个样本覆盖全部 case 族；clipboard 两种；本机电池四态；网络五态；系统 Focus 两态。
+        XCTAssertEqual(samples.count, 23)
 
         for payload in samples {
             let e = expect(for: payload)

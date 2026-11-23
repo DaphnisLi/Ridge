@@ -822,6 +822,8 @@ private struct OnboardingPermissionRow: View {
         case .screenCapture: return "rectangle.dashed.badge.record"
         case .bluetooth: return "antenna.radiowaves.left.and.right"
         case .inputMonitoring: return "keyboard"
+        case .location: return "location.fill"
+        case .fullDiskAccess: return "internaldrive"
         }
     }
 
@@ -831,14 +833,16 @@ private struct OnboardingPermissionRow: View {
         case .screenCapture: return SettingsChrome.primary.opacity(0.12)
         case .bluetooth: return SettingsChrome.surfaceContainer
         case .inputMonitoring: return SettingsChrome.surfaceContainerHighest
+        case .location: return SettingsChrome.primary.opacity(0.10)
+        case .fullDiskAccess: return SettingsChrome.surfaceContainer
         }
     }
 
     private var iconForeground: Color {
         switch need {
         case .calendar: return .white
-        case .screenCapture: return SettingsChrome.primary
-        case .bluetooth, .inputMonitoring: return SettingsChrome.onSurfaceVariant
+        case .screenCapture, .location: return SettingsChrome.primary
+        case .bluetooth, .inputMonitoring, .fullDiskAccess: return SettingsChrome.onSurfaceVariant
         }
     }
 }
