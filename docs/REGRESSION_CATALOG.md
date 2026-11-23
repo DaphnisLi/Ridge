@@ -495,6 +495,8 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-23 | 浏览器下载：进行中估速 / 无进度退化图标；`downloadResident` 仍夹在音乐与专注之间 |
+| 2026-11-23 | 下载完成常驻：`downloadResident` 权重夹在音乐与专注之间；布局矩阵 64 格 |
 | 2026-11-23 | Focus tip 半岛方案 03（模式色光点 / 关态空心环）；C 类 secondary |
 | 2026-11-23 | Focus 自定义/私有图标走私有 CoreGlyphs；catalog `system-focus-tip-miss` occurrences=2 |
 | 2026-11-23 | 撤回 tip「上线默认开」；网络/Focus 默认关，打开再申请定位/完全磁盘访问 |

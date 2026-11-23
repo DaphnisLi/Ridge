@@ -19,6 +19,7 @@ struct IslandStyleGallerySection: View {
             galleryGroup(title: L10n.TestLab.galleryPeripheral) { tipPeripheralRows }
             galleryGroup(title: L10n.TestLab.galleryMacBattery) { tipMacBatteryRows }
             galleryGroup(title: L10n.TestLab.gallerySystemFocus) { tipSystemFocusRows }
+            galleryGroup(title: L10n.TestLab.galleryDownloadComplete) { tipDownloadCompleteRows }
             galleryGroup(title: L10n.TestLab.galleryCapture) { tipCaptureRows }
             galleryGroup(title: L10n.TestLab.galleryMedia) { liveMediaRows }
             galleryGroup(title: L10n.TestLab.galleryFocus) { liveFocusRows }
@@ -205,6 +206,33 @@ struct IslandStyleGallerySection: View {
                 onTap: { harness.presentSystemFocusTip(kind: .off) }
             ) {
                 SystemFocusNoticeCard.previewSample(preview: .off, flushSide: .trailing)
+            }
+        }
+    }
+
+    private var tipDownloadCompleteRows: some View {
+        galleryRow(title: L10n.TestLab.sectionStates, columns: 2) {
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryDownloadDownloading, half: false),
+                onTap: { harness.presentDownloadDownloadingSample() }
+            ) {
+                DownloadCompactStandbyView.previewSample(
+                    fileName: "Archive.zip",
+                    phase: .downloading,
+                    speedBytesPerSecond: 2_400_000
+                )
+            }
+            tipCell(
+                label: pairedLabel(L10n.TestLab.galleryDownloadComplete, half: false),
+                onTap: { harness.presentDownloadCompleteSample() }
+            ) {
+                DownloadCompactStandbyView.previewSample(fileName: "Report.pdf")
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryDownloadComplete, half: true),
+                onTap: { harness.presentDownloadCompleteSample() }
+            ) {
+                DownloadCompactStandbyView.previewSample(fileName: "Report.pdf", flushSide: .trailing)
             }
         }
     }

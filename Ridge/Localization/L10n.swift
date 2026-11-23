@@ -447,6 +447,8 @@ enum L10n {
                 return tr("widgets.category.network_link_tip", "网络与 VPN")
             case "builtin.systemFocusTip":
                 return tr("widgets.category.system_focus_tip", "系统专注模式")
+            case "builtin.downloadComplete":
+                return tr("widgets.category.download_complete", "浏览器下载")
             case "builtin.copiedNotice":
                 return tr("widgets.category.copied_notice", "剪贴板提示")
             default:
@@ -491,6 +493,11 @@ enum L10n {
                 return tr("widgets.footer.network_link_tip", "Wi‑Fi / 以太网 / VPN 通断瞬时提示")
             case "builtin.systemFocusTip":
                 return tr("widgets.footer.system_focus_tip", "Focus / 勿扰开·关·切换瞬时提示")
+            case "builtin.downloadComplete":
+                return tr(
+                    "widgets.footer.download_complete",
+                    "下载中估速上岛 · 完成后点按打开或 Reveal"
+                )
             case "builtin.copiedNotice":
                 return tr("widgets.footer.copied_notice", "复制成功时刘海右侧圆岛提示")
             default:
@@ -517,6 +524,7 @@ enum L10n {
             case "builtin.macBatteryTip": return "laptopcomputer"
             case "builtin.networkLinkTip": return "wifi"
             case "builtin.systemFocusTip": return "moon.fill"
+            case "builtin.downloadComplete": return "arrow.down.circle.fill"
             case "builtin.copiedNotice": return "doc.on.clipboard"
             default: return "slider.horizontal.3"
             }
@@ -2457,6 +2465,46 @@ enum L10n {
 
     }
 
+    // MARK: - Download complete（浏览器下载完成常驻）
+
+    enum DownloadComplete {
+        static var widgetName: String { tr("download_complete.widget.name", "浏览器下载") }
+        static var widgetSummary: String {
+            tr(
+                "download_complete.widget.summary",
+                "主流浏览器下载中估速上岛；无进度时仅图标。完成后点按打开或在 Finder 中显示"
+            )
+        }
+        static var doneBadge: String { tr("download_complete.badge.done", "下载完成") }
+        static var downloadingBadge: String {
+            tr("download_complete.badge.downloading", "下载中")
+        }
+        static var downloadingPlaceholderName: String {
+            tr("download_complete.name.placeholder", "正在下载")
+        }
+        static var tapHint: String {
+            tr("download_complete.a11y.tap_hint", "打开文件或在 Finder 中显示")
+        }
+        static var tapHintDownloading: String {
+            tr("download_complete.a11y.tap_hint_downloading", "在 Finder 中显示下载中的文件")
+        }
+        static var clickActionTitle: String {
+            tr("download_complete.settings.click_title", "完成后的点按操作")
+        }
+        static var clickActionSubtitle: String {
+            tr(
+                "download_complete.settings.click_subtitle",
+                "仅对已完成项生效；进行中点按一律在 Finder 中显示。打开失败时回退到 Reveal"
+            )
+        }
+        static var openDefaultApp: String {
+            tr("download_complete.settings.open_default", "用默认 App 打开")
+        }
+        static var revealInFinder: String {
+            tr("download_complete.settings.reveal_finder", "在 Finder 中显示")
+        }
+    }
+
     // MARK: - System Focus tip（系统 Focus / 勿扰；与专注计时无关）
 
     enum SystemFocus {
@@ -3679,6 +3727,34 @@ enum L10n {
             )
         }
 
+        static var downloadCompleteTitle: String {
+            tr("test_lab.download_complete.title", "浏览器下载")
+        }
+        static var downloadCompleteSubtitle: String {
+            tr(
+                "test_lab.download_complete.subtitle",
+                "挂进行中（估速）或完成样张；完成后点按按设置打开或 Reveal。"
+            )
+        }
+        static var downloadCompletePresent: String {
+            tr("test_lab.download_complete.present", "挂完成")
+        }
+        static var downloadCompletePresentDownloading: String {
+            tr("test_lab.download_complete.present_downloading", "挂下载中")
+        }
+        static var downloadCompleteClear: String {
+            tr("test_lab.download_complete.clear", "撤常驻")
+        }
+        static var statusDownloadComplete: String {
+            tr("test_lab.status.download_complete", "下载：已挂完成样张常驻")
+        }
+        static var statusDownloadDownloading: String {
+            tr("test_lab.status.download_downloading", "下载：已挂进行中样张常驻")
+        }
+        static var statusDownloadCleared: String {
+            tr("test_lab.status.download_cleared", "下载：已撤常驻")
+        }
+
         static var systemFocusTitle: String { tr("test_lab.system_focus.title", "系统专注模式") }
         static var systemFocusSubtitle: String {
             tr(
@@ -3767,6 +3843,12 @@ enum L10n {
         }
         static var gallerySystemFocusOff: String {
             tr("test_lab.gallery.system_focus_off", "已关闭")
+        }
+        static var galleryDownloadComplete: String {
+            tr("test_lab.gallery.download_complete", "下载完成")
+        }
+        static var galleryDownloadDownloading: String {
+            tr("test_lab.gallery.download_downloading", "下载中")
         }
         static var galleryAI: String { tr("test_lab.gallery.ai", "AI 额度") }
         static var galleryProcess: String { tr("test_lab.gallery.process", "进程结束") }

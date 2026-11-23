@@ -2155,6 +2155,7 @@ final class RegressionCatalogTests: XCTestCase {
             "builtin.systemFocusTip.onUntil",
             "builtin.systemFocusTip.onOpened",
             "builtin.systemFocusTip.off",
+            "builtin.downloadComplete",
         ]
         for id in tipIDs {
             XCTAssertTrue(
@@ -2312,11 +2313,13 @@ final class RegressionCatalogTests: XCTestCase {
         let macBattery = order.firstIndex(of: "builtin.macBatteryTip")!
         let network = order.firstIndex(of: "builtin.networkLinkTip")!
         let systemFocus = order.firstIndex(of: "builtin.systemFocusTip")!
+        let download = order.firstIndex(of: "builtin.downloadComplete")!
         let media = order.firstIndex(of: "builtin.media")!
         XCTAssertEqual(peripheral + 1, macBattery)
         XCTAssertEqual(macBattery + 1, network)
         XCTAssertEqual(network + 1, systemFocus)
-        XCTAssertEqual(systemFocus + 1, media)
+        XCTAssertEqual(systemFocus + 1, download)
+        XCTAssertEqual(download + 1, media)
         XCTAssertEqual(media + 1, focus)
         XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
         XCTAssertEqual(order.last, "system.controlDeck.projects")
@@ -2337,6 +2340,7 @@ final class RegressionCatalogTests: XCTestCase {
                 "builtin.macBatteryTip",
                 "builtin.networkLinkTip",
                 "builtin.systemFocusTip",
+                "builtin.downloadComplete",
                 "builtin.media",
                 "builtin.focusTimer",
                 "builtin.worldClock",
@@ -2351,6 +2355,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.macBatteryTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.networkLinkTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.systemFocusTip"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.downloadComplete"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.copiedNotice"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.media"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.battery"), .live)
@@ -2365,7 +2370,56 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.macBatteryTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.networkLinkTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.systemFocusTip"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.downloadComplete"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.copiedNotice"))
+    }
+
+    @MainActor
+    func test_downloadComplete_layoutBetweenMediaAndFocus() {
+        // 仅下载
+        var only = IslandNoticeSlots(downloadResident: true)
+        XCTAssertEqual(only.resolvedLayout, .fullDownload)
+        // 播放盖下载
+        only.mediaResident = true
+        XCTAssertEqual(only.resolvedLayout, .fullMedia)
+        only.mediaResident = false
+        // 下载 + 专注
+        only.focusResident = true
+        XCTAssertEqual(
+            only.resolvedLayout,
+            .dual(left: .download, right: .focus)
+        )
+        // 点击动作默认打开
+        XCTAssertEqual(
+            DownloadCompleteSettings.shared.clickAction,
+            .openWithDefaultApp
+        )
+    }
+
+    func test_downloadTransferFormatting_speedAndProgressDegrade() {
+        XCTAssertNil(DownloadTransferFormatting.speedText(bytesPerSecond: nil))
+        XCTAssertNil(DownloadTransferFormatting.speedText(bytesPerSecond: 100))
+        let text = DownloadTransferFormatting.speedText(bytesPerSecond: 2_400_000)
+        XCTAssertNotNil(text)
+        XCTAssertTrue(text?.hasSuffix("/s") == true)
+
+        let downloading = DownloadCompleteItem(
+            path: "/tmp/a.crdownload",
+            fileName: "a.zip",
+            phase: .downloading,
+            bytesReceived: 500,
+            totalBytes: nil
+        )
+        XCTAssertNil(downloading.progressFraction)
+
+        let withTotal = DownloadCompleteItem(
+            path: "/tmp/a.crdownload",
+            fileName: "a.zip",
+            phase: .downloading,
+            bytesReceived: 50,
+            totalBytes: 100
+        )
+        XCTAssertEqual(withTotal.progressFraction, 0.5)
     }
 
     func test_systemFocusTip_detailAndOffSymbol() {

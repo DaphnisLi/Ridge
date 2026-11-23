@@ -383,6 +383,21 @@ final class IslandTestHarness: ObservableObject {
         note(L10n.TestLab.statusSystemFocusTip(kind.rawValue))
     }
 
+    func presentDownloadCompleteSample() {
+        DownloadCompleteSession.shared.presentSample()
+        note(L10n.TestLab.statusDownloadComplete)
+    }
+
+    func presentDownloadDownloadingSample() {
+        DownloadCompleteSession.shared.presentDownloadingSample()
+        note(L10n.TestLab.statusDownloadDownloading)
+    }
+
+    func clearDownloadCompleteSample() {
+        DownloadCompleteSession.shared.clearPending(reason: "testLabClear")
+        note(L10n.TestLab.statusDownloadCleared)
+    }
+
     // MARK: - Control deck
 
     func openControlDeck(pane: ControlDeckSettings.Pane) {

@@ -105,10 +105,15 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
         exclusive: Bool = false,
         meetingOn: Bool = false,
         media: Bool = false,
+        download: Bool = false,
         focus: Bool = false,
         secondary: IslandNoticePayload? = nil
     ) -> IslandNoticeSlots {
-        var slots = IslandNoticeSlots(focusResident: focus, mediaResident: media)
+        var slots = IslandNoticeSlots(
+            focusResident: focus,
+            mediaResident: media,
+            downloadResident: download
+        )
         if exclusive {
             slots.primary = self.exclusive
         } else if meetingOn {
@@ -118,15 +123,16 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
         return slots
     }
 
-    // MARK: - 1. resolvedLayout 真值表（会议 × 播放 × 专注 × C）
+    // MARK: - 1. resolvedLayout 真值表（会议 × 播放 × 下载 × 专注 × C）
 
-    /// 16 格穷举 + 独占压过一切；与 `IslandNoticeSlotPolicy.resolvedLayout` 一一对应。
+    /// 穷举 + 独占压过一切；与 `IslandNoticeSlotPolicy.resolvedLayout` 一一对应。
     func test_islandNoticeLayoutMatrix_resolvedLayoutTruthTable() {
         struct Row {
             let name: String
             let exclusive: Bool
             let meeting: Bool
             let media: Bool
+            let download: Bool
             let focus: Bool
             let hasC: Bool
             let expected: IslandNoticeLayout
@@ -138,56 +144,69 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             for exclusive in [false, true] {
                 for meetingOn in [false, true] {
                     for media in [false, true] {
-                        for focus in [false, true] {
-                            for hasC in [false, true] {
-                                let name = [
-                                    exclusive ? "A" : "-",
-                                    meetingOn ? "M" : "-",
-                                    media ? "P" : "-",
-                                    focus ? "F" : "-",
-                                    hasC ? "C" : "-"
-                                ].joined()
-                                let expected: IslandNoticeLayout
-                                if exclusive {
-                                    expected = .fullNotice(self.exclusive)
-                                } else if meetingOn {
-                                    if hasC {
-                                        expected = .dual(left: .notice(meeting), right: .notice(c))
+                        for download in [false, true] {
+                            for focus in [false, true] {
+                                for hasC in [false, true] {
+                                    let name = [
+                                        exclusive ? "A" : "-",
+                                        meetingOn ? "M" : "-",
+                                        media ? "P" : "-",
+                                        download ? "D" : "-",
+                                        focus ? "F" : "-",
+                                        hasC ? "C" : "-"
+                                    ].joined()
+                                    let expected: IslandNoticeLayout
+                                    if exclusive {
+                                        expected = .fullNotice(self.exclusive)
+                                    } else if meetingOn {
+                                        if hasC {
+                                            expected = .dual(left: .notice(meeting), right: .notice(c))
+                                        } else if focus {
+                                            expected = .dual(left: .notice(meeting), right: .focus)
+                                        } else {
+                                            expected = .fullNotice(meeting)
+                                        }
+                                    } else if media {
+                                        // 播放盖下载
+                                        if hasC {
+                                            expected = .dual(left: .media, right: .notice(c))
+                                        } else if focus {
+                                            expected = .dual(left: .media, right: .focus)
+                                        } else {
+                                            expected = .fullMedia
+                                        }
+                                    } else if download {
+                                        if hasC {
+                                            expected = .dual(left: .download, right: .notice(c))
+                                        } else if focus {
+                                            expected = .dual(left: .download, right: .focus)
+                                        } else {
+                                            expected = .fullDownload
+                                        }
+                                    } else if hasC {
+                                        if focus {
+                                            expected = .dual(left: .focus, right: .notice(c))
+                                        } else {
+                                            expected = .fullNotice(c)
+                                        }
                                     } else if focus {
-                                        expected = .dual(left: .notice(meeting), right: .focus)
+                                        expected = .fullFocus
                                     } else {
-                                        expected = .fullNotice(meeting)
+                                        expected = .empty
                                     }
-                                } else if media {
-                                    if hasC {
-                                        expected = .dual(left: .media, right: .notice(c))
-                                    } else if focus {
-                                        expected = .dual(left: .media, right: .focus)
-                                    } else {
-                                        expected = .fullMedia
-                                    }
-                                } else if hasC {
-                                    if focus {
-                                        expected = .dual(left: .focus, right: .notice(c))
-                                    } else {
-                                        expected = .fullNotice(c)
-                                    }
-                                } else if focus {
-                                    expected = .fullFocus
-                                } else {
-                                    expected = .empty
-                                }
-                                list.append(
-                                    Row(
-                                        name: name,
-                                        exclusive: exclusive,
-                                        meeting: meetingOn,
-                                        media: media,
-                                        focus: focus,
-                                        hasC: hasC,
-                                        expected: expected
+                                    list.append(
+                                        Row(
+                                            name: name,
+                                            exclusive: exclusive,
+                                            meeting: meetingOn,
+                                            media: media,
+                                            download: download,
+                                            focus: focus,
+                                            hasC: hasC,
+                                            expected: expected
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
@@ -196,13 +215,14 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             return list
         }()
 
-        XCTAssertEqual(rows.count, 32, "A×会议×播放×专注×C 应为 32 格")
+        XCTAssertEqual(rows.count, 64, "A×会议×播放×下载×专注×C 应为 64 格")
 
         for row in rows {
             let slots = makeSlots(
                 exclusive: row.exclusive,
                 meetingOn: row.meeting,
                 media: row.media,
+                download: row.download,
                 focus: row.focus,
                 secondary: row.hasC ? c : nil
             )
@@ -221,7 +241,7 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                 XCTAssertFalse(slots.usesDualFlushChrome, "满岛 A/会议非 dualFlush: \(row.name)")
             case .fullNotice(let p) where p.usesDualFlushSoloChrome:
                 XCTAssertTrue(slots.usesDualFlushChrome, "RAM/进程结束单独须 dualFlush: \(row.name)")
-            case .fullMedia, .fullFocus, .empty:
+            case .fullMedia, .fullDownload, .fullFocus, .empty:
                 XCTAssertFalse(slots.usesDualFlushChrome, "\(row.name)")
                 XCTAssertFalse(slots.anyUsesNotchWingChrome, "\(row.name)")
             default:
@@ -743,6 +763,16 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                 XCTAssertEqual(right, .notice(tip), tip.sourceTag)
             } else {
                 XCTFail("应为 dual: \(tip.sourceTag)")
+            }
+
+            // 有下载无播放：左必为 download
+            var download = IslandNoticeSlots(downloadResident: true)
+            download = IslandNoticeSlotPolicy.applying(incoming: tip, to: download)!
+            if case .dual(let left, let right) = download.resolvedLayout {
+                XCTAssertEqual(left, .download, tip.sourceTag)
+                XCTAssertEqual(right, .notice(tip), tip.sourceTag)
+            } else {
+                XCTFail("下载+C 应为 dual: \(tip.sourceTag)")
             }
 
             // 有会议：左必为会议

@@ -49,6 +49,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if WidgetSettings.shared.isEnabled(SystemFocusTipWidget.manifest.id) {
             SystemFocusSession.shared.start()
         }
+        if WidgetSettings.shared.isEnabled(DownloadCompleteTipWidget.manifest.id) {
+            DownloadCompleteSession.shared.start()
+        }
         LoginItemService.shared.refresh()
         UpdateService.shared.start()
         // 首次启动引导：下一拍再出，避免与岛初始化抢主线程。

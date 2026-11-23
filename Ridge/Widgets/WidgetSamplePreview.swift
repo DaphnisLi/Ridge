@@ -442,7 +442,8 @@ enum WidgetSamplePreview {
              "builtin.systemFocusTip.onUntil",
              "builtin.systemFocusTip.onOpened",
              "builtin.systemFocusTip.on",
-             "builtin.systemFocusTip.off":
+             "builtin.systemFocusTip.off",
+             "builtin.downloadComplete":
             return true
         default:
             return false
@@ -501,6 +502,8 @@ enum WidgetSamplePreview {
             systemFocusTipSample(preview: .onOpened, compact: compact)
         case "builtin.systemFocusTip.off":
             systemFocusTipSample(preview: .off, compact: compact)
+        case "builtin.downloadComplete":
+            downloadCompleteSample(compact: compact)
         case "builtin.copiedNotice":
             copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":
@@ -633,6 +636,16 @@ enum WidgetSamplePreview {
         compact: Bool
     ) -> some View {
         SystemFocusNoticeCard.previewSample(preview: preview, compact: compact)
+    }
+
+    private static func downloadCompleteSample(compact: Bool) -> some View {
+        _ = compact
+        // 库卡默认展「进行中 + 估速」；无进度条（退化口径）。
+        return DownloadCompactStandbyView.previewSample(
+            fileName: "Archive.zip",
+            phase: .downloading,
+            speedBytesPerSecond: 2_400_000
+        )
     }
 
     private static func copiedNoticeSample(compact: Bool) -> some View {

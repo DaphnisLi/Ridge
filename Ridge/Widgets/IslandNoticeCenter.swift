@@ -278,6 +278,15 @@ final class IslandNoticeCenter: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.syncResidents() }
             .store(in: &residentObservers)
+        DownloadCompleteSession.shared.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.syncResidents() }
+            .store(in: &residentObservers)
+        syncResidents()
+    }
+
+    /// 下载会话主动推一次常驻同步（与 objectWillChange 互补）。
+    func refreshResidentsFromDownload() {
         syncResidents()
     }
 
@@ -314,13 +323,20 @@ final class IslandNoticeCenter: ObservableObject {
         let focus = FocusTimerSession.shared.showsCompactStandby
         // 音乐是 B；可与专注并排（左音乐右专注），mediaResident 跟播放态。
         let media = MediaCompactPresence.isActive
-        guard slots.focusResident != focus || slots.mediaResident != media else { return }
+        // 下载完成常驻：低于音乐、高于专注；有播放时被盖但旗标仍在。
+        let download = DownloadCompactPresence.isActive
+        guard slots.focusResident != focus
+            || slots.mediaResident != media
+            || slots.downloadResident != download
+        else { return }
         var next = slots
         next.focusResident = focus
         next.mediaResident = media
+        next.downloadResident = download
         AppLog.info("IslandNotice", "B/C 常驻旗标", [
             "focus": focus,
             "media": media,
+            "download": download,
             "phase": FocusTimerSession.shared.phase.rawValue,
             "layout": String(describing: next.resolvedLayout)
         ])
@@ -343,6 +359,7 @@ final class IslandNoticeCenter: ObservableObject {
                 "queued": next.secondaryQueue.map(\.id).joined(separator: ","),
                 "focus": next.focusResident,
                 "media": next.mediaResident,
+                "download": next.downloadResident,
                 "layout": String(describing: next.resolvedLayout),
                 "dualFlush": next.usesDualFlushChrome,
                 "orbTip": next.anyUsesNotchRightOrbChrome,
@@ -354,8 +371,8 @@ final class IslandNoticeCenter: ObservableObject {
 
     private func prepareLayout(for next: IslandNoticeSlots, triggering payload: IslandNoticePayload?) {
         switch next.resolvedLayout {
-        case .empty, .fullFocus, .fullMedia:
-            // 仅专注 / 仅音乐：收起翼，不预备通知页尺寸。
+        case .empty, .fullFocus, .fullMedia, .fullDownload:
+            // 仅专注 / 仅音乐 / 仅下载：收起翼，不预备通知页尺寸。
             return
         case .dual:
             // 音乐+专注收起双翼走 compactSize；有 tip 的双槽才预备展开尺寸。

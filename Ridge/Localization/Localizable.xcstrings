@@ -12619,5 +12619,258 @@
       }
     }
   },
-  "version": "1.0"
+  "version": "1.0",
+  "widgets.category.download_complete": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "浏览器下载"
+        }
+      }
+    }
+  },
+  "widgets.footer.download_complete": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载中估速上岛 · 完成后点按打开或 Reveal"
+        }
+      }
+    }
+  },
+  "download_complete.widget.name": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "浏览器下载"
+        }
+      }
+    }
+  },
+  "download_complete.widget.summary": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "主流浏览器下载中估速上岛；无进度时仅图标。完成后点按打开或在 Finder 中显示"
+        }
+      }
+    }
+  },
+  "download_complete.badge.done": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载完成"
+        }
+      }
+    }
+  },
+  "download_complete.badge.downloading": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载中"
+        }
+      }
+    }
+  },
+  "download_complete.name.placeholder": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "正在下载"
+        }
+      }
+    }
+  },
+  "download_complete.a11y.tap_hint": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "打开文件或在 Finder 中显示"
+        }
+      }
+    }
+  },
+  "download_complete.a11y.tap_hint_downloading": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在 Finder 中显示下载中的文件"
+        }
+      }
+    }
+  },
+  "download_complete.settings.click_title": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "完成后的点按操作"
+        }
+      }
+    }
+  },
+  "download_complete.settings.click_subtitle": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "仅对已完成项生效；进行中点按一律在 Finder 中显示。打开失败时回退到 Reveal"
+        }
+      }
+    }
+  },
+  "download_complete.settings.open_default": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "用默认 App 打开"
+        }
+      }
+    }
+  },
+  "download_complete.settings.reveal_finder": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "在 Finder 中显示"
+        }
+      }
+    }
+  },
+  "test_lab.download_complete.title": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "浏览器下载"
+        }
+      }
+    }
+  },
+  "test_lab.download_complete.subtitle": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "挂进行中（估速）或完成样张；完成后点按按设置打开或 Reveal。"
+        }
+      }
+    }
+  },
+  "test_lab.download_complete.present": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "挂完成"
+        }
+      }
+    }
+  },
+  "test_lab.download_complete.present_downloading": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "挂下载中"
+        }
+      }
+    }
+  },
+  "test_lab.download_complete.clear": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "撤常驻"
+        }
+      }
+    }
+  },
+  "test_lab.status.download_complete": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载：已挂完成样张常驻"
+        }
+      }
+    }
+  },
+  "test_lab.status.download_downloading": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载：已挂进行中样张常驻"
+        }
+      }
+    }
+  },
+  "test_lab.status.download_cleared": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载：已撤常驻"
+        }
+      }
+    }
+  },
+  "test_lab.gallery.download_complete": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载完成"
+        }
+      }
+    }
+  },
+  "test_lab.gallery.download_downloading": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "下载中"
+        }
+      }
+    }
+  }
 }

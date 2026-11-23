@@ -14,6 +14,7 @@ struct IslandContentView: View {
     @ObservedObject private var nowPlaying = NowPlayingService.shared
     @ObservedObject private var widgetSettings = WidgetSettings.shared
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
+    @ObservedObject private var downloadSession = DownloadCompleteSession.shared
     @State private var shelfDropTargeted = false
 
     private var shelfDropEnabled: Bool {
@@ -32,10 +33,23 @@ struct IslandContentView: View {
         MediaCompactPresence.isActive
     }
 
+    /// 下载完成常驻（有播放时被盖，不在此画）。
+    private var showsDownloadCompactStandby: Bool {
+        DownloadCompactPresence.isActive && !showsMediaCompactStandby
+    }
+
     /// 收起且无 tip：音乐+专注左右双翼。
     private var showsMediaFocusCompactDual: Bool {
         !viewModel.isExpanded
             && showsMediaCompactStandby
+            && focusTimer.showsCompactStandby
+            && !noticeCenter.slots.hasNoticePayload
+    }
+
+    /// 收起且无 tip：下载+专注左右双翼（无音乐时）。
+    private var showsDownloadFocusCompactDual: Bool {
+        !viewModel.isExpanded
+            && showsDownloadCompactStandby
             && focusTimer.showsCompactStandby
             && !noticeCenter.slots.hasNoticePayload
     }
@@ -45,6 +59,15 @@ struct IslandContentView: View {
         let height = NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
         // 音乐 + 专注：贴刘海左右双翼（与 tip dualFlush 同宽）。
         if showsMediaFocusCompactDual {
+            let dual = IslandChrome.preparedDualFlushPanelSize(
+                notchWidth: viewModel.notchWidth,
+                notchHeight: viewModel.notchHeight,
+                rightIsOrb: false
+            )
+            return CGSize(width: NotchGeometry.pixelAlign(dual.width), height: height)
+        }
+        // 下载 + 专注：同宽双翼。
+        if showsDownloadFocusCompactDual {
             let dual = IslandChrome.preparedDualFlushPanelSize(
                 notchWidth: viewModel.notchWidth,
                 notchHeight: viewModel.notchHeight,
@@ -71,7 +94,7 @@ struct IslandContentView: View {
                 height: height
             )
         }
-        if showsMediaCompactStandby {
+        if showsMediaCompactStandby || showsDownloadCompactStandby {
             return CGSize(
                 width: NotchGeometry.pixelAlign(
                     max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.mediaCompactWidth)
@@ -128,8 +151,8 @@ struct IslandContentView: View {
         if runtime.isTransientNoticePage, noticeCenter.slots.usesDualFlushChrome {
             return true
         }
-        // 收起：音乐左 + 专注右，与 tip 双槽同壳。
-        return showsMediaFocusCompactDual
+        // 收起：音乐/下载左 + 专注右，与 tip 双槽同壳。
+        return showsMediaFocusCompactDual || showsDownloadFocusCompactDual
     }
 
     private var usesDualFlushWithRightOrb: Bool {
@@ -283,10 +306,16 @@ struct IslandContentView: View {
         .animation(islandSpring, value: focusTimer.snapshot.elapsedSeconds)
         .animation(islandSpring, value: focusTimerSettings.extendStepMinutes)
         .animation(islandSpring, value: showsMediaCompactStandby)
+        .animation(islandSpring, value: showsDownloadCompactStandby)
+        .animation(islandSpring, value: downloadSession.pending?.path)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
         .onPreferenceChange(IslandPanelSizeKey.self) { size in
-            guard viewModel.isExpanded || focusTimer.showsCompactStandby || showsMediaCompactStandby else { return }
+            guard viewModel.isExpanded
+                || focusTimer.showsCompactStandby
+                || showsMediaCompactStandby
+                || showsDownloadCompactStandby
+            else { return }
             guard size.width > 1, size.height > 1 else { return }
             var resolved = size
             // 番茄：高度始终不低于态下限；宽度仅终局抬升（选时等由内容测量，避免右侧虚空）。
@@ -357,6 +386,13 @@ struct IslandContentView: View {
                 "title": String((nowPlaying.snapshot?.title ?? "").prefix(24))
             ])
         }
+        .onChange(of: showsDownloadCompactStandby) { _, active in
+            syncCompactPanelSizeIfNeeded()
+            AppLog.info("Download", "下载小岛已更新", [
+                "active": active,
+                "name": downloadSession.pending?.fileName ?? ""
+            ])
+        }
         .onChange(of: shelfDropTargeted) { _, targeted in
             let active = targeted && shelfDropEnabled
             IslandController.shared?.setShelfDropTargeted(active)
@@ -417,6 +453,7 @@ private struct IslandBody: View {
     @ObservedObject private var nowPlaying = NowPlayingService.shared
     @ObservedObject private var widgetSettings = WidgetSettings.shared
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
+    @ObservedObject private var downloadSession = DownloadCompleteSession.shared
     @Environment(\.islandPalette) private var palette
 
     /// 专注终局：贴刘海双翼 tip（顶距 0），勿走展开页大顶空。
@@ -460,9 +497,20 @@ private struct IslandBody: View {
         MediaCompactPresence.isActive
     }
 
+    private var showsDownloadCompactStandby: Bool {
+        DownloadCompactPresence.isActive && !showsMediaCompactStandby
+    }
+
     /// 收起且无 tip：左音乐右专注。
     private var showsMediaFocusCompactDual: Bool {
         showsMediaCompactStandby
+            && focusTimer.showsCompactStandby
+            && !noticeCenter.slots.hasNoticePayload
+    }
+
+    /// 收起且无 tip：左下载右专注。
+    private var showsDownloadFocusCompactDual: Bool {
+        showsDownloadCompactStandby
             && focusTimer.showsCompactStandby
             && !noticeCenter.slots.hasNoticePayload
     }
@@ -528,6 +576,25 @@ private struct IslandBody: View {
                         onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
                     )
                 }
+            } else if showsDownloadFocusCompactDual, let item = downloadSession.pending {
+                // 左下载 · 右专注。
+                IslandDualNotchWingRow {
+                    DownloadCompactStandbyView(
+                        item: item,
+                        flushSide: .leading,
+                        bareWingContent: true
+                    )
+                } right: {
+                    FocusTimerStandbyView(
+                        snapshot: focusTimer.snapshot,
+                        flushSide: .trailing,
+                        bareWingContent: true,
+                        extendStepMinutes: focusTimerSettings.extendStepMinutes,
+                        onExtend: { FocusTimerSession.shared.extend() },
+                        onFinishEarly: { FocusTimerSession.shared.finishEarly() },
+                        onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
+                    )
+                }
             } else if focusTimer.showsCompactStandby {
                 // 倒计时随 +Nm；正计时按分秒占位、出小时加宽；内边距在 StandbyView 内。
                 let standbyW: CGFloat = {
@@ -570,6 +637,13 @@ private struct IslandBody: View {
                 }
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint(L10n.Media.previewStageExpanded)
+            } else if showsDownloadCompactStandby, let item = downloadSession.pending {
+                DownloadCompactStandbyView(item: item)
+                    .padding(.horizontal, 10)
+                    .frame(
+                        width: NotchGeometry.mediaCompactWidth,
+                        height: compactContentHeight
+                    )
             } else {
                 Color.clear
                     .frame(width: 1, height: 1)

@@ -313,8 +313,8 @@ private struct IslandNoticeCardView: View {
 
     var body: some View {
         switch noticeCenter.slots.resolvedLayout {
-        case .empty, .fullFocus, .fullMedia:
-            // 仅专注 / 仅音乐：收起翼由 IslandBody 画，不上通知页内容。
+        case .empty, .fullFocus, .fullMedia, .fullDownload:
+            // 仅专注 / 仅音乐 / 仅下载：收起翼由 IslandBody 画，不上通知页内容。
             Color.clear.frame(width: 1, height: 1)
         case .fullNotice(let payload):
             noticeBody(payload, compact: false)
@@ -351,6 +351,14 @@ private struct IslandNoticeCardView: View {
                     artwork: snap.artwork,
                     elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
                     isPlaying: snap.isPlaying,
+                    flushSide: flushSide,
+                    bareWingContent: true
+                )
+            }
+        case .download:
+            if let item = DownloadCompleteSession.shared.pending {
+                DownloadCompactStandbyView(
+                    item: item,
                     flushSide: flushSide,
                     bareWingContent: true
                 )

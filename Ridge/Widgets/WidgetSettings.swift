@@ -76,6 +76,9 @@ final class WidgetSettings: ObservableObject {
             if id == SystemFocusTipWidget.manifest.id {
                 SystemFocusSession.shared.start()
             }
+            if id == DownloadCompleteTipWidget.manifest.id {
+                DownloadCompleteSession.shared.start()
+            }
             Task { @MainActor in
                 await WidgetPermissionGate.ensureOnEnable(widgetID: id)
             }
@@ -87,6 +90,8 @@ final class WidgetSettings: ObservableObject {
             NetworkLinkSession.shared.stop()
         } else if id == SystemFocusTipWidget.manifest.id {
             SystemFocusSession.shared.stop()
+        } else if id == DownloadCompleteTipWidget.manifest.id {
+            DownloadCompleteSession.shared.stop()
         }
     }
 

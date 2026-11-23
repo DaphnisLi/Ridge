@@ -29,6 +29,7 @@ struct IslandTestLabPane: View {
                 macBatteryCard
                 networkLinkCard
                 systemFocusCard
+                downloadCompleteCard
                 captureCard
                 mediaCard
                 focusCard
@@ -337,6 +338,29 @@ struct IslandTestLabPane: View {
                 }),
                 (L10n.TestLab.systemFocusTipOff, {
                     harness.presentSystemFocusTip(kind: .off)
+                })
+            ])
+        }
+    }
+
+    // MARK: Download complete
+
+    private var downloadCompleteCard: some View {
+        labCard(
+            title: L10n.TestLab.downloadCompleteTitle,
+            symbol: "arrow.down.circle.fill",
+            subtitle: L10n.TestLab.downloadCompleteSubtitle
+        ) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.downloadCompletePresentDownloading, {
+                    harness.presentDownloadDownloadingSample()
+                }),
+                (L10n.TestLab.downloadCompletePresent, {
+                    harness.presentDownloadCompleteSample()
+                }),
+                (L10n.TestLab.downloadCompleteClear, {
+                    harness.clearDownloadCompleteSample()
                 })
             ])
         }

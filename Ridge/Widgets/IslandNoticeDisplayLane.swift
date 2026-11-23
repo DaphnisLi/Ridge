@@ -4,21 +4,23 @@ import Foundation
 ///
 /// 1. **取色 / 框选 / 会议**（最高）
 /// 2. **播放**
-/// 3. **专注**
-/// 4. **C 类短提示**（复制 / 久坐 / 外设 / 额度 / RAM / 进程结束…）
+/// 3. **下载完成常驻**（低于音乐、高于专注与 C）
+/// 4. **专注**
+/// 5. **C 类短提示**（复制 / 久坐 / 外设 / 额度 / RAM / 进程结束…）
 ///
 /// 形态：
 /// - 取色 / 框选 → 满岛独占（清 C 队列）
-/// - 会议 + 播放 → **会议满岛**（盖音乐）
-/// - 左会议或音乐 + 右 C 或专注
-/// - 左专注 + 右 C（无会议/音乐时）
+/// - 会议 + 播放 / 下载 → **会议满岛**（盖音乐/下载）
+/// - 播放 + 下载 → **只显音乐**（下载会话保留）
+/// - 左会议 / 音乐 / 下载 + 右 C 或专注
+/// - 左专注 + 右 C（无会议/音乐/下载时）
 /// - 专注已在右翼时来了 C → C **先盖住**专注；C 约 3s 收起后专注回到右翼
 ///
 /// 多条非专注 C：**FIFO**，同时只一条。
 /// 凡 `.dual` 一律 **dualFlush** 左右小岛，禁止再抬会议双翼宽。
 ///
 /// - exclusive (A)：取色 / 框选
-/// - primary (B)：会议 tip（音乐常驻走 `mediaResident`）
+/// - primary (B)：会议 tip（音乐 / 下载常驻见 `mediaResident` / `downloadResident`）
 /// - secondary (C)：短提示
 enum IslandNoticeDisplayLane: Int, Equatable, Comparable {
     case secondary = 0
@@ -36,6 +38,7 @@ enum IslandNoticeLayout: Equatable {
     case fullNotice(IslandNoticePayload)
     case fullFocus
     case fullMedia
+    case fullDownload
     case dual(left: IslandNoticeLayoutSide, right: IslandNoticeLayoutSide)
 }
 
@@ -43,6 +46,7 @@ enum IslandNoticeLayoutSide: Equatable {
     case notice(IslandNoticePayload)
     case focus
     case media
+    case download
 }
 
 /// 主 / 次 / 常驻旗标快照。
@@ -53,16 +57,18 @@ struct IslandNoticeSlots: Equatable {
     var secondary: IslandNoticePayload?
     /// 等待中的 C（FIFO；出现顺序）。
     var secondaryQueue: [IslandNoticePayload] = []
-    /// 专注计时中（权重低于播放；有播放时居右，被 C 暂盖后会回到右翼）。
+    /// 专注计时中（权重低于下载；有播放/下载时居右，被 C 暂盖后会回到右翼）。
     var focusResident: Bool = false
     /// 音乐播放中（权重低于会议；会议在时满岛会议盖住音乐）。
     var mediaResident: Bool = false
+    /// 下载完成待处理（权重低于音乐、高于专注；有播放时被盖）。
+    var downloadResident: Bool = false
 
     var current: IslandNoticePayload? { primary ?? secondary }
 
     var isEmpty: Bool {
         primary == nil && secondary == nil && secondaryQueue.isEmpty
-            && !focusResident && !mediaResident
+            && !focusResident && !mediaResident && !downloadResident
     }
 
     var hasNoticePayload: Bool {
@@ -97,7 +103,7 @@ struct IslandNoticeSlots: Equatable {
 
     var anyUsesNotchWingChrome: Bool {
         switch resolvedLayout {
-        case .fullFocus, .fullMedia, .dual, .empty:
+        case .fullFocus, .fullMedia, .fullDownload, .dual, .empty:
             // 双槽一律左右 flush 小岛，勿抬会议双翼宽；单独专注/音乐不走翼 tip。
             return false
         case .fullNotice(let p):
@@ -180,7 +186,7 @@ struct IslandNoticeSlots: Equatable {
 
     var anyUsesNotchRightOrbChrome: Bool {
         // 「已复制」单独时用圆岛；与 B/专注并排时走翼宽，圆岛画在右翼即可。
-        if focusResident || mediaResident { return false }
+        if focusResident || mediaResident || downloadResident { return false }
         if primary != nil { return false }
         return secondary?.usesNotchRightOrbChrome == true
     }
@@ -262,7 +268,8 @@ enum IslandNoticeSlotPolicy {
         guard let id else {
             return IslandNoticeSlots(
                 focusResident: slots.focusResident,
-                mediaResident: slots.mediaResident
+                mediaResident: slots.mediaResident,
+                downloadResident: slots.downloadResident
             )
         }
         var next = slots
@@ -293,36 +300,50 @@ enum IslandNoticeSlotPolicy {
         return next
     }
 
-    /// 布局解析（权重：取色/框选/会议 > 播放 > 专注 > C）。
-    /// 会议盖播放满岛；左=会议|音乐|专注，右=C|专注；C 暂盖右翼专注，撤后专注回右。
+    static func withDownloadResident(_ enabled: Bool, slots: IslandNoticeSlots) -> IslandNoticeSlots {
+        var next = slots
+        next.downloadResident = enabled
+        return next
+    }
+
+    /// 布局解析（权重：取色/框选/会议 > 播放 > 下载 > 专注 > C）。
+    /// 会议盖播放/下载满岛；播放盖下载；左=会议|音乐|下载|专注，右=C|专注。
     static func resolvedLayout(_ slots: IslandNoticeSlots) -> IslandNoticeLayout {
         if let primary = slots.primary, primary.displayLane == .exclusive {
             return .fullNotice(primary)
         }
 
-        // B：会议 tip（可与 mediaResident 并存；布局层始终盖音乐）
+        // B：会议 tip（可与 media/download 并存；布局层始终盖）
         if let primary = slots.primary {
             if let secondary = slots.secondary {
-                // 两 B + C，或会议 + C → 左会议右 C；勿再把音乐摆上右/左翼
                 return .dual(left: .notice(primary), right: .notice(secondary))
             }
             if slots.focusResident {
                 return .dual(left: .notice(primary), right: .focus)
             }
-            // 仅会议，或会议+音乐两 B：只展示加入会议满岛 tip
             return .fullNotice(primary)
         }
 
-        // B：音乐（无会议时才生效）
+        // B：音乐（无会议时才生效；盖住下载）
         if slots.mediaResident {
             if let secondary = slots.secondary {
-                // 短 C 占右；专注与 C 同时时专注让路。
                 return .dual(left: .media, right: .notice(secondary))
             }
             if slots.focusResident {
                 return .dual(left: .media, right: .focus)
             }
             return .fullMedia
+        }
+
+        // 下载完成常驻（低于音乐、高于专注）
+        if slots.downloadResident {
+            if let secondary = slots.secondary {
+                return .dual(left: .download, right: .notice(secondary))
+            }
+            if slots.focusResident {
+                return .dual(left: .download, right: .focus)
+            }
+            return .fullDownload
         }
 
         // 无 B：专注左 + 短 C 右；或单独短 C 满岛；或仅专注

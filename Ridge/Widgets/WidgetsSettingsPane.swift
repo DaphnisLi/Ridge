@@ -576,6 +576,7 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.macBatteryTip"
             || widgetID == "builtin.networkLinkTip"
             || widgetID == "builtin.systemFocusTip"
+            || widgetID == "builtin.downloadComplete"
             || widgetID == "builtin.copiedNotice"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".shelf"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".volume"
@@ -629,6 +630,8 @@ private struct WidgetPreviewPane: View {
             NetworkLinkTipWidgetConfigSection()
         } else if widgetID == "builtin.systemFocusTip" {
             SystemFocusTipWidgetConfigSection()
+        } else if widgetID == "builtin.downloadComplete" {
+            DownloadCompleteTipWidgetConfigSection()
         } else if widgetID == "builtin.copiedNotice" {
             CopiedNoticeWidgetConfigSection()
         } else if widgetID == ControlDeckSettings.pageIDPrefix + ".shelf" {
