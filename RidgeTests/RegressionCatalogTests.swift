@@ -2471,7 +2471,7 @@ final class RegressionCatalogTests: XCTestCase {
             FocusTimerFormatting.countUpClock(1 * 3600 + 27 * 60 + 32),
             "01:27:32"
         )
-        // 专注左环须与媒体封面同径；库卡待命外框 290×30（详情另走 standby）。
+        // 库卡待命外框 290×30（详情另走 standby）；环径令牌保留供双翼小标对齐参考。
         XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)
         XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
         XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
@@ -2526,5 +2526,93 @@ final class RegressionCatalogTests: XCTestCase {
         )
         IslandNoticeCenter.shared.dismiss(id: "meeting.lead.media-hover-guard")
         XCTAssertNil(IslandNoticeCenter.shared.current)
+    }
+
+    /// media-compact-not-resident：左翼/刘海开媒体；右专注翼排除；仅专注翼不算。
+    func test_mediaCompactNotResident_dualWingHoverCountsAsExpand() {
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: false,
+                pointerOverCompactPanel: true,
+                mediaCompactVisible: true,
+                hoverExpandSuppressed: false,
+                pointerOverFocusTrailingWing: false
+            ),
+            "播放小岛可见时悬停左翼须能开媒体"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: false,
+                pointerOverCompactPanel: true,
+                mediaCompactVisible: true,
+                hoverExpandSuppressed: false,
+                pointerOverFocusTrailingWing: true
+            ),
+            "右专注翼不得因悬停开媒体（留给 +Nm/暂停）"
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: true,
+                pointerOverCompactPanel: false,
+                mediaCompactVisible: true,
+                hoverExpandSuppressed: false,
+                pointerOverFocusTrailingWing: false
+            ),
+            "悬停刘海仍须展开"
+        )
+        // 刘海命中优先；即便误标 trailing 也不应挡刘海（调用方应保证互斥，闸门仍以 trailing 为准）。
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: true,
+                pointerOverCompactPanel: false,
+                mediaCompactVisible: true,
+                hoverExpandSuppressed: false,
+                pointerOverFocusTrailingWing: true
+            ),
+            "右翼标记时即便 notchHover 也不开媒体"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: false,
+                pointerOverCompactPanel: true,
+                mediaCompactVisible: false,
+                hoverExpandSuppressed: false
+            ),
+            "仅专注待命翼不得因悬停开媒体"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: false,
+                pointerOverCompactPanel: true,
+                mediaCompactVisible: true,
+                hoverExpandSuppressed: true
+            ),
+            "拖文件松手冷却中不得展开"
+        )
+
+        let notch = CGRect(x: 100, y: 0, width: 200, height: 32)
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isPointerOverMediaFocusTrailingWing(
+                mouse: CGPoint(x: 320, y: 16),
+                notchFrame: notch,
+                mediaFocusDualVisible: true
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isPointerOverMediaFocusTrailingWing(
+                mouse: CGPoint(x: 80, y: 16),
+                notchFrame: notch,
+                mediaFocusDualVisible: true
+            ),
+            "左翼不算专注 trailing"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isPointerOverMediaFocusTrailingWing(
+                mouse: CGPoint(x: 320, y: 16),
+                notchFrame: notch,
+                mediaFocusDualVisible: false
+            ),
+            "非双翼时不算"
+        )
     }
 }

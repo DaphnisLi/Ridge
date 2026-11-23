@@ -517,12 +517,16 @@ private struct IslandBody: View {
                     .accessibilityAddTraits(.isButton)
                     .accessibilityHint(L10n.Media.previewStageExpanded)
                 } right: {
+                    // 悬停右翼：倒计时 +Nm/结束，正计时 暂停/结束；勿禁命中。
                     FocusTimerStandbyView(
                         snapshot: focusTimer.snapshot,
                         flushSide: .trailing,
-                        bareWingContent: true
+                        bareWingContent: true,
+                        extendStepMinutes: focusTimerSettings.extendStepMinutes,
+                        onExtend: { FocusTimerSession.shared.extend() },
+                        onFinishEarly: { FocusTimerSession.shared.finishEarly() },
+                        onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
                     )
-                    .allowsHitTesting(false)
                 }
             } else if focusTimer.showsCompactStandby {
                 // 倒计时随 +Nm；正计时按分秒占位、出小时加宽；内边距在 StandbyView 内。

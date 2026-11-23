@@ -153,7 +153,7 @@ struct FocusTimerIslandCardView: View {
 
 struct FocusTimerStandbyView: View {
     let snapshot: FocusTimerSnapshot
-    /// 双槽一侧：timer + MM:SS + 点（窄翼无操作钮）。
+    /// 双槽一侧：闲时 icon+时长；悬停 morph 操作钮（倒计时 +Nm/结束，正计时 暂停/结束）。
     var flushSide: IslandFlushWingStyle.Side? = nil
     /// 真岛双槽：只画内容，不套黑胶囊。
     var bareWingContent: Bool = false
@@ -161,30 +161,13 @@ struct FocusTimerStandbyView: View {
     var onExtend: () -> Void = {}
     var onFinishEarly: () -> Void = {}
     var onTogglePause: () -> Void = {}
+    @State private var isWingHovering = false
+    @State private var wingHoverDismissWork: DispatchWorkItem?
 
     private var isOvertime: Bool { snapshot.phase == .overtime }
     private var isCountUp: Bool { snapshot.isCountUp }
-    /// 正计时绿 / 加时黄 / 倒计时蓝；半块 flush 另用 `flushAccent`，禁止串色。
-    private var ringColor: Color {
-        if isCountUp {
-            return Color(red: 0.45, green: 0.92, blue: 0.58)
-        }
-        return isOvertime
-            ? Color(red: 0.98, green: 0.75, blue: 0.14)
-            : Color(red: 0.0, green: 0.44, blue: 0.92)
-    }
-    private var ringIconColor: Color {
-        if isCountUp {
-            return Color(red: 0.45, green: 0.92, blue: 0.58)
-        }
-        return isOvertime
-            ? Color(red: 1.0, green: 0.84, blue: 0.40)
-            : Color.white.opacity(0.95)
-    }
-    private var ringFill: Color? {
-        isCountUp ? Color(red: 0.10, green: 0.28, blue: 0.18) : nil
-    }
-    private var ringIcon: String {
+    /// 双翼闲时小标：正计时 timer / 加时闹钟 / 倒计时沙漏。
+    private var wingIcon: String {
         if isCountUp { return "timer" }
         return isOvertime ? "alarm.fill" : "hourglass"
     }
@@ -213,35 +196,26 @@ struct FocusTimerStandbyView: View {
     }
 
     private var fullStandbyBody: some View {
-        // 倒计时：左环+剩余，右 +Nm / 停止；正计时：左绿环+已过，右暂停 / 停止。
+        // 倒计时：左剩余，右 +Nm / 停止；正计时：左已过，右暂停 / 停止。无进度环（双翼仍用小标）。
         // 左右 padding 写在内容内，外层勿再叠，否则固定岛宽会被吃掉导致芯片裁切。
         HStack(spacing: 0) {
-            HStack(spacing: 8) {
-                FocusTimerProgressRing(
-                    progress: snapshot.progress,
-                    stroke: ringColor,
-                    icon: ringIcon,
-                    iconColor: ringIconColor,
-                    fill: ringFill
+            Text(clockText)
+                .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(1)
+                // 正计时：先按分秒占位，出小时再加宽；禁止随「仅秒」文案缩列导致被裁。
+                .frame(
+                    minWidth: isCountUp
+                        ? NotchGeometry.focusTimerCountUpClockMinWidth(
+                            elapsedSeconds: snapshot.elapsedSeconds
+                        )
+                        : nil,
+                    alignment: .leading
                 )
-                Text(clockText)
-                    .font(.system(size: 15, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Color.white)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(1)
-                    // 正计时：先按分秒占位，出小时再加宽；禁止随「仅秒」文案缩列导致被裁。
-                    .frame(
-                        minWidth: isCountUp
-                            ? NotchGeometry.focusTimerCountUpClockMinWidth(
-                                elapsedSeconds: snapshot.elapsedSeconds
-                            )
-                            : nil,
-                        alignment: .leading
-                    )
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            .layoutPriority(2)
+                .fixedSize(horizontal: true, vertical: false)
+                .layoutPriority(2)
             Spacer(minLength: 16)
             HStack(spacing: 8) {
                 if isCountUp {
@@ -267,13 +241,65 @@ struct FocusTimerStandbyView: View {
     }
 
     private func wingLeadContent(bare: Bool) -> some View {
-        // 仅双槽半块：外图标 | 时长 | 刘海侧指示点。
+        // 双槽半块：闲时外图标|时长|点；悬停 morph 操作钮（勿开媒体大面板，由 Controller 排除右翼）。
+        // contentShape / onHover 必须在铺满翼槽之后，否则左右 padding / Spacer 一移就收钮。
         let spacer = bare
             ? IslandFlushWingStyle.bareContentSpacerMin
             : CGFloat(4)
-        let row = HStack(spacing: 0) {
+        let core = ZStack {
+            wingIdleRow(spacer: spacer)
+                .opacity(isWingHovering ? 0 : 1)
+                .scaleEffect(isWingHovering ? 0.96 : 1)
+                .allowsHitTesting(!isWingHovering)
+            wingActionsRow
+                .opacity(isWingHovering ? 1 : 0)
+                .scaleEffect(isWingHovering ? 1 : 0.96)
+                .allowsHitTesting(isWingHovering)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(.easeOut(duration: 0.14), value: isWingHovering)
+
+        let filled: AnyView = {
+            if bare {
+                return AnyView(core.islandBareFlushWingContent())
+            }
+            return AnyView(
+                IslandFlushWingCapsule(side: flushSide ?? .leading) { core }
+            )
+        }()
+
+        return AnyView(
+            filled
+                .contentShape(Rectangle())
+                .onHover { hovering in
+                    wingHoverDismissWork?.cancel()
+                    wingHoverDismissWork = nil
+                    if hovering {
+                        if !isWingHovering {
+                            AppLog.debug("FocusTimer", "双翼专注悬停：展示操作钮", [
+                                "countUp": isCountUp,
+                                "overtime": isOvertime
+                            ])
+                        }
+                        isWingHovering = true
+                    } else {
+                        // 短宽限：morph / 点按瞬间出界不立刻收钮。
+                        let work = DispatchWorkItem {
+                            isWingHovering = false
+                        }
+                        wingHoverDismissWork = work
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+                    }
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("\(statusLabel)，\(clockText)")
+        )
+    }
+
+    private func wingIdleRow(spacer: CGFloat) -> some View {
+        HStack(spacing: 0) {
             HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
-                Image(systemName: ringIcon)
+                Image(systemName: wingIcon)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(flushAccent)
                     .symbolRenderingMode(.hierarchical)
@@ -288,15 +314,23 @@ struct FocusTimerStandbyView: View {
                 .fill(Color.white.opacity(isOvertime || isCountUp ? 0.55 : 0.40))
                 .frame(width: 4, height: 4)
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(statusLabel)，\(clockText)")
+    }
 
-        if bare {
-            return AnyView(row.islandBareFlushWingContent())
+    /// 悬停右翼：倒计时 `+Nm`+结束；正计时 暂停+结束。
+    private var wingActionsRow: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            if isCountUp {
+                FocusTimerStandbyPauseButton(
+                    isPaused: snapshot.isPaused,
+                    action: onTogglePause
+                )
+                FocusTimerStandbyStopButton(action: onFinishEarly)
+            } else {
+                FocusTimerStandbyExtendButton(minutes: extendStepMinutes, action: onExtend)
+                FocusTimerStandbyStopButton(action: onFinishEarly)
+            }
         }
-        return AnyView(
-            IslandFlushWingCapsule(side: flushSide ?? .leading) { row }
-        )
     }
 }
 
@@ -1006,13 +1040,16 @@ private struct FocusTimerStandbyExtendButton: View {
 /// 待命态结束：深灰圆钮 + 停止方块。
 private struct FocusTimerStandbyStopButton: View {
     let action: () -> Void
+    /// 可视圆；可点区更大，半岛小圆不易点空。
+    private let visualSize: CGFloat = 26
+    private let hitSize: CGFloat = 44
 
     var body: some View {
         Button(action: action) {
             Image(systemName: "stop.fill")
                 .font(.system(size: 9, weight: .bold))
                 .foregroundStyle(Color.white.opacity(0.90))
-                .frame(width: 26, height: 26)
+                .frame(width: visualSize, height: visualSize)
                 .background(
                     Circle()
                         .fill(Color.white.opacity(0.12))
@@ -1021,7 +1058,8 @@ private struct FocusTimerStandbyStopButton: View {
                                 .stroke(Color.white.opacity(0.10), lineWidth: 1)
                         )
                 )
-                .contentShape(Circle())
+                .frame(width: hitSize, height: hitSize)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(L10n.FocusTimer.finishEarly)
@@ -1054,33 +1092,3 @@ private struct FocusTimerStandbyPauseButton: View {
     }
 }
 
-// MARK: - Ring
-
-private struct FocusTimerProgressRing: View {
-    let progress: Double
-    let stroke: Color
-    let icon: String
-    let iconColor: Color
-    var fill: Color? = nil
-
-    var body: some View {
-        let d = FocusTimerCompactMetrics.progressRingDiameter
-        let line = FocusTimerCompactMetrics.progressRingLineWidth
-        ZStack {
-            if let fill {
-                Circle()
-                    .fill(fill)
-            }
-            Circle()
-                .stroke(Color.white.opacity(0.15), lineWidth: line)
-            Circle()
-                .trim(from: 0, to: max(0.02, min(1, progress)))
-                .stroke(stroke, style: StrokeStyle(lineWidth: line, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            Image(systemName: icon)
-                .font(.system(size: FocusTimerCompactMetrics.progressRingIconPointSize, weight: .semibold))
-                .foregroundStyle(iconColor)
-        }
-        .frame(width: d, height: d)
-    }
-}

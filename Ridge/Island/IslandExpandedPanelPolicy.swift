@@ -142,7 +142,8 @@ enum IslandExpandedPanelPolicy {
 
     /// 收起态是否应因指针位置展开。
     /// - 拖文件：接近区或刘海均可。
-    /// - 普通移入：仅刘海；接近区 / 播放翼外侧不算。
+    /// - 普通移入：仅刘海；接近区 / 番茄翼外侧不算。
+    /// - 播放小岛（含左音乐右专注）另见 `shouldExpandCollapsedForMediaCompact`：可见小岛翼也算。
     /// - `hoverExpandSuppressed`：未入舱松手后的冷却，挡住回头再开。
     static func shouldExpandCollapsedForPointer(
         mouse: CGPoint,
@@ -157,6 +158,33 @@ enum IslandExpandedPanelPolicy {
         }
         if hoverExpandSuppressed { return false }
         return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
+    }
+
+    /// 收起态正显示播放小岛时：悬停刘海或**左音乐翼**开媒体大面板。
+    /// 左音乐·右专注双翼时，右翼留给专注操作钮（`+Nm`/结束 或 暂停/结束），**不得**开媒体。
+    /// 仅专注待命不适用（`mediaCompactVisible == false`）。
+    static func shouldExpandCollapsedForMediaCompact(
+        notchHover: Bool,
+        pointerOverCompactPanel: Bool,
+        mediaCompactVisible: Bool,
+        hoverExpandSuppressed: Bool,
+        pointerOverFocusTrailingWing: Bool = false
+    ) -> Bool {
+        if hoverExpandSuppressed { return false }
+        // 右专注翼：悬停 morph 操作钮，禁止 compactHover 抢成媒体大面板。
+        if pointerOverFocusTrailingWing { return false }
+        if notchHover { return true }
+        return mediaCompactVisible && pointerOverCompactPanel
+    }
+
+    /// 左音乐·右专注双翼：指针是否在刘海右侧的专注翼上（开操作钮、不开媒体）。
+    static func isPointerOverMediaFocusTrailingWing(
+        mouse: CGPoint,
+        notchFrame: CGRect,
+        mediaFocusDualVisible: Bool
+    ) -> Bool {
+        guard mediaFocusDualVisible else { return false }
+        return mouse.x > notchFrame.maxX
     }
 
     /// 因货架拖文件而展开后，鼠标松开且未刚完成投放 → 是否强收。

@@ -303,12 +303,12 @@
 ### media-compact-not-resident — 播放大面板不得常驻分页
 
 - **recurring:** false  
-- **occurrences:** 1（2026-11-11：产品纠正「收起待命」命名与常驻逻辑；同日改为悬停展开）  
-- **症状:** 有曲目即 admit/自动 expand，大面板占分页；设置预览误称「收起待命」  
-- **根因倾向:** `MediaNowPlayingWidget` 有曲目即 `admit`+`revealPage`+`expand`；与「仅小岛常驻」不符  
-- **防护:** 有曲目不自动 admit；收起态正显示播放小岛时悬停才 `open`；会议 tip 等盖住/展开时不打开媒体大面板；收岛 `close` 撤争夺；预览左「正在播放」右「展开播放」  
-- **相关代码:** `MediaNowPlayingWidget`、`MediaCompactPresence.isVisiblyShowingCompact`、`LiveIslandGate`、`IslandController`、`MediaSettingsPane`  
-- **自动化:** `RegressionCatalogTests.test_mediaCompactNotResident_gateClosedUntilOpen`
+- **occurrences:** 4（2026-11-11：有曲目即常驻大面板；2026-11-23：左音乐右专注时悬停右翼不展开；同日产品改右翼 morph 专注钮；**同日：右翼操作钮未及左右缘就收——「不开媒体」被当成离开岛**）  
+- **症状:** 有曲目即 admit/自动 expand；或双翼时移入右专注翼误开媒体；或悬停出 `+Nm`/暂停后移向边缘即收回  
+- **根因倾向:** 有曲目即 admit；右翼整块曾进 `compactHover`；排除右翼后又把 expand 意图当 `isPointerOverIsland`，`scheduleCollapse`；翼内 hover 未铺满 contentShape  
+- **防护:** 有曲目不自动 admit；悬停刘海或**左**音乐翼 `open`；右专注翼禁止开媒体但收起态 `pointerPresent=overInteractive`；整翼 `contentShape` + 短宽限；会议 tip 盖住时不算可见；收岛 `close`  
+- **相关代码:** `MediaCompactPresence`、`IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact`、`IslandController`、`FocusTimerStandbyView`  
+- **自动化:** `test_mediaCompactNotResident_*`（含 `dualWingHoverCountsAsExpand` / 右翼排除）
 
 ### media-click-opens-empty — 播放中点刘海落到空态
 
@@ -359,6 +359,16 @@
 - **防护:** 终局改 `notchWingTip`（顶 0）+ 左右翼布局；`forcePanelSize` 写入翼 tip 矮高  
 - **相关代码:** `FocusTimerCompletedView`、`FocusTimerContentSize.panelSize`、`IslandContentView.usesFocusCompletedWingTip`  
 - **自动化:** `RegressionCatalogTests.test_focusCompletedClippedByNotch_topInsetClearsNotch`
+
+### focus-completed-half-island-miss — 半岛待命结束未见全岛完成态
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-23：左音乐右专注半岛结束，完成态未占满全岛 / 秒收）  
+- **症状:** 双翼待命点结束或倒计时归零后，看不到全岛终局（绿勾+时长+备注），或闪一下被 hoverEnd 收掉  
+- **根因倾向:** 终局 `expand` 后指针不在保展开区 → `scheduleCollapse` → `dismissCompletion`；媒体闸未关可能抢页  
+- **防护:** `keepsIslandExpandedWithoutHover`（`phase==completed`）；`hoverEnd` / 收起前复查与会议 tip 同挡；完成时 `close` 媒体闸；未展开则 sticky 强制全岛终局  
+- **相关代码:** `FocusTimerSession.complete`、`keepsIslandExpandedWithoutHover`、`IslandController.keepsExpandedWithoutHoverNow`  
+- **自动化:** `IslandNoticeBehaviorTests.test_islandNoticeBehavior_focusCompactStandbyOnlyWhileTiming`（含终局 keep）
 
 ### peripheral-wing-floor-meeting-width — 外设收窄后左右间距仍不对
 

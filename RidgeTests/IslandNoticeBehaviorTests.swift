@@ -557,7 +557,7 @@ final class IslandNoticeBehaviorTests: XCTestCase {
         XCTAssertFalse(settings.isMuted, "改阈值须清免打扰，否则新规则被旧 mute 挡住")
     }
 
-    // MARK: - 专注待命：仅计时/加时
+    // MARK: - 专注待命：仅计时/加时；终局保全岛
 
     func test_islandNoticeBehavior_focusCompactStandbyOnlyWhileTiming() {
         let focus = FocusTimerSession.shared
@@ -600,7 +600,13 @@ final class IslandNoticeBehaviorTests: XCTestCase {
         focus.finishEarly()
         XCTAssertEqual(focus.phase, .completed)
         XCTAssertFalse(focus.showsCompactStandby)
+        // 半岛/待命结束：终局须保全岛展开，不因指针离开秒收。
+        XCTAssertTrue(
+            focus.keepsIslandExpandedWithoutHover,
+            "终局须 keepsIslandExpandedWithoutHover，全岛完成态不被 hoverEnd 收掉"
+        )
         focus.dismissCompletion()
+        XCTAssertFalse(focus.keepsIslandExpandedWithoutHover)
         #endif
 
         focus.setWidgetEnabled(false)

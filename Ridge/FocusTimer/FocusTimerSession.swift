@@ -21,6 +21,11 @@ final class FocusTimerSession: ObservableObject {
         isWidgetEnabled && (phase == .running || phase == .overtime || phase == .countUp)
     }
 
+    /// 终局全岛展示：不因指针离开收掉（含从音乐+专注半岛结束），直到保存或主动离开。
+    var keepsIslandExpandedWithoutHover: Bool {
+        phase == .completed
+    }
+
     /// 需要争夺岛展示。
     var wantsIslandDisplay: Bool {
         isWidgetEnabled
@@ -280,7 +285,12 @@ final class FocusTimerSession: ObservableObject {
             "id": pendingRecordID.map { String($0.uuidString.prefix(8)) } ?? "nil"
         ])
         IslandHaptics.play(IslandSettings.shared.hapticIntensity)
-        // 按时 / 提前结束都要切回番茄页并展开，否则停在其它页时看不到命名框。
+        // 半岛（左音乐右专注）结束：撤媒体大面板闸，避免抢页盖住终局全岛。
+        if LiveIslandGate.shared.isOpened(LiveIslandGate.mediaID) {
+            LiveIslandGate.shared.close(LiveIslandGate.mediaID, reason: "focusTimerComplete")
+            AppLog.info("FocusTimer", "终局前已撤媒体大面板", ["reason": reason])
+        }
+        // 按时 / 提前结束都要切回番茄页并展开全岛终局（不因指针不在而秒收）。
         WidgetRuntime.shared.revealPage(
             FocusTimerWidget.manifest.id,
             reason: "focusTimerComplete"

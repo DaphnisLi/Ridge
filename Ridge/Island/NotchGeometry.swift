@@ -19,8 +19,8 @@ struct NotchGeometry: Equatable {
     /// 无真刘海时的预览 / 测试参考高（≈典型 `safeAreaInsets.top`）。
     /// 真机收起高度必须用 `compactPanelHeight(notchHeight:)`，与刘海同高、底边齐平。
     static let compactIslandHeight: CGFloat = 32
-    /// 番茄倒计时收起待命（+5m 档）最小宽度（含内容左右内边距）。
-    static let focusTimerCompactWidth: CGFloat = 360
+    /// 番茄倒计时收起待命（+5m 档）最小宽度（含内容左右内边距；无左侧进度环）。
+    static let focusTimerCompactWidth: CGFloat = 330
     static var focusTimerCompactHeight: CGFloat { compactIslandHeight }
     /// 待命内容左右内边距；与 `focusTimerStandbyWidth` 配套，禁止再在外层叠 padding 吃掉宽度。
     static let focusTimerStandbyHorizontalPadding: CGFloat = 10

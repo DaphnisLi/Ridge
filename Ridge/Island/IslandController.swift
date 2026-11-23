@@ -37,6 +37,12 @@ final class IslandController: NSObject {
             designSticky: isSettingsDesignSticky
         )
     }
+
+    /// 会议等常驻 tip，或专注终局全岛：指针离开也不收。
+    private var keepsExpandedWithoutHoverNow: Bool {
+        IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover
+            || FocusTimerSession.shared.keepsIslandExpandedWithoutHover
+    }
     private var collapseWorkItem: DispatchWorkItem?
     /// 岛内按下拖拽中：保持接收事件，避免穿透把翻页掐断。
     private var isMouseDownInIsland = false
@@ -841,16 +847,17 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "货架投放区命中中，忽略收起", ["targeted": true])
             return
         }
-        // 常驻 / 瞬时 tip：移开指针不得收岛（约 3s 由 auto-dismiss 撤；会议须入会 / 点掉）。
+        // 常驻 tip / 专注终局：移开指针不得收岛（会议须入会；终局须保存或主动离开）。
         if reason == "hoverEnd" || reason == "pointerOverSettings",
-           IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover
+           keepsExpandedWithoutHoverNow
         {
             let notice = IslandNoticeCenter.shared.current
-            AppLog.debug("Island", "常驻提示中，忽略收起", [
+            AppLog.debug("Island", "常驻展开中，忽略收起", [
                 "reason": reason,
                 "notice": notice?.id ?? "",
                 "source": notice?.sourceTag ?? "",
-                "dual": IslandNoticeCenter.shared.slots.isDual
+                "dual": IslandNoticeCenter.shared.slots.isDual,
+                "focusCompleted": FocusTimerSession.shared.keepsIslandExpandedWithoutHover
             ])
             return
         }
@@ -865,7 +872,7 @@ final class IslandController: NSObject {
             "wasKey": window.isKeyWindow,
             "key": Self.describeKeyWindow()
         ])
-        // 番茄终局：收起不丢已入库记录，回到选时；备注需点「保存」才会写入。
+        // 非 hover 收起（设置关闭等）：终局不丢已入库记录，回到选时。
         if FocusTimerSession.shared.phase == .completed {
             FocusTimerSession.shared.dismissCompletion()
         }
@@ -956,6 +963,19 @@ final class IslandController: NSObject {
             ])
             expand(reason: "noticeSticky:\(notice?.sourceTag ?? "dual")")
         }
+        // 专注终局：半岛待命结束后须保持全岛完成态；若被误收再强制展开。
+        if FocusTimerSession.shared.keepsIslandExpandedWithoutHover, !viewModel.isExpanded {
+            AppLog.warn("Island", "专注终局未展开，强制全岛完成态", [
+                "phase": FocusTimerSession.shared.phase.rawValue,
+                "page": WidgetRuntime.shared.activeID ?? "nil"
+            ])
+            WidgetRuntime.shared.revealPage(
+                FocusTimerWidget.manifest.id,
+                reason: "focusCompletedSticky"
+            )
+            expand(reason: "focusCompletedSticky")
+            applyFocusTimerCompletedLayout(reason: "focusCompletedSticky")
+        }
         if noticeSlots.anyKeepsExpandedWithoutHover, noticeSlots.anyUsesNotchWingChrome {
             let wingW = noticeSlots.wingTipPreparedWingWidth
             let floored = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
@@ -1000,9 +1020,10 @@ final class IslandController: NSObject {
                 // 瞬时 tip 除外：约 3s 常驻展示，指针在设置窗上也不得收掉。
                 collapseWorkItem?.cancel()
                 collapseWorkItem = nil
-                if IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover {
-                    AppLog.debug("Island", "设置窗命中中，常驻 tip 保持展开", [
-                        "notice": IslandNoticeCenter.shared.current?.id ?? ""
+                if keepsExpandedWithoutHoverNow {
+                    AppLog.debug("Island", "设置窗命中中，常驻展开保持", [
+                        "notice": IslandNoticeCenter.shared.current?.id ?? "",
+                        "focusCompleted": FocusTimerSession.shared.keepsIslandExpandedWithoutHover
                     ])
                 } else {
                     collapse(reason: "pointerOverSettings")
@@ -1144,6 +1165,15 @@ final class IslandController: NSObject {
             return
         }
 
+        // 左音乐·右专注：刘海右侧是专注翼，悬停/按住只出操作钮，禁止开媒体大面板。
+        let mediaFocusDualVisible = MediaCompactPresence.isVisiblyShowingCompact
+            && FocusTimerSession.shared.showsCompactStandby
+        let overFocusTrailingWing = IslandExpandedPanelPolicy.isPointerOverMediaFocusTrailingWing(
+            mouse: mouse,
+            notchFrame: geometry.notchFrame,
+            mediaFocusDualVisible: mediaFocusDualVisible
+        )
+
         // 按住拖动 / 列表纵滑宽限内：保持展开，避免滚一半指针微移就收岛。
         if dragHold || scrollHold {
             collapseWorkItem?.cancel()
@@ -1152,8 +1182,16 @@ final class IslandController: NSObject {
             if !viewModel.isExpanded {
                 let holdReason = dragHold ? "dragHold" : "scrollHold"
                 let mediaReason = dragHold ? "compactDragHold" : "compactScrollHold"
-                // 播放小岛可点两翼：左键按下也算 dragHold，必须先开媒体，禁止裸 expand 落到空态。
-                if MediaCompactPresence.openExpandedPanel(reason: mediaReason) {
+                // 右专注翼按住操作钮：勿抢媒体；左翼/刘海仍先开媒体，禁止裸 expand 落到空态。
+                if !overFocusTrailingWing,
+                   MediaCompactPresence.openExpandedPanel(reason: mediaReason)
+                {
+                    return
+                }
+                if overFocusTrailingWing {
+                    AppLog.debug("Island", "右专注翼按住：保持待命操作钮", [
+                        "reason": holdReason
+                    ])
                     return
                 }
                 if shouldExpandForPointerInteraction(reason: holdReason) {
@@ -1170,24 +1208,32 @@ final class IslandController: NSObject {
             return
         }
 
-        // 收起态悬停展开：仅刘海；拖文件接近区只在 fileDrag 时由上面 shelfHold 处理。
+        // 收起态悬停展开：默认仅刘海；播放小岛可见时左翼也算；右专注翼除外。
+        // 「在岛上」与「要展开」分离：右翼 / 专注待命宽胶囊仍算在岛上，禁止误 scheduleCollapse。
+        // 拖文件接近区只在 fileDrag 时由上面 shelfHold 处理。
+        let notchHoverExpand = IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
+            mouse: mouse,
+            notchFrame: geometry.notchFrame,
+            isFileDrag: false,
+            fileDragApproachContainsMouse: false,
+            hoverExpandSuppressed: hoverExpandSuppressed
+        )
         let wantCollapsedHoverExpand = !viewModel.isExpanded
-            && IslandExpandedPanelPolicy.shouldExpandCollapsedForPointer(
-                mouse: mouse,
-                notchFrame: geometry.notchFrame,
-                isFileDrag: false,
-                fileDragApproachContainsMouse: false,
-                hoverExpandSuppressed: hoverExpandSuppressed
+            && IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: notchHoverExpand,
+                pointerOverCompactPanel: overInteractive,
+                mediaCompactVisible: MediaCompactPresence.isVisiblyShowingCompact,
+                hoverExpandSuppressed: hoverExpandSuppressed,
+                pointerOverFocusTrailingWing: overFocusTrailingWing
             )
-        let overHoverExpand = viewModel.isExpanded ? overRetention : wantCollapsedHoverExpand
+        // 展开态跟保展开区；收起态跟可点区（含右专注翼操作钮、专注待命左右缘）。
+        let pointerPresent = viewModel.isExpanded ? overRetention : overInteractive
 
-        if overHoverExpand == isPointerOverIsland { return }
-        isPointerOverIsland = overHoverExpand
-
-        if overHoverExpand {
+        if pointerPresent {
+            let wasPresent = isPointerOverIsland
+            isPointerOverIsland = true
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
-            // 无面板/已点进实况上岛时，禁止仅靠移入展开（瞬时提示可程序 expand，悬停仅保展开）。
             if viewModel.isExpanded {
                 return
             }
@@ -1197,25 +1243,39 @@ final class IslandController: NSObject {
                 ])
                 return
             }
-            // 仅当收起态正显示播放小岛（无会议 tip 等盖住）时，悬停才开媒体大面板。
-            // 会议等更高优先级 tip 展开中时上面已 return，不会走到这里。
-            if MediaCompactPresence.openExpandedPanel(reason: "compactHover") {
-                return
-            }
-            if shouldExpandForPointerInteraction(reason: "hover") {
-                expand(reason: "hover")
-            } else {
-                AppLog.debug("Island", "无面板上岛，忽略悬停展开", [
-                    "page": WidgetRuntime.shared.activeID ?? "nil",
-                    "pages": WidgetRuntime.shared.pageIDs.count,
-                    "empty": WidgetRuntime.shared.isShowingEmpty,
-                    "notice": IslandNoticeCenter.shared.current?.id ?? ""
+            // 仅左翼/刘海开媒体；右专注翼只保存在岛上，留给 morph 操作钮。
+            if wantCollapsedHoverExpand {
+                if MediaCompactPresence.openExpandedPanel(reason: "compactHover") {
+                    AppLog.info("Island", "播放小岛悬停展开媒体", [
+                        "notchHover": notchHoverExpand,
+                        "overWing": overInteractive,
+                        "focusTrailing": overFocusTrailingWing
+                    ])
+                    return
+                }
+                if shouldExpandForPointerInteraction(reason: "hover") {
+                    expand(reason: "hover")
+                } else if !wasPresent {
+                    AppLog.debug("Island", "无面板上岛，忽略悬停展开", [
+                        "page": WidgetRuntime.shared.activeID ?? "nil",
+                        "pages": WidgetRuntime.shared.pageIDs.count,
+                        "empty": WidgetRuntime.shared.isShowingEmpty,
+                        "notice": IslandNoticeCenter.shared.current?.id ?? ""
+                    ])
+                }
+            } else if overFocusTrailingWing, !wasPresent {
+                AppLog.debug("Island", "右专注翼悬停：保持操作钮，不开媒体", [
+                    "interactive": overInteractive
                 ])
             }
-        } else if IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover,
-                  viewModel.isExpanded
-        {
-            // 会议等常驻提示：离开热区也不安排收起，岛保持展开。
+            return
+        }
+
+        if isPointerOverIsland == false { return }
+        isPointerOverIsland = false
+
+        if keepsExpandedWithoutHoverNow, viewModel.isExpanded {
+            // 会议 tip / 专注终局：离开热区也不安排收起，岛保持全岛展开。
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
         } else {
@@ -1584,10 +1644,11 @@ final class IslandController: NSObject {
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             // 会议等常驻提示：宽限到期也不收。
-            if IslandNoticeCenter.shared.slots.anyKeepsExpandedWithoutHover {
-                AppLog.debug("Island", "收起前复查：常驻提示，取消收起", [
+            if self.keepsExpandedWithoutHoverNow {
+                AppLog.debug("Island", "收起前复查：常驻展开，取消收起", [
                     "notice": IslandNoticeCenter.shared.current?.id ?? "",
-                    "dual": IslandNoticeCenter.shared.slots.isDual
+                    "dual": IslandNoticeCenter.shared.slots.isDual,
+                    "focusCompleted": FocusTimerSession.shared.keepsIslandExpandedWithoutHover
                 ])
                 return
             }
