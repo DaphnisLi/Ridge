@@ -1,22 +1,22 @@
 import Foundation
 
-/// 灵动岛番茄倒计时运行态（选时 / 计时 / 顺延 / 终局）。收起待命是 running 的收起表现。
+/// 灵动岛番茄倒计时运行态（选时 / 计时 / 顺延 / 终局）。
+/// 计时与加时岛上只走待命胶囊（含操作钮），不再有悬停展开面板。
 enum FocusTimerPhase: String, Equatable {
     /// 未起钟：选预设或自定义分钟。
     case picking
-    /// 计时中（收起为左右待命；悬停为进行中面板）。
+    /// 计时中：岛上为蓝环待命胶囊。
     case running
-    /// 已加时：悬停只展示顺延面板，不再回到「进行中」。
+    /// 已加时：岛上为黄环待命胶囊（同布局）。
     case overtime
     /// 时间到：填写备注并结算。
     case completed
 }
 
-/// 设置页五态预览 Tab（含「标准待命」收起样张）。
+/// 设置页预览 Tab：选时 / 待命 / 加时待命 / 终局（无「计时展开」）。
 enum FocusTimerPreviewTab: String, CaseIterable, Identifiable {
     case standby
     case picking
-    case running
     case overtime
     case completed
 
@@ -26,13 +26,13 @@ enum FocusTimerPreviewTab: String, CaseIterable, Identifiable {
         switch self {
         case .standby: return .running
         case .picking: return .picking
-        case .running: return .running
         case .overtime: return .overtime
         case .completed: return .completed
         }
     }
 
-    var isCompact: Bool { self == .standby }
+    /// 计时中两态均为待命胶囊壳。
+    var isCompact: Bool { self == .standby || self == .overtime }
 }
 
 enum FocusTimerKind: String, Codable, Hashable {
@@ -49,7 +49,7 @@ struct FocusTimerPreset: Identifiable, Codable, Equatable, Hashable {
     /// 展示色：error / primary / tertiary / secondary。
     var tint: String
 
-    /// 默认四档：15 / 30 / 60 / 90；微调步长分别为 ±5 / ±5 / ±10 / ±20。
+    /// 默认三档：15 / 30 / 60；微调步长分别为 ±5 / ±5 / ±10。
     static let defaults: [FocusTimerPreset] = [
         FocusTimerPreset(
             id: "sprint",
@@ -71,13 +71,6 @@ struct FocusTimerPreset: Identifiable, Codable, Equatable, Hashable {
             minutes: 60,
             subtitle: L10n.FocusTimer.presetDeepHint,
             tint: "tertiary"
-        ),
-        FocusTimerPreset(
-            id: "long",
-            title: L10n.FocusTimer.presetLong,
-            minutes: 90,
-            subtitle: L10n.FocusTimer.presetLongHint,
-            tint: "secondary"
         )
     ]
 
@@ -86,9 +79,7 @@ struct FocusTimerPreset: Identifiable, Codable, Equatable, Hashable {
         switch id {
         case "sprint", "tomato": return 5
         case "deep": return 10
-        case "long": return 20
         default:
-            if minutes >= 90 { return 20 }
             if minutes >= 60 { return 10 }
             return 5
         }
@@ -201,17 +192,6 @@ struct FocusTimerSnapshot: Equatable {
     )
 
     static let runningStandbyPreview = FocusTimerSnapshot(
-        phase: .running,
-        plannedSeconds: 30 * 60,
-        overtimeSeconds: 0,
-        elapsedSeconds: 6 * 60 + 18,
-        remainingSeconds: 23 * 60 + 42,
-        noteDraft: "",
-        customMinutes: 30,
-        selectedPresetID: "tomato"
-    )
-
-    static let runningExpandedPreview = FocusTimerSnapshot(
         phase: .running,
         plannedSeconds: 30 * 60,
         overtimeSeconds: 0,

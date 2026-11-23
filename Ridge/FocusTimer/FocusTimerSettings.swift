@@ -15,8 +15,9 @@ final class FocusTimerSettings: ObservableObject {
     }
 
     private enum Key {
-        /// v2：默认档位改为 15 / 30 / 60 / 90。
-        static let presets = "focusTimer.presets.v2"
+        /// v3：默认三档 15 / 30 / 60（去掉 90）。
+        static let presets = "focusTimer.presets.v3"
+        static let presetsLegacyV2 = "focusTimer.presets.v2"
         static let extendStep = "focusTimer.extendStepMinutes"
         static let history = "focusTimer.history.v1"
     }
@@ -50,7 +51,15 @@ final class FocusTimerSettings: ObservableObject {
            let decoded = try? JSONDecoder().decode([FocusTimerPreset].self, from: data),
            !decoded.isEmpty
         {
-            presets = decoded
+            presets = Array(decoded.prefix(3))
+        } else if let legacy = defaults.data(forKey: Key.presetsLegacyV2),
+                  let decoded = try? JSONDecoder().decode([FocusTimerPreset].self, from: legacy),
+                  !decoded.isEmpty
+        {
+            // v2 四档含 90：迁到三档并写入 v3。
+            let migrated = Array(decoded.filter { $0.id != "long" }.prefix(3))
+            presets = migrated
+            AppLog.info("FocusTimer", "预设已从 v2 迁到三档", ["count": migrated.count])
         } else {
             presets = FocusTimerPreset.defaults
         }
@@ -63,6 +72,8 @@ final class FocusTimerSettings: ObservableObject {
         } else {
             history = []
         }
+        // init 内赋值未必触发 didSet，显式落盘 v3。
+        persistPresets()
     }
 
     func updatePreset(_ preset: FocusTimerPreset) {

@@ -4,13 +4,15 @@ import SwiftUI
 /// 媒体展开面板下限：展开瞬间先写入，避免可点区仍停在小岛高度导致底栏按钮点空。
 enum MediaExpandedContentSize {
     static let contentWidth: CGFloat = 320
-    /// 翼行 + 歌名作者 + 进度 + 控件的内容估算高（不含壳层底距；顶距媒体为 0）。
+    /// 翼行 + 歌名作者 + 进度 + 控件的内容估算高（不含壳层顶/底距）。
     static let minContentHeight: CGFloat = 152
+    /// 展开相对顶边的可见空隙（略离开刘海；勿回 0 贴顶，也勿用整段 `expandedTopInset`）。
+    static let topInset: CGFloat = 4
 
     static func panelSize() -> CGSize {
         CGSize(
             width: contentWidth + IslandChrome.horizontalInsetTotal,
-            height: minContentHeight + IslandChrome.contentBottom
+            height: topInset + minContentHeight + IslandChrome.contentBottom
         )
     }
 }

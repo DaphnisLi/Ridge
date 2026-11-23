@@ -10,8 +10,8 @@ enum FocusTimerCompactMetrics {
     static let progressRingIconPointSize: CGFloat = 9
 }
 
-/// 番茄面板下限：选时 / 进行中 / 顺延走内容 `fixedSize` + IslandChrome；
-/// 仅终局锁最小宽高，防止 Preference 矮框裁掉备注。
+/// 番茄面板下限：选时走内容 `fixedSize` + IslandChrome；
+/// 计时 / 加时不走展开面板；仅终局锁最小宽高。
 enum FocusTimerContentSize {
     /// 终局备注行需要的内容宽；其它态不锁宽，由内容撑开。
     static let completedContentWidth: CGFloat = 480
@@ -26,7 +26,7 @@ enum FocusTimerContentSize {
         }
     }
 
-    /// 展开首帧 / Preference 下限（宽仅终局抬升；其它态宽交给测量）。
+    /// 展开首帧 / Preference 下限（宽仅终局抬升；计时/加时不展开）。
     static func panelSize(phase: FocusTimerPhase, notchHeight: CGFloat) -> CGSize {
         let height = IslandChrome.expandedTopInset(notchHeight: notchHeight)
             + minimumContentHeight(phase: phase)
@@ -36,7 +36,7 @@ enum FocusTimerContentSize {
             case .completed:
                 return completedContentWidth + IslandChrome.horizontalInsetTotal
             case .picking, .running, .overtime:
-                // 仅作展开占位种子；真正宽度由 Preference 内容测量，可小于此值。
+                // 选时种子宽；计时/加时若误走展开亦用待命宽量级。
                 return 360 + IslandChrome.horizontalInsetTotal
             }
         }()
@@ -49,13 +49,14 @@ enum FocusTimerContentSize {
     }
 }
 
-/// 岛面番茄倒计时：按 phase 渲染五态；预览可注入 snapshot。
+/// 岛面番茄倒计时：选时 / 待命（含加时黄）/ 终局；预览可注入 snapshot。
 struct FocusTimerIslandCardView: View {
     let snapshot: FocusTimerSnapshot
     var isExpanded: Bool = true
     var onSelectPreset: (FocusTimerPreset) -> Void = { _ in }
     var onCustomMinutes: (Int) -> Void = { _ in }
     var onStart: () -> Void = {}
+    var onStartCountUp: () -> Void = {}
     var onExtend: () -> Void = {}
     var onFinishEarly: () -> Void = {}
     var onNoteChange: (String) -> Void = { _ in }
@@ -65,15 +66,21 @@ struct FocusTimerIslandCardView: View {
 
     var body: some View {
         Group {
-            if !isExpanded, snapshot.phase == .running || snapshot.phase == .overtime {
-                FocusTimerStandbyView(snapshot: snapshot)
+            if snapshot.phase == .running || snapshot.phase == .overtime {
+                // 计时 / 加时：一律待命胶囊（含 +Nm / 停止），不区分悬停展开。
+                FocusTimerStandbyView(
+                    snapshot: snapshot,
+                    extendStepMinutes: extendStepMinutes,
+                    onExtend: onExtend,
+                    onFinishEarly: onFinishEarly
+                )
             } else if snapshot.phase == .completed {
                 // 只锁宽；高度跟内容走，避免虚高把底边距撑大。
                 phaseBody
                     .frame(width: FocusTimerContentSize.completedContentWidth, alignment: .topLeading)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                // 选时 / 进行中 / 顺延：内容固有尺寸，左右底边距走 IslandChrome，勿再锁死宽。
+                // 选时：内容固有尺寸，左右底边距走 IslandChrome，勿再锁死宽。
                 phaseBody
                     .fixedSize(horizontal: true, vertical: true)
             }
@@ -91,22 +98,11 @@ struct FocusTimerIslandCardView: View {
                 presets: presets,
                 onSelectPreset: onSelectPreset,
                 onCustomMinutes: onCustomMinutes,
-                onStart: onStart
+                onStart: onStart,
+                onStartCountUp: onStartCountUp
             )
-        case .running:
-            FocusTimerRunningView(
-                snapshot: snapshot,
-                extendStepMinutes: extendStepMinutes,
-                onExtend: onExtend,
-                onFinishEarly: onFinishEarly
-            )
-        case .overtime:
-            FocusTimerOvertimeView(
-                snapshot: snapshot,
-                extendStepMinutes: extendStepMinutes,
-                onExtend: onExtend,
-                onFinish: onFinishEarly
-            )
+        case .running, .overtime:
+            EmptyView()
         case .completed:
             FocusTimerCompletedView(
                 snapshot: snapshot,
@@ -121,7 +117,7 @@ struct FocusTimerIslandCardView: View {
         let snap: FocusTimerSnapshot = {
             switch phase {
             case .picking: return .pickingPreview
-            case .running: return compact ? .runningStandbyPreview : .runningExpandedPreview
+            case .running: return .runningStandbyPreview
             case .overtime: return .overtimePreview
             case .completed: return .completedPreview
             }
@@ -135,21 +131,29 @@ struct FocusTimerIslandCardView: View {
     }
 }
 
-// MARK: - 1. 标准待命（收起）
+// MARK: - 1. 标准待命（计时 / 加时唯一岛面）
 
 struct FocusTimerStandbyView: View {
     let snapshot: FocusTimerSnapshot
-    /// 双槽一侧：timer + MM:SS + 点。
+    /// 双槽一侧：timer + MM:SS + 点（窄翼无操作钮）。
     var flushSide: IslandFlushWingStyle.Side? = nil
     /// 真岛双槽：只画内容，不套黑胶囊。
     var bareWingContent: Bool = false
+    var extendStepMinutes: Int = 5
+    var onExtend: () -> Void = {}
+    var onFinishEarly: () -> Void = {}
 
     private var isOvertime: Bool { snapshot.phase == .overtime }
-    /// 满岛待命原色；半块 flush 另用 `flushAccent`，禁止串色。
+    /// 常规蓝 / 加时黄；半块 flush 另用 `flushAccent`，禁止串色。
     private var ringColor: Color {
         isOvertime
-            ? Color(red: 0.96, green: 0.62, blue: 0.04)
-            : Color(red: 0.325, green: 0.882, blue: 0.435)
+            ? Color(red: 0.98, green: 0.75, blue: 0.14)
+            : Color(red: 0.0, green: 0.44, blue: 0.92)
+    }
+    private var ringIconColor: Color {
+        isOvertime
+            ? Color(red: 1.0, green: 0.84, blue: 0.40)
+            : Color.white.opacity(0.95)
     }
     private var flushAccent: Color {
         isOvertime ? IslandFlushWingStyle.accentWarning : IslandFlushWingStyle.accentInfo
@@ -164,49 +168,49 @@ struct FocusTimerStandbyView: View {
     }
 
     private var fullStandbyBody: some View {
-        // 满岛待命原样：左右翼贴边；勿改色/布局去迁就半块 flush。
+        // 左：环+剩余；右：+Nm / 停止；中空。加时仅环色改黄。
+        // 左右 padding 写在内容内，外层勿再叠，否则固定岛宽会被吃掉导致芯片裁切。
         HStack(spacing: 0) {
             HStack(spacing: 8) {
                 FocusTimerProgressRing(
                     progress: snapshot.progress,
                     stroke: ringColor,
-                    icon: isOvertime ? "alarm.fill" : "timer",
-                    iconColor: ringColor
+                    icon: "hourglass",
+                    iconColor: ringIconColor
                 )
-                Text(isOvertime ? L10n.FocusTimer.overtimeBadge : L10n.FocusTimer.focusing)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.55))
+                Text(FocusTimerFormatting.clock(snapshot.remainingSeconds))
+                    .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.white)
+                    .monospacedDigit()
                     .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
-            Spacer(minLength: 16)
+            .layoutPriority(1)
+            Spacer(minLength: 20)
             HStack(spacing: 8) {
-                Text(
-                    isOvertime
-                        ? "+\(FocusTimerFormatting.clock(snapshot.remainingSeconds))"
-                        : FocusTimerFormatting.clock(snapshot.remainingSeconds)
-                )
-                .font(.system(size: 15, weight: .semibold, design: .monospaced))
-                .foregroundStyle(isOvertime ? Color(red: 1.0, green: 0.75, blue: 0.35) : .white)
-                Circle()
-                    .fill(ringColor)
-                    .frame(width: 8, height: 8)
-                    .opacity(0.95)
+                FocusTimerStandbyExtendButton(minutes: extendStepMinutes, action: onExtend)
+                FocusTimerStandbyStopButton(action: onFinishEarly)
             }
+            .fixedSize(horizontal: true, vertical: false)
+            .layoutPriority(2)
         }
+        .padding(.horizontal, NotchGeometry.focusTimerStandbyHorizontalPadding)
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(
+            "\(isOvertime ? L10n.FocusTimer.overtimeBadge : L10n.FocusTimer.focusing)，\(FocusTimerFormatting.clock(snapshot.remainingSeconds))"
+        )
     }
 
     private func wingLeadContent(bare: Bool) -> some View {
-        let clock = isOvertime
-            ? "+\(FocusTimerFormatting.clock(snapshot.remainingSeconds))"
-            : FocusTimerFormatting.clock(snapshot.remainingSeconds)
+        let clock = FocusTimerFormatting.clock(snapshot.remainingSeconds)
         // 仅双槽半块：外图标 | 时长 | 刘海侧指示点。
         let spacer = bare
             ? IslandFlushWingStyle.bareContentSpacerMin
             : CGFloat(4)
         let row = HStack(spacing: 0) {
             HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
-                Image(systemName: isOvertime ? "alarm.fill" : "timer")
+                Image(systemName: isOvertime ? "alarm.fill" : "hourglass")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(flushAccent)
                     .symbolRenderingMode(.hierarchical)
@@ -241,25 +245,28 @@ private struct FocusTimerPickingView: View {
     let onSelectPreset: (FocusTimerPreset) -> Void
     let onCustomMinutes: (Int) -> Void
     let onStart: () -> Void
+    let onStartCountUp: () -> Void
 
-    /// 自定义分钟输入草稿（仅数字）；点「开始计时」才起钟。
+    /// 自定义分钟输入草稿（仅数字）；点播放钮才起钟。
     @State private var customText: String = ""
 
-    private let playGreen = Color(red: 0.325, green: 0.882, blue: 0.435)
     private let primaryBlue = Color(red: 0.0, green: 0.35, blue: 0.74)
+    /// 正计时胶囊：深绿底 + 薄荷绿字/标。
+    private let countUpFill = Color(red: 0.10, green: 0.28, blue: 0.18)
+    private let countUpAccent = Color(red: 0.45, green: 0.92, blue: 0.58)
 
     var body: some View {
         HStack(spacing: 10) {
-            // 预设：播放图标 + 分钟，一点即起。
+            // 预设：深灰胶囊；仅播放三角改蓝，其余保持原样。
             HStack(spacing: 5) {
-                ForEach(presets.prefix(4)) { preset in
+                ForEach(presets.prefix(3)) { preset in
                     Button {
                         onSelectPreset(preset)
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(playGreen)
+                                .foregroundStyle(primaryBlue)
                             Text(L10n.FocusTimer.presetMinutesChip(preset.minutes))
                                 .font(.system(size: 13, weight: .semibold, design: .monospaced))
                                 .foregroundStyle(.white)
@@ -280,11 +287,7 @@ private struct FocusTimerPickingView: View {
                 }
             }
 
-            Rectangle()
-                .fill(Color.white.opacity(0.15))
-                .frame(width: 1, height: 18)
-
-            // 自定义：输入框与「开始计时」并成一块。
+            // 自定义倒计时：输入 + 蓝播放钮 +「倒计时」文案（与预设之间不画竖线）。
             HStack(spacing: 0) {
                 HStack(spacing: 3) {
                     FocusTimerMinutesField(text: $customText) { value in
@@ -306,11 +309,12 @@ private struct FocusTimerPickingView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "play.fill")
                             .font(.system(size: 11, weight: .bold))
-                        Text(L10n.FocusTimer.start)
-                            .font(.system(size: 13, weight: .semibold))
+                        Text(L10n.FocusTimer.countdownMode)
+                            .font(.system(size: 12, weight: .semibold))
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
+                    .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -320,7 +324,9 @@ private struct FocusTimerPickingView: View {
                 .buttonStyle(.plain)
                 .disabled(!canStartCustom)
                 .opacity(canStartCustom ? 1 : 0.45)
+                .accessibilityLabel(L10n.FocusTimer.countdownMode)
                 .padding(2)
+                .padding(.trailing, 2)
             }
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -330,12 +336,41 @@ private struct FocusTimerPickingView: View {
                             .stroke(Color.white.opacity(0.20), lineWidth: 1)
                     )
             )
+
+            pickingDivider
+
+            // 正计时入口（深绿胶囊）。
+            Button {
+                onStartCountUp()
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "timer")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(L10n.FocusTimer.countUpMode)
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundStyle(countUpAccent)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(countUpFill)
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(L10n.FocusTimer.countUpMode)
         }
         .onAppear {
             if customText.isEmpty {
                 customText = "\(snapshot.customMinutes)"
             }
         }
+    }
+
+    private var pickingDivider: some View {
+        Rectangle()
+            .fill(Color.white.opacity(0.15))
+            .frame(width: 1, height: 18)
     }
 
     private var canStartCustom: Bool {
@@ -355,7 +390,8 @@ private struct FocusTimerMinutesField: NSViewRepresentable {
     @Binding var text: String
     var onValidMinutes: (Int) -> Void
 
-    private static let caretColor = NSColor(red: 0.325, green: 0.882, blue: 0.435, alpha: 1)
+    private static let textColor = NSColor.white
+    private static let caretColor = NSColor.white
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -369,7 +405,7 @@ private struct FocusTimerMinutesField: NSViewRepresentable {
         field.drawsBackground = false
         field.focusRingType = .none
         field.font = .monospacedDigitSystemFont(ofSize: 15, weight: .bold)
-        field.textColor = Self.caretColor
+        field.textColor = Self.textColor
         field.caretColor = Self.caretColor
         field.alignment = .center
         field.delegate = context.coordinator
@@ -738,120 +774,7 @@ private struct FocusTimerNoteField: NSViewRepresentable {
     }
 }
 
-// MARK: - 3. 计时进行中（展开）
-
-private struct FocusTimerRunningView: View {
-    let snapshot: FocusTimerSnapshot
-    let extendStepMinutes: Int
-    let onExtend: () -> Void
-    let onFinishEarly: () -> Void
-
-    private let green = Color(red: 0.325, green: 0.882, blue: 0.435)
-
-    var body: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                FocusTimerProgressRing(
-                    progress: snapshot.progress,
-                    stroke: Color(red: 0.0, green: 0.44, blue: 0.92),
-                    icon: "hourglass",
-                    iconColor: Color(red: 0.68, green: 0.78, blue: 1.0)
-                )
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.FocusTimer.plannedLabel(snapshot.plannedMinutes))
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.45))
-                    Text(L10n.FocusTimer.elapsedLabel(FocusTimerFormatting.clock(snapshot.elapsedSeconds)))
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.8))
-                }
-            }
-
-            Spacer(minLength: 6)
-
-            HStack(spacing: 6) {
-                Text(L10n.FocusTimer.remaining)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.45))
-                Text(FocusTimerFormatting.clock(snapshot.remainingSeconds))
-                    .font(.system(size: 17, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white)
-                Circle()
-                    .fill(green)
-                    .frame(width: 8, height: 8)
-            }
-
-            Spacer(minLength: 6)
-
-            HStack(spacing: 8) {
-                FocusTimerSolidExtendButton(minutes: extendStepMinutes, action: onExtend)
-                FocusTimerStopButton(action: onFinishEarly)
-            }
-            .fixedSize(horizontal: true, vertical: false)
-            .layoutPriority(1)
-        }
-    }
-}
-
-// MARK: - 4. 顺延加时
-
-private struct FocusTimerOvertimeView: View {
-    let snapshot: FocusTimerSnapshot
-    let extendStepMinutes: Int
-    let onExtend: () -> Void
-    let onFinish: () -> Void
-
-    private let amber = Color(red: 0.98, green: 0.75, blue: 0.14)
-    private let amberText = Color(red: 1.0, green: 0.75, blue: 0.35)
-
-    var body: some View {
-        HStack(spacing: 10) {
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(amber.opacity(0.2))
-                        .frame(width: 28, height: 28)
-                    Image(systemName: "alarm.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(amber)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(L10n.FocusTimer.overtimeAdded(snapshot.overtimeMinutes))
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(amberText)
-                    Text(L10n.FocusTimer.totalPlanned(snapshot.plannedMinutes + snapshot.overtimeMinutes))
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.45))
-                }
-            }
-
-            Spacer(minLength: 6)
-
-            HStack(spacing: 6) {
-                Text(L10n.FocusTimer.remaining)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Color(red: 1.0, green: 0.90, blue: 0.70).opacity(0.7))
-                Text("+\(FocusTimerFormatting.clock(snapshot.remainingSeconds))")
-                    .font(.system(size: 17, weight: .bold, design: .monospaced))
-                    .foregroundStyle(amberText)
-                Circle()
-                    .fill(amber)
-                    .frame(width: 8, height: 8)
-            }
-
-            Spacer(minLength: 6)
-
-            HStack(spacing: 8) {
-                FocusTimerSolidExtendButton(minutes: extendStepMinutes, action: onExtend)
-                FocusTimerStopButton(action: onFinish)
-            }
-            .fixedSize(horizontal: true, vertical: false)
-            .layoutPriority(1)
-        }
-    }
-}
-
-// MARK: - 5. 终局收拢
+// MARK: - 3. 终局收拢
 
 private struct FocusTimerCompletedView: View {
     let snapshot: FocusTimerSnapshot
@@ -1005,58 +928,56 @@ private struct FocusTimerCompletedView: View {
 
 // MARK: - 共用控件
 
-/// 实心琥珀加时：`+5m`。
-private struct FocusTimerSolidExtendButton: View {
+/// 待命态加时：深灰胶囊 `+5m`（白字）。
+private struct FocusTimerStandbyExtendButton: View {
     let minutes: Int
     let action: () -> Void
-
-    private let amber = Color(red: 0.98, green: 0.75, blue: 0.14)
 
     var body: some View {
         Button(action: action) {
             Text(L10n.FocusTimer.extendChip(minutes))
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundStyle(.black)
-                .padding(.horizontal, 12)
+                .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.white.opacity(0.92))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(amber)
-                        .shadow(color: amber.opacity(0.35), radius: 4, y: 1)
+                        .fill(Color.white.opacity(0.12))
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                        )
                 )
         }
         .buttonStyle(.plain)
+        .fixedSize(horizontal: true, vertical: false)
+        .accessibilityLabel(L10n.FocusTimer.extendChip(minutes))
     }
 }
 
-/// 结束：停止图标 +「结束」。
-private struct FocusTimerStopButton: View {
+/// 待命态结束：深灰圆钮 + 停止方块。
+private struct FocusTimerStandbyStopButton: View {
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 3) {
-                Image(systemName: "stop.fill")
-                    .font(.system(size: 10, weight: .bold))
-                Text(L10n.FocusTimer.finishEarly)
-                    .font(.system(size: 12, weight: .medium))
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            .foregroundStyle(Color.white.opacity(0.85))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.white.opacity(0.10))
-                    .overlay(
-                        Capsule(style: .continuous)
-                            .stroke(Color.white.opacity(0.10), lineWidth: 1)
-                    )
-            )
+            Image(systemName: "stop.fill")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(Color.white.opacity(0.90))
+                .frame(width: 26, height: 26)
+                .background(
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                        )
+                )
         }
         .buttonStyle(.plain)
-        .fixedSize(horizontal: true, vertical: false)
+        .accessibilityLabel(L10n.FocusTimer.finishEarly)
     }
 }
 

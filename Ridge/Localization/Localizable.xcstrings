@@ -12188,6 +12188,28 @@
           }
         }
       }
+    },
+    "focus_timer.mode.countdown": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "倒计时"
+          }
+        }
+      }
+    },
+    "focus_timer.mode.count_up": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正计时"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

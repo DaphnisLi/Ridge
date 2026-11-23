@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-/// 番茄倒计时：开启后常驻选时态；计时中收起为待命、悬停展开进行中 / 顺延 / 终局。
+/// 番茄倒计时：开启后常驻选时态；计时 / 加时为待命胶囊（可 +Nm / 停止，不悬停展开）；终局展开命名。
 @MainActor
 final class FocusTimerWidget: IslandWidget {
     static let manifest = WidgetManifest(
@@ -95,13 +95,14 @@ private struct FocusTimerLiveView: View {
     @ObservedObject var settings: FocusTimerSettings
 
     var body: some View {
-        // 展开区：选时 / 进行中 / 顺延 / 终局。收起待命由 IslandBody 单独渲染。
+        // 展开区：选时 / 终局。计时与加时待命由 IslandBody 单独渲染，不走悬停展开。
         FocusTimerIslandCardView(
             snapshot: session.snapshot,
             isExpanded: true,
             onSelectPreset: { session.selectPreset($0) },
             onCustomMinutes: { session.setCustomMinutes($0) },
             onStart: { session.startCustomTimer() },
+            onStartCountUp: { session.startCountUpTimer() },
             onExtend: { session.extend() },
             onFinishEarly: { session.finishEarly() },
             // 仅在「完成命名」时经 onNoteChange 写入；逐字回写会整卡刷新打断 field editor。

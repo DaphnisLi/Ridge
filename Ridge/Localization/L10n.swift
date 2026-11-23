@@ -2900,6 +2900,10 @@ enum L10n {
             tr("focus_timer.picking.hint", "快捷预设 或 自选分钟")
         }
         static var start: String { tr("focus_timer.start", "开始计时") }
+        /// 选时态：自定义起钟一侧标注。
+        static var countdownMode: String { tr("focus_timer.mode.countdown", "倒计时") }
+        /// 选时态：正计时入口按钮。
+        static var countUpMode: String { tr("focus_timer.mode.count_up", "正计时") }
         static var remaining: String { tr("focus_timer.remaining", "剩余") }
         static var finishEarly: String { tr("focus_timer.finish_early", "结束") }
         static var finishDone: String { tr("focus_timer.finish_done", "完成收工") }

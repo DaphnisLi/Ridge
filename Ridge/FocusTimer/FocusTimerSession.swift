@@ -85,6 +85,11 @@ final class FocusTimerSession: ObservableObject {
         startTimer(minutes: customMinutes, title: L10n.FocusTimer.customSessionTitle, kind: .custom)
     }
 
+    /// 选时态「正计时」入口；会话累加逻辑尚未接上，仅打点便于验收点击。
+    func startCountUpTimer() {
+        AppLog.info("FocusTimer", "正计时入口已点（累加会话待接）")
+    }
+
     func startTimer(minutes: Int? = nil, title: String? = nil, kind: FocusTimerKind? = nil) {
         // 上一轮终局若未点保存，记录已在 complete 时入库；清掉待写备注态再开新钟。
         if phase == .completed {

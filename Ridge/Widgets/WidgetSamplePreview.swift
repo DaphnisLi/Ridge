@@ -526,17 +526,10 @@ enum WidgetSamplePreview {
     }
 
     @ViewBuilder
-    private static func focusTimerSample(compact: Bool) -> some View {
-        if compact {
-            meetingMatchedCompactChrome {
-                FocusTimerIslandCardView.previewSample(phase: .running, compact: true)
-            }
-        } else {
-            FocusTimerIslandCardView.previewSample(phase: .running, compact: false)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
-                .frame(maxWidth: 540)
-                .frame(minHeight: 72)
+    private static func focusTimerSample(compact _: Bool) -> some View {
+        // 计时中仅待命胶囊；库卡 / 详情同壳。
+        meetingMatchedCompactChrome {
+            FocusTimerIslandCardView.previewSample(phase: .running, compact: true)
         }
     }
 

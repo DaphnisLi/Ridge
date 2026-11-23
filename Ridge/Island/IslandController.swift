@@ -197,6 +197,10 @@ final class IslandController: NSObject {
             .sink { [weak self] phase in
                 AppLog.info("Island", "番茄计时态切换，刷新收起尺寸", ["phase": phase.rawValue])
                 self?.viewModel.allowPanelShrink(for: 0.7, reason: "focusPhase")
+                // 计时 / 加时只保留待命胶囊：起钟或顺延后若仍展开则收起。
+                if phase == .running || phase == .overtime, self?.viewModel.isExpanded == true {
+                    self?.collapse(reason: "focusTimerStandby")
+                }
                 // 终局等比进行中更高：立刻套画布，避免 Preference 仍按 80pt 矮框裁掉备注热区。
                 self?.applyFocusTimerPanelSizeIfNeeded(phase: phase, reason: "phase")
                 self?.updateInteractiveFrame()
@@ -417,6 +421,13 @@ final class IslandController: NSObject {
 
     /// 指针交互是否允许展开：有面板/已点进实况，或瞬时通知保展开；纯空态禁止（避免点出「尚未添加」）。
     private func shouldExpandForPointerInteraction(reason: String) -> Bool {
+        // 计时 / 加时仅待命胶囊（含操作钮），悬停/按住不展开进行中或顺延面板。
+        if FocusTimerSession.shared.showsCompactStandby,
+           WidgetRuntime.shared.activeID == FocusTimerWidget.manifest.id
+        {
+            AppLog.debug("Island", "番茄待命禁止指针展开", ["reason": reason])
+            return false
+        }
         if WidgetRuntime.shared.allowsHoverExpand {
             return true
         }

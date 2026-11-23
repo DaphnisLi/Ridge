@@ -10,6 +10,7 @@ struct IslandContentView: View {
     @ObservedObject private var shelfDropSession = ShelfDropSession.shared
     @ObservedObject private var shelfSettings = ShelfSettings.shared
     @ObservedObject private var focusTimer = FocusTimerSession.shared
+    @ObservedObject private var focusTimerSettings = FocusTimerSettings.shared
     @ObservedObject private var nowPlaying = NowPlayingService.shared
     @ObservedObject private var widgetSettings = WidgetSettings.shared
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
@@ -51,11 +52,14 @@ struct IslandContentView: View {
             )
             return CGSize(width: NotchGeometry.pixelAlign(dual.width), height: height)
         }
-        // 番茄计时中：收起态加宽，左右翼展示待命倒计时（对齐 Live Activity）。
+        // 番茄计时中：收起态加宽，左右翼展示待命倒计时；宽随 +Nm 芯片位数伸缩。
         if focusTimer.showsCompactStandby {
+            let focusW = NotchGeometry.focusTimerStandbyWidth(
+                extendStepMinutes: focusTimerSettings.extendStepMinutes
+            )
             return CGSize(
                 width: NotchGeometry.pixelAlign(
-                    max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.focusTimerCompactWidth)
+                    max(viewModel.notchWidth * NotchGeometry.compactScale, focusW)
                 ),
                 height: height
             )
@@ -274,6 +278,7 @@ struct IslandContentView: View {
         .animation(islandSpring, value: viewModel.panelSize)
         .animation(islandSpring, value: focusTimer.showsCompactStandby)
         .animation(islandSpring, value: focusTimer.snapshot.remainingSeconds)
+        .animation(islandSpring, value: focusTimerSettings.extendStepMinutes)
         .animation(islandSpring, value: showsMediaCompactStandby)
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
@@ -318,6 +323,15 @@ struct IslandContentView: View {
         }
         .onChange(of: focusTimer.showsCompactStandby) { _, _ in
             syncCompactPanelSizeIfNeeded()
+        }
+        .onChange(of: focusTimerSettings.extendStepMinutes) { _, minutes in
+            // 顺延档变更时允许缩宽 / 加宽，否则 panelSize 只升不降会卡在旧宽。
+            viewModel.allowPanelShrink(for: 0.6, reason: "focusExtendStep")
+            syncCompactPanelSizeIfNeeded()
+            AppLog.info("FocusTimer", "待命岛宽随顺延步长刷新", [
+                "minutes": minutes,
+                "width": Int(NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: minutes))
+            ])
         }
         .onChange(of: showsMediaCompactStandby) { _, active in
             syncCompactPanelSizeIfNeeded()
@@ -383,6 +397,7 @@ private struct IslandBody: View {
     let notchHeight: CGFloat
     @ObservedObject var runtime: WidgetRuntime
     @ObservedObject private var focusTimer = FocusTimerSession.shared
+    @ObservedObject private var focusTimerSettings = FocusTimerSettings.shared
     @ObservedObject private var nowPlaying = NowPlayingService.shared
     @ObservedObject private var widgetSettings = WidgetSettings.shared
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
@@ -485,14 +500,20 @@ private struct IslandBody: View {
                     .allowsHitTesting(false)
                 }
             } else if focusTimer.showsCompactStandby {
-                // 左右翼贴胶囊边：用满 compact 宽，内边距略收，避免内容挤在中段。
-                FocusTimerStandbyView(snapshot: focusTimer.snapshot)
-                    .padding(.horizontal, 8)
+                // 宽随 +Nm 位数伸缩；内边距在 StandbyView 内，此处勿再叠 padding。
+                let standbyW = NotchGeometry.focusTimerStandbyWidth(
+                    extendStepMinutes: focusTimerSettings.extendStepMinutes
+                )
+                FocusTimerStandbyView(
+                    snapshot: focusTimer.snapshot,
+                    extendStepMinutes: focusTimerSettings.extendStepMinutes,
+                    onExtend: { FocusTimerSession.shared.extend() },
+                    onFinishEarly: { FocusTimerSession.shared.finishEarly() }
+                )
                     .frame(
-                        width: NotchGeometry.focusTimerCompactWidth,
+                        width: standbyW,
                         height: compactContentHeight
                     )
-                    .allowsHitTesting(false)
             } else if showsMediaCompactStandby, let snap = nowPlaying.snapshot {
                 MediaCompactStandbyView(
                     title: snap.title,
@@ -545,11 +566,11 @@ private struct IslandBody: View {
     }
 
     private var contentTopInset: CGFloat {
-        // 媒体展开：顶行封面/律动与刘海同带，顶距置 0（勿用负 padding，否则命中区收缩点不中控件）。
+        // 媒体展开：顶行贴近刘海，仅留一小段空隙（勿用负 padding，否则命中区收缩点不中控件）。
         if chromeSurface == .expanded,
            runtime.activeID == MediaNowPlayingWidget.manifest.id
         {
-            return 0
+            return MediaExpandedContentSize.topInset
         }
         return chromeInsets.top
     }

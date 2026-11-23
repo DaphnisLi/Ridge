@@ -2175,11 +2175,14 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertGreaterThan(MediaPreviewChrome.expandedTop, 0)
         XCTAssertEqual(MediaPreviewChrome.expandedBottom, IslandChrome.contentBottom)
         XCTAssertEqual(MediaPreviewChrome.expandedHorizontal, IslandChrome.contentHorizontal)
-        // 真岛面板下限仍只含底距（运行时顶 0）；预览顶距另走 MediaPreviewChrome.expandedTop。
+        // 真岛面板下限 = 顶空隙 + 内容 + 底距；预览顶距另走 MediaPreviewChrome.expandedTop。
         let panel = MediaExpandedContentSize.panelSize()
+        XCTAssertEqual(MediaExpandedContentSize.topInset, 4, accuracy: 0.5)
         XCTAssertEqual(
             panel.height,
-            MediaExpandedContentSize.minContentHeight + IslandChrome.contentBottom,
+            MediaExpandedContentSize.topInset
+                + MediaExpandedContentSize.minContentHeight
+                + IslandChrome.contentBottom,
             accuracy: 0.5
         )
     }
@@ -2192,6 +2195,26 @@ final class RegressionCatalogTests: XCTestCase {
             NotchGeometry.mediaCompactWidth,
             NotchGeometry.focusTimerCompactWidth,
             "播放小岛曾用 300 明显偏窄，至少与番茄翼同宽或更宽"
+        )
+        // 顺延 +10m/+15m 比 +5m 加宽，避免待命右簇被裁。
+        XCTAssertEqual(
+            NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 5),
+            NotchGeometry.focusTimerCompactWidth,
+            accuracy: 0.5
+        )
+        XCTAssertGreaterThan(
+            NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 10),
+            NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 5)
+        )
+        XCTAssertEqual(
+            NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 10),
+            NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 15),
+            accuracy: 0.5
+        )
+        XCTAssertGreaterThanOrEqual(
+            NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 10)
+                - NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: 5),
+            20
         )
         // 专注左环须与媒体封面同径；库卡待命外框 290×30（详情另走 standby）。
         XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)

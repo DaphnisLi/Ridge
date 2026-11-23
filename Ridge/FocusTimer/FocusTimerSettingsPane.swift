@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 嵌入「番茄倒计时」配置页：对齐稿面——五态 Tab 舞台 + 三栏看板 + 预设。
+/// 嵌入「番茄倒计时」配置页：对齐稿面——四态 Tab 舞台 + 三栏看板 + 预设。
 struct FocusTimerWidgetConfigSection: View {
     @ObservedObject private var settings = FocusTimerSettings.shared
     @State private var previewTab: FocusTimerPreviewTab = .standby
@@ -57,7 +57,7 @@ struct FocusTimerWidgetConfigSection: View {
         }
     }
 
-    // MARK: - 五态舞台（统一 SettingsIslandStage）
+    // MARK: - 四态舞台（统一 SettingsIslandStage）
 
     private var islandStageCard: some View {
         SettingsIslandStage(
@@ -68,7 +68,7 @@ struct FocusTimerWidgetConfigSection: View {
             )
         ) { option in
             let tab = FocusTimerPreviewTab(rawValue: option.id) ?? .standby
-            // 详情：待命/展开保持原先尺寸；库卡才用会议同款 290 chrome。
+            // 详情：待命胶囊 / 选时·终局展开；库卡才用会议同款 290 chrome。
             FocusTimerIslandCardView.previewSample(phase: tab.phase, compact: tab.isCompact)
                 .padding(
                     .horizontal,
@@ -103,7 +103,6 @@ struct FocusTimerWidgetConfigSection: View {
         switch tab {
         case .standby: return L10n.FocusTimer.phaseStandby
         case .picking: return L10n.FocusTimer.phasePicking
-        case .running: return L10n.FocusTimer.phaseRunning
         case .overtime: return L10n.FocusTimer.phaseOvertime
         case .completed: return L10n.FocusTimer.phaseCompleted
         }
@@ -111,9 +110,8 @@ struct FocusTimerWidgetConfigSection: View {
 
     private func tabBadge(_ tab: FocusTimerPreviewTab) -> String {
         switch tab {
-        case .standby: return "75%"
+        case .standby: return "23:42"
         case .picking: return L10n.FocusTimer.tabBadgeCustom
-        case .running: return "18:42"
         case .overtime: return "+10m"
         case .completed: return L10n.FocusTimer.tabBadgeSummary
         }
@@ -121,9 +119,8 @@ struct FocusTimerWidgetConfigSection: View {
 
     private func tabIcon(_ tab: FocusTimerPreviewTab) -> String {
         switch tab {
-        case .standby: return "timer"
+        case .standby: return "hourglass"
         case .picking: return "slider.horizontal.3"
-        case .running: return "hourglass"
         case .overtime: return "alarm.fill"
         case .completed: return "checkmark.seal.fill"
         }
@@ -133,7 +130,6 @@ struct FocusTimerWidgetConfigSection: View {
         switch tab {
         case .standby: return SettingsChrome.primary
         case .picking: return Color(red: 0.30, green: 0.29, blue: 0.79)
-        case .running: return SettingsChrome.primaryContainer
         case .overtime: return Color(red: 0.85, green: 0.47, blue: 0.02)
         case .completed: return SettingsChrome.secondary
         }
@@ -820,6 +816,7 @@ struct FocusTimerWidgetConfigSection: View {
 
     private func extendStepChip(_ minutes: Int, accent: Color) -> some View {
         let selected = settings.extendStepMinutes == minutes
+        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
         return Button {
             settings.extendStepMinutes = minutes
             AppLog.info("FocusTimer", "切换顺延步长", ["minutes": minutes])
@@ -831,10 +828,12 @@ struct FocusTimerWidgetConfigSection: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    shape
                         .fill(selected ? SettingsChrome.cardBackground : Color.clear)
                         .shadow(color: selected ? .black.opacity(0.06) : .clear, radius: 1.5, y: 0.5)
                 )
+                // plain Button 默认只点文字；整块芯片都要可点。
+                .contentShape(shape)
         }
         .buttonStyle(.plain)
     }

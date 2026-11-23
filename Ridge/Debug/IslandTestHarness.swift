@@ -347,12 +347,10 @@ final class IslandTestHarness: ObservableObject {
         case .picking:
             focusEnterPicking()
             IslandController.shared?.expand(reason: "testLabFocusPicking")
-        case .running:
-            focusEnterRunning(minutes: 25)
-            IslandController.shared?.expand(reason: "testLabFocusRunning")
         case .overtime:
             focusEnterOvertime()
-            IslandController.shared?.expand(reason: "testLabFocusOvertime")
+            IslandController.shared?.collapse(reason: "testLabFocusOvertime")
+            note(L10n.TestLab.statusFocusOvertime)
         case .completed:
             focusEnterCompleted()
             IslandController.shared?.expand(reason: "testLabFocusCompleted")

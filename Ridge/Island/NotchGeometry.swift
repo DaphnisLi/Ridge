@@ -19,9 +19,17 @@ struct NotchGeometry: Equatable {
     /// 无真刘海时的预览 / 测试参考高（≈典型 `safeAreaInsets.top`）。
     /// 真机收起高度必须用 `compactPanelHeight(notchHeight:)`，与刘海同高、底边齐平。
     static let compactIslandHeight: CGFloat = 32
-    /// 番茄倒计时收起待命（左右翼）最小宽度；加宽让「专注中」与倒计时贴两边。
-    static let focusTimerCompactWidth: CGFloat = 348
+    /// 番茄倒计时收起待命（+5m 档）最小宽度（含内容左右内边距）。
+    static let focusTimerCompactWidth: CGFloat = 360
     static var focusTimerCompactHeight: CGFloat { compactIslandHeight }
+    /// 待命内容左右内边距；与 `focusTimerStandbyWidth` 配套，禁止再在外层叠 padding 吃掉宽度。
+    static let focusTimerStandbyHorizontalPadding: CGFloat = 10
+
+    /// 待命岛宽随顺延芯片变：`+10m` / `+15m` 比 `+5m` 多一位数字，加宽避免右簇被裁。
+    static func focusTimerStandbyWidth(extendStepMinutes: Int) -> CGFloat {
+        let extraDigits = max(0, String(max(extendStepMinutes, 0)).count - 1)
+        return focusTimerCompactWidth + CGFloat(extraDigits) * 24
+    }
     /// 正在播放常驻小岛：左封面歌名、右律动条+时长（略宽于番茄，避免歌名挤）。
     static let mediaCompactWidth: CGFloat = 380
     static var mediaCompactHeight: CGFloat { compactIslandHeight }

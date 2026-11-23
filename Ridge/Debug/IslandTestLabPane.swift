@@ -363,7 +363,6 @@ struct IslandTestLabPane: View {
         switch tab {
         case .standby: return L10n.FocusTimer.phaseStandby
         case .picking: return L10n.FocusTimer.phasePicking
-        case .running: return L10n.FocusTimer.phaseRunning
         case .overtime: return L10n.FocusTimer.phaseOvertime
         case .completed: return L10n.FocusTimer.phaseCompleted
         }
