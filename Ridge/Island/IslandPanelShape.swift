@@ -1,5 +1,38 @@
 import SwiftUI
 
+/// 下圆角半径解析：设置值须经面板半高/半宽钳制；设置页迷你预览高度须能区分最大预设。
+enum IslandBottomRadiusPolicy {
+    /// 设置滑条 / 预设上限（与 `IslandSettingsPane` 一致）。
+    static let settingsMaxRadius: CGFloat = 32
+    /// 控制台展开稿面：不低于此值（与 `IslandContentView.appliedBottomRadius` 一致）。
+    static let controlDeckFloor: CGFloat = 26
+    /// 设置「下圆角」迷你预览高度：须 ≥ `2 * settingsMaxRadius`，否则 18/24/32 在矮条上视觉撞顶无差别。
+    static let settingsGeometryPreviewHeight: CGFloat = 68
+    static let settingsGeometryPreviewWidth: CGFloat = 170
+
+    /// 按面板尺寸钳制下圆角（路径算法同 `IslandPanelShape`）。
+    static func clamped(preferred: CGFloat, panelWidth: CGFloat, panelHeight: CGFloat) -> CGFloat {
+        min(max(0, preferred), panelHeight / 2, panelWidth / 2)
+    }
+
+    /// 真岛应用半径：圆岛固定；控制台有下限；其余跟设置。
+    static func applied(
+        settingsRadius: CGFloat,
+        isNotchRightOrb: Bool,
+        isControlDeckPage: Bool,
+        panelWidth: CGFloat,
+        panelHeight: CGFloat
+    ) -> CGFloat {
+        if isNotchRightOrb {
+            return IslandChrome.notchRightOrbDiameter / 2
+        }
+        let preferred = isControlDeckPage
+            ? max(settingsRadius, controlDeckFloor)
+            : settingsRadius
+        return clamped(preferred: preferred, panelWidth: panelWidth, panelHeight: panelHeight)
+    }
+}
+
 /// 岛外壳轮廓：默认上直角、下圆角（贴顶融刘海）；`capsule` 仅保留给特殊样张；`circle` 给刘海右侧微岛。
 enum IslandOutlineStyle: String, Equatable {
     /// 贴顶直角，底边圆角（真岛 / tip / 常驻默认）。

@@ -793,8 +793,8 @@ final class RegressionCatalogTests: XCTestCase {
 
     func test_islandChromeDoublePadding_tokensAreFixed() {
         // 左右 / 底是固定令牌；改数须有意为之，并同步本用例。
-        XCTAssertEqual(IslandChrome.contentHorizontal, 14)
-        XCTAssertEqual(IslandChrome.contentBottom, 14)
+        XCTAssertEqual(IslandChrome.contentHorizontal, 7)
+        XCTAssertEqual(IslandChrome.contentBottom, 7)
         XCTAssertEqual(IslandChrome.compactTipTopInset, 0)
         XCTAssertEqual(IslandChrome.compactTipBottom, 4)
         XCTAssertEqual(IslandChrome.shortTipBottom, 6)
@@ -835,7 +835,8 @@ final class RegressionCatalogTests: XCTestCase {
     }
 
     /// 外设满岛翼 tip：外缘只计壳层 horizontal 一次；预备宽 = 内容宽 + horizontalInsetTotal。
-    /// 卡根再叠 bareContentLeading / trailing = 左右空档过大（2026-11-23 复发）。
+    /// 卡根再叠 bareContentLeading / trailing = 左右空档过大；
+    /// 右翼不占满 wingWidth 时 HStack+.frame 居中，左右外缘再空一截（2026-11-23）。
     func test_islandChromeDoublePadding_peripheralWingTipOuterInsetIsChromeOnly() {
         let notchW: CGFloat = 160
         let notchH: CGFloat = 32
@@ -843,7 +844,9 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(wingInsets.horizontal, IslandChrome.contentHorizontal)
 
         let wingW = IslandChrome.preparedPeripheralWingWidth
-        let contentW = wingW * 2 + max(notchW, 110)
+        // 左右各占满一翼：子宽必须等于 totalWidth，禁止右翼 fixedSize 欠宽导致居中空边。
+        let contentW = wingW + max(notchW, 110) + wingW
+        XCTAssertEqual(contentW, wingW * 2 + max(notchW, 110), accuracy: 0.5)
         let prepared = IslandChrome.preparedWingTipPanelSize(
             notchWidth: notchW,
             notchHeight: notchH,
@@ -1138,35 +1141,44 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(untouched.width, 200, accuracy: 0.5)
     }
 
-    /// focus-completed-clipped-by-notch：终局顶距躲开刘海；左右/底与展开页令牌一致。
+    /// focus-completed-clipped-by-notch：终局须翼 tip（顶 0），高度远小于展开页，消灭大顶空。
     func test_focusCompletedClippedByNotch_topInsetClearsNotch() {
+        let notchW: CGFloat = 160
         let notchH: CGFloat = 32
-        let top = FocusTimerContentSize.completedTopInset(notchHeight: notchH)
-        let expanded = IslandChrome.expandedTopInset(notchHeight: notchH)
-        XCTAssertEqual(top, expanded, accuracy: 0.5)
-        XCTAssertGreaterThan(top, notchH, "终局内容须落在刘海下沿之下")
+        let wingInsets = IslandChrome.insets(for: .notchWingTip, notchHeight: notchH)
+        XCTAssertEqual(wingInsets.top, 0, accuracy: 0.5, "终局壳层须 notchWingTip 顶距 0")
+        XCTAssertEqual(wingInsets.bottom, IslandChrome.compactTipBottom, accuracy: 0.5)
+        XCTAssertEqual(FocusTimerContentSize.completedPreviewTopInset, 0, accuracy: 0.5)
         XCTAssertEqual(
             FocusTimerContentSize.completedBottomInset,
-            IslandChrome.contentBottom,
+            IslandChrome.compactTipBottom,
             accuracy: 0.5
         )
-        // 左右 / 底同一令牌 14；面板宽 = 内容宽 + 左右 chrome，禁止行内 leading 空出右缘。
-        let expandedInsets = IslandChrome.insets(for: .expanded, notchHeight: notchH)
-        XCTAssertEqual(expandedInsets.horizontal, IslandChrome.contentHorizontal)
-        XCTAssertEqual(expandedInsets.bottom, IslandChrome.contentBottom)
-        XCTAssertEqual(IslandChrome.contentHorizontal, 14)
-        let panel = FocusTimerContentSize.panelSize(phase: .completed, notchHeight: notchH)
-        XCTAssertEqual(
-            panel.width,
-            FocusTimerContentSize.completedContentWidth + IslandChrome.horizontalInsetTotal,
-            accuracy: 0.5
+
+        let completed = FocusTimerContentSize.panelSize(
+            phase: .completed,
+            notchHeight: notchH,
+            notchWidth: notchW
         )
-        XCTAssertEqual(
-            panel.height,
-            top + FocusTimerCompletedView.noteRowHeight + FocusTimerContentSize.completedBottomInset,
-            accuracy: 0.5
+        let expandedPick = FocusTimerContentSize.panelSize(
+            phase: .picking,
+            notchHeight: notchH,
+            notchWidth: notchW
         )
-        XCTAssertLessThan(FocusTimerContentSize.completedPreviewTopInset, top)
+        let expected = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchW + FocusTimerContentSize.completedCenterExtra,
+            notchHeight: notchH,
+            wingWidth: FocusTimerContentSize.completedWingWidth
+        )
+        XCTAssertEqual(completed.width, expected.width, accuracy: 0.5)
+        XCTAssertEqual(completed.height, expected.height, accuracy: 0.5)
+        XCTAssertLessThan(
+            completed.height,
+            expandedPick.height - 20,
+            "终局翼 tip 须明显矮于选时展开页，用户才能感到顶空消失"
+        )
+        XCTAssertEqual(FocusTimerContentSize.completedWingWidth, 120, accuracy: 0.5)
+        XCTAssertEqual(FocusTimerContentSize.completedCenterExtra, 8, accuracy: 0.5)
     }
 
     /// peripheral-wing-floor-meeting-width：外设窄翼可点区抬升须用 peripheral 预备宽，禁止抬成会议翼（否则左右空一边）。
@@ -1645,6 +1657,61 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(panel.contains(CGPoint(x: 100, y: 20)))
     }
 
+    /// island-bottom-corner-preview-dead：设置迷你预览须够高以区分 8/18/24（及滑条 32）；矮条会把大半径钳成同形。
+    func test_islandBottomCornerPreviewDead_settingsPreviewDistinguishesPresets() {
+        let previewH = IslandBottomRadiusPolicy.settingsGeometryPreviewHeight
+        let previewW = IslandBottomRadiusPolicy.settingsGeometryPreviewWidth
+        XCTAssertGreaterThanOrEqual(
+            previewH,
+            IslandBottomRadiusPolicy.settingsMaxRadius * 2,
+            "迷你预览高度不足时滑条上限会被半高钳死"
+        )
+        XCTAssertEqual(IslandSettings.Defaults.bottomCornerRadius, 18.0, accuracy: 0.5)
+        let flat = IslandBottomRadiusPolicy.clamped(preferred: 8, panelWidth: previewW, panelHeight: previewH)
+        let classic = IslandBottomRadiusPolicy.clamped(preferred: 18, panelWidth: previewW, panelHeight: previewH)
+        let standard = IslandBottomRadiusPolicy.clamped(preferred: 24, panelWidth: previewW, panelHeight: previewH)
+        let sliderMax = IslandBottomRadiusPolicy.clamped(preferred: 32, panelWidth: previewW, panelHeight: previewH)
+        XCTAssertEqual(flat, 8, accuracy: 0.5)
+        XCTAssertEqual(classic, 18, accuracy: 0.5)
+        XCTAssertEqual(standard, 24, accuracy: 0.5)
+        XCTAssertEqual(sliderMax, 32, accuracy: 0.5)
+        XCTAssertLessThan(flat, classic)
+        XCTAssertLessThan(classic, standard)
+        XCTAssertLessThan(standard, sliderMax)
+
+        // 旧 24pt 矮预览：18/24/32 全部钳成 12，调了「没反应」。
+        let deadH: CGFloat = 24
+        let deadClassic = IslandBottomRadiusPolicy.clamped(preferred: 18, panelWidth: previewW, panelHeight: deadH)
+        let deadRound = IslandBottomRadiusPolicy.clamped(preferred: 32, panelWidth: previewW, panelHeight: deadH)
+        XCTAssertEqual(deadClassic, deadRound, accuracy: 0.5)
+
+        // 真岛：非控制台跟设置；控制台有 26 下限；圆岛固定半径。
+        let tall = IslandBottomRadiusPolicy.applied(
+            settingsRadius: 8,
+            isNotchRightOrb: false,
+            isControlDeckPage: false,
+            panelWidth: 400,
+            panelHeight: 120
+        )
+        XCTAssertEqual(tall, 8, accuracy: 0.5)
+        let deck = IslandBottomRadiusPolicy.applied(
+            settingsRadius: 8,
+            isNotchRightOrb: false,
+            isControlDeckPage: true,
+            panelWidth: 400,
+            panelHeight: 120
+        )
+        XCTAssertEqual(deck, IslandBottomRadiusPolicy.controlDeckFloor, accuracy: 0.5)
+        let orb = IslandBottomRadiusPolicy.applied(
+            settingsRadius: 8,
+            isNotchRightOrb: true,
+            isControlDeckPage: false,
+            panelWidth: 32,
+            panelHeight: 32
+        )
+        XCTAssertEqual(orb, IslandChrome.notchRightOrbDiameter / 2, accuracy: 0.5)
+    }
+
     @MainActor
     func test_meetingTipDismiss_retainWindowMatchesMode() {
         let settings = MeetingSettings.shared
@@ -2050,7 +2117,7 @@ final class RegressionCatalogTests: XCTestCase {
             )
         }
         // tip 左右边距令牌不得漂移（与 island-chrome-double-padding 同值）。
-        XCTAssertEqual(IslandChrome.contentHorizontal, 14)
+        XCTAssertEqual(IslandChrome.contentHorizontal, 7)
         XCTAssertEqual(IslandChrome.compactTipBottom, 4)
         // 媒体/番茄可固定预览宽，但高度须贴内容（stageCanvas 不得把 minStageHeight 作用在黑岛上）。
         XCTAssertTrue(

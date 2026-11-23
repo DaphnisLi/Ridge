@@ -7,8 +7,8 @@ import SwiftUI
 ///
 /// 左右 / 底边是**固定令牌**；改数值须同步 `RidgeTests`（`island-chrome-double-padding`）。
 enum IslandChrome {
-    /// 内容区相对面板左右边（展开页 / tip / 短提示统一）。
-    static let contentHorizontal: CGFloat = 14
+    /// 内容区相对面板左右边（展开页 / tip / 短提示统一；原 14，收为半档）。
+    static let contentHorizontal: CGFloat = 7
     /// 内容区相对面板底边；与左右边距一致。
     static let contentBottom: CGFloat = contentHorizontal
 
@@ -40,7 +40,7 @@ enum IslandChrome {
         max(10, notchHeight)
     }
 
-    /// 短提示底距：仍明显小于展开页默认 contentBottom（14）。
+    /// 短提示底距：仍明显小于展开页默认 contentBottom。
     static let shortTipBottom: CGFloat = 6
 
     /// 「已复制」等内容区估算高度（不含 chrome 顶/底）；遗留短条契约仍保留给测试 / 旧路径。
@@ -63,6 +63,8 @@ enum IslandChrome {
     static let preparedWingWidth: CGFloat = 98
     /// 外设满岛 tip 单侧翼宽：比会议收一档；长设备名在左翼内滚动。
     static let preparedPeripheralWingWidth: CGFloat = 78
+    /// 专注终局翼 tip：右翼要装备注+回车，比会议略宽。
+    static let preparedFocusCompletedWingWidth: CGFloat = 120
 
     /// 短 tip 上岛前强制面板尺寸（遗留；「已复制」已改圆岛）。
     static func preparedShortTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {

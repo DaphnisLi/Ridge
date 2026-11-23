@@ -35,8 +35,12 @@ enum ControlDeckContentSize {
     }
 
     /// 电量内容宽：按列数自适应，上限为控制台满宽。
+    /// 满三列直接回 `width`，避免 `floor` 单卡宽后 3×卡+缝 比满宽少 1–2pt。
     static func batteryContentWidth(deviceCount: Int) -> CGFloat {
         let cols = batteryColumnCount(deviceCount: max(deviceCount, 1))
+        if cols >= NotchGeometry.batteryDeckColumns {
+            return width
+        }
         let cardW = batteryCardWidthAtFullDeck
         let gaps = CGFloat(max(cols - 1, 0)) * batteryCardSpacing
         let needed = CGFloat(cols) * cardW + gaps

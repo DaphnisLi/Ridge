@@ -3,23 +3,15 @@ import SwiftUI
 struct IslandSettingsPane: View {
     @ObservedObject var settings: IslandSettings
 
-    /// 下圆角曲率预设（对齐稿面：平角 / 经典 / 默认 / 圆润）。
+    /// 下圆角曲率预设（仅 pt；默认 18）。
     private enum CornerRadiusPreset: Double, CaseIterable, Identifiable {
-        case flat = 8
-        case classic = 18
-        case standard = 24
-        case round = 32
+        case pt8 = 8
+        case pt18 = 18
+        case pt24 = 24
 
         var id: Double { rawValue }
 
-        var title: String {
-            switch self {
-            case .flat: return L10n.Settings.cornerPresetFlat
-            case .classic: return L10n.Settings.cornerPresetClassic
-            case .standard: return L10n.Settings.cornerPresetDefault
-            case .round: return L10n.Settings.cornerPresetRound
-            }
-        }
+        var title: String { "\(Int(rawValue)) pt" }
     }
 
     var body: some View {
@@ -67,7 +59,18 @@ struct IslandSettingsPane: View {
             IslandHaptics.play(value)
         }
         .onChange(of: settings.bottomCornerRadius) { _, value in
-            AppLog.info("Settings", "下圆角已更新", ["radius": value])
+            let previewH = IslandBottomRadiusPolicy.settingsGeometryPreviewHeight
+            let previewW = IslandBottomRadiusPolicy.settingsGeometryPreviewWidth
+            let effective = IslandBottomRadiusPolicy.clamped(
+                preferred: CGFloat(value),
+                panelWidth: previewW,
+                panelHeight: previewH
+            )
+            AppLog.info("Settings", "下圆角已更新", [
+                "radius": value,
+                "previewEffective": effective,
+                "previewH": Int(previewH)
+            ])
         }
         .onChange(of: settings.theme) { _, value in
             AppLog.info("Settings", "预设主题", ["theme": value.rawValue])
@@ -106,11 +109,7 @@ struct IslandSettingsPane: View {
     }
 
     private var currentCurvatureBadge: String {
-        let pts = Int(settings.bottomCornerRadius.rounded())
-        if let preset = matchedCornerPreset {
-            return L10n.Settings.curvatureBadgeNamed(preset.title, pts)
-        }
-        return L10n.Settings.curvatureBadgeCustom(pts)
+        "\(Int(settings.bottomCornerRadius.rounded())) pt"
     }
 
     private var geometryCard: some View {
@@ -150,10 +149,16 @@ struct IslandSettingsPane: View {
                 trailing: "\(L10n.Settings.cornerRoundMax) (32 pt)"
             )
 
-            HStack(alignment: .center) {
-                Text(L10n.Settings.geometryPreview)
-                    .font(SettingsChrome.Font.label)
-                    .foregroundStyle(SettingsChrome.onSurface)
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.Settings.geometryPreview)
+                        .font(SettingsChrome.Font.label)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Text(L10n.Settings.geometryPreviewHint)
+                        .font(SettingsChrome.Font.footnote)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 Spacer(minLength: 8)
                 geometryMiniPreview
             }
@@ -170,12 +175,11 @@ struct IslandSettingsPane: View {
             items: CornerRadiusPreset.allCases.map { preset in
                 .init(
                     id: "\(Int(preset.rawValue))",
-                    title: "\(preset.title) (\(Int(preset.rawValue)) pt)",
+                    title: preset.title,
                     selected: active == preset
                 ) {
                     settings.bottomCornerRadius = preset.rawValue
                     AppLog.info("Settings", "下圆角预设", [
-                        "preset": preset.title,
                         "radius": preset.rawValue
                     ])
                 }
@@ -183,20 +187,30 @@ struct IslandSettingsPane: View {
         )
     }
 
-    /// 顶部平直贴顶、底部双圆角；曲率联动，宽度固定（稿面 170pt 迷你岛）。
+    /// 顶部平直贴顶、底部双圆角；高度须能展示滑条上限 32pt（矮条会把大半径钳成同形）。
     private var geometryMiniPreview: some View {
         let palette = settings.theme.palette
-        let radius = min(max(settings.bottomCornerRadius, 0), 32)
-        return HStack(spacing: 6) {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 6, height: 6)
-            Capsule()
-                .fill(Color.white.opacity(0.6))
-                .frame(width: 28, height: 4)
+        let previewH = IslandBottomRadiusPolicy.settingsGeometryPreviewHeight
+        let previewW = IslandBottomRadiusPolicy.settingsGeometryPreviewWidth
+        let radius = IslandBottomRadiusPolicy.clamped(
+            preferred: CGFloat(settings.bottomCornerRadius),
+            panelWidth: previewW,
+            panelHeight: previewH
+        )
+        return VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 6, height: 6)
+                Capsule()
+                    .fill(Color.white.opacity(0.6))
+                    .frame(width: 28, height: 4)
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 10)
         }
-        .padding(.horizontal, 14)
-        .frame(width: 170, height: 24)
+        .frame(width: previewW, height: previewH)
         .background(
             UnevenRoundedRectangle(
                 topLeadingRadius: 0,
@@ -207,6 +221,9 @@ struct IslandSettingsPane: View {
             )
             .fill(palette.fill)
             .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+        )
+        .accessibilityLabel(
+            "\(L10n.Settings.geometryPreview)，\(Int(radius.rounded())) pt"
         )
         .animation(.easeOut(duration: 0.15), value: settings.bottomCornerRadius)
         .animation(.easeOut(duration: 0.15), value: settings.theme)

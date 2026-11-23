@@ -84,6 +84,7 @@ struct FocusTimerWidgetConfigSection: View {
 
     private func previewTopPadding(_ tab: FocusTimerPreviewTab) -> CGFloat {
         if tab.isCompact { return 6 }
+        // 终局翼 tip：顶 0（贴刘海），与真岛 notchWingTip 一致。
         if tab == .completed { return FocusTimerContentSize.completedPreviewTopInset }
         return IslandChrome.contentBottom
     }

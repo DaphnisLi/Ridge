@@ -24,12 +24,17 @@ struct BatteryDeckIslandPreview: View {
         IslandChrome.previewExpandedVisibleTopInset(notchHeight: notchHeight)
     }
 
-    /// 与 `IslandContentView.appliedBottomRadius` 控制台分支一致：至少 26。
+    /// 与真岛控制台分支一致（`IslandBottomRadiusPolicy`）。
     private var bottomRadius: CGFloat {
-        let preferred = max(CGFloat(settings.bottomCornerRadius), 26)
         let panelH = canvasHeight + visibleTopInset + IslandChrome.contentBottom
         let panelW = canvasWidth + IslandChrome.horizontalInsetTotal
-        return min(preferred, panelH / 2, panelW / 2)
+        return IslandBottomRadiusPolicy.applied(
+            settingsRadius: CGFloat(settings.bottomCornerRadius),
+            isNotchRightOrb: false,
+            isControlDeckPage: true,
+            panelWidth: panelW,
+            panelHeight: panelH
+        )
     }
 
     /// 未缩放时黑岛固有尺寸（含 chrome）；库卡缩放系数见 `libraryPreviewScale`。

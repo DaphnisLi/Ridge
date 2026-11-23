@@ -628,8 +628,9 @@ struct PeripheralBatteryNoticeCard: View {
     }
 
     private var fullWingBody: some View {
-        // 左右翼等宽贴刘海；外缘只靠壳层 `notchWingTip` horizontal，禁止再叠 leading/trailing。
-        // 设备名只在左翼内滚动（同会议 tip：卡根零外圈 padding）。
+        // 左右翼必须各占满 wingWidth：右翼若只 fixedSize，子宽 < totalWidth，
+        // 外层 .frame 会居中整条 → 左右外缘空一大截（用户「边距这么大」）。
+        // 外缘只靠壳层 `notchWingTip` horizontal；卡根禁止再叠 padding。
         HStack(spacing: 0) {
             leftCluster
                 .frame(width: wingWidth, alignment: .leading)
@@ -638,7 +639,8 @@ struct PeripheralBatteryNoticeCard: View {
                 .frame(width: notchWidth)
                 .accessibilityHidden(true)
             rightCluster
-                .fixedSize(horizontal: true, vertical: false)
+                .frame(width: wingWidth, alignment: .trailing)
+                .clipped()
         }
         .frame(width: totalWidth, height: barHeight)
         .clipped()
@@ -701,7 +703,7 @@ struct PeripheralBatteryNoticeCard: View {
     /// 右翼：电量% + 状态环（接入蓝弧 / 满电绿闪 / 低电红弧；按实际电量画弧）。
     @ViewBuilder
     private var rightCluster: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             if let pct = rightWingPercent {
                 Text(L10n.Battery.tipPercentBadge(pct))
                     .font(.system(size: 12, weight: .medium, design: .default))
@@ -713,9 +715,10 @@ struct PeripheralBatteryNoticeCard: View {
             PeripheralBatteryStatusGlyph(
                 style: style,
                 percent: rightWingPercent,
-                size: 20
+                size: 18
             )
         }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     /// 满电默认 100；低电用通知值；接入仅在读得到时显示。

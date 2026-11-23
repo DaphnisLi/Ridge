@@ -143,17 +143,12 @@ struct IslandContentView: View {
     }
 
     private var appliedBottomRadius: CGFloat {
-        if usesNotchRightOrb {
-            return IslandChrome.notchRightOrbDiameter / 2
-        }
-        // 控制台混音台稿面底部约 26pt 圆角。
-        let preferred = runtime.isControlDeckPage
-            ? max(CGFloat(settings.bottomCornerRadius), 26)
-            : CGFloat(settings.bottomCornerRadius)
-        return min(
-            preferred,
-            bodySize.height / 2,
-            bodySize.width / 2
+        IslandBottomRadiusPolicy.applied(
+            settingsRadius: CGFloat(settings.bottomCornerRadius),
+            isNotchRightOrb: usesNotchRightOrb,
+            isControlDeckPage: runtime.isControlDeckPage,
+            panelWidth: bodySize.width,
+            panelHeight: bodySize.height
         )
     }
 
@@ -300,7 +295,8 @@ struct IslandContentView: View {
             {
                 let floor = FocusTimerContentSize.panelSize(
                     phase: focusTimer.phase,
-                    notchHeight: viewModel.notchHeight
+                    notchHeight: viewModel.notchHeight,
+                    notchWidth: viewModel.notchWidth
                 )
                 let floorWidth = FocusTimerContentSize.shouldFloorWidth(phase: focusTimer.phase)
                 // 终局：宽高都不得低于下限（矮框会把备注裁出可点区）。
@@ -423,10 +419,17 @@ private struct IslandBody: View {
     @ObservedObject private var noticeCenter = IslandNoticeCenter.shared
     @Environment(\.islandPalette) private var palette
 
+    /// 专注终局：贴刘海双翼 tip（顶距 0），勿走展开页大顶空。
+    private var usesFocusCompletedWingTip: Bool {
+        runtime.activeID == FocusTimerWidget.manifest.id
+            && focusTimer.phase == .completed
+    }
+
     private var usesNotchWingTip: Bool {
-        // 仅会议翼 tip；音乐/专注+短 C 走 dualFlush（零 inset、同刘海高）。
-        runtime.isTransientNoticePage
-            && noticeCenter.slots.anyUsesNotchWingChrome
+        // 会议等通知翼 tip，或专注终局翼 tip；音乐/专注+短 C 走 dualFlush。
+        usesFocusCompletedWingTip
+            || (runtime.isTransientNoticePage
+                && noticeCenter.slots.anyUsesNotchWingChrome)
     }
 
     private var usesDualFlushTip: Bool {
@@ -602,23 +605,10 @@ private struct IslandBody: View {
         {
             return MediaExpandedContentSize.topInset
         }
-        // 番茄终局单行：顶距须躲开刘海（与展开页同令牌），禁止固定 6 把内容顶进盲区。
-        if chromeSurface == .expanded,
-           runtime.activeID == FocusTimerWidget.manifest.id,
-           focusTimer.phase == .completed
-        {
-            return FocusTimerContentSize.completedTopInset(notchHeight: notchHeight)
-        }
         return chromeInsets.top
     }
 
     private var contentBottomInset: CGFloat {
-        if chromeSurface == .expanded,
-           runtime.activeID == FocusTimerWidget.manifest.id,
-           focusTimer.phase == .completed
-        {
-            return FocusTimerContentSize.completedBottomInset
-        }
         return chromeInsets.bottom
     }
 }

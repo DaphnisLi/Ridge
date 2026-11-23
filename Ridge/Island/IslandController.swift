@@ -651,9 +651,15 @@ final class IslandController: NSObject {
         else { return }
         let size = FocusTimerContentSize.panelSize(
             phase: resolved,
-            notchHeight: viewModel.notchHeight
+            notchHeight: viewModel.notchHeight,
+            notchWidth: viewModel.notchWidth
         )
-        viewModel.applyMeasuredPanelSize(size)
+        // 终局翼 tip：须 force，否则误缩守卫可能挡住从展开页大高度收到 tip 矮高。
+        if resolved == .completed {
+            viewModel.forcePanelSize(size, reason: "focusCompleted:\(reason)")
+        } else {
+            viewModel.applyMeasuredPanelSize(size)
+        }
         updateInteractiveFrame(expanded: viewModel.isExpanded || resolved == .completed)
         AppLog.warn("Island", "番茄面板尺寸已套用", [
             "reason": reason,
@@ -665,12 +671,21 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 计时结束专用：保证切页 + 展开后可点区立刻覆盖终局备注。
+    /// 计时结束专用：强制翼 tip 矮面板，可点区立刻覆盖备注；顶距 0 贴刘海。
     func applyFocusTimerCompletedLayout(reason: String) {
-        applyFocusTimerPanelSizeIfNeeded(phase: .completed, reason: reason)
+        let size = FocusTimerContentSize.panelSize(
+            phase: .completed,
+            notchHeight: viewModel.notchHeight,
+            notchWidth: viewModel.notchWidth
+        )
+        viewModel.forcePanelSize(size, reason: reason)
         updateInteractiveFrame(expanded: true)
-        // 终局备注点输入框时再 prepare；此处 activate 会抢走正在用的其它 App。
-        AppLog.debug("Overlay", "番茄终局布局：不抢前台", ["reason": reason])
+        AppLog.warn("Island", "番茄终局翼 tip 布局已预备", [
+            "reason": reason,
+            "w": Int(size.width),
+            "h": Int(size.height),
+            "wingW": Int(FocusTimerContentSize.completedWingWidth)
+        ])
     }
 
     /// 进入取色 / OCR：收岛、清按住态、强制穿透，并挡住悬停展开。
@@ -1503,15 +1518,18 @@ final class IslandController: NSObject {
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight
         )
-        // 翼 tip：可点区至少预备双翼宽，避免 panel 误缩后右翼按钮点穿。
-        // 外设窄翼须用 peripheral 预备宽，禁止抬成会议翼导致左右空一边。
+        // 翼 tip（通知或专注终局）：可点区至少预备双翼宽，避免右翼控件点穿。
         let noticeSlots = IslandNoticeCenter.shared.slots
+        let focusCompletedWing = WidgetRuntime.shared.activeID == FocusTimerWidget.manifest.id
+            && FocusTimerSession.shared.phase == .completed
         let interactivePanel = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
             current: viewModel.panelSize,
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight,
-            usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome,
-            wingWidth: noticeSlots.wingTipPreparedWingWidth
+            usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome || focusCompletedWing,
+            wingWidth: focusCompletedWing
+                ? FocusTimerContentSize.completedWingWidth
+                : noticeSlots.wingTipPreparedWingWidth
         )
         let panelOffsetX = currentPanelHorizontalOffset(panel: interactivePanel)
         let retentionOffsetX = currentPanelHorizontalOffset(panel: retentionSize)
@@ -1974,14 +1992,18 @@ final class IslandController: NSObject {
         let windowFrame = window.frame
         let isExpanded = expanded ?? viewModel.isExpanded
         // 展开 / 收起 / 待命一律以内容（或收起几何）写入的 panelSize 为准；
-        // 翼 tip 额外抬到该 tip 预备双翼宽（外设用窄翼），保证右翼按钮落在 HitTest 内。
+        // 翼 tip（通知 / 专注终局）额外抬到预备双翼宽，保证右翼控件落在 HitTest 内。
         let noticeSlots = IslandNoticeCenter.shared.slots
+        let focusCompletedWing = WidgetRuntime.shared.activeID == FocusTimerWidget.manifest.id
+            && FocusTimerSession.shared.phase == .completed
         let panel = IslandExpandedPanelPolicy.wingTipInteractivePanelSize(
             current: viewModel.panelSize,
             notchWidth: geometry.notchWidth,
             notchHeight: geometry.notchHeight,
-            usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome,
-            wingWidth: noticeSlots.wingTipPreparedWingWidth
+            usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome || focusCompletedWing,
+            wingWidth: focusCompletedWing
+                ? FocusTimerContentSize.completedWingWidth
+                : noticeSlots.wingTipPreparedWingWidth
         )
         let offsetX = currentPanelHorizontalOffset(panel: panel)
         // 面板在窗内水平居中（圆岛再加右偏）、贴顶（AppKit 原点左下）。

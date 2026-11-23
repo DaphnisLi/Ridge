@@ -11,55 +11,46 @@ enum FocusTimerCompactMetrics {
 }
 
 /// 番茄面板下限：选时走内容 `fixedSize` + IslandChrome；
-/// 计时 / 加时不走展开面板；仅终局锁最小宽高。
+/// 计时 / 加时不走展开面板；终局改贴刘海双翼 tip（顶距 0，无展开页大顶空）。
 enum FocusTimerContentSize {
-    /// 终局单行（绿勾 + 时长 + 备注 + 回车）内容宽。
-    static let completedContentWidth: CGFloat = 460
-    /// 终局顶距：须躲开刘海盲区，禁止用固定 6 把单行顶进摄像头区。
-    static func completedTopInset(notchHeight: CGFloat) -> CGFloat {
-        IslandChrome.expandedTopInset(notchHeight: notchHeight)
-    }
-    /// 设置预览无刘海：只保留「刘海下沿 → 内容」的可见间隙。
-    static var completedPreviewTopInset: CGFloat {
-        IslandChrome.previewExpandedVisibleTopInset()
-    }
-    /// 终局底距：与展开页统一，避免单行贴底。
-    static let completedBottomInset: CGFloat = IslandChrome.contentBottom
+    /// 终局单侧翼宽（与 `IslandChrome.preparedFocusCompletedWingWidth` 对齐）。
+    static var completedWingWidth: CGFloat { IslandChrome.preparedFocusCompletedWingWidth }
+    /// 终局中间刘海空隙额外加宽（左右内容略分开，勿贴死硬件宽）。
+    static let completedCenterExtra: CGFloat = 8
+    /// 设置预览无硬件刘海：翼 tip 顶距为 0，预览只留底距。
+    static var completedPreviewTopInset: CGFloat { 0 }
+    static var completedBottomInset: CGFloat { IslandChrome.compactTipBottom }
 
     static func minimumContentHeight(phase: FocusTimerPhase) -> CGFloat {
         switch phase {
         case .picking, .running, .overtime, .countUp:
             return 28
         case .completed:
-            // 单行终局 ≈ 备注行高，勿再按双行虚高。
             return FocusTimerCompletedView.noteRowHeight
         }
     }
 
-    /// 展开首帧 / Preference 下限（宽仅终局抬升；计时/加时/正计时不展开）。
-    static func panelSize(phase: FocusTimerPhase, notchHeight: CGFloat) -> CGSize {
-        let height: CGFloat = {
-            switch phase {
-            case .completed:
-                return completedTopInset(notchHeight: notchHeight)
-                    + minimumContentHeight(phase: phase)
-                    + completedBottomInset
-            case .picking, .running, .overtime, .countUp:
-                return IslandChrome.expandedTopInset(notchHeight: notchHeight)
+    /// 展开首帧 / Preference 下限（终局用翼 tip 预备尺寸；计时/加时/正计时不展开）。
+    static func panelSize(
+        phase: FocusTimerPhase,
+        notchHeight: CGFloat,
+        notchWidth: CGFloat = 160
+    ) -> CGSize {
+        switch phase {
+        case .completed:
+            return IslandChrome.preparedWingTipPanelSize(
+                notchWidth: notchWidth + completedCenterExtra,
+                notchHeight: notchHeight,
+                wingWidth: completedWingWidth
+            )
+        case .picking, .running, .overtime, .countUp:
+            return CGSize(
+                width: 360 + IslandChrome.horizontalInsetTotal,
+                height: IslandChrome.expandedTopInset(notchHeight: notchHeight)
                     + minimumContentHeight(phase: phase)
                     + IslandChrome.contentBottom
-            }
-        }()
-        let width: CGFloat = {
-            switch phase {
-            case .completed:
-                return completedContentWidth + IslandChrome.horizontalInsetTotal
-            case .picking, .running, .overtime, .countUp:
-                // 选时种子宽；计时/加时/正计时若误走展开亦用待命宽量级。
-                return 360 + IslandChrome.horizontalInsetTotal
-            }
-        }()
-        return CGSize(width: width, height: height)
+            )
+        }
     }
 
     /// Preference 是否应抬升宽度（仅终局）。
@@ -83,6 +74,8 @@ struct FocusTimerIslandCardView: View {
     var onSave: () -> Void = {}
     var presets: [FocusTimerPreset] = FocusTimerPreset.defaults
     var extendStepMinutes: Int = 5
+    /// 设置样张终局略收翼宽。
+    var previewCompactCompleted: Bool = false
 
     var body: some View {
         Group {
@@ -96,10 +89,9 @@ struct FocusTimerIslandCardView: View {
                     onTogglePause: onToggleCountUpPause
                 )
             } else if snapshot.phase == .completed {
-                // 锁内容宽；行内撑满，回车钮贴右，左右只留壳层 contentHorizontal。
+                // 双翼 tip：固有宽高，壳层 notchWingTip（顶 0）。
                 phaseBody
-                    .frame(width: FocusTimerContentSize.completedContentWidth)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: true, vertical: true)
             } else {
                 // 选时：内容固有尺寸，左右底边距走 IslandChrome，勿再锁死宽。
                 phaseBody
@@ -128,7 +120,8 @@ struct FocusTimerIslandCardView: View {
             FocusTimerCompletedView(
                 snapshot: snapshot,
                 onNoteChange: onNoteChange,
-                onSave: onSave
+                onSave: onSave,
+                compact: previewCompactCompleted
             )
         }
     }
@@ -148,7 +141,8 @@ struct FocusTimerIslandCardView: View {
             snapshot: snap,
             isExpanded: !compact || phase == .picking || phase == .completed,
             presets: FocusTimerPreset.defaults,
-            extendStepMinutes: 5
+            extendStepMinutes: 5,
+            previewCompactCompleted: compact && phase == .completed
         )
     }
 }
@@ -839,19 +833,45 @@ private struct FocusTimerNoteField: NSViewRepresentable {
     }
 }
 
-// MARK: - 3. 终局收拢（单行：绿勾 · 时长 · | · 备注 · 回车）
+// MARK: - 3. 终局收拢（贴刘海双翼 tip：左勾+时长 · 右备注+回车）
 
 struct FocusTimerCompletedView: View {
     let snapshot: FocusTimerSnapshot
     let onNoteChange: (String) -> Void
     let onSave: () -> Void
+    /// 设置样张略收翼宽。
+    var compact: Bool = false
+    var previewNotchWidth: CGFloat = 110
     @State private var draft: String = ""
 
-    /// 单行终局内容高（与稿面矮胶囊对齐）。
+    @Environment(\.islandNotchWidth) private var envNotchWidth
+    @Environment(\.islandNotchHeight) private var envNotchHeight
+
+    /// 翼 tip 内容高（与刘海同量级）。
     static let noteRowHeight: CGFloat = 32
 
-    private let green = Color(red: 0.22, green: 0.78, blue: 0.42)
+    /// 完成勾选圆：与稿面 mint 描边勾一致（约 #7EE3A9）。
+    private let green = Color(red: 0.494, green: 0.890, blue: 0.663)
     private let muted = Color.white.opacity(0.45)
+
+    private var notchWidth: CGFloat {
+        compact ? previewNotchWidth : max(envNotchWidth, 110)
+    }
+
+    private var barHeight: CGFloat {
+        compact ? 30 : max(envNotchHeight, 32)
+    }
+
+    private var wingWidth: CGFloat {
+        compact ? 100 : FocusTimerContentSize.completedWingWidth
+    }
+
+    /// 中间空隙 = 刘海宽 + 略加宽，左右内容不要贴着刘海缘。
+    private var centerClearWidth: CGFloat {
+        notchWidth + (compact ? 4 : FocusTimerContentSize.completedCenterExtra)
+    }
+
+    private var totalWidth: CGFloat { wingWidth * 2 + centerClearWidth }
 
     /// 主时长：实际已过分钟（至少 1）；岛上不展示加时括号旁注。
     private var actualFocusMinutes: Int {
@@ -859,48 +879,66 @@ struct FocusTimerCompletedView: View {
     }
 
     var body: some View {
-        // 整行撑满内容宽：左簇 / 分割 / 备注伸缩 / 回车贴右。
-        // 外缘左右底只靠 IslandChrome（14），禁止再 leading 对齐留下右侧空档。
-        HStack(alignment: .center, spacing: 10) {
-            // 左：绿勾圆 + 真实时长（仅 Xm）
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(green)
-                        .frame(width: 22, height: 22)
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.white)
-                }
+        // 左右翼贴刘海；壳层 notchWingTip 顶距 0，消灭展开页大顶空。
+        HStack(spacing: 0) {
+            leftCluster
+                .frame(width: wingWidth, alignment: .leading)
+                .clipped()
+            Color.clear
+                .frame(width: centerClearWidth)
+                .accessibilityHidden(true)
+            rightCluster
+                .frame(width: wingWidth, alignment: .trailing)
+                .clipped()
+        }
+        .frame(width: totalWidth, height: barHeight)
+        .clipped()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(
+            "\(L10n.FocusTimer.completedTitle)，\(FocusTimerFormatting.compactDuration(actualFocusMinutes))"
+        )
+        .onAppear {
+            draft = snapshot.noteDraft
+            AppLog.warn("FocusTimer", "终局翼 tip 备注区已显示（默认不聚焦）", [
+                "wingW": Int(wingWidth),
+                "notchW": Int(notchWidth),
+                "center": Int(centerClearWidth),
+                "barH": Int(barHeight)
+            ])
+        }
+    }
+
+    private var leftCluster: some View {
+        // 描边勾选圆（checkmark.circle）+ 时长；靠左，图标与数字留间距。
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(green)
+                .symbolRenderingMode(.monochrome)
                 .accessibilityHidden(true)
 
-                Text(FocusTimerFormatting.compactDuration(actualFocusMinutes))
-                    .font(.system(size: 16, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            .fixedSize(horizontal: true, vertical: false)
+            Text(FocusTimerFormatting.compactDuration(actualFocusMinutes))
+                .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white)
+                .monospacedDigit()
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-            Rectangle()
-                .fill(Color.white.opacity(0.18))
-                .frame(width: 1, height: 18)
-
-            HStack(spacing: 6) {
-                Image(systemName: "list.bullet.clipboard")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(muted)
-                    .accessibilityHidden(true)
-                FocusTimerNoteField(
-                    text: $draft,
-                    placeholder: L10n.FocusTimer.notePlaceholder,
-                    onSubmit: commitSave
-                )
-                .frame(minWidth: 96, maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
+    private var rightCluster: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "list.bullet.clipboard")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(muted)
+                .accessibilityHidden(true)
+            FocusTimerNoteField(
+                text: $draft,
+                placeholder: L10n.FocusTimer.notePlaceholder,
+                onSubmit: commitSave
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             Button(action: commitSave) {
                 Image(systemName: "return")
                     .font(.system(size: 12, weight: .semibold))
@@ -920,20 +958,7 @@ struct FocusTimerCompletedView: View {
             .accessibilityLabel(L10n.FocusTimer.saveRecord)
             .fixedSize(horizontal: true, vertical: false)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
-        .frame(height: Self.noteRowHeight)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(
-            "\(L10n.FocusTimer.completedTitle)，\(FocusTimerFormatting.compactDuration(actualFocusMinutes))"
-        )
-        .onAppear {
-            draft = snapshot.noteDraft
-            AppLog.warn("FocusTimer", "终局单行备注区已显示（默认不聚焦）", [
-                "contentW": Int(FocusTimerContentSize.completedContentWidth),
-                "chromeH": Int(IslandChrome.contentHorizontal),
-                "chromeBottom": Int(IslandChrome.contentBottom)
-            ])
-        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     /// 保存时才回写 session，避免逐字 objectWillChange 拆掉 field editor。
