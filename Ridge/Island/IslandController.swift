@@ -771,6 +771,15 @@ final class IslandController: NSObject {
         )
     }
 
+    /// 网络 tip：翼宽略收，SSID / VPN 名在左翼滚动。
+    func prepareNetworkLinkWingNoticeLayout(reason: String) {
+        prepareWingTipNoticeLayout(
+            wingWidth: IslandChrome.preparedNetworkLinkWingWidth,
+            reason: reason,
+            logLabel: "网络翼"
+        )
+    }
+
     private func prepareWingTipNoticeLayout(
         wingWidth: CGFloat,
         reason: String,

@@ -55,6 +55,28 @@
           }
         }
       }
+    },
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridge 需要定位权限以读取当前 Wi‑Fi 名称并显示在灵动岛提示中；不会用于追踪位置。"
+          }
+        }
+      }
+    },
+    "NSLocationUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ridge 需要定位权限以读取当前 Wi‑Fi 名称并显示在灵动岛提示中；不会用于追踪位置。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

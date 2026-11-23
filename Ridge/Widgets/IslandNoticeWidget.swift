@@ -408,6 +408,16 @@ private struct IslandNoticeCardView: View {
                 flushSide: flushSide,
                 bareWingContent: bareWingContent
             )
+        case .networkWifiConnected(let notice),
+             .networkWiredConnected(let notice),
+             .networkVPNConnected(let notice),
+             .networkWifiDisconnected(let notice),
+             .networkVPNDisconnected(let notice):
+            NetworkLinkNoticeCard(
+                notice: notice,
+                flushSide: flushSide,
+                bareWingContent: bareWingContent
+            )
         case .clipboardCaptureHint(let id, let text, let symbol):
             if id.hasPrefix("copy.") {
                 // 单独 / 双槽右侧一律现有 Ø32 圆岛；双槽时不要外包 Spacer 黑翼。
@@ -517,9 +527,12 @@ struct PeripheralBatteryNoticeCard: View {
         return max(envNotchHeight, 32)
     }
 
+    /// 真岛满岛翼宽；须与 `IslandChrome.preparedPeripheralWingWidth` 同值（自动化锁）。
+    static let liveWingWidth: CGFloat = IslandChrome.preparedPeripheralWingWidth
+
     /// 与 `IslandChrome.preparedPeripheralWingWidth` 对齐；设置样张略收。
     private var wingWidth: CGFloat {
-        compact ? 70 : IslandChrome.preparedPeripheralWingWidth
+        compact ? 70 : Self.liveWingWidth
     }
 
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }

@@ -20,7 +20,7 @@
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
 | `island-hover-retention` | 岛悬停热区退化 | ≥8 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区** | 收起悬停仅刘海；拖文件才用接近区；展开地板 + 中下点用例 |
-| `island-chrome-double-padding` | 岛边距叠两层 | ≥5 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bareContentLeading / 右翼欠宽居中导致左右空档过大** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 peripheralWingTip） |
+| `island-chrome-double-padding` | 岛边距叠两层 | ≥6 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bare / 右翼欠宽居中**；**新 tip 翼宽 ≠ preparedWingWidth** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 wingTipCardsMatchPrepared） |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
@@ -52,11 +52,11 @@
 ### island-chrome-double-padding — 岛边距叠两层
 
 - **recurring:** true  
-- **occurrences:** 5+（通知卡 / 多 widget 反复翻车；2026-11-10 会前提示 tip 根上再叠 nudge；**2026-11-23 外设满岛 tip 卡内再叠 bareContentLeading**；**同日右翼 fixedSize 欠宽，HStack+.frame 居中，左右外缘空一大截**）  
+- **occurrences:** 6+（通知卡 / 多 widget 反复翻车；2026-11-10 会前提示 tip 根上再叠 nudge；**2026-11-23 外设满岛 tip 卡内再叠 bareContentLeading**；**同日右翼 fixedSize 欠宽，HStack+.frame 居中，左右外缘空一大截**；**同日网络 tip 翼宽硬编码 104 ≠ 壳层预备 98**）  
 - **症状:** 下边距过大，左右离岛边过宽，或 tip 误用展开页大底距  
-- **根因倾向:** 根视图 `.padding(.vertical/.horizontal)` / HTML `px/py` / 翼 tip `nudgeInward` / **满岛翼卡再叠 `bareContentLeading`** 叠 `IslandChrome`；**右翼不占满 `wingWidth` 导致整条居中**；或未标 `usesNotchWingChrome` 退回 `contentBottom`  
-- **防护:** 左右/底只走 `IslandChrome.insets(for:)`；widget/通知卡根视图只排内容；会议/外设满岛 tip 禁根上外圈 padding；左右翼各 `frame(width: wingWidth)`；`bareContentLeading` 仅 dualFlush bare  
-- **自动化:** `RegressionCatalogTests.test_islandChromeDoublePadding_*`（令牌 + surface inset + `peripheralWingTipOuterInsetIsChromeOnly`）
+- **根因倾向:** 根视图 `.padding(.vertical/.horizontal)` / HTML `px/py` / 翼 tip `nudgeInward` / **满岛翼卡再叠 `bareContentLeading`** 叠 `IslandChrome`；**右翼不占满 `wingWidth` 导致整条居中**；**内容翼宽与 `preparedWingWidth` 不一致**；或未标 `usesNotchWingChrome` 退回 `contentBottom`  
+- **防护:** 左右/底只走 `IslandChrome.insets(for:)`；widget/通知卡根视图只排内容；满岛 tip `liveWingWidth == preparedWingWidth`（或外设 `preparedPeripheralWingWidth`）；左右翼各 `frame(width: wingWidth)`；`bareContentLeading` 仅 dualFlush bare  
+- **自动化:** `RegressionCatalogTests.test_islandChromeDoublePadding_*`（令牌 + surface inset + `peripheralWingTipOuterInsetIsChromeOnly` + `wingTipCardsMatchPreparedWingWidth`）
 
 ### settings-preview-live-data — 设置预览用真数据
 
@@ -459,12 +459,35 @@
 - **防护:** 以 AC 接电边沿触发充电 tip；`IOPSNotification` + AppDelegate 启用时启动会话；设置页可试投样张  
 - **自动化:** 不强制（occurrences=1）
 
+### network-link-tip-miss — 切 Wi‑Fi / VPN 无 tip
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-23：默认关 + 仅 `NWPathMonitor`；Clash 系统代理不改 path；空闲 `utun` 误判）  
+- **症状:** 切换 Wi‑Fi 或 Clash/VPN 后岛上无网络 tip；日志无 `NetworkLink`  
+- **根因倾向:** tip 默认关且启动未拉会话；系统代理通断不走 path；`availableInterfaces` 含常驻 `utun`  
+- **防护:** 上线一次性默认开；AppDelegate 启用时 `start`；`SCDynamicStore` 订主接口+Proxies；VPN=主接口隧道 **或** 系统代理  
+- **相关代码:** `NetworkLinkSession` / `NetworkLinkMonitor` / `WidgetSettings.networkLinkTipShipOn`  
+- **自动化:** `NetworkLinkTipPolicyTests`（occurrences=1，不强制每次跑）
+
+### network-link-name-miss — Wi‑Fi / VPN 名称读不到
+
+- **recurring:** false  
+- **occurrences:** 2（2026-11-23：日志 `ssid=` 空；同日设置页「允许读取」按钮无弹窗）  
+- **症状:** 真机 tip 左翼只有「Wi‑Fi」「VPN」，没有 SSID / 节点名；点授权钮无反应  
+- **根因倾向:** Sonoma+ CoreWLAN `ssid` 需定位；仅 `requestWhenInUse` 在 macOS/LSUIElement 常不弹窗；缺 location entitlement；Clash 系统代理不暴露节点名  
+- **防护:** location entitlement；`requestWhenInUse` + `requestLocation`；activate App；约 1.2s 仍 notDetermined 则开系统定位页；VPN 记名 + 代理客户端启发式  
+- **相关代码:** `NetworkLinkLocationAccess` / `NetworkLinkMetrics` / `NetworkLinkTipWidgetConfigSection`  
+- **自动化:** 不强制（occurrences=2 但难自动化系统弹窗，暂不标 recurring）
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-23 | 网络 tip：定位读 SSID + 代理客户端名回退；catalog `network-link-name-miss` |
+| 2026-11-23 | 网络 tip 翼宽锁定 `preparedWingWidth`；补 `wingTipCardsMatchPreparedWingWidth`；catalog double-padding +1 |
+| 2026-11-23 | 网络 tip：默认开 + 系统代理/主接口侦测；catalog `network-link-tip-miss` |
 | 2026-11-22 | 本机电池 tip：AC 边沿（含优化充电）+ IOPS 监听 + 启动拉起 + 设置试投；catalog `mac-battery-tip-miss-on-ac` |
 | 2026-11-22 | 进程结束 tip 自动收按 tip id 撤槽，勿绑旧 `lastWatchEnded`；catalog `process-ended-tip-stale-dismiss` |
 | 2026-11-19 | 加厚岛逻辑自动化：全 C 盖专注、权重阶梯、翼宽、`shouldDismissNow`、Center FIFO、专注待命；测试台仍归手动 |

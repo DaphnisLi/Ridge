@@ -429,6 +429,8 @@ enum L10n {
                 return tr("widgets.category.peripheral_tip", "外设状态")
             case "builtin.macBatteryTip":
                 return tr("widgets.category.mac_battery_tip", "本机电池")
+            case "builtin.networkLinkTip":
+                return tr("widgets.category.network_link_tip", "网络与 VPN")
             case "builtin.copiedNotice":
                 return tr("widgets.category.copied_notice", "剪贴板提示")
             default:
@@ -469,6 +471,8 @@ enum L10n {
                 return tr("widgets.footer.peripheral_tip", "低电 / 满电 / 接入瞬时提示")
             case "builtin.macBatteryTip":
                 return tr("widgets.footer.mac_battery_tip", "充电中 / 低电 / 充满瞬时提示")
+            case "builtin.networkLinkTip":
+                return tr("widgets.footer.network_link_tip", "Wi‑Fi / 以太网 / VPN 通断瞬时提示")
             case "builtin.copiedNotice":
                 return tr("widgets.footer.copied_notice", "复制成功时刘海右侧圆岛提示")
             default:
@@ -493,6 +497,7 @@ enum L10n {
             case "builtin.ocrSelect": return "text.viewfinder"
             case "builtin.peripheralTip": return "battery.25"
             case "builtin.macBatteryTip": return "laptopcomputer"
+            case "builtin.networkLinkTip": return "wifi"
             case "builtin.copiedNotice": return "doc.on.clipboard"
             default: return "slider.horizontal.3"
             }
@@ -2060,6 +2065,12 @@ enum L10n {
                 "Ridge 需要蓝牙权限以读取附近 iPhone / iPad、已连接耳机与键鼠等设备的电量，并在控制台中显示。"
             )
         }
+        static var locationWhenInUseUsage: String {
+            tr(
+                "NSLocationWhenInUseUsageDescription",
+                "Ridge 需要定位权限以读取当前 Wi‑Fi 名称并显示在灵动岛提示中；不会用于追踪位置。"
+            )
+        }
     }
 
     // MARK: - Battery（控制台电量与外设）
@@ -2425,6 +2436,82 @@ enum L10n {
             )
         }
 
+    }
+
+    // MARK: - Network / VPN tip（主路径与 VPN；非常驻网速页）
+
+    enum NetworkLink {
+        static var widgetName: String { tr("network_link.widget.name", "网络与 VPN") }
+        static var widgetSummary: String {
+            tr(
+                "network_link.widget.summary",
+                "Wi‑Fi / 以太网 / VPN 通断经瞬时通知提示；切换时抑制中间断开"
+            )
+        }
+
+        static var wifiConnected: String { tr("network_link.tip.wifi_connected", "已连接 Wi‑Fi") }
+        static func wifiConnectedNamed(_ ssid: String) -> String {
+            String(
+                format: tr("network_link.tip.wifi_connected_named_format", "已连接 Wi‑Fi · %@"),
+                ssid
+            )
+        }
+        static var wiredConnected: String { tr("network_link.tip.wired_connected", "已连接以太网") }
+        static var vpnConnected: String { tr("network_link.tip.vpn_connected", "已连接 VPN") }
+        static var wifiDisconnected: String { tr("network_link.tip.wifi_disconnected", "Wi‑Fi 已断开") }
+        static var vpnDisconnected: String { tr("network_link.tip.vpn_disconnected", "VPN 已断开") }
+
+        static var wifiShort: String { tr("network_link.short.wifi", "Wi‑Fi") }
+        /// 稿面有线左翼标题（系统设置同款「以太网」）。
+        static var wiredShort: String { tr("network_link.short.wired", "以太网") }
+        /// 稿面 Wi‑Fi 断开左翼标题。
+        static var offlineTitle: String { tr("network_link.short.offline", "离线") }
+        static var vpnShort: String { tr("network_link.short.vpn", "VPN") }
+        static var connectedBadge: String { tr("network_link.badge.connected", "已连接") }
+        /// 稿面右翼断开文案（短）。
+        static var disconnectedBadge: String { tr("network_link.badge.disconnected", "断开") }
+
+        static var previewWifiConnected: String {
+            tr("network_link.preview.wifi_connected", "已连 Wi‑Fi")
+        }
+        static var previewWiredConnected: String {
+            tr("network_link.preview.wired_connected", "已连以太网")
+        }
+        static var previewVPNConnected: String {
+            tr("network_link.preview.vpn_connected", "已连 VPN")
+        }
+        static var previewWifiDisconnected: String {
+            tr("network_link.preview.wifi_disconnected", "Wi‑Fi 断开")
+        }
+        static var previewVPNDisconnected: String {
+            tr("network_link.preview.vpn_disconnected", "VPN 断开")
+        }
+
+        static var settingsFootnote: String {
+            tr(
+                "network_link.settings.footnote",
+                "只提示最终落点。连接态右翼只显示网关延迟。Wi‑Fi 名称需系统「定位」权限（macOS 限制，不追踪位置）。Clash 等系统代理通常读不到节点名，会尽量显示客户端名称，否则为「VPN」。不做常驻网速页。"
+            )
+        }
+
+        static var locationAccessTitle: String {
+            tr("network_link.location.title", "定位权限（Wi‑Fi 名称）")
+        }
+        static var locationAccessDesc: String {
+            tr(
+                "network_link.location.desc",
+                "系统要求授权定位后才能读取当前 Wi‑Fi 名称；Ridge 不会用于追踪位置。"
+            )
+        }
+        static var locationAccessDeniedDesc: String {
+            tr(
+                "network_link.location.denied_desc",
+                "定位权限未开启，请在系统设置中允许 Ridge，以便显示 Wi‑Fi 名称。"
+            )
+        }
+        static var locationAccessAllow: String {
+            tr("network_link.location.allow", "允许定位并读取名称")
+        }
     }
 
     // MARK: - Copied notice（复制成功瞬时提示）
@@ -3496,6 +3583,35 @@ enum L10n {
         static func statusMacBatteryTip(_ kind: String) -> String {
             String(
                 format: tr("test_lab.status.mac_battery_tip_format", "本机电池：已投递 %@ tip"),
+                kind
+            )
+        }
+
+        static var networkLinkTitle: String { tr("test_lab.network_link.title", "网络与 VPN") }
+        static var networkLinkSubtitle: String {
+            tr(
+                "test_lab.network_link.subtitle",
+                "直接投递五态 tip（切换合并策略请用真机通断验证）。"
+            )
+        }
+        static var networkLinkTipWifiOn: String {
+            tr("test_lab.network_link.tip_wifi_on", "已连 Wi‑Fi")
+        }
+        static var networkLinkTipWiredOn: String {
+            tr("test_lab.network_link.tip_wired_on", "已连以太网")
+        }
+        static var networkLinkTipVPNOn: String {
+            tr("test_lab.network_link.tip_vpn_on", "已连 VPN")
+        }
+        static var networkLinkTipWifiOff: String {
+            tr("test_lab.network_link.tip_wifi_off", "Wi‑Fi 断开")
+        }
+        static var networkLinkTipVPNOff: String {
+            tr("test_lab.network_link.tip_vpn_off", "VPN 断开")
+        }
+        static func statusNetworkLinkTip(_ kind: String) -> String {
+            String(
+                format: tr("test_lab.status.network_link_tip_format", "网络：已投递 %@ tip"),
                 kind
             )
         }

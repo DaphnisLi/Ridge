@@ -145,7 +145,12 @@ final class IslandNoticeBehaviorTests: XCTestCase {
             ),
             .macBatteryUnplugged(
                 .init(id: "mac.u", kind: .unplugged, percent: 64, threshold: 0, detail: "")
-            )
+            ),
+            .networkWifiConnected(.init(id: "net.w", kind: .wifiConnected, title: "Cafe", detail: "18ms", ssid: "Cafe")),
+            .networkWiredConnected(.init(id: "net.e", kind: .wiredConnected, title: "以太网", detail: "12ms")),
+            .networkVPNConnected(.init(id: "net.v", kind: .vpnConnected, title: "VPN", detail: "24ms")),
+            .networkWifiDisconnected(.init(id: "net.wo", kind: .wifiDisconnected, title: "Cafe", detail: "断开", ssid: "Cafe")),
+            .networkVPNDisconnected(.init(id: "net.vo", kind: .vpnDisconnected, title: "VPN", detail: "断开"))
         ]
         for tip in tips {
             XCTAssertEqual(

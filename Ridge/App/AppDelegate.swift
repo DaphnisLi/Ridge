@@ -43,6 +43,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if WidgetSettings.shared.isEnabled(MacBatteryTipWidget.manifest.id) {
             MacBatterySession.shared.start()
         }
+        if WidgetSettings.shared.isEnabled(NetworkLinkTipWidget.manifest.id) {
+            NetworkLinkSession.shared.start()
+        }
         LoginItemService.shared.refresh()
         UpdateService.shared.start()
         // 首次启动引导：下一拍再出，避免与岛初始化抢主线程。

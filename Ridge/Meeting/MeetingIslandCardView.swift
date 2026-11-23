@@ -151,8 +151,11 @@ struct MeetingIslandCardView: View {
         return max(envNotchHeight, 32)
     }
 
+    /// 真岛满岛翼宽；须与 `IslandChrome.preparedWingWidth` 同值（自动化锁）。
+    static let liveWingWidth: CGFloat = IslandChrome.preparedWingWidth
+
     /// 左右翼等宽，决定整岛宽度；内容用 overlay 左右叠，不靠翼宽硬裁按钮。
-    private var wingWidth: CGFloat { compact ? 90 : 98 }
+    private var wingWidth: CGFloat { compact ? 90 : Self.liveWingWidth }
     /// 标题可伸进刘海；右翼控件整体左移后，标题少占一点刘海，避免撞上倒计时。
     private var titleMaxWidth: CGFloat {
         let iconSlot: CGFloat = compact ? 21 : 22

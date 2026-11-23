@@ -355,6 +355,29 @@ final class IslandTestHarness: ObservableObject {
         note(L10n.TestLab.statusMacBatteryTip(kind.rawValue))
     }
 
+    func presentNetworkLinkTip(kind: NetworkLinkTipKind) {
+        var notice = NetworkLinkNoticeCard.previewNotice(kind: kind)
+        notice = NetworkLinkNotice(
+            id: "test.network.\(kind.rawValue).\(UUID().uuidString.prefix(6))",
+            kind: notice.kind,
+            title: notice.title,
+            detail: notice.detail,
+            ssid: notice.ssid,
+            latencyMs: notice.latencyMs
+        )
+        let payload: IslandNoticePayload
+        switch kind {
+        case .wifiConnected: payload = .networkWifiConnected(notice)
+        case .wiredConnected: payload = .networkWiredConnected(notice)
+        case .vpnConnected: payload = .networkVPNConnected(notice)
+        case .wifiDisconnected: payload = .networkWifiDisconnected(notice)
+        case .vpnDisconnected: payload = .networkVPNDisconnected(notice)
+        }
+        IslandNoticeCenter.shared.present(payload)
+        note(L10n.TestLab.statusNetworkLinkTip(kind.rawValue))
+        AppLog.info("TestLab", "已投递网络 tip", ["kind": kind.rawValue])
+    }
+
     // MARK: - Control deck
 
     func openControlDeck(pane: ControlDeckSettings.Pane) {

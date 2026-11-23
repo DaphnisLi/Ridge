@@ -27,6 +27,7 @@ struct IslandTestLabPane: View {
                 processCard
                 peripheralCard
                 macBatteryCard
+                networkLinkCard
                 captureCard
                 mediaCard
                 focusCard
@@ -286,6 +287,35 @@ struct IslandTestLabPane: View {
                 }),
                 (L10n.TestLab.macBatteryTipUnplug, {
                     harness.presentMacBatteryTip(kind: .unplugged)
+                })
+            ])
+        }
+    }
+
+    // MARK: Network / VPN
+
+    private var networkLinkCard: some View {
+        labCard(
+            title: L10n.TestLab.networkLinkTitle,
+            symbol: "wifi",
+            subtitle: L10n.TestLab.networkLinkSubtitle
+        ) {
+            sectionLabel(L10n.TestLab.sectionStates)
+            buttonGrid([
+                (L10n.TestLab.networkLinkTipWifiOn, {
+                    harness.presentNetworkLinkTip(kind: .wifiConnected)
+                }),
+                (L10n.TestLab.networkLinkTipWiredOn, {
+                    harness.presentNetworkLinkTip(kind: .wiredConnected)
+                }),
+                (L10n.TestLab.networkLinkTipVPNOn, {
+                    harness.presentNetworkLinkTip(kind: .vpnConnected)
+                }),
+                (L10n.TestLab.networkLinkTipWifiOff, {
+                    harness.presentNetworkLinkTip(kind: .wifiDisconnected)
+                }),
+                (L10n.TestLab.networkLinkTipVPNOff, {
+                    harness.presentNetworkLinkTip(kind: .vpnDisconnected)
                 })
             ])
         }

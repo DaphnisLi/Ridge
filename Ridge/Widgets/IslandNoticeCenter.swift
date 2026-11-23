@@ -12,6 +12,11 @@ enum IslandNoticePayload: Identifiable, Hashable {
     case macBatteryLow(MacBatteryNotice)
     case macBatteryFull(MacBatteryNotice)
     case macBatteryUnplugged(MacBatteryNotice)
+    case networkWifiConnected(NetworkLinkNotice)
+    case networkWiredConnected(NetworkLinkNotice)
+    case networkVPNConnected(NetworkLinkNotice)
+    case networkWifiDisconnected(NetworkLinkNotice)
+    case networkVPNDisconnected(NetworkLinkNotice)
     case clipboardCaptureHint(id: String, text: String, symbol: String)
     case colorPickTip
     case ocrSelectTip
@@ -41,6 +46,12 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .macBatteryFull(let notice),
              .macBatteryUnplugged(let notice):
             return notice.id
+        case .networkWifiConnected(let notice),
+             .networkWiredConnected(let notice),
+             .networkVPNConnected(let notice),
+             .networkWifiDisconnected(let notice),
+             .networkVPNDisconnected(let notice):
+            return notice.id
         case .clipboardCaptureHint(let id, _, _):
             return "shelf.capture.\(id)"
         case .colorPickTip: return Self.colorPickTipID
@@ -62,6 +73,11 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .macBatteryLow: return "macBattery.low"
         case .macBatteryFull: return "macBattery.full"
         case .macBatteryUnplugged: return "macBattery.unplugged"
+        case .networkWifiConnected: return "network.wifiConnected"
+        case .networkWiredConnected: return "network.wiredConnected"
+        case .networkVPNConnected: return "network.vpnConnected"
+        case .networkWifiDisconnected: return "network.wifiDisconnected"
+        case .networkVPNDisconnected: return "network.vpnDisconnected"
         case .clipboardCaptureHint, .colorPickTip, .ocrSelectTip: return "shelf.capture"
         case .aiUsageAlert: return "aiUsage"
         case .moveReminder: return "moveReminder"
@@ -89,6 +105,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .moveReminder, .ramPressure, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+             .networkWifiDisconnected, .networkVPNDisconnected,
              .aiUsageAlert:
             #if DEBUG
             if let override = IslandTestLabSettings.resolvedTipDurationNanoseconds() {
@@ -109,6 +127,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .ramPressure, .processEnded, .peripheralLowBattery,
              .peripheralFullCharge, .peripheralConnected,
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+             .networkWifiDisconnected, .networkVPNDisconnected,
              .aiUsageAlert, .moveReminder, .meetingLead:
             return true
         }
@@ -118,7 +138,9 @@ enum IslandNoticePayload: Identifiable, Hashable {
         switch self {
         case .meetingLead, .aiUsageAlert, .moveReminder, .colorPickTip, .ocrSelectTip,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
-             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged:
+             .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+             .networkWifiDisconnected, .networkVPNDisconnected:
             return true
         default:
             return false
@@ -129,6 +151,17 @@ enum IslandNoticePayload: Identifiable, Hashable {
     var usesCompactPeripheralWing: Bool {
         switch self {
         case .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// 网络 tip：翼宽略收（`preparedNetworkLinkWingWidth`），名称可滚动。
+    var usesNetworkLinkWing: Bool {
+        switch self {
+        case .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+             .networkWifiDisconnected, .networkVPNDisconnected:
             return true
         default:
             return false
@@ -167,6 +200,8 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .meetingLead, .moveReminder, .ramPressure, .processEnded, .colorPickTip, .ocrSelectTip,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+             .networkWifiDisconnected, .networkVPNDisconnected,
              .aiUsageAlert:
             return true
         case .clipboardCaptureHint(let id, _, _):
@@ -333,6 +368,8 @@ final class IslandNoticeCenter: ObservableObject {
                 IslandController.shared?.prepareShortNoticeLayout(reason: "present:\(p.id)")
             } else if p.usesCompactPeripheralWing {
                 IslandController.shared?.preparePeripheralWingNoticeLayout(reason: "present:\(p.id)")
+            } else if p.usesNetworkLinkWing {
+                IslandController.shared?.prepareNetworkLinkWingNoticeLayout(reason: "present:\(p.id)")
             } else if next.anyUsesNotchWingChrome {
                 IslandController.shared?.prepareMeetingWingNoticeLayout(reason: "present:\(p.id)")
             }

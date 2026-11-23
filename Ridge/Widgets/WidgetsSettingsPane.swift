@@ -574,6 +574,7 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.ocrSelect"
             || widgetID == "builtin.peripheralTip"
             || widgetID == "builtin.macBatteryTip"
+            || widgetID == "builtin.networkLinkTip"
             || widgetID == "builtin.copiedNotice"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".shelf"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".volume"
@@ -623,6 +624,8 @@ private struct WidgetPreviewPane: View {
             PeripheralTipWidgetConfigSection()
         } else if widgetID == "builtin.macBatteryTip" {
             MacBatteryTipWidgetConfigSection()
+        } else if widgetID == "builtin.networkLinkTip" {
+            NetworkLinkTipWidgetConfigSection()
         } else if widgetID == "builtin.copiedNotice" {
             CopiedNoticeWidgetConfigSection()
         } else if widgetID == ControlDeckSettings.pageIDPrefix + ".shelf" {

@@ -116,11 +116,25 @@ struct IslandNoticeSlots: Equatable {
         }
     }
 
+    /// 当前满岛翼 tip 是否网络略收翼。
+    var anyUsesNetworkLinkWing: Bool {
+        switch resolvedLayout {
+        case .fullNotice(let p):
+            return p.usesNetworkLinkWing
+        default:
+            return false
+        }
+    }
+
     /// 当前翼 tip 预备单侧翼宽。
     var wingTipPreparedWingWidth: CGFloat {
-        anyUsesCompactPeripheralWing
-            ? IslandChrome.preparedPeripheralWingWidth
-            : IslandChrome.preparedWingWidth
+        if anyUsesCompactPeripheralWing {
+            return IslandChrome.preparedPeripheralWingWidth
+        }
+        if anyUsesNetworkLinkWing {
+            return IslandChrome.preparedNetworkLinkWingWidth
+        }
+        return IslandChrome.preparedWingWidth
     }
 
     /// 任意 `.dual` 都走贴刘海左右 flush；单独进程结束等走 dualFlush 双翼。
@@ -336,6 +350,8 @@ extension IslandNoticePayload {
         case .clipboardCaptureHint, .moveReminder, .processEnded,
              .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+             .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+             .networkWifiDisconnected, .networkVPNDisconnected,
              .aiUsageAlert, .ramPressure:
             // 非专注 C：靠右半块 / 单独满岛；多条 FIFO。
             return .secondary

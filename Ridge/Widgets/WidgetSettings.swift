@@ -24,6 +24,8 @@ final class WidgetSettings: ObservableObject {
         static let flatLibraryOrderMigrated = "widget.libraryFlatOrder.v4"
         /// 小组件默认全关（升 v 号再强制一次）。
         static let defaultOffMigrated = "widget.defaultOff.v2"
+        /// 网络 tip 无 TCC：上线时一次性默认打开（用户仍可关）。
+        static let networkLinkTipShipOn = "widget.networkLinkTip.shipOn.v1"
     }
 
     /// 用户排序：越靠前 priority 越高。仅含 `showsInLibrary` 的 id。
@@ -68,6 +70,9 @@ final class WidgetSettings: ObservableObject {
             if id == MacBatteryTipWidget.manifest.id {
                 MacBatterySession.shared.start()
             }
+            if id == NetworkLinkTipWidget.manifest.id {
+                NetworkLinkSession.shared.start()
+            }
             Task { @MainActor in
                 await WidgetPermissionGate.ensureOnEnable(widgetID: id)
             }
@@ -75,6 +80,8 @@ final class WidgetSettings: ObservableObject {
             MoveReminderSession.shared.stop()
         } else if id == MacBatteryTipWidget.manifest.id {
             MacBatterySession.shared.stop()
+        } else if id == NetworkLinkTipWidget.manifest.id {
+            NetworkLinkSession.shared.stop()
         }
     }
 
@@ -225,6 +232,19 @@ final class WidgetSettings: ObservableObject {
                 "version": Key.defaultOffMigrated,
                 "disabled": disabledIDs.count
             ])
+        }
+
+        // 网络 tip 无需额外权限；上线后一次性打开，避免「切了网没反应」。
+        if !defaults.bool(forKey: Key.networkLinkTipShipOn) {
+            let id = "builtin.networkLinkTip"
+            disabledIDs.remove(id)
+            if !order.contains(id) {
+                insertInCanonicalPosition(id)
+            }
+            defaults.set(Array(disabledIDs), forKey: Key.disabled)
+            defaults.set(order, forKey: Key.order)
+            defaults.set(true, forKey: Key.networkLinkTipShipOn)
+            AppLog.warn("Widget", "已默认打开网络 tip", ["id": id])
         }
 
         // 确保 ControlDeck 迁移先跑（清掉旧 combo 键）。

@@ -834,6 +834,45 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(orb.horizontal, 0)
     }
 
+    /// 满岛翼 tip 内容翼宽必须 == 壳层预备翼宽。
+    /// 网络 tip 曾硬编码 104、壳层按 98 预备 → 裁切/空边（2026-11-23）。
+    func test_islandChromeDoublePadding_wingTipCardsMatchPreparedWingWidth() {
+        let meetingWing = IslandChrome.preparedWingWidth
+        let networkWing = IslandChrome.preparedNetworkLinkWingWidth
+        XCTAssertEqual(meetingWing, 98)
+        XCTAssertEqual(networkWing, 84)
+        XCTAssertLessThan(networkWing, meetingWing)
+        XCTAssertEqual(NetworkLinkNoticeCard.liveWingWidth, networkWing)
+        XCTAssertEqual(MacBatteryNoticeCard.liveWingWidth, meetingWing)
+        XCTAssertEqual(MeetingIslandCardView.liveWingWidth, meetingWing)
+        XCTAssertEqual(
+            PeripheralBatteryNoticeCard.liveWingWidth,
+            IslandChrome.preparedPeripheralWingWidth
+        )
+
+        let notchW: CGFloat = 179
+        let notchH: CGFloat = 32
+        let contentW = networkWing * 2 + notchW
+        let prepared = IslandChrome.preparedWingTipPanelSize(
+            notchWidth: notchW,
+            notchHeight: notchH,
+            wingWidth: networkWing
+        )
+        XCTAssertEqual(
+            prepared.width,
+            contentW + IslandChrome.horizontalInsetTotal,
+            accuracy: 0.5,
+            "预备面板宽 = 内容(翼×2+刘海) + chrome；卡内翼宽不得另写魔数"
+        )
+
+        let net = IslandNoticePayload.networkWifiConnected(
+            .init(id: "n", kind: .wifiConnected, title: "Wi‑Fi")
+        )
+        XCTAssertFalse(net.usesCompactPeripheralWing)
+        XCTAssertTrue(net.usesNetworkLinkWing)
+        XCTAssertTrue(net.usesNotchWingChrome)
+    }
+
     /// 外设满岛翼 tip：外缘只计壳层 horizontal 一次；预备宽 = 内容宽 + horizontalInsetTotal。
     /// 卡根再叠 bareContentLeading / trailing = 左右空档过大；
     /// 右翼不占满 wingWidth 时 HStack+.frame 居中，左右外缘再空一截（2026-11-23）。
@@ -2105,6 +2144,12 @@ final class RegressionCatalogTests: XCTestCase {
             "builtin.macBatteryTip.low",
             "builtin.macBatteryTip.full",
             "builtin.macBatteryTip.unplugged",
+            "builtin.networkLinkTip",
+            "builtin.networkLinkTip.wifiConnected",
+            "builtin.networkLinkTip.wiredConnected",
+            "builtin.networkLinkTip.vpnConnected",
+            "builtin.networkLinkTip.wifiDisconnected",
+            "builtin.networkLinkTip.vpnDisconnected",
         ]
         for id in tipIDs {
             XCTAssertTrue(
@@ -2260,9 +2305,11 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(focus + 1, shelf)
         let peripheral = order.firstIndex(of: "builtin.peripheralTip")!
         let macBattery = order.firstIndex(of: "builtin.macBatteryTip")!
+        let network = order.firstIndex(of: "builtin.networkLinkTip")!
         let media = order.firstIndex(of: "builtin.media")!
         XCTAssertEqual(peripheral + 1, macBattery)
-        XCTAssertEqual(macBattery + 1, media)
+        XCTAssertEqual(macBattery + 1, network)
+        XCTAssertEqual(network + 1, media)
         XCTAssertEqual(media + 1, focus)
         XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
         XCTAssertEqual(order.last, "system.controlDeck.projects")
@@ -2281,6 +2328,7 @@ final class RegressionCatalogTests: XCTestCase {
                 "builtin.ocrSelect",
                 "builtin.peripheralTip",
                 "builtin.macBatteryTip",
+                "builtin.networkLinkTip",
                 "builtin.media",
                 "builtin.focusTimer",
                 "builtin.worldClock",
@@ -2293,6 +2341,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.meeting"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.peripheralTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.macBatteryTip"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.networkLinkTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.copiedNotice"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.media"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.battery"), .live)
@@ -2305,6 +2354,7 @@ final class RegressionCatalogTests: XCTestCase {
     func test_widgetLibraryFamily_peripheralAndCopiedTipsNeverContentPage() {
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.peripheralTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.macBatteryTip"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.networkLinkTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.copiedNotice"))
     }
 

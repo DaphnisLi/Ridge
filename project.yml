@@ -55,6 +55,10 @@ targets:
       - sdk: CoreBluetooth.framework
       - sdk: IOKit.framework
       - sdk: ServiceManagement.framework
+      - sdk: Network.framework
+      - sdk: CoreWLAN.framework
+      - sdk: CoreLocation.framework
+      - sdk: SystemConfiguration.framework
       - package: MediaRemoteAdapter
         product: MediaRemoteAdapter
         embed: true
@@ -64,6 +68,8 @@ targets:
       properties:
         com.apple.security.get-task-allow: true
         com.apple.security.personal-information.calendars: true
+        # Wi‑Fi SSID（CoreWLAN）依赖定位 TCC；Hardened Runtime 需此 entitlement
+        com.apple.security.personal-information.location: true
         # 外设卡片打开系统蓝牙设置（AppleScript 揭面板）
         com.apple.security.automation.apple-events: true
 

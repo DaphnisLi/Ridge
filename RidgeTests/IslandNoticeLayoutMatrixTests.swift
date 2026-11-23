@@ -338,7 +338,9 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                 )
             case .moveReminder, .aiUsageAlert,
                  .peripheralLowBattery, .peripheralFullCharge, .peripheralConnected,
-                 .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged:
+                 .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
+                 .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
+                 .networkWifiDisconnected, .networkVPNDisconnected:
                 return Expect(
                     lane: .secondary,
                     autoDismiss: true,
@@ -364,6 +366,21 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
         let macUnplug = IslandNoticePayload.macBatteryUnplugged(
             .init(id: "mac.up", kind: .unplugged, percent: 64, threshold: 0, detail: "u")
         )
+        let netWifi = IslandNoticePayload.networkWifiConnected(
+            .init(id: "net.wifi", kind: .wifiConnected, title: "Cafe", detail: "18ms", ssid: "Cafe")
+        )
+        let netWired = IslandNoticePayload.networkWiredConnected(
+            .init(id: "net.wired", kind: .wiredConnected, title: "以太网", detail: "12ms")
+        )
+        let netVPN = IslandNoticePayload.networkVPNConnected(
+            .init(id: "net.vpn", kind: .vpnConnected, title: "VPN", detail: "24ms")
+        )
+        let netWifiOff = IslandNoticePayload.networkWifiDisconnected(
+            .init(id: "net.wifiOff", kind: .wifiDisconnected, title: "Cafe", detail: "断开", ssid: "Cafe")
+        )
+        let netVPNOff = IslandNoticePayload.networkVPNDisconnected(
+            .init(id: "net.vpnOff", kind: .vpnDisconnected, title: "VPN", detail: "断开")
+        )
 
         let samples: [IslandNoticePayload] = [
             exclusive,
@@ -381,11 +398,16 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             macCharging,
             macLow,
             macFull,
-            macUnplug
+            macUnplug,
+            netWifi,
+            netWired,
+            netVPN,
+            netWifiOff,
+            netVPNOff
         ]
 
-        // 16 个样本覆盖全部 case 族；clipboard 两种（copy / 非 copy）；本机电池四态。
-        XCTAssertEqual(samples.count, 16)
+        // 21 个样本覆盖全部 case 族；clipboard 两种；本机电池四态；网络五态。
+        XCTAssertEqual(samples.count, 21)
 
         for payload in samples {
             let e = expect(for: payload)

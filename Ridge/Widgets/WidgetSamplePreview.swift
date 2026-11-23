@@ -431,7 +431,13 @@ enum WidgetSamplePreview {
              "builtin.macBatteryTip.charging",
              "builtin.macBatteryTip.low",
              "builtin.macBatteryTip.full",
-             "builtin.macBatteryTip.unplugged":
+             "builtin.macBatteryTip.unplugged",
+             "builtin.networkLinkTip",
+             "builtin.networkLinkTip.wifiConnected",
+             "builtin.networkLinkTip.wiredConnected",
+             "builtin.networkLinkTip.vpnConnected",
+             "builtin.networkLinkTip.wifiDisconnected",
+             "builtin.networkLinkTip.vpnDisconnected":
             return true
         default:
             return false
@@ -474,6 +480,16 @@ enum WidgetSamplePreview {
             macBatteryTipSample(kind: .low, compact: compact)
         case "builtin.macBatteryTip.unplugged":
             macBatteryTipSample(kind: .unplugged, compact: compact)
+        case "builtin.networkLinkTip", "builtin.networkLinkTip.wifiConnected":
+            networkLinkTipSample(kind: .wifiConnected, compact: compact)
+        case "builtin.networkLinkTip.wiredConnected":
+            networkLinkTipSample(kind: .wiredConnected, compact: compact)
+        case "builtin.networkLinkTip.vpnConnected":
+            networkLinkTipSample(kind: .vpnConnected, compact: compact)
+        case "builtin.networkLinkTip.wifiDisconnected":
+            networkLinkTipSample(kind: .wifiDisconnected, compact: compact)
+        case "builtin.networkLinkTip.vpnDisconnected":
+            networkLinkTipSample(kind: .vpnDisconnected, compact: compact)
         case "builtin.copiedNotice":
             copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":
@@ -592,6 +608,13 @@ enum WidgetSamplePreview {
         compact: Bool
     ) -> some View {
         MacBatteryNoticeCard.previewSample(kind: kind, compact: compact)
+    }
+
+    private static func networkLinkTipSample(
+        kind: NetworkLinkTipKind,
+        compact: Bool
+    ) -> some View {
+        NetworkLinkNoticeCard.previewSample(kind: kind, compact: compact)
     }
 
     private static func copiedNoticeSample(compact: Bool) -> some View {

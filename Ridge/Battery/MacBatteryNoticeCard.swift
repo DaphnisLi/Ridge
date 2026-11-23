@@ -2,12 +2,16 @@ import SwiftUI
 
 /// 本机电池 tip：满岛 = 方案 01（左笔记本+色点 / 右百分比+电量条）；
 /// 半岛 = 原生精雕微舱（笔记本 + 百分比 + 电量条 + 充电黄闪电）。
+/// 壳层 `usesNotchWingChrome`；根视图禁止外圈 padding；翼宽对齐 `preparedWingWidth`。
 struct MacBatteryNoticeCard: View {
     let notice: MacBatteryNotice
     var compact: Bool = false
     var flushSide: IslandFlushWingStyle.Side? = nil
     var bareWingContent: Bool = false
     var previewNotchWidth: CGFloat = 110
+
+    /// 真岛满岛翼宽；须与 `IslandChrome.preparedWingWidth` 同值（自动化锁）。
+    static let liveWingWidth: CGFloat = IslandChrome.preparedWingWidth
 
     @Environment(\.islandNotchWidth) private var envNotchWidth
     @Environment(\.islandNotchHeight) private var envNotchHeight
@@ -22,7 +26,7 @@ struct MacBatteryNoticeCard: View {
         return max(envNotchHeight, 32)
     }
 
-    private var wingWidth: CGFloat { compact ? 96 : 104 }
+    private var wingWidth: CGFloat { compact ? 70 : Self.liveWingWidth }
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
 
     private var title: String {

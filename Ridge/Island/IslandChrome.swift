@@ -63,6 +63,8 @@ enum IslandChrome {
     static let preparedWingWidth: CGFloat = 98
     /// 外设满岛 tip 单侧翼宽：比会议收一档；长设备名在左翼内滚动。
     static let preparedPeripheralWingWidth: CGFloat = 78
+    /// 网络 tip 单侧翼宽：比会议略收；SSID / VPN 名放不下则左翼滚动。
+    static let preparedNetworkLinkWingWidth: CGFloat = 84
     /// 专注终局翼 tip：右翼要装备注+回车，比会议略宽。
     static let preparedFocusCompletedWingWidth: CGFloat = 120
 

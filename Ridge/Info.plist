@@ -38,6 +38,10 @@
 	<string>Ridge 需要控制「系统设置」以打开蓝牙面板，便于管理外设连接。</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Ridge 需要蓝牙权限以读取附近 iPhone / iPad、已连接耳机与键鼠等设备的电量，并在控制台中显示。</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ridge 需要定位权限以读取当前 Wi‑Fi 名称并显示在灵动岛提示中；不会用于追踪位置。</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Ridge 需要定位权限以读取当前 Wi‑Fi 名称并显示在灵动岛提示中；不会用于追踪位置。</string>
 	<key>SUFeedURL</key>
 	<string>https://daphnis.app/ridge/appcast.xml</string>
 	<key>SUEnableAutomaticChecks</key>
