@@ -1,0 +1,31 @@
+---
+description: 岛上可点热区必须够大；禁止只认图标/小圆点
+alwaysApply: true
+---
+
+# 岛上点击 / 悬停热区
+
+用户反复踩坑：**热区过小**——只能点中小图标，点旁边文字/空白/翼缘就没反应；或往右移未出岛 morph 已收。
+
+## 必须
+
+- **整块可点**：图标 + 文案 + 同簇空白视为同一热区；用 `.contentShape(Rectangle())` + `frame(maxWidth/Height: .infinity)`，禁止只给 SF Symbol 自身命中。
+- **按钮外扩**：圆钮 / 小芯片视觉可小，命中至少外扩约 **10pt**（`padding(hitPad)` + `contentShape` + 负 padding 收回布局），勿只留 Ø26 圆心。
+- **双翼 morph**：右计时翼操作钮须跟 **Controller 右翼命中**（`FocusTrailingWingHover`）钉住，不能只靠 SwiftUI `onHover`；贴边仍算在翼上；**指针离开后必须恢复闲时数字/文案**（禁止 sticky morph）。
+- **收起可点框**：双翼 / 计时待命 `collapsedInteractivePadX/Y` 须够大，避免未出岛 click-through 掐 hover。
+- **黑底不抢击**：`IslandOpaqueFillView` 必须 `hitTest → nil` / `allowsHitTesting(false)`。
+
+## 禁止
+
+- 只有图标可点、旁边时长/标题点空
+- 依赖「刚好移到 26pt 圆钮中心」才能暂停/结束
+- 双翼右缘未出岛就收 morph / 穿透
+- 为省事去掉外扩命中又引回归
+
+## 自检
+
+新做岛上按钮或双翼 morph 时：
+
+1. 点图标旁文字是否同样有反馈？
+2. 移向翼缘（未出岛）morph / 悬停是否还在？
+3. 圆钮周围空白能否点中？

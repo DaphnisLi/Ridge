@@ -165,6 +165,10 @@ final class FocusTimerSession: ObservableObject {
     /// 正计时暂停 / 继续。
     func toggleCountUpPause() {
         guard phase == .countUp else { return }
+        AppLog.warn("FocusTimer", "正计时暂停/继续点击", [
+            "paused": isPaused,
+            "elapsed": elapsedSeconds
+        ])
         if isPaused {
             if let pauseStartedAt {
                 pausedAccumulatedSeconds += max(0, Int(Date().timeIntervalSince(pauseStartedAt)))
@@ -185,6 +189,11 @@ final class FocusTimerSession: ObservableObject {
 
     func finishEarly() {
         guard phase == .running || phase == .overtime || phase == .countUp else { return }
+        AppLog.warn("FocusTimer", "结束计时点击", [
+            "phase": phase.rawValue,
+            "elapsed": elapsedSeconds,
+            "countUp": phase == .countUp
+        ])
         complete(reason: "finishEarly")
     }
 
@@ -282,6 +291,7 @@ final class FocusTimerSession: ObservableObject {
             "overtime": overtimeSeconds,
             "endedEarly": endedEarly,
             "countUp": wasCountUp,
+            "kind": sessionKind.rawValue,
             "id": pendingRecordID.map { String($0.uuidString.prefix(8)) } ?? "nil"
         ])
         IslandHaptics.play(IslandSettings.shared.hapticIntensity)
@@ -312,7 +322,9 @@ final class FocusTimerSession: ObservableObject {
             var wallSec = max(0, Int(endedAt.timeIntervalSince(startedAt)) - pausedAccumulatedSeconds)
             wallSec = max(0, wallSec)
             let actualSec = max(tickSec, wallSec)
-            let elapsedMin = max(1, (actualSec + 59) / 60)
+            // 终局岛面跟墙钟秒数，勿进位成「下一整分」再显示。
+            elapsedSeconds = actualSec
+            let elapsedMin = max(1, actualSec / 60)
             record = FocusTimerRecord(
                 id: id,
                 title: note,
@@ -328,6 +340,7 @@ final class FocusTimerSession: ObservableObject {
             )
             AppLog.info("FocusTimer", "结算正计时工时", [
                 "elapsedMin": elapsedMin,
+                "actualSec": actualSec,
                 "wallSec": wallSec,
                 "tickSec": tickSec,
                 "pausedSec": pausedAccumulatedSeconds
@@ -433,7 +446,8 @@ final class FocusTimerSession: ObservableObject {
             noteDraft: noteDraft,
             customMinutes: customMinutes,
             selectedPresetID: selectedPresetID,
-            isPaused: isPaused
+            isPaused: isPaused,
+            kind: sessionKind
         )
     }
 

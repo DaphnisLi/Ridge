@@ -19,13 +19,13 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥9 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区**；**收起右计时翼贴边 morph 误收** | 收起可点外扩；双翼地板；展开地板 + 中下点用例 |
-| `media-compact-not-resident` | 播放大面板不得常驻 / 右计时翼 morph 误收 | ≥5 | 有曲目即大面板；双翼右翼误开媒体；**右翼操作钮未出缘就收** | 右翼禁开媒体；收起 interactive 外扩；`test_mediaCompactNotResident_*` / `test_islandHoverRetention_collapsedInteractive*` |
+| `island-hover-retention` | 岛悬停热区退化 | ≥10 | 展开后热区缩成刘海/短 tip；下移/拖一半就收；**选时更宽时 lastStable 更窄 → 右侧「正计时」出热区**；收起右翼贴边 morph 误收 | 保展开 `max(stable,panel)`；收起可点外扩；双翼地板；中下点/选时宽用例 |
+| `media-compact-not-resident` | 播放大面板不得常驻 / 右计时翼 morph 误收 | ≥9 | 有曲目即大面板；双翼右翼误开媒体；**未出岛 morph 已收**；**点时长无效**；**离岛 morph 不恢复数字** | 右翼禁开媒体；Controller 钉 morph；离岛清 hover；整翼热区；`test_mediaCompactNotResident_*` |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥6 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bare / 右翼欠宽居中**；**新 tip 翼宽 ≠ preparedWingWidth** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 wingTipCardsMatchPrepared） |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
-| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥6 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌 / 混音台滑条静音 / **久坐 +10m 点穿**） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；常驻翼 tip 可点区抬双翼宽；`test_islandFocusPolicy_*` / `test_islandFocusSteal_*` |
+| `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥9 | 粘键盘；SwiftUI 首击无响应；**选时「正计时」只图标可点 / 写死宽右侧空白 / 播放抢页** | 自适应布局单测 + DirectHit + 挡媒体；`test_islandFocusSteal_picking*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 5 | 黑岛过高；电量空黑；番茄垫高；**四 tip 库卡高低不齐** | 环 22；`meetingMatchedCompactChrome`；`test_libraryIslandStageStretch_*` |
 | `island-bottom-corner-preview-dead` | 下圆角曲率调了没反应 | 2 | 迷你预览钳死；**库卡/详情写死半径不跟设置** | 壳 `nil`→设置；`test_islandBottomCornerPreviewDead_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
@@ -43,13 +43,13 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 9+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；2026-11-13 展开后下移一半仍收；**2026-11-13 非拖文件也认过大接近区**；**2026-11-24 计时右翼未出岛 morph/待命就收**）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**；**收起双翼/计时待命往右移未出岛，操作钮已收**  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；**收起态悬停跟宽小岛/接近区走**；展开瞬间矮 Preference；**收起 interactive 仅 ±2pt，右翼贴边 click-through 掐 SwiftUI hover**  
-- **防护:** 收起悬停展开 **仅刘海**（`hoverExpandFrame`）；`fileDragApproachFrame` **仅**拖文件；展开态仍用大面板保展开 + `expandedRetentionFloor`；`scrollHold`；**收起 `collapsedInteractiveFrame` 外扩 + dualFlush/计时待命 panel 地板**  
-- **自动化:** `test_islandHoverRetention_*` + `test_islandHoverExpand_collapsedOnlyNotchCountsWithoutFileDrag` + `test_islandHoverExpand_fileDragApproachZoneOnlyWhenDraggingFiles`  
-- **曾缺口（已补 2026-11-13 / 2026-11-24）:** Preference 未到 / 误报矮框；非拖文件误用大接近区；收起右翼贴边穿透。  
-- **日志锚点:** `指针离开保展开区，安排收起`；`收起待命可点区过窄，抬回可见宽`；`货架拖入：钉住展开`（须 `fileDrag=true`）；`保展开改用稳定面板尺寸`
+- **occurrences:** 10+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；2026-11-13 展开后下移一半仍收；**2026-11-13 非拖文件也认过大接近区**；**2026-11-24 计时右翼未出岛 morph/待命就收**；**同日选时岛 447 宽但 lastStable 334 → 右侧「正计时」出保展开、点字无效**）  
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**；**收起双翼/计时待命往右移未出岛，操作钮已收**；**选时右侧「正计时」只能点图标、往右移岛就收**  
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；收起 interactive 过紧；**`resolvedRetentionPanelSize` 只返回更高更窄的 stable，未并入当前更宽面板**  
+- **防护:** 收起悬停展开 **仅刘海**；`fileDragApproachFrame` **仅**拖文件；展开态 `max(stable, panel)` 保展开 + `expandedRetentionFloor`；`scrollHold`；收起 interactive 外扩 + dualFlush/待命地板；选时「正计时」整颗胶囊 `contentShape`  
+- **自动化:** `test_islandHoverRetention_*`（含 `pickingWiderThanStableUnionsWidth`）+ `test_islandHoverExpand_*`  
+- **曾缺口（已补 2026-11-13 / 2026-11-24）:** Preference 未到 / 误报矮框；非拖文件误用大接近区；收起右翼贴边穿透；**选时宽于 lastStable**。  
+- **日志锚点:** `指针离开保展开区，安排收起`；`收起待命可点区过窄，抬回可见宽`；`货架拖入：钉住展开`（须 `fileDrag=true`）；`保展开改用稳定面板尺寸`；`选时：点正计时起钟`
 
 ### island-chrome-double-padding — 岛边距叠两层
 
@@ -245,12 +245,12 @@
 ### island-focus-steal — 岛抢鼠标/键盘焦点
 
 - **recurring:** true  
-- **occurrences:** 6（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；2026-11-12 媒体展开暂停/切歌；2026-11-13 混音台；**2026-11-16 久坐 +10m：tip 在场但 expanded=false / panel≈刘海，右翼点穿；且被「已复制」顶掉**）  
-- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体播放控件/混音台控件/久坐「+10m」点了没反应  
-- **根因倾向:** 一律 `activate`；去掉 `makeKey`；`hosting` 吞掉 SwiftUI 首击；横滑翻页 pan 抢走音量横向拖动；会议/久坐 tip 可点区停在刘海/短条；常驻 tip 未保展开  
-- **防护:** 普通点击只 `makeKey`；穿透即 resign；`hitTest` 直达 `NSControl` / `IslandDirectHitTarget`；会议 tip / 媒体播放 / 混音台 / **久坐**用 AppKit；常驻翼 tip `wingTipInteractivePanelSize` 抬双翼宽 + 未展开则强制 expand；久坐 `preemptionRank=50` 不被复制盖；翻页 pan 在控件上 `failed`  
-- **相关代码:** `IslandFocusPolicy`、`IslandExpandedPanelPolicy.wingTipInteractivePanelSize`、`IslandDirectHitTarget`、`MoveReminderPillNSButton`、`MeetingLeadAppKitPillButton`  
-- **自动化:** `RegressionCatalogTests.test_islandFocusPolicy_*`、`test_islandFocusSteal_*`、`test_controlDeckVolumeHeight_adaptsBelowMaxAndCapsAtMax`
+- **occurrences:** 9（抢焦点；矫枉后按钮失灵；翼 tip 可点区过窄点穿；2026-11-12 媒体；2026-11-13 混音台；2026-11-16 久坐 +10m；2026-11-24 正计时暂停/结束点空；同日选时「正计时」只图标可点；**同日播放时三字仍无反应 + 写死宽右侧空白，补布局/挡媒体/Hosting 优先级单测**）  
+- **症状:** 悬停或点过岛后其它 App 点不进；或会议「进入」/媒体/混音台/久坐「+10m」/计时待命钮/选时「正计时」点了没反应；选时绿胶囊右侧虚空  
+- **根因倾向:** 一律 `activate`；`hosting` 吞掉 SwiftUI 首击；可编辑字段外溢抢点；播放 `compactHover` 抢选时页；**选时绿胶囊写死宽 / 热区缩成图标**  
+- **防护:** 普通点击只 `makeKey`；选时正计时 `FocusTimerCountUpButtonLayout` 自适应宽 + HitView/`IslandDirectHitTarget`；Hosting 控件优先于可编辑；`MediaFocusPickingGate` 挡媒体抢页  
+- **相关代码:** `FocusTimerCountUpButtonLayout`、`MediaFocusPickingGate`、`IslandHostingHitPolicy`、`FocusTimerCountUpHitView`  
+- **自动化:** `test_islandFocusSteal_pickingCountUpButtonFitsTitleHitArea`、`test_islandFocusSteal_pickingBlocksMediaCompactExpand`、`test_islandFocusSteal_hostingPrefersDirectControlOverEditable` + 既有 `test_islandFocusSteal_*` / `test_islandFocusPolicy_*`
 
 ### tip-outline-panel — 瞬时提示上直角下圆角
 
@@ -305,11 +305,11 @@
 ### media-compact-not-resident — 播放大面板不得常驻分页
 
 - **recurring:** true  
-- **occurrences:** 5（2026-11-11：有曲目即常驻大面板；2026-11-23：左音乐右专注时悬停右翼不展开；同日产品改右翼 morph 专注钮；同日：右翼操作钮未及左右缘就收；**2026-11-24 计时往右移未出岛 morph 已收**）  
-- **症状:** 有曲目即 admit/自动 expand；或双翼时移入右计时翼误开媒体；或悬停出 `+Nm`/暂停后移向边缘即收回  
-- **根因倾向:** 有曲目即 admit；右翼整块曾进 `compactHover`；排除右翼后又把 expand 意图当 `isPointerOverIsland`；**收起 interactive ±2pt + panel 过窄 → 穿透掐 hover**  
-- **防护:** 有曲目不自动 admit；悬停刘海或**左**音乐翼 `open`；右计时翼禁开媒体；`collapsedInteractiveFrame` 外扩；dualFlush/计时待命地板；整翼 `contentShape` + 0.28s 宽限  
-- **相关代码:** `MediaCompactPresence`、`IslandExpandedPanelPolicy`、`IslandController.ensureCollapsedCompactPanelSizeIfNeeded`、`FocusTimerStandbyView`  
+- **occurrences:** 9（2026-11-11：有曲目即常驻大面板；2026-11-23：左音乐右专注时悬停右翼不展开；同日产品改右翼 morph 专注钮；同日：右翼操作钮未及左右缘就收；2026-11-24 计时往右移未出岛 morph 已收；同日正计时每秒 allowPanelShrink 抖 hover/点空；同日 OpaqueFill 抢击 + trailing 分界过严；同日往右移未出岛 morph 已收，且只有图标可点、点时长无反应；**同日：离岛后 morph 不恢复数字；播放+正计时点时长无反应、往右滑未出岛就收**）  
+- **症状:** 有曲目即 admit/自动 expand；或双翼时移入右计时翼误开媒体；或悬停出 `+Nm`/暂停后移向边缘即收回；正计时钮点了没反应；播放中右翼按钮点空；**点时长文字无效**；**指针离开后操作钮不收回、数字不恢复**  
+- **根因倾向:** 有曲目即 admit；右翼整块曾进 `compactHover`；收起 interactive 过紧；正计时每秒缩扩；OpaqueFill 抢击；trailing 分界过严；仅 SwiftUI onHover 钉 morph；**onHover 离开时因 trailingPinned 跳过清 `isWingHovering`，离岛后 morph 粘住**；media 旗标用 `isVisiblyShowingCompact` 与双翼 UI 不同步  
+- **防护:** 右计时翼禁开媒体；`collapsedInteractivePadX≥28`；OpaqueFill 不抢击；trailing 含 underlap；**`FocusTrailingWingHover` 钉住+解除去抖**；本地 hover 离开必清 `isWingHovering`；闲态整翼 Button；时长区可点；media 用 `isActive`  
+- **相关代码:** `FocusTrailingWingHover`、`FocusTimerStandbyView`、`IslandOpaqueFillView`、`IslandExpandedPanelPolicy`  
 - **自动化:** `test_mediaCompactNotResident_*`；`test_islandHoverRetention_collapsedInteractivePadsFocusTrailingWing`
 
 ### media-click-opens-empty — 播放中点刘海落到空态
@@ -352,14 +352,34 @@
 - **相关代码:** `OnboardingProgress`、`OnboardingController.requestNextPermission`、`WidgetPermissionGate.ensureBluetooth`  
 - **自动化:** 不强制（occurrences=1）
 
-### focus-completed-clipped-by-notch — 终局顶空过大 / 调顶距无感
+### focus-timer-standby-side-margins — 计时待命左右边距不对称
 
 - **recurring:** false  
-- **occurrences:** 3（2026-11-23：① 顶距 6 被挡；② 行内右缘空；③ 仅把间隙 +6→+2 用户无感，因大半是刘海盲区）  
-- **症状:** 终局上半截大块空黑；微调顶距「完全没变化」  
-- **根因倾向:** 终局走展开页 `expandedTopInset`（含整段刘海高）；可见间隙只占其中几 pt  
-- **防护:** 终局改 `notchWingTip`（顶 0）+ 左右翼布局；`forcePanelSize` 写入翼 tip 矮高  
-- **相关代码:** `FocusTimerCompletedView`、`FocusTimerContentSize.panelSize`、`IslandContentView.usesFocusCompletedWingTip`  
+- **occurrences:** 1（2026-11-24：正计时满岛左环离边过远、右结束钮贴圆角）  
+- **症状:** 左内边距明显大于右；结束圆钮贴下圆角弦  
+- **根因倾向:** 对称 `horizontal=14`；环/勾有字形内白、圆钮实心外缘 + 下圆角裁切，视觉右更贴  
+- **防护:** `focusTimerStandbyLeadingPadding=10`（对齐媒体）、`TrailingPadding=16`；终局右翼回车略收 trailing  
+- **相关代码:** `NotchGeometry.focusTimerStandbyLeadingPadding`、`FocusTimerStandbyView.fullStandbyBody`  
+- **自动化:** 不强制；`test_focusTimerStandbySideMargins_trailingClearsCorner`
+
+### focus-completed-countup-duration-wrong — 正计时终局时长进位成 1h 12m
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-24：正计时约 1h11m 结束，左翼显示 `1h····12m`）  
+- **症状:** 终局绿勾旁时长与进行中墙钟不一致；整分进位；等宽 `1h 12m` 字缝过大  
+- **根因倾向:** 终局一律 `compactDuration((elapsed+59)/60)`；snapshot 终局丢失 kind；等宽字体撑开空格  
+- **防护:** `completedDurationLabel`：正计时走 `countUpClock`；倒计时整分不进位；snapshot 带 `kind`；结算写回 `elapsedSeconds`  
+- **相关代码:** `FocusTimerFormatting.completedDurationLabel`、`FocusTimerCompletedView`、`FocusTimerSession.finalizeRecord`  
+- **自动化:** 不强制（occurrences=1）；`RegressionCatalogTests.test_focusCompletedCountUpDuration_matchesRunningClock`
+
+### focus-completed-clipped-by-notch — 终局顶空过大 / 高度掉出刘海
+
+- **recurring:** false  
+- **occurrences:** 4（2026-11-23：① 顶距 6 被挡；② 行内右缘空；③ 仅把间隙 +6→+2 用户无感；**2026-11-24：④ 终局高=刘海+compactTipBottom，底边掉出刘海**）  
+- **症状:** 终局上半截大块空黑；或底边明显低于刘海下沿  
+- **根因倾向:** 终局曾走展开页大顶距；改翼 tip 后仍叠 `compactTipBottom`（预备高 = 刘海+4）  
+- **防护:** `preparedFocusCompletedPanelSize` 高=刘海；壳层终局底距 0；`forcePanelSize` 写入该矮高  
+- **相关代码:** `IslandChrome.preparedFocusCompletedPanelSize`、`FocusTimerCompletedView`、`IslandContentView.contentBottomInset`  
 - **自动化:** `RegressionCatalogTests.test_focusCompletedClippedByNotch_topInsetClearsNotch`
 
 ### focus-completed-half-island-miss — 半岛待命结束未见全岛完成态
@@ -537,6 +557,17 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-24 | 选时「正计时」补单测：自适应宽/文案热区/挡媒体/Hosting 优先级；catalog focus-steal +1 |
+| 2026-11-24 | 选时「正计时」：HitView+DirectHit；hosting 按钮优先于可编辑外溢；选时中禁媒体抢页；focus-steal |
+| 2026-11-24 | 选时「正计时」改 AppKit 整 bounds 可点（SwiftUI 只吃图标）；catalog focus-steal +1 |
+| 2026-11-24 | 选时「正计时」：保展开 max(stable,panel) 盖住更宽选时岛；整颗胶囊可点；catalog hover-retention +1 |
+| 2026-11-24 | 音乐+正计时：离岛清 hover 恢复数字；时长 Button 热区；trailing 解除去抖；padX≥28；media 用 isActive；catalog media-compact +1 |
+| 2026-11-24 | 播放+正计时：Controller 钉右翼 morph、整翼热区、padX≥22；规则 island-hit-targets；catalog media-compact +1 |
+| 2026-11-24 | 播放+正计时右翼点空：OpaqueFill 禁命中 + trailing underlap；catalog media-compact +1 |
+| 2026-11-24 | 专注终局高=刘海（去掉 tip 底距），catalog `focus-completed-clipped-by-notch` +1 |
+| 2026-11-24 | 计时待命左右边距：左 10 / 右 16，躲开下圆角贴边；catalog `focus-timer-standby-side-margins` |
+| 2026-11-24 | 正计时左右被裁：收起勿用 Preference 缩窄窗框；文案始终分:秒；岛宽/内边距加大 |
+| 2026-11-24 | 正计时待命：禁每秒缩扩 + 按下钉 morph；待命钮恢复 SwiftUI 原貌（勿 AppKit 改长相）；catalog focus-steal / media-compact +1 |
 | 2026-11-24 | 计时右翼贴边误收：收起 interactive 外扩 + dualFlush/待命地板；catalog hover-retention / media-compact recurring |
 | 2026-11-24 | 四档定稿：A 取色框选；B 会议/播放；C 下载/计时；D tip（PRODUCT + island-priority-grades） |
 | 2026-11-24 | 下载：计时并排左下右计；音乐并排左音右下（下完再露计时）；布局矩阵同步 |

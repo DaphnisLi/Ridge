@@ -1145,6 +1145,115 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(opened.contains(calendarPage), "禁止打开 Google 日程页")
     }
 
+    /// island-focus-steal：选时「正计时」宽自适应 + 文案区可点；禁写死 88 右侧虚空。
+    func test_islandFocusSteal_pickingCountUpButtonFitsTitleHitArea() {
+        let title = L10n.FocusTimer.countUpMode
+        XCTAssertEqual(title, "正计时", "契约锚定中文三字文案")
+
+        let width = FocusTimerCountUpButtonLayout.fittingWidth(title: title)
+        let size = FocusTimerCountUpButtonLayout.fittingSize(title: title)
+
+        XCTAssertEqual(size.height, FocusTimerCountUpButtonLayout.height, accuracy: 0.5)
+        XCTAssertEqual(size.width, width, accuracy: 0.5)
+        XCTAssertLessThan(
+            width,
+            FocusTimerCountUpButtonLayout.forbiddenFixedWidth - 4,
+            "自适应宽须明显窄于曾写死的 88，否则右侧大片空白回归"
+        )
+        XCTAssertGreaterThan(
+            width,
+            FocusTimerCountUpButtonLayout.titleMinX + 20,
+            "宽须盖住「正计时」文案，不能缩成仅图标"
+        )
+
+        // 图标中心可点。
+        let iconX = FocusTimerCountUpButtonLayout.iconMinX
+            + FocusTimerCountUpButtonLayout.iconSide / 2
+        XCTAssertTrue(FocusTimerCountUpButtonLayout.containsTap(localX: iconX, title: title))
+
+        // 文案带中点可点（用户反复踩坑：只图标有用、三字无反应）。
+        let titleMidX = (
+            FocusTimerCountUpButtonLayout.titleMinX
+                + (width - FocusTimerCountUpButtonLayout.horizontalPadding)
+        ) / 2
+        XCTAssertTrue(
+            FocusTimerCountUpButtonLayout.containsTitleTap(localX: titleMidX, title: title),
+            "点「正计时」三字中部必须算命中"
+        )
+        XCTAssertTrue(FocusTimerCountUpButtonLayout.containsTap(localX: titleMidX, title: title))
+
+        // 胶囊外缘外不可点（热区不虚胖）。
+        XCTAssertFalse(FocusTimerCountUpButtonLayout.containsTap(localX: width + 2, title: title))
+        XCTAssertFalse(
+            FocusTimerCountUpButtonLayout.containsTitleTap(
+                localX: FocusTimerCountUpButtonLayout.iconMinX + 2,
+                title: title
+            ),
+            "图标带不算文案带"
+        )
+    }
+
+    /// island-focus-steal：选时页打开时播放不得抢媒体大面板。
+    func test_islandFocusSteal_pickingBlocksMediaCompactExpand() {
+        XCTAssertTrue(
+            MediaFocusPickingGate.shouldBlockMediaExpand(
+                focusPhase: .picking,
+                activePageID: FocusTimerWidget.manifest.id
+            ),
+            "专注选时 + 焦点页时须挡媒体悬停抢页"
+        )
+        XCTAssertFalse(
+            MediaFocusPickingGate.shouldBlockMediaExpand(
+                focusPhase: .countUp,
+                activePageID: FocusTimerWidget.manifest.id
+            ),
+            "正计时进行中不走选时挡板"
+        )
+        XCTAssertFalse(
+            MediaFocusPickingGate.shouldBlockMediaExpand(
+                focusPhase: .picking,
+                activePageID: MediaNowPlayingWidget.manifest.id
+            ),
+            "当前页是媒体时不挡"
+        )
+        XCTAssertFalse(
+            MediaFocusPickingGate.shouldBlockMediaExpand(
+                focusPhase: .picking,
+                activePageID: nil
+            )
+        )
+    }
+
+    /// island-focus-steal：Hosting 同点下 DirectHit/按钮优先于可编辑外溢。
+    func test_islandFocusSteal_hostingPrefersDirectControlOverEditable() {
+        XCTAssertTrue(
+            IslandHostingHitPolicy.prefersDirectControl(
+                hasDirectControlUnderPoint: true,
+                hasEditableUnderPoint: true
+            ),
+            "正计时 DirectHit 与分钟输入重叠时须点到按钮"
+        )
+        XCTAssertTrue(
+            IslandHostingHitPolicy.prefersDirectControl(
+                hasDirectControlUnderPoint: true,
+                hasEditableUnderPoint: false
+            )
+        )
+        XCTAssertFalse(
+            IslandHostingHitPolicy.prefersDirectControl(
+                hasDirectControlUnderPoint: false,
+                hasEditableUnderPoint: true
+            ),
+            "无按钮时才轮到可编辑字段"
+        )
+        XCTAssertTrue(
+            IslandHostingHitPolicy.prefersDirectControl(
+                hasDirectControlUnderPoint: false,
+                hasEditableUnderPoint: false
+            )
+        )
+    }
+
     /// island-focus-steal：久坐常驻 tip 须 keepExpanded；可点区不得窄于预备双翼宽。
     func test_islandFocusSteal_moveReminderWingTipInteractiveFloor() {
         let move = IslandNoticePayload.moveReminder(
@@ -1181,18 +1290,18 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(untouched.width, 200, accuracy: 0.5)
     }
 
-    /// focus-completed-clipped-by-notch：终局须翼 tip（顶 0），高度远小于展开页，消灭大顶空。
+    /// focus-completed-clipped-by-notch：终局须翼 tip（顶 0），高=刘海，勿掉出刘海下沿。
     func test_focusCompletedClippedByNotch_topInsetClearsNotch() {
         let notchW: CGFloat = 160
         let notchH: CGFloat = 32
         let wingInsets = IslandChrome.insets(for: .notchWingTip, notchHeight: notchH)
         XCTAssertEqual(wingInsets.top, 0, accuracy: 0.5, "终局壳层须 notchWingTip 顶距 0")
-        XCTAssertEqual(wingInsets.bottom, IslandChrome.compactTipBottom, accuracy: 0.5)
         XCTAssertEqual(FocusTimerContentSize.completedPreviewTopInset, 0, accuracy: 0.5)
         XCTAssertEqual(
             FocusTimerContentSize.completedBottomInset,
-            IslandChrome.compactTipBottom,
-            accuracy: 0.5
+            0,
+            accuracy: 0.5,
+            "终局底距须 0，禁止 compactTipBottom 把岛顶出刘海"
         )
 
         let completed = FocusTimerContentSize.panelSize(
@@ -1205,13 +1314,26 @@ final class RegressionCatalogTests: XCTestCase {
             notchHeight: notchH,
             notchWidth: notchW
         )
-        let expected = IslandChrome.preparedWingTipPanelSize(
+        let expected = IslandChrome.preparedFocusCompletedPanelSize(
             notchWidth: notchW + FocusTimerContentSize.completedCenterExtra,
-            notchHeight: notchH,
-            wingWidth: FocusTimerContentSize.completedWingWidth
+            notchHeight: notchH
         )
         XCTAssertEqual(completed.width, expected.width, accuracy: 0.5)
         XCTAssertEqual(completed.height, expected.height, accuracy: 0.5)
+        XCTAssertEqual(
+            completed.height,
+            NotchGeometry.compactPanelHeight(notchHeight: notchH),
+            accuracy: 0.5,
+            "终局高须等于刘海，与收起待命齐平"
+        )
+        XCTAssertLessThan(
+            completed.height,
+            IslandChrome.preparedWingTipPanelSize(
+                notchWidth: notchW,
+                notchHeight: notchH
+            ).height - 0.5,
+            "终局不得再用会议翼 tip 的 +compactTipBottom 高度"
+        )
         XCTAssertLessThan(
             completed.height,
             expandedPick.height - 20,
@@ -1219,6 +1341,50 @@ final class RegressionCatalogTests: XCTestCase {
         )
         XCTAssertEqual(FocusTimerContentSize.completedWingWidth, 120, accuracy: 0.5)
         XCTAssertEqual(FocusTimerContentSize.completedCenterExtra, 8, accuracy: 0.5)
+    }
+
+    /// focus-timer-standby-side-margins：待命左右边距不对齐（左松右贴边）。
+    func test_focusTimerStandbySideMargins_trailingClearsCorner() {
+        XCTAssertEqual(NotchGeometry.focusTimerStandbyLeadingPadding, 10, accuracy: 0.5)
+        XCTAssertEqual(NotchGeometry.focusTimerStandbyTrailingPadding, 16, accuracy: 0.5)
+        XCTAssertGreaterThan(
+            NotchGeometry.focusTimerStandbyTrailingPadding,
+            NotchGeometry.focusTimerStandbyLeadingPadding,
+            "右缘须大于左缘，躲开下圆角 + 结束圆钮"
+        )
+        XCTAssertEqual(
+            NotchGeometry.focusTimerStandbyHorizontalPadding,
+            NotchGeometry.focusTimerStandbyTrailingPadding,
+            accuracy: 0.5
+        )
+        // 与媒体收起外缘 10 对齐，禁止再把左距抬到 14 显空。
+        XCTAssertEqual(NotchGeometry.focusTimerStandbyLeadingPadding, 10, accuracy: 0.5)
+    }
+
+    /// focus-completed-countup-duration-wrong：正计时终局跟进行中墙钟，禁进位 `1h 12m`。
+    func test_focusCompletedCountUpDuration_matchesRunningClock() {
+        let countUpEnd = 1 * 3600 + 11 * 60 + 18
+        XCTAssertEqual(
+            FocusTimerFormatting.completedDurationLabel(elapsedSeconds: countUpEnd, kind: .countUp),
+            FocusTimerFormatting.countUpClock(countUpEnd)
+        )
+        XCTAssertEqual(
+            FocusTimerFormatting.completedDurationLabel(elapsedSeconds: countUpEnd, kind: .countUp),
+            "01:11:18"
+        )
+        XCTAssertEqual(
+            FocusTimerFormatting.completedDurationLabel(elapsedSeconds: 25 * 60 + 40, kind: .preset),
+            "25m",
+            "倒计时终局按整分向下取，不进位到下一分"
+        )
+        XCTAssertEqual(FocusTimerSnapshot.completedCountUpPreview.kind, .countUp)
+        XCTAssertEqual(
+            FocusTimerFormatting.completedDurationLabel(
+                elapsedSeconds: FocusTimerSnapshot.completedCountUpPreview.elapsedSeconds,
+                kind: FocusTimerSnapshot.completedCountUpPreview.kind
+            ),
+            "01:11:18"
+        )
     }
 
     /// peripheral-wing-floor-meeting-width：外设窄翼可点区抬升须用 peripheral 预备宽，禁止抬成会议翼（否则左右空一边）。
@@ -2854,7 +3020,8 @@ final class RegressionCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             FocusTimerFormatting.countUpClock(45),
-            "45"
+            "00:45",
+            "不足 1 分也显示分:秒，禁止只露秒把「分」藏掉"
         )
         XCTAssertEqual(
             FocusTimerFormatting.countUpClock(90),

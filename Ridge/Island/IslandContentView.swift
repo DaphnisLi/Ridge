@@ -38,9 +38,22 @@ struct IslandContentView: View {
         DownloadCompactPresence.isActive
     }
 
-    /// 收起且无 tip：音乐+计时左右双翼（无下载时；有下载则右翼先给下载）。
+    /// 计时待命须贴刘海：即便 isExpanded 未落，面板尺寸仍走 compact（避免大顶距空壳）。
+    private var forcesFocusCompactPanelSize: Bool {
+        guard focusTimer.showsCompactStandby else { return false }
+        if noticeCenter.slots.primary?.displayLane == .exclusive { return false }
+        if noticeCenter.slots.anyKeepsExpandedWithoutHover { return false }
+        if MediaCompactPresence.isActive,
+           runtime.activeID == LiveIslandGate.mediaID
+        {
+            return false
+        }
+        return true
+    }
+
+    /// 收起（或强制计时待命）且无 tip：音乐+计时左右双翼。
     private var showsMediaFocusCompactDual: Bool {
-        !viewModel.isExpanded
+        (!viewModel.isExpanded || forcesFocusCompactPanelSize)
             && showsMediaCompactStandby
             && focusTimer.showsCompactStandby
             && !showsDownloadCompactStandby
@@ -55,9 +68,9 @@ struct IslandContentView: View {
             && !noticeCenter.slots.hasNoticePayload
     }
 
-    /// 收起且无 tip：左下载 · 右计时（无音乐时）。
+    /// 收起（或强制计时待命）且无 tip：左下载 · 右计时。
     private var showsDownloadFocusCompactDual: Bool {
-        !viewModel.isExpanded
+        (!viewModel.isExpanded || forcesFocusCompactPanelSize)
             && showsDownloadCompactStandby
             && focusTimer.showsCompactStandby
             && !showsMediaCompactStandby
@@ -120,6 +133,10 @@ struct IslandContentView: View {
 
     /// 可见面板尺寸：收起用刘海/待命；展开用内容测量结果（viewModel.panelSize）。
     private var bodySize: CGSize {
+        // 正计时/倒计时待命：禁止沿用展开大顶距高度（内容会被顶到刘海下）。
+        if forcesFocusCompactPanelSize {
+            return compactSize
+        }
         if viewModel.isExpanded {
             if shelfMagneticStagingActive {
                 return shelfDropPanelSize
@@ -213,6 +230,7 @@ struct IslandContentView: View {
                             outlineStyle: .flushLeading,
                             fill: settings.theme.nsFillColor
                         )
+                        .allowsHitTesting(false)
                         .frame(width: leftFillW, height: bodySize.height)
                         .frame(
                             width: bodySize.width,
@@ -228,6 +246,7 @@ struct IslandContentView: View {
                             outlineStyle: .flushTrailing,
                             fill: settings.theme.nsFillColor
                         )
+                        .allowsHitTesting(false)
                         .frame(width: rightFillW, height: bodySize.height)
                         .frame(
                             width: bodySize.width,
@@ -241,6 +260,7 @@ struct IslandContentView: View {
                         outlineStyle: outlineStyle,
                         fill: settings.theme.nsFillColor
                     )
+                    .allowsHitTesting(false)
                     .frame(width: bodySize.width, height: bodySize.height)
                 }
 
@@ -306,8 +326,7 @@ struct IslandContentView: View {
         .animation(islandSpring, value: settings.theme)
         .animation(islandSpring, value: viewModel.panelSize)
         .animation(islandSpring, value: focusTimer.showsCompactStandby)
-        .animation(islandSpring, value: focusTimer.snapshot.remainingSeconds)
-        .animation(islandSpring, value: focusTimer.snapshot.elapsedSeconds)
+        // 倒计时/正计时每秒变数禁止弹簧整岛：会掐右翼 morph hover，并让待命钮点空。
         .animation(islandSpring, value: focusTimerSettings.extendStepMinutes)
         .animation(islandSpring, value: showsMediaCompactStandby)
         .animation(islandSpring, value: showsDownloadCompactStandby)
@@ -315,17 +334,13 @@ struct IslandContentView: View {
         .opacity(viewModel.isHiddenForFullscreen || !viewModel.isVisibleOnDisplay ? 0 : 1)
         .allowsHitTesting(!viewModel.isHiddenForFullscreen && viewModel.isVisibleOnDisplay)
         .onPreferenceChange(IslandPanelSizeKey.self) { size in
-            guard viewModel.isExpanded
-                || focusTimer.showsCompactStandby
-                || showsMediaCompactStandby
-                || showsDownloadCompactStandby
-            else { return }
+            // 收起待命宽高只认 compactSize（syncCompactPanelSizeIfNeeded）；
+            // Preference 若缩窄，窗框会裁掉正计时左侧时分与右侧结束钮。
+            guard viewModel.isExpanded else { return }
             guard size.width > 1, size.height > 1 else { return }
             var resolved = size
             // 番茄：高度始终不低于态下限；宽度仅终局抬升（选时等由内容测量，避免右侧虚空）。
-            if viewModel.isExpanded,
-               runtime.activeID == FocusTimerWidget.manifest.id
-            {
+            if runtime.activeID == FocusTimerWidget.manifest.id {
                 let floor = FocusTimerContentSize.panelSize(
                     phase: focusTimer.phase,
                     notchHeight: viewModel.notchHeight,
@@ -370,17 +385,19 @@ struct IslandContentView: View {
                 "width": Int(NotchGeometry.focusTimerStandbyWidth(extendStepMinutes: minutes))
             ])
         }
-        .onChange(of: focusTimer.snapshot.elapsedSeconds) { _, elapsed in
+        .onChange(of: focusTimer.snapshot.elapsedSeconds) { oldElapsed, elapsed in
             guard focusTimer.snapshot.isCountUp else { return }
-            // 跨过 1h 时加宽；允许缩宽以免卡在旧宽。
+            // 仅跨过「出小时」档才改岛宽；禁止每秒 allowPanelShrink（会穿透抖动 + 待命钮点空）。
+            let wasHours = FocusTimerFormatting.countUpShowsHours(oldElapsed)
+            let nowHours = FocusTimerFormatting.countUpShowsHours(elapsed)
+            guard wasHours != nowHours else { return }
             viewModel.allowPanelShrink(for: 0.6, reason: "focusCountUpHours")
             syncCompactPanelSizeIfNeeded()
-            if FocusTimerFormatting.countUpShowsHours(elapsed) {
-                AppLog.debug("FocusTimer", "正计时进入时分秒档，岛宽已加宽", [
-                    "elapsed": elapsed,
-                    "width": Int(NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: elapsed))
-                ])
-            }
+            AppLog.info("FocusTimer", "正计时岛宽随小时档切换", [
+                "elapsed": elapsed,
+                "hours": nowHours,
+                "width": Int(NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: elapsed))
+            ])
         }
         .onChange(of: showsMediaCompactStandby) { _, active in
             syncCompactPanelSizeIfNeeded()
@@ -542,10 +559,27 @@ private struct IslandBody: View {
         return true
     }
 
+    /// 计时 / 加时 / 正计时：即便 isExpanded 未收完，也优先画贴刘海待命，禁止 WidgetHost+大顶距把内容顶到刘海下。
+    /// 音乐大面板展开时让位（左翼开媒体合法）。
+    private var prefersFocusCompactOverExpanded: Bool {
+        guard focusTimer.showsCompactStandby else { return false }
+        if noticeCenter.slots.primary?.displayLane == .exclusive { return false }
+        if noticeCenter.slots.anyKeepsExpandedWithoutHover { return false }
+        if isExpanded,
+           showsMediaCompactStandby,
+           runtime.activeID == LiveIslandGate.mediaID
+        {
+            return false
+        }
+        return true
+    }
+
     var body: some View {
         Group {
             if prefersDownloadCompactOverExpanded, let item = downloadSession.pending {
                 downloadCompactBody(item: item)
+            } else if prefersFocusCompactOverExpanded {
+                focusCompactStandbyBody()
             } else if isExpanded {
                 VStack(spacing: 0) {
                     // 可选顶栏标题（在统一顶距之下）；会议 / 媒体 / 番茄 title 为空，不占行。
@@ -571,63 +605,6 @@ private struct IslandBody: View {
                             .allowsHitTesting(false)
                     }
                 }
-            } else if showsMediaDownloadCompactDual, let item = downloadSession.pending,
-                      let snap = nowPlaying.snapshot {
-                mediaDownloadDualRow(snap: snap, item: item)
-            } else if showsMediaFocusCompactDual, let snap = nowPlaying.snapshot {
-                // 左音乐 · 右计时；与 tip dualFlush 同壳。
-                IslandDualNotchWingRow {
-                    MediaCompactStandbyView(
-                        title: snap.title,
-                        artwork: snap.artwork,
-                        elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
-                        isPlaying: snap.isPlaying,
-                        flushSide: .leading,
-                        bareWingContent: true
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        MediaCompactPresence.openExpandedPanel(reason: "compactTap")
-                    }
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityHint(L10n.Media.previewStageExpanded)
-                } right: {
-                    // 悬停右翼：倒计时 +Nm/结束，正计时 暂停/结束；勿禁命中。
-                    FocusTimerStandbyView(
-                        snapshot: focusTimer.snapshot,
-                        flushSide: .trailing,
-                        bareWingContent: true,
-                        extendStepMinutes: focusTimerSettings.extendStepMinutes,
-                        onExtend: { FocusTimerSession.shared.extend() },
-                        onFinishEarly: { FocusTimerSession.shared.finishEarly() },
-                        onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
-                    )
-                }
-            } else if showsDownloadFocusCompactDual, let item = downloadSession.pending {
-                downloadCompactBody(item: item)
-            } else if focusTimer.showsCompactStandby {
-                // 倒计时随 +Nm；正计时按分秒占位、出小时加宽；内边距在 StandbyView 内。
-                let standbyW: CGFloat = {
-                    if focusTimer.snapshot.isCountUp {
-                        return NotchGeometry.focusTimerCountUpStandbyWidth(
-                            elapsedSeconds: focusTimer.snapshot.elapsedSeconds
-                        )
-                    }
-                    return NotchGeometry.focusTimerStandbyWidth(
-                        extendStepMinutes: focusTimerSettings.extendStepMinutes
-                    )
-                }()
-                FocusTimerStandbyView(
-                    snapshot: focusTimer.snapshot,
-                    extendStepMinutes: focusTimerSettings.extendStepMinutes,
-                    onExtend: { FocusTimerSession.shared.extend() },
-                    onFinishEarly: { FocusTimerSession.shared.finishEarly() },
-                    onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
-                )
-                    .frame(
-                        width: standbyW,
-                        height: compactContentHeight
-                    )
             } else if showsMediaCompactStandby, let snap = nowPlaying.snapshot {
                 MediaCompactStandbyView(
                     title: snap.title,
@@ -653,6 +630,63 @@ private struct IslandBody: View {
                 Color.clear
                     .frame(width: 1, height: 1)
             }
+        }
+    }
+
+    /// 贴刘海计时待命（含双翼）；供 `prefersFocusCompactOverExpanded` 使用，不依赖 isExpanded。
+    @ViewBuilder
+    private func focusCompactStandbyBody() -> some View {
+        if showsMediaFocusCompactDual, let snap = nowPlaying.snapshot {
+            IslandDualNotchWingRow {
+                MediaCompactStandbyView(
+                    title: snap.title,
+                    artwork: snap.artwork,
+                    elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
+                    isPlaying: snap.isPlaying,
+                    flushSide: .leading,
+                    bareWingContent: true
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    MediaCompactPresence.openExpandedPanel(reason: "compactTap")
+                }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint(L10n.Media.previewStageExpanded)
+            } right: {
+                FocusTimerStandbyView(
+                    snapshot: focusTimer.snapshot,
+                    flushSide: .trailing,
+                    bareWingContent: true,
+                    extendStepMinutes: focusTimerSettings.extendStepMinutes,
+                    onExtend: { FocusTimerSession.shared.extend() },
+                    onFinishEarly: { FocusTimerSession.shared.finishEarly() },
+                    onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
+                )
+            }
+        } else if showsDownloadFocusCompactDual, let item = downloadSession.pending {
+            downloadCompactBody(item: item)
+        } else {
+            let standbyW: CGFloat = {
+                if focusTimer.snapshot.isCountUp {
+                    return NotchGeometry.focusTimerCountUpStandbyWidth(
+                        elapsedSeconds: focusTimer.snapshot.elapsedSeconds
+                    )
+                }
+                return NotchGeometry.focusTimerStandbyWidth(
+                    extendStepMinutes: focusTimerSettings.extendStepMinutes
+                )
+            }()
+            FocusTimerStandbyView(
+                snapshot: focusTimer.snapshot,
+                extendStepMinutes: focusTimerSettings.extendStepMinutes,
+                onExtend: { FocusTimerSession.shared.extend() },
+                onFinishEarly: { FocusTimerSession.shared.finishEarly() },
+                onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
+            )
+            .frame(
+                width: standbyW,
+                height: compactContentHeight
+            )
         }
     }
 
@@ -755,6 +789,8 @@ private struct IslandBody: View {
     }
 
     private var contentBottomInset: CGFloat {
+        // 专注终局：高贴齐刘海，禁止 notchWingTip 的 compactTipBottom 把底边顶出刘海。
+        if usesFocusCompletedWingTip { return 0 }
         return chromeInsets.bottom
     }
 }

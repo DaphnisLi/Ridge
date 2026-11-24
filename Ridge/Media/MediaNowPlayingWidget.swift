@@ -162,6 +162,17 @@ enum MediaCompactPresence {
     @MainActor
     static var isVisiblyShowingCompact: Bool {
         guard isActive, IslandNoticeCenter.shared.current == nil else { return false }
+        // 展开态正停在专注选时等其它页时，不算播放小岛可见——否则点「正计时」会被 compactHover 抢成媒体。
+        if let controller = IslandController.shared,
+           controller.viewModel.isExpanded
+        {
+            let page = WidgetRuntime.shared.activeID
+            let onMediaPage = page == LiveIslandGate.mediaID
+                || page == MediaNowPlayingWidget.manifest.id
+            if !onMediaPage {
+                return false
+            }
+        }
         switch IslandNoticeCenter.shared.slots.resolvedLayout {
         case .fullMedia, .dual(left: .media, _):
             return true
@@ -175,6 +186,16 @@ enum MediaCompactPresence {
     @discardableResult
     @MainActor
     static func openExpandedPanel(reason: String) -> Bool {
+        // 专注选时展开中：禁止播放悬停/按住抢页（与 isVisiblyShowingCompact 双保险）。
+        if MediaFocusPickingGate.shouldBlockMediaExpand(
+            focusPhase: FocusTimerSession.shared.phase,
+            activePageID: WidgetRuntime.shared.activeID
+        ) {
+            AppLog.warn("Media", "展开大面板跳过：专注选时中", [
+                "reason": reason
+            ])
+            return false
+        }
         guard isVisiblyShowingCompact else {
             AppLog.debug("Media", "展开大面板跳过：当前不是播放小岛", [
                 "reason": reason,

@@ -15,6 +15,59 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
         )
     }
 
+    /// island-hover-retention：选时岛更宽更矮时，保展开宽须盖住当前面板（含右侧「正计时」）。
+    func test_islandHoverRetention_pickingWiderThanStableUnionsWidth() {
+        let notch = CGSize(width: 179, height: 32)
+        // 上一页媒体/控制台：更高更窄；选时：更宽更矮（日志 panelW=447 stableW=334）。
+        let stable = CGSize(width: 334, height: 142)
+        let picking = CGSize(width: 447, height: 73)
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldPreferStableRetention(
+                panel: picking,
+                stable: stable,
+                notch: notch,
+                isExpanded: true
+            ),
+            "选时更矮时应倾向保留稳定高度"
+        )
+        let resolved = IslandExpandedPanelPolicy.resolvedRetentionPanelSize(
+            panel: picking,
+            stable: stable,
+            notch: notch,
+            isExpanded: true
+        )
+        XCTAssertGreaterThanOrEqual(
+            resolved.width,
+            picking.width - 0.5,
+            "保展开宽不得窄于选时岛，否则右侧「正计时」出热区"
+        )
+        XCTAssertGreaterThanOrEqual(
+            resolved.height,
+            stable.height - 0.5,
+            "仍须保留上一页稳定高度，避免下半截误收"
+        )
+
+        let notchFrame = CGRect(x: 400, y: 968, width: notch.width, height: notch.height)
+        let screenMaxY: CGFloat = 1000
+        let retentionFrame = CGRect(
+            x: notchFrame.midX - resolved.width / 2,
+            y: screenMaxY - resolved.height,
+            width: resolved.width,
+            height: resolved.height
+        )
+        let visiblePicking = CGRect(
+            x: notchFrame.midX - picking.width / 2,
+            y: screenMaxY - picking.height,
+            width: picking.width,
+            height: picking.height
+        )
+        let countUpButton = CGPoint(x: visiblePicking.maxX - 24, y: visiblePicking.midY)
+        XCTAssertTrue(
+            retentionFrame.contains(countUpButton),
+            "选时右侧「正计时」须仍在保展开区内"
+        )
+    }
+
     /// 展开态面板仍为刘海尺寸时，resolvedRetention 须抬到下限且中下点命中。
     func testExpandedRetentionFloorKeepsMidLowerPoint() {
         let notch = CGSize(width: 180, height: 32)
@@ -162,6 +215,11 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
 
     /// island-hover-retention / media-compact-not-resident：收起可点框外扩，右计时翼贴边仍算在岛上。
     func test_islandHoverRetention_collapsedInteractivePadsFocusTrailingWing() {
+        XCTAssertGreaterThanOrEqual(
+            IslandExpandedPanelPolicy.collapsedInteractivePadX,
+            28,
+            "双翼右缘外扩过小会未出岛就穿透收 morph"
+        )
         let notch = CGRect(x: 400, y: 900, width: 160, height: 32)
         // dualFlush：左翼 120 + 刘海 160 + 右翼 120
         let dual = CGRect(x: 280, y: 900, width: 400, height: 32)
@@ -170,7 +228,10 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
             notchFrame: notch
         )
         let rightEdgeInside = CGPoint(x: dual.maxX - 2, y: dual.midY)
-        let rightEdgePadded = CGPoint(x: dual.maxX + 8, y: dual.midY)
+        let rightEdgePadded = CGPoint(
+            x: dual.maxX + IslandExpandedPanelPolicy.collapsedInteractivePadX - 2,
+            y: dual.midY
+        )
         XCTAssertTrue(hit.contains(rightEdgeInside), "右翼内缘须可点")
         XCTAssertTrue(hit.contains(rightEdgePadded), "右翼外扩须保活，避免 morph 误收")
 
@@ -209,6 +270,16 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
                 focusTrailingDualVisible: true
             )
         )
+        // 右翼 underlap 伸进刘海：贴右缘内侧也须认成右计时翼，否则点暂停会误开媒体。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
+                mouse: CGPoint(x: notch.maxX - 6, y: dual.midY),
+                notchFrame: notch,
+                panelFrame: dual,
+                focusTrailingDualVisible: true
+            ),
+            "刘海右缘 underlap 内须算右计时翼"
+        )
         XCTAssertFalse(
             IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
                 mouse: CGPoint(x: notch.midX, y: notch.midY),
@@ -216,7 +287,7 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
                 panelFrame: dual,
                 focusTrailingDualVisible: true
             ),
-            "刘海内不算右计时翼"
+            "刘海中线不算右计时翼"
         )
         XCTAssertFalse(
             IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
@@ -239,6 +310,28 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
                 hoverExpandSuppressed: false,
                 pointerOverFocusTrailingWing: true
             )
+        )
+    }
+
+    /// media-compact-not-resident / island-focus-steal：正计时岛宽只在跨小时档变，禁止每秒缩扩抖 hover/点空。
+    func test_mediaCompactNotResident_countUpStandbyWidthStableUntilHours() {
+        let underHourA = NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 45)
+        let underHourB = NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 3599)
+        XCTAssertEqual(underHourA, underHourB, "不足 1h 岛宽须恒定，勿每秒变")
+        XCTAssertFalse(FocusTimerFormatting.countUpShowsHours(45))
+        XCTAssertFalse(FocusTimerFormatting.countUpShowsHours(3599))
+        XCTAssertTrue(FocusTimerFormatting.countUpShowsHours(3600))
+        let withHours = NotchGeometry.focusTimerCountUpStandbyWidth(elapsedSeconds: 3600)
+        XCTAssertGreaterThan(withHours, underHourB, "出小时才加宽")
+        // 跨档才应触发 panel sync（与 IslandContentView.onChange 同条件）。
+        XCTAssertNotEqual(
+            FocusTimerFormatting.countUpShowsHours(3599),
+            FocusTimerFormatting.countUpShowsHours(3600)
+        )
+        XCTAssertEqual(
+            FocusTimerFormatting.countUpShowsHours(100),
+            FocusTimerFormatting.countUpShowsHours(200),
+            "同档内秒级跳动不得触发缩扩"
         )
     }
 

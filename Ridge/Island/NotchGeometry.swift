@@ -19,19 +19,23 @@ struct NotchGeometry: Equatable {
     /// 无真刘海时的预览 / 测试参考高（≈典型 `safeAreaInsets.top`）。
     /// 真机收起高度必须用 `compactPanelHeight(notchHeight:)`，与刘海同高、底边齐平。
     static let compactIslandHeight: CGFloat = 32
-    /// 番茄倒计时收起待命（+5m 档）最小宽度（含内容左右内边距；无左侧进度环）。
-    static let focusTimerCompactWidth: CGFloat = 330
+    /// 番茄倒计时收起待命（+5m 档）最小宽度（含左右内边距、进度环、暂停/结束，躲开下圆角裁切）。
+    static let focusTimerCompactWidth: CGFloat = 360
     static var focusTimerCompactHeight: CGFloat { compactIslandHeight }
-    /// 待命内容左右内边距；与 `focusTimerStandbyWidth` 配套，禁止再在外层叠 padding 吃掉宽度。
-    static let focusTimerStandbyHorizontalPadding: CGFloat = 10
-    /// 正计时待命基准宽：与倒计时待命同档，保证 `MM:SS` + 暂停/结束不被裁；不足 1 分也按分秒占位。
+    /// 待命左内边距：与媒体收起 `padding(.horizontal, 10)` 对齐，避免左环离边过远。
+    static let focusTimerStandbyLeadingPadding: CGFloat = 10
+    /// 待命右内边距：略大于左，躲开下圆角弦 + 结束圆钮实心外缘（曾对称 14 仍显右贴边）。
+    static let focusTimerStandbyTrailingPadding: CGFloat = 16
+    /// 兼容旧名：取左右较大值，避免其它调用方低估右缘余量。
+    static var focusTimerStandbyHorizontalPadding: CGFloat { focusTimerStandbyTrailingPadding }
+    /// 正计时待命基准宽：与倒计时待命同档；不足 1 分也按分秒占位。
     static var focusTimerCountUpCompactWidth: CGFloat { focusTimerCompactWidth }
     /// 正计时进入「时分秒」后额外宽度（`HH:` 三位）。
-    static let focusTimerCountUpHoursExtraWidth: CGFloat = 48
-    /// 正计时分秒文案最小占位（15pt mono `00:00`）；仅秒显示时也不缩。
+    static let focusTimerCountUpHoursExtraWidth: CGFloat = 56
+    /// 正计时分秒文案最小占位（15pt mono `00:00`）。
     static let focusTimerCountUpClockMinWidthMMSS: CGFloat = 52
     /// 正计时时分秒文案最小占位（`00:00:00`）。
-    static let focusTimerCountUpClockMinWidthHHMMSS: CGFloat = 80
+    static let focusTimerCountUpClockMinWidthHHMMSS: CGFloat = 88
 
     /// 待命岛宽随顺延芯片变：`+10m` / `+15m` 比 `+5m` 多一位数字，加宽避免右簇被裁。
     static func focusTimerStandbyWidth(extendStepMinutes: Int) -> CGFloat {

@@ -180,7 +180,10 @@ struct FocusTimerSnapshot: Equatable {
     var selectedPresetID: String?
     /// 仅正计时：暂停中不累加。
     var isPaused: Bool
+    /// 本会话种类；终局仍保留，便于时长文案走正计时/倒计时分岔。
+    var kind: FocusTimerKind
 
+    /// 进行中的正计时（不含终局；终局看 `kind == .countUp`）。
     var isCountUp: Bool { phase == .countUp }
 
     var progress: Double {
@@ -204,7 +207,8 @@ struct FocusTimerSnapshot: Equatable {
         noteDraft: "",
         customMinutes: 25,
         selectedPresetID: nil,
-        isPaused: false
+        isPaused: false,
+        kind: .preset
     )
 
     static let runningStandbyPreview = FocusTimerSnapshot(
@@ -216,7 +220,8 @@ struct FocusTimerSnapshot: Equatable {
         noteDraft: "",
         customMinutes: 30,
         selectedPresetID: "tomato",
-        isPaused: false
+        isPaused: false,
+        kind: .preset
     )
 
     static let overtimePreview = FocusTimerSnapshot(
@@ -228,7 +233,8 @@ struct FocusTimerSnapshot: Equatable {
         noteDraft: "",
         customMinutes: 30,
         selectedPresetID: "tomato",
-        isPaused: false
+        isPaused: false,
+        kind: .overtimeSprint
     )
 
     static let countUpPreview = FocusTimerSnapshot(
@@ -240,7 +246,8 @@ struct FocusTimerSnapshot: Equatable {
         noteDraft: "",
         customMinutes: 25,
         selectedPresetID: nil,
-        isPaused: false
+        isPaused: false,
+        kind: .countUp
     )
 
     static let completedPreview = FocusTimerSnapshot(
@@ -252,7 +259,22 @@ struct FocusTimerSnapshot: Equatable {
         noteDraft: "",
         customMinutes: 25,
         selectedPresetID: "tomato",
-        isPaused: false
+        isPaused: false,
+        kind: .preset
+    )
+
+    /// 正计时终局样张（与进行中同款墙钟文案）。
+    static let completedCountUpPreview = FocusTimerSnapshot(
+        phase: .completed,
+        plannedSeconds: 0,
+        overtimeSeconds: 0,
+        elapsedSeconds: 1 * 3600 + 11 * 60 + 18,
+        remainingSeconds: 0,
+        noteDraft: "",
+        customMinutes: 25,
+        selectedPresetID: nil,
+        isPaused: false,
+        kind: .countUp
     )
 }
 
@@ -264,7 +286,7 @@ enum FocusTimerFormatting {
         return String(format: "%02d:%02d", m, r)
     }
 
-    /// 正计时显示：秒 → 分:秒 → 时:分:秒；岛宽以分秒为基准，出小时再加宽。
+    /// 正计时显示：始终至少 `分:秒`，出小时再 `时:分:秒`；禁止只显示秒把「分」藏掉。
     static func countUpClock(_ totalSeconds: Int) -> String {
         let s = max(0, totalSeconds)
         let h = s / 3600
@@ -273,10 +295,7 @@ enum FocusTimerFormatting {
         if h > 0 {
             return String(format: "%02d:%02d:%02d", h, m, r)
         }
-        if m > 0 {
-            return String(format: "%02d:%02d", m, r)
-        }
-        return String(format: "%02d", r)
+        return String(format: "%02d:%02d", m, r)
     }
 
     /// 正计时是否已进入「时分秒」档（驱动岛宽）。
@@ -289,8 +308,18 @@ enum FocusTimerFormatting {
             let h = minutes / 60
             let m = minutes % 60
             if m == 0 { return "\(h)h" }
-            return "\(h)h \(m)m"
+            // 窄空格，避免等宽字体把「1h 12m」撑成大缝。
+            return "\(h)h\u{2009}\(m)m"
         }
         return "\(minutes)m"
+    }
+
+    /// 终局左翼时长：正计时跟进行中同款墙钟；倒计时用整分 `Xm` / `Nh Nm`。
+    static func completedDurationLabel(elapsedSeconds: Int, kind: FocusTimerKind) -> String {
+        if kind == .countUp {
+            return countUpClock(elapsedSeconds)
+        }
+        let minutes = max(1, elapsedSeconds / 60)
+        return compactDuration(minutes)
     }
 }

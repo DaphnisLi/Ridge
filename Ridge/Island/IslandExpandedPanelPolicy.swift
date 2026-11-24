@@ -168,9 +168,10 @@ enum IslandExpandedPanelPolicy {
     }
 
     /// 收起态可点 / 悬停保活水平外扩（pt）。过紧时右翼 morph 会因 click-through 误收。
-    static let collapsedInteractivePadX: CGFloat = 14
+    /// 音乐+计时右翼贴边：22 仍会未出岛就收，提到 32。
+    static let collapsedInteractivePadX: CGFloat = 32
     /// 收起态可点 / 悬停保活竖直外扩（pt）。
-    static let collapsedInteractivePadY: CGFloat = 6
+    static let collapsedInteractivePadY: CGFloat = 10
 
     /// 收起态可点框：可见面板外扩 ∪ 刘海（展开态仍用大面板 retention，勿走此）。
     static func collapsedInteractiveFrame(
@@ -214,7 +215,9 @@ enum IslandExpandedPanelPolicy {
         return downloadActive
     }
 
-    /// 双槽右计时翼：须在收起可点框内且在刘海右侧（开操作钮、不开媒体）。
+    /// 双槽右计时翼：须在收起可点框内且在刘海右半（开操作钮、不开媒体）。
+    /// 分界用刘海中线偏右一点：右翼 underlap 伸进刘海弧，纯 `maxX` 会把贴刘海的暂停/结束误判成左翼而去开媒体。
+    /// 右缘用 `hit.maxX`（含 pad），禁止只认 `panel.maxX`——往右滑未出黑岛就丢命中。
     static func isPointerOverFocusTrailingWing(
         mouse: CGPoint,
         notchFrame: CGRect,
@@ -224,7 +227,9 @@ enum IslandExpandedPanelPolicy {
         guard focusTrailingDualVisible else { return false }
         let hit = collapsedInteractiveFrame(panelFrame: panelFrame, notchFrame: notchFrame)
         guard hit.contains(mouse) else { return false }
-        return mouse.x > notchFrame.maxX
+        // 刘海右缘再往左收 underlap，避免点右翼内侧仍 >maxX 失败。
+        let trailingStart = notchFrame.maxX - IslandChrome.dualFlushNotchUnderlap
+        return mouse.x >= trailingStart
     }
 
     /// 兼容旧名：无面板框时仅按「刘海右缘以右」粗判（测试 / 旧调用）。
@@ -274,30 +279,38 @@ enum IslandExpandedPanelPolicy {
     }
 
     /// 解析展开态保展开用的面板尺寸（稳定大面板优先，其次当前面板，矮框则抬到下限）。
+    /// 最终宽高取 `max(首选, 当前可见面板)`：选时岛可比上一页更宽更矮，若只认「更高但更窄」的
+    /// lastStable，右侧「正计时」会落在保展开外 → 往右移未点就收岛。
     static func resolvedRetentionPanelSize(
         panel: CGSize,
         stable: CGSize,
         notch: CGSize,
         isExpanded: Bool
     ) -> CGSize {
-        if shouldPreferStableRetention(
-            panel: panel,
-            stable: stable,
-            notch: notch,
-            isExpanded: isExpanded
-        ) {
-            return stable
-        }
-        guard isExpanded else { return panel }
-        if isCollapsedSizedWhileExpanded(panel: panel, notch: notch, isExpanded: true) {
-            let floor = expandedRetentionFloor(notch: notch)
-            return CGSize(
-                width: max(panel.width, floor.width),
-                height: max(panel.height, floor.height)
-            )
-        }
-        // 已高于刘海但仍明显矮于稳定大面板时，上面 shouldPrefer 已处理；这里直接用当前面板。
-        return panel
+        let preferred: CGSize = {
+            if shouldPreferStableRetention(
+                panel: panel,
+                stable: stable,
+                notch: notch,
+                isExpanded: isExpanded
+            ) {
+                return stable
+            }
+            guard isExpanded else { return panel }
+            if isCollapsedSizedWhileExpanded(panel: panel, notch: notch, isExpanded: true) {
+                let floor = expandedRetentionFloor(notch: notch)
+                return CGSize(
+                    width: max(panel.width, floor.width),
+                    height: max(panel.height, floor.height)
+                )
+            }
+            return panel
+        }()
+        guard isExpanded else { return preferred }
+        return CGSize(
+            width: max(preferred.width, panel.width),
+            height: max(preferred.height, panel.height)
+        )
     }
 
     /// 大面板竖直中下点是否仍在保展开区内（「移动一半就收」回归锚点）。
@@ -361,19 +374,29 @@ enum IslandExpandedPanelPolicy {
 
     /// 翼 tip（会议 / 久坐 / 外设等）可点区：不得窄于该 tip 的预备双翼宽，否则右翼控件落在 interactive 外点穿。
     /// - Parameter wingWidth: 会议等用 `preparedWingWidth`；外设满岛用 `preparedPeripheralWingWidth`（勿混抬）。
+    /// - Parameter focusCompletedFlush: 专注终局用刘海同高预备尺寸（含 centerExtra），禁止抬成会议 tip 的 +bottom。
     static func wingTipInteractivePanelSize(
         current: CGSize,
         notchWidth: CGFloat,
         notchHeight: CGFloat,
         usesNotchWingChrome: Bool,
-        wingWidth: CGFloat = IslandChrome.preparedWingWidth
+        wingWidth: CGFloat = IslandChrome.preparedWingWidth,
+        focusCompletedFlush: Bool = false
     ) -> CGSize {
         guard usesNotchWingChrome else { return current }
-        let prepared = IslandChrome.preparedWingTipPanelSize(
-            notchWidth: notchWidth,
-            notchHeight: notchHeight,
-            wingWidth: wingWidth
-        )
+        let prepared: CGSize = {
+            if focusCompletedFlush {
+                return IslandChrome.preparedFocusCompletedPanelSize(
+                    notchWidth: notchWidth + FocusTimerContentSize.completedCenterExtra,
+                    notchHeight: notchHeight
+                )
+            }
+            return IslandChrome.preparedWingTipPanelSize(
+                notchWidth: notchWidth,
+                notchHeight: notchHeight,
+                wingWidth: wingWidth
+            )
+        }()
         return CGSize(
             width: max(current.width, prepared.width),
             height: max(current.height, prepared.height)

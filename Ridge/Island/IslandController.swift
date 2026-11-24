@@ -182,7 +182,9 @@ final class IslandController: NSObject {
             .sink { [weak self] id in
                 guard let self else { return }
                 self.viewModel.allowPanelShrink(for: 0.7, reason: "activeID")
-                if id == FocusTimerWidget.manifest.id {
+                if FocusTimerSession.shared.showsCompactStandby {
+                    self.ensureFocusCompactStandby(reason: "activeID")
+                } else if id == FocusTimerWidget.manifest.id {
                     self.applyFocusTimerPanelSizeIfNeeded(reason: "page")
                 }
                 self.updateInteractiveFrame()
@@ -207,11 +209,9 @@ final class IslandController: NSObject {
             .sink { [weak self] phase in
                 AppLog.info("Island", "番茄计时态切换，刷新收起尺寸", ["phase": phase.rawValue])
                 self?.viewModel.allowPanelShrink(for: 0.7, reason: "focusPhase")
-                // 计时 / 加时 / 正计时只保留待命胶囊：起钟后若仍展开则收起。
-                if phase == .running || phase == .overtime || phase == .countUp,
-                   self?.viewModel.isExpanded == true
-                {
-                    self?.collapse(reason: "focusTimerStandby")
+                // 计时 / 加时 / 正计时只保留贴刘海待命：禁止展开大顶距。
+                if phase == .running || phase == .overtime || phase == .countUp {
+                    self?.ensureFocusCompactStandby(reason: "phase")
                 }
                 // 终局等比进行中更高：立刻套画布，避免 Preference 仍按 80pt 矮框裁掉备注热区。
                 self?.applyFocusTimerPanelSizeIfNeeded(phase: phase, reason: "phase")
@@ -433,10 +433,8 @@ final class IslandController: NSObject {
 
     /// 指针交互是否允许展开：有面板/已点进实况，或瞬时通知保展开；纯空态禁止（避免点出「尚未添加」）。
     private func shouldExpandForPointerInteraction(reason: String) -> Bool {
-        // 计时 / 加时仅待命胶囊（含操作钮），悬停/按住不展开进行中或顺延面板。
-        if FocusTimerSession.shared.showsCompactStandby,
-           WidgetRuntime.shared.activeID == FocusTimerWidget.manifest.id
-        {
+        // 计时 / 加时 / 正计时：仅贴刘海待命，禁止展开成「刘海下方大顶距」面板（左音乐翼开媒体另走 openExpandedPanel）。
+        if FocusTimerSession.shared.showsCompactStandby {
             AppLog.debug("Island", "番茄待命禁止指针展开", ["reason": reason])
             return false
         }
@@ -745,12 +743,17 @@ final class IslandController: NSObject {
 
     /// 当前是番茄页时按 phase 写入内容画布尺寸。
     /// 终局必须抬高可点框：停在进行中 ~80pt 时备注落在 interactiveFrame 外，表现为「点不了输入」。
+    /// 进行中 / 加时 / 正计时**禁止**写入展开画布（大顶距），只保留贴刘海待命。
     private func applyFocusTimerPanelSizeIfNeeded(
         phase: FocusTimerPhase? = nil,
         reason: String
     ) {
         guard WidgetRuntime.shared.activeID == FocusTimerWidget.manifest.id else { return }
         let resolved = phase ?? FocusTimerSession.shared.phase
+        if resolved == .running || resolved == .overtime || resolved == .countUp {
+            ensureFocusCompactStandby(reason: "panelSize:\(reason)")
+            return
+        }
         // 终局即使尚未 expand 也先写入，避免首帧沿用刘海 30pt / 进行中 80pt。
         guard viewModel.isExpanded
             || reason.hasPrefix("expand:")
@@ -778,6 +781,26 @@ final class IslandController: NSObject {
             "panelW": Int(viewModel.panelSize.width),
             "panelH": Int(viewModel.panelSize.height)
         ])
+    }
+
+    /// 计时待命必须贴刘海：若误展开（翻页/悬停），收起并回到 compact 尺寸。
+    /// 音乐大面板展开时不抢（左翼开媒体合法）。
+    func ensureFocusCompactStandby(reason: String) {
+        guard FocusTimerSession.shared.showsCompactStandby else { return }
+        if viewModel.isExpanded,
+           MediaCompactPresence.isActive,
+           WidgetRuntime.shared.activeID == LiveIslandGate.mediaID
+        {
+            return
+        }
+        if viewModel.isExpanded {
+            AppLog.warn("Island", "番茄待命仍展开，强制收起贴刘海", [
+                "reason": reason,
+                "phase": FocusTimerSession.shared.phase.rawValue,
+                "page": WidgetRuntime.shared.activeID ?? "nil"
+            ])
+            collapse(reason: "focusCompact:\(reason)")
+        }
     }
 
     /// 计时结束专用：强制翼 tip 矮面板，可点区立刻覆盖备注；顶距 0 贴刘海。
@@ -1291,8 +1314,10 @@ final class IslandController: NSObject {
         ensureCollapsedCompactPanelSizeIfNeeded(geometry: geometry)
 
         // 左音乐·右计时 / 左下载·右计时：右翼只出操作钮，禁止开媒体大面板。
+        // media 用 isActive（与 ContentView 双翼条件一致），勿仅靠 isVisiblyShowingCompact——
+        // slots 尚未写成 .dual 时会误判成左翼，往右滑开媒体 / 收 morph。
         let focusTrailingDualVisible = IslandExpandedPanelPolicy.isFocusTrailingDualStandby(
-            mediaVisible: MediaCompactPresence.isVisiblyShowingCompact,
+            mediaVisible: MediaCompactPresence.isActive,
             downloadActive: DownloadCompactPresence.isActive,
             focusStandby: FocusTimerSession.shared.showsCompactStandby,
             hasNoticePayload: IslandNoticeCenter.shared.slots.hasNoticePayload
@@ -1306,6 +1331,11 @@ final class IslandController: NSObject {
             notchFrame: geometry.notchFrame,
             panelFrame: compactPanelOnScreen,
             focusTrailingDualVisible: focusTrailingDualVisible
+        )
+        // 钉住右翼 morph：与可点框同步，避免 SwiftUI onHover 贴边先丢、按钮点空。
+        FocusTrailingWingHover.shared.setActive(
+            overFocusTrailingWing && !viewModel.isExpanded,
+            reason: overFocusTrailingWing ? "pointerOverTrailing" : "pointerAway"
         )
 
         // 按住拖动 / 列表纵滑宽限内：保持展开，避免滚一半指针微移就收岛。
@@ -1380,10 +1410,11 @@ final class IslandController: NSObject {
             // 仅左翼/刘海开媒体；右专注翼只保存在岛上，留给 morph 操作钮。
             if wantCollapsedHoverExpand {
                 if MediaCompactPresence.openExpandedPanel(reason: "compactHover") {
-                    AppLog.info("Island", "播放小岛悬停展开媒体", [
+                    AppLog.warn("Island", "播放小岛悬停展开媒体", [
                         "notchHover": notchHoverExpand,
                         "overWing": overInteractive,
-                        "focusTrailing": overFocusTrailingWing
+                        "focusTrailing": overFocusTrailingWing,
+                        "focusDual": focusTrailingDualVisible
                     ])
                     return
                 }
@@ -1397,10 +1428,13 @@ final class IslandController: NSObject {
                         "notice": IslandNoticeCenter.shared.current?.id ?? ""
                     ])
                 }
-            } else if overFocusTrailingWing, !wasPresent {
-                AppLog.debug("Island", "右专注翼悬停：保持操作钮，不开媒体", [
-                    "interactive": overInteractive
-                ])
+            } else if overFocusTrailingWing {
+                if !wasPresent {
+                    AppLog.warn("Island", "右专注翼悬停：保持操作钮，不开媒体", [
+                        "interactive": overInteractive,
+                        "dual": focusTrailingDualVisible
+                    ])
+                }
             }
             return
         }
@@ -1731,7 +1765,8 @@ final class IslandController: NSObject {
             usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome || focusCompletedWing,
             wingWidth: focusCompletedWing
                 ? FocusTimerContentSize.completedWingWidth
-                : noticeSlots.wingTipPreparedWingWidth
+                : noticeSlots.wingTipPreparedWingWidth,
+            focusCompletedFlush: focusCompletedWing
         )
         let panelOffsetX = currentPanelHorizontalOffset(panel: interactivePanel)
         let retentionOffsetX = currentPanelHorizontalOffset(panel: retentionSize)
@@ -2215,7 +2250,8 @@ final class IslandController: NSObject {
             usesNotchWingChrome: noticeSlots.anyUsesNotchWingChrome || focusCompletedWing,
             wingWidth: focusCompletedWing
                 ? FocusTimerContentSize.completedWingWidth
-                : noticeSlots.wingTipPreparedWingWidth
+                : noticeSlots.wingTipPreparedWingWidth,
+            focusCompletedFlush: focusCompletedWing
         )
         let offsetX = currentPanelHorizontalOffset(panel: panel)
         // 面板在窗内水平居中（圆岛再加右偏）、贴顶（AppKit 原点左下）。
@@ -2252,8 +2288,17 @@ final class IslandController: NSObject {
     private func ensureCollapsedCompactPanelSizeIfNeeded(geometry: NotchGeometry) {
         guard !viewModel.isExpanded else { return }
         let slots = IslandNoticeCenter.shared.slots
+        let mediaFocusDual = MediaCompactPresence.isActive
+            && FocusTimerSession.shared.showsCompactStandby
+            && !DownloadCompactPresence.isActive
+            && !slots.hasNoticePayload
+        let downloadFocusDual = DownloadCompactPresence.isActive
+            && FocusTimerSession.shared.showsCompactStandby
+            && !MediaCompactPresence.isActive
+            && !slots.hasNoticePayload
         let size: CGSize
         let reason: String
+        // 音乐+计时 / 下载+计时：即使 slots 尚未写成 .dual，也按双翼地板抬宽，避免右翼落在可点区外。
         if case .dual = slots.resolvedLayout {
             size = IslandChrome.preparedDualFlushPanelSize(
                 notchWidth: geometry.notchWidth,
@@ -2262,6 +2307,14 @@ final class IslandController: NSObject {
                 wingWidth: slots.dualFlushWingWidth
             )
             reason = "compactDualFlushFloor"
+        } else if mediaFocusDual || downloadFocusDual {
+            size = IslandChrome.preparedDualFlushPanelSize(
+                notchWidth: geometry.notchWidth,
+                notchHeight: geometry.notchHeight,
+                rightIsOrb: false,
+                wingWidth: IslandChrome.dualFlushLeftWingWidth
+            )
+            reason = mediaFocusDual ? "mediaFocusDualFloor" : "downloadFocusDualFloor"
         } else if FocusTimerSession.shared.showsCompactStandby,
                   !MediaCompactPresence.isActive,
                   !DownloadCompactPresence.isActive
@@ -2296,7 +2349,13 @@ final class IslandController: NSObject {
             "toW": Int(size.width),
             "toH": Int(size.height)
         ])
-        viewModel.forcePanelSize(size, reason: reason)
+        // 直接抬宽，勿走 forcePanelSize（会 allowPanelShrink，Preference 立刻又缩回去抖 hover）。
+        viewModel.panelSize = IslandPanelSizing.clamp(
+            size,
+            notchWidth: viewModel.notchWidth,
+            notchHeight: viewModel.notchHeight,
+            maxWidth: viewModel.maxExpandedWidth
+        )
         updateInteractiveFrame(expanded: false)
     }
 

@@ -106,6 +106,17 @@ enum IslandChrome {
         return CGSize(width: width, height: height)
     }
 
+    /// 专注终局：高=刘海（与收起待命同），禁止再叠 `compactTipBottom` 掉出刘海下沿。
+    static func preparedFocusCompletedPanelSize(
+        notchWidth: CGFloat,
+        notchHeight: CGFloat
+    ) -> CGSize {
+        let notchW = max(notchWidth, 110)
+        let height = NotchGeometry.compactPanelHeight(notchHeight: notchHeight)
+        let width = preparedFocusCompletedWingWidth * 2 + notchW + horizontalInsetTotal
+        return CGSize(width: width, height: height)
+    }
+
     /// 双槽左翼**内容**宽（音乐/专注）；过宽会让音符与时长之间空洞过大。
     static let dualFlushLeftWingWidth: CGFloat = 120
     /// 进程结束 tip 单独上岛：内容更短，翼宽收一档（稿 ~86–104）。

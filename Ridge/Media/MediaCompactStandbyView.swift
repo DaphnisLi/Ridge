@@ -23,6 +23,8 @@ struct MediaCompactStandbyView: View {
     private let flushEqGreen = IslandFlushWingStyle.accentSuccess
     private let artworkSide: CGFloat = 22
     private let leftClusterSpacing: CGFloat = 8
+    /// 满岛右翼：律动条与时长数字间距（原 6 过挤）。
+    private let equalizerElapsedSpacing: CGFloat = 12
 
     private var notchWidth: CGFloat {
         envNotchWidth > 40 ? envNotchWidth : previewNotchWidth
@@ -97,7 +99,7 @@ struct MediaCompactStandbyView: View {
                     .frame(width: notch)
                     .accessibilityHidden(true)
 
-                HStack(spacing: 6) {
+                HStack(spacing: equalizerElapsedSpacing) {
                     MediaCompactEqualizerBars(
                         isPlaying: isPlaying,
                         tint: eqGreen,
@@ -109,7 +111,8 @@ struct MediaCompactStandbyView: View {
                         .foregroundStyle(.white)
                         .lineLimit(1)
                 }
-                .frame(width: wing, alignment: .trailing)
+                // 律动+时长作为一组在右翼水平居中（勿再贴右缘）。
+                .frame(width: wing, alignment: .center)
                 .clipped()
             }
             .frame(width: total, height: geo.size.height)

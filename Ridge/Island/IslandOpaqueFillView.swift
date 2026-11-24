@@ -25,6 +25,9 @@ final class IslandOpaqueFillNSView: NSView {
 
     override var isFlipped: Bool { true }
 
+    /// 只铺色，禁止抢 SwiftUI 按钮命中（双翼右计时暂停/结束曾被黑底 NSView 挡住）。
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true

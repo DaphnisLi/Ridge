@@ -103,6 +103,18 @@ final class IslandHitTestView: NSView {
 /// 岛上非 `NSControl`、但须直达 mouseDown 的自绘热区（混音台滑条 / 设备行等）。
 protocol IslandDirectHitTarget: AnyObject {}
 
+/// Hosting 命中优先级契约（可单测）：选时「正计时」DirectHit 必须先于可编辑字段外溢。
+enum IslandHostingHitPolicy {
+    /// 同点下若有 DirectHit / NSButton，不得再让 NSTextField 外溢热区抢走。
+    static func prefersDirectControl(
+        hasDirectControlUnderPoint: Bool,
+        hasEditableUnderPoint: Bool
+    ) -> Bool {
+        if hasDirectControlUnderPoint { return true }
+        return hasEditableUnderPoint == false
+    }
+}
+
 /// 横向翻页拖拽：位移不足或偏竖直时失败，避免抢走混音台按钮点击。
 final class HorizontalPagePanRecognizer: NSPanGestureRecognizer {
     private let recognizeDistance: CGFloat = 12
@@ -214,25 +226,57 @@ final class IslandHostingView<Content: View>: NSHostingView<Content> {
     /// nonactivatingPanel 不抢前台；必须允许首击直达 SwiftUI 按钮，否则「点一下没反应」。
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    /// 1) 可编辑字段优先。
-    /// 2) AppKit 控件（会议「进入」NSButton 等）必须直达，否则 hosting 吞掉 mouseDown。
+    /// 1) AppKit 按钮 / 自绘热区优先（选时「正计时」曾被可编辑字段外溢热区抢走标题区）。
+    /// 2) 可编辑字段次之。
     /// 3) 其余仍由本 view 接手（acceptsFirstMouse + makeKey），避免透明区漏点。
     override func hitTest(_ point: NSPoint) -> NSView? {
         guard bounds.contains(point) else { return nil }
+        if let control = directHitControl(at: point) {
+            return control
+        }
         if let editable = editableSubview(at: point) {
             return editable
         }
+        return self
+    }
+
+    /// 在 point 下寻找 NSButton / IslandDirectHitTarget（整 bounds），勿让 NSTextField 外溢抢点。
+    private func directHitControl(at point: NSPoint) -> NSView? {
         if let systemHit = super.hitTest(point) {
             var cursor: NSView? = systemHit
             while let cur = cursor, cur !== self {
-                // NSControl + 自绘热区（混音台滑条等）必须直达，否则 hosting 吞掉首击。
-                if cur is NSControl || cur is IslandDirectHitTarget {
+                if cur is IslandDirectHitTarget {
+                    return cur
+                }
+                if cur is NSButton {
+                    return cur
+                }
+                cursor = cur.superview
+            }
+            // 普通 NSControl（非文本）：直达。
+            cursor = systemHit
+            while let cur = cursor, cur !== self {
+                if cur is NSControl, !(cur is NSTextField), !(cur is NSTextView) {
                     return cur
                 }
                 cursor = cur.superview
             }
         }
-        return self
+        // 再扫一遍：NSButton 标题区偶发 super.hitTest 落到旁系 SwiftUI 层。
+        var match: NSView?
+        func walk(_ view: NSView) {
+            for sub in view.subviews {
+                walk(sub)
+                let frameInSelf = sub.convert(sub.bounds, to: self)
+                guard frameInSelf.width > 1, frameInSelf.height > 1 else { continue }
+                guard frameInSelf.contains(point) else { continue }
+                if sub is IslandDirectHitTarget || sub is NSButton {
+                    match = sub
+                }
+            }
+        }
+        walk(self)
+        return match
     }
 
     /// 从某命中视图向上找可编辑控件 / 文本宿主。
