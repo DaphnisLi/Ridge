@@ -167,9 +167,24 @@ enum IslandExpandedPanelPolicy {
         return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
     }
 
+    /// 收起态可点 / 悬停保活水平外扩（pt）。过紧时右翼 morph 会因 click-through 误收。
+    static let collapsedInteractivePadX: CGFloat = 14
+    /// 收起态可点 / 悬停保活竖直外扩（pt）。
+    static let collapsedInteractivePadY: CGFloat = 6
+
+    /// 收起态可点框：可见面板外扩 ∪ 刘海（展开态仍用大面板 retention，勿走此）。
+    static func collapsedInteractiveFrame(
+        panelFrame: CGRect,
+        notchFrame: CGRect
+    ) -> CGRect {
+        panelFrame
+            .insetBy(dx: -collapsedInteractivePadX, dy: -collapsedInteractivePadY)
+            .union(hoverExpandFrame(notchFrame: notchFrame))
+    }
+
     /// 收起态正显示播放小岛时：悬停刘海或**左音乐翼**开媒体大面板。
-    /// 左音乐·右专注双翼时，右翼留给专注操作钮（`+Nm`/结束 或 暂停/结束），**不得**开媒体。
-    /// 仅专注待命不适用（`mediaCompactVisible == false`）。
+    /// 左音乐·右计时双翼时，右翼留给计时操作钮（`+Nm`/结束 或 暂停/结束），**不得**开媒体。
+    /// 仅计时待命不适用（`mediaCompactVisible == false`）。
     static func shouldExpandCollapsedForMediaCompact(
         notchHover: Bool,
         pointerOverCompactPanel: Bool,
@@ -178,13 +193,41 @@ enum IslandExpandedPanelPolicy {
         pointerOverFocusTrailingWing: Bool = false
     ) -> Bool {
         if hoverExpandSuppressed { return false }
-        // 右专注翼：悬停 morph 操作钮，禁止 compactHover 抢成媒体大面板。
+        // 右计时翼：悬停 morph 操作钮，禁止 compactHover 抢成媒体大面板。
         if pointerOverFocusTrailingWing { return false }
         if notchHover { return true }
         return mediaCompactVisible && pointerOverCompactPanel
     }
 
-    /// 左音乐·右专注双翼：指针是否在刘海右侧的专注翼上（开操作钮、不开媒体）。
+    /// 右翼是否为计时待命：左音乐·右计时，或左下载·右计时（有下载盖右翼时不算）。
+    static func isFocusTrailingDualStandby(
+        mediaVisible: Bool,
+        downloadActive: Bool,
+        focusStandby: Bool,
+        hasNoticePayload: Bool
+    ) -> Bool {
+        guard focusStandby, !hasNoticePayload else { return false }
+        if mediaVisible {
+            // 音乐+下载时右翼是下载，不是计时。
+            return !downloadActive
+        }
+        return downloadActive
+    }
+
+    /// 双槽右计时翼：须在收起可点框内且在刘海右侧（开操作钮、不开媒体）。
+    static func isPointerOverFocusTrailingWing(
+        mouse: CGPoint,
+        notchFrame: CGRect,
+        panelFrame: CGRect,
+        focusTrailingDualVisible: Bool
+    ) -> Bool {
+        guard focusTrailingDualVisible else { return false }
+        let hit = collapsedInteractiveFrame(panelFrame: panelFrame, notchFrame: notchFrame)
+        guard hit.contains(mouse) else { return false }
+        return mouse.x > notchFrame.maxX
+    }
+
+    /// 兼容旧名：无面板框时仅按「刘海右缘以右」粗判（测试 / 旧调用）。
     static func isPointerOverMediaFocusTrailingWing(
         mouse: CGPoint,
         notchFrame: CGRect,

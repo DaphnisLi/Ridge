@@ -160,6 +160,88 @@ final class IslandExpandedPanelPolicyTests: XCTestCase {
         XCTAssertFalse(notch.contains(leftWing), "左翼本就不在刘海内")
     }
 
+    /// island-hover-retention / media-compact-not-resident：收起可点框外扩，右计时翼贴边仍算在岛上。
+    func test_islandHoverRetention_collapsedInteractivePadsFocusTrailingWing() {
+        let notch = CGRect(x: 400, y: 900, width: 160, height: 32)
+        // dualFlush：左翼 120 + 刘海 160 + 右翼 120
+        let dual = CGRect(x: 280, y: 900, width: 400, height: 32)
+        let hit = IslandExpandedPanelPolicy.collapsedInteractiveFrame(
+            panelFrame: dual,
+            notchFrame: notch
+        )
+        let rightEdgeInside = CGPoint(x: dual.maxX - 2, y: dual.midY)
+        let rightEdgePadded = CGPoint(x: dual.maxX + 8, y: dual.midY)
+        XCTAssertTrue(hit.contains(rightEdgeInside), "右翼内缘须可点")
+        XCTAssertTrue(hit.contains(rightEdgePadded), "右翼外扩须保活，避免 morph 误收")
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isFocusTrailingDualStandby(
+                mediaVisible: true,
+                downloadActive: false,
+                focusStandby: true,
+                hasNoticePayload: false
+            )
+        )
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isFocusTrailingDualStandby(
+                mediaVisible: false,
+                downloadActive: true,
+                focusStandby: true,
+                hasNoticePayload: false
+            ),
+            "左下载右计时也是右计时翼"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isFocusTrailingDualStandby(
+                mediaVisible: true,
+                downloadActive: true,
+                focusStandby: true,
+                hasNoticePayload: false
+            ),
+            "音乐+下载时右翼是下载，不是计时"
+        )
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
+                mouse: rightEdgeInside,
+                notchFrame: notch,
+                panelFrame: dual,
+                focusTrailingDualVisible: true
+            )
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
+                mouse: CGPoint(x: notch.midX, y: notch.midY),
+                notchFrame: notch,
+                panelFrame: dual,
+                focusTrailingDualVisible: true
+            ),
+            "刘海内不算右计时翼"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
+                mouse: CGPoint(x: dual.maxX + 80, y: dual.midY),
+                notchFrame: notch,
+                panelFrame: dual,
+                focusTrailingDualVisible: true
+            ),
+            "远出外扩区外不算在岛上"
+        )
+    }
+
+    /// media-compact-not-resident：右计时翼命中时不得开媒体。
+    func test_mediaCompactNotResident_focusTrailingWingBlocksMediaExpand() {
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact(
+                notchHover: false,
+                pointerOverCompactPanel: true,
+                mediaCompactVisible: true,
+                hoverExpandSuppressed: false,
+                pointerOverFocusTrailingWing: true
+            )
+        )
+    }
+
     func testDetectsCollapsedSizedWhileExpanded() {
         XCTAssertTrue(
             IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(

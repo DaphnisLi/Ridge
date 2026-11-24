@@ -19,7 +19,8 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥8 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区** | 收起悬停仅刘海；拖文件才用接近区；展开地板 + 中下点用例 |
+| `island-hover-retention` | 岛悬停热区退化 | ≥9 | 展开后热区缩成刘海/短 tip；下移/拖/列表纵滑一半就收岛；**非拖文件却认大接近区**；**收起右计时翼贴边 morph 误收** | 收起可点外扩；双翼地板；展开地板 + 中下点用例 |
+| `media-compact-not-resident` | 播放大面板不得常驻 / 右计时翼 morph 误收 | ≥5 | 有曲目即大面板；双翼右翼误开媒体；**右翼操作钮未出缘就收** | 右翼禁开媒体；收起 interactive 外扩；`test_mediaCompactNotResident_*` / `test_islandHoverRetention_collapsedInteractive*` |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥6 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bare / 右翼欠宽居中**；**新 tip 翼宽 ≠ preparedWingWidth** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 wingTipCardsMatchPrepared） |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
@@ -42,13 +43,13 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 8+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；2026-11-13 展开后下移一半仍收；**2026-11-13 非拖文件也认过大接近区**）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；**收起态悬停跟宽小岛/接近区走**；展开瞬间矮 Preference  
-- **防护:** 收起悬停展开 **仅刘海**（`hoverExpandFrame`）；`fileDragApproachFrame` **仅**拖文件；展开态仍用大面板保展开 + `expandedRetentionFloor`；`scrollHold`  
+- **occurrences:** 9+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；2026-11-13 展开后下移一半仍收；**2026-11-13 非拖文件也认过大接近区**；**2026-11-24 计时右翼未出岛 morph/待命就收**）  
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**；**收起双翼/计时待命往右移未出岛，操作钮已收**  
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；**收起态悬停跟宽小岛/接近区走**；展开瞬间矮 Preference；**收起 interactive 仅 ±2pt，右翼贴边 click-through 掐 SwiftUI hover**  
+- **防护:** 收起悬停展开 **仅刘海**（`hoverExpandFrame`）；`fileDragApproachFrame` **仅**拖文件；展开态仍用大面板保展开 + `expandedRetentionFloor`；`scrollHold`；**收起 `collapsedInteractiveFrame` 外扩 + dualFlush/计时待命 panel 地板**  
 - **自动化:** `test_islandHoverRetention_*` + `test_islandHoverExpand_collapsedOnlyNotchCountsWithoutFileDrag` + `test_islandHoverExpand_fileDragApproachZoneOnlyWhenDraggingFiles`  
-- **曾缺口（已补 2026-11-13）:** Preference 未到 / 误报矮框；非拖文件误用大接近区。  
-- **日志锚点:** `指针离开保展开区，安排收起`；`货架拖入：钉住展开`（须 `fileDrag=true`）；`保展开改用稳定面板尺寸`
+- **曾缺口（已补 2026-11-13 / 2026-11-24）:** Preference 未到 / 误报矮框；非拖文件误用大接近区；收起右翼贴边穿透。  
+- **日志锚点:** `指针离开保展开区，安排收起`；`收起待命可点区过窄，抬回可见宽`；`货架拖入：钉住展开`（须 `fileDrag=true`）；`保展开改用稳定面板尺寸`
 
 ### island-chrome-double-padding — 岛边距叠两层
 
@@ -303,13 +304,13 @@
 
 ### media-compact-not-resident — 播放大面板不得常驻分页
 
-- **recurring:** false  
-- **occurrences:** 4（2026-11-11：有曲目即常驻大面板；2026-11-23：左音乐右专注时悬停右翼不展开；同日产品改右翼 morph 专注钮；**同日：右翼操作钮未及左右缘就收——「不开媒体」被当成离开岛**）  
-- **症状:** 有曲目即 admit/自动 expand；或双翼时移入右专注翼误开媒体；或悬停出 `+Nm`/暂停后移向边缘即收回  
-- **根因倾向:** 有曲目即 admit；右翼整块曾进 `compactHover`；排除右翼后又把 expand 意图当 `isPointerOverIsland`，`scheduleCollapse`；翼内 hover 未铺满 contentShape  
-- **防护:** 有曲目不自动 admit；悬停刘海或**左**音乐翼 `open`；右专注翼禁止开媒体但收起态 `pointerPresent=overInteractive`；整翼 `contentShape` + 短宽限；会议 tip 盖住时不算可见；收岛 `close`  
-- **相关代码:** `MediaCompactPresence`、`IslandExpandedPanelPolicy.shouldExpandCollapsedForMediaCompact`、`IslandController`、`FocusTimerStandbyView`  
-- **自动化:** `test_mediaCompactNotResident_*`（含 `dualWingHoverCountsAsExpand` / 右翼排除）
+- **recurring:** true  
+- **occurrences:** 5（2026-11-11：有曲目即常驻大面板；2026-11-23：左音乐右专注时悬停右翼不展开；同日产品改右翼 morph 专注钮；同日：右翼操作钮未及左右缘就收；**2026-11-24 计时往右移未出岛 morph 已收**）  
+- **症状:** 有曲目即 admit/自动 expand；或双翼时移入右计时翼误开媒体；或悬停出 `+Nm`/暂停后移向边缘即收回  
+- **根因倾向:** 有曲目即 admit；右翼整块曾进 `compactHover`；排除右翼后又把 expand 意图当 `isPointerOverIsland`；**收起 interactive ±2pt + panel 过窄 → 穿透掐 hover**  
+- **防护:** 有曲目不自动 admit；悬停刘海或**左**音乐翼 `open`；右计时翼禁开媒体；`collapsedInteractiveFrame` 外扩；dualFlush/计时待命地板；整翼 `contentShape` + 0.28s 宽限  
+- **相关代码:** `MediaCompactPresence`、`IslandExpandedPanelPolicy`、`IslandController.ensureCollapsedCompactPanelSizeIfNeeded`、`FocusTimerStandbyView`  
+- **自动化:** `test_mediaCompactNotResident_*`；`test_islandHoverRetention_collapsedInteractivePadsFocusTrailingWing`
 
 ### media-click-opens-empty — 播放中点刘海落到空态
 
@@ -536,6 +537,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-24 | 计时右翼贴边误收：收起 interactive 外扩 + dualFlush/待命地板；catalog hover-retention / media-compact recurring |
 | 2026-11-24 | 四档定稿：A 取色框选；B 会议/播放；C 下载/计时；D tip（PRODUCT + island-priority-grades） |
 | 2026-11-24 | 下载：计时并排左下右计；音乐并排左音右下（下完再露计时）；布局矩阵同步 |
 | 2026-11-24 | 下载与音乐并排右翼（不再被盖）；布局矩阵/PRODUCT 同步 |

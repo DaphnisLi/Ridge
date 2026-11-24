@@ -25,6 +25,13 @@ enum RecurringRegressionManifest {
             ]
         ),
         Entry(
+            id: "media-compact-not-resident",
+            testNamePrefixes: [
+                "test_mediaCompactNotResident_",
+                "test_islandHoverRetention_collapsedInteractive"
+            ]
+        ),
+        Entry(
             id: "island-chrome-double-padding",
             testNamePrefixes: [
                 "test_islandChromeDoublePadding_",

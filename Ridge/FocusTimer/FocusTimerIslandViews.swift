@@ -283,12 +283,13 @@ struct FocusTimerStandbyView: View {
                         }
                         isWingHovering = true
                     } else {
-                        // 短宽限：morph / 点按瞬间出界不立刻收钮。
+                        // 短宽限：morph / 点按瞬间出界或贴边穿透抖动不立刻收钮。
                         let work = DispatchWorkItem {
                             isWingHovering = false
+                            AppLog.debug("FocusTimer", "双翼专注悬停：收起操作钮")
                         }
                         wingHoverDismissWork = work
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28, execute: work)
                     }
                 }
                 .accessibilityElement(children: .contain)

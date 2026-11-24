@@ -1287,13 +1287,25 @@ final class IslandController: NSObject {
             return
         }
 
-        // 左音乐·右专注：刘海右侧是专注翼，悬停/按住只出操作钮，禁止开媒体大面板。
-        let mediaFocusDualVisible = MediaCompactPresence.isVisiblyShowingCompact
-            && FocusTimerSession.shared.showsCompactStandby
-        let overFocusTrailingWing = IslandExpandedPanelPolicy.isPointerOverMediaFocusTrailingWing(
+        // 收起双翼 / 计时待命：panelSize 过窄时右翼落在可点区外 → 穿透 → morph 误收。
+        ensureCollapsedCompactPanelSizeIfNeeded(geometry: geometry)
+
+        // 左音乐·右计时 / 左下载·右计时：右翼只出操作钮，禁止开媒体大面板。
+        let focusTrailingDualVisible = IslandExpandedPanelPolicy.isFocusTrailingDualStandby(
+            mediaVisible: MediaCompactPresence.isVisiblyShowingCompact,
+            downloadActive: DownloadCompactPresence.isActive,
+            focusStandby: FocusTimerSession.shared.showsCompactStandby,
+            hasNoticePayload: IslandNoticeCenter.shared.slots.hasNoticePayload
+        )
+        let compactPanelOnScreen = geometry.panelFrameOnScreen(
+            size: viewModel.panelSize,
+            horizontalOffset: currentPanelHorizontalOffset(panel: viewModel.panelSize)
+        )
+        let overFocusTrailingWing = IslandExpandedPanelPolicy.isPointerOverFocusTrailingWing(
             mouse: mouse,
             notchFrame: geometry.notchFrame,
-            mediaFocusDualVisible: mediaFocusDualVisible
+            panelFrame: compactPanelOnScreen,
+            focusTrailingDualVisible: focusTrailingDualVisible
         )
 
         // 按住拖动 / 列表纵滑宽限内：保持展开，避免滚一半指针微移就收岛。
@@ -1748,10 +1760,19 @@ final class IslandController: NSObject {
             panelFrame: retentionBody,
             expanded: expanded
         )
-        // 收起态可点区仍含可见小岛两翼；悬停展开热区见 retention（仅刘海）。
-        let interactiveFrame = pageBody
-            .insetBy(dx: -2, dy: -2)
-            .union(IslandExpandedPanelPolicy.hoverExpandFrame(notchFrame: geometry.notchFrame))
+        // 收起态可点区须含可见小岛两翼并外扩；过紧时右计时翼 morph 会因穿透误收。
+        // 展开态保展开见 retention；可点仍跟面板略外扩。
+        let interactiveFrame: CGRect = {
+            if expanded {
+                return pageBody
+                    .insetBy(dx: -2, dy: -2)
+                    .union(IslandExpandedPanelPolicy.hoverExpandFrame(notchFrame: geometry.notchFrame))
+            }
+            return IslandExpandedPanelPolicy.collapsedInteractiveFrame(
+                panelFrame: pageBody,
+                notchFrame: geometry.notchFrame
+            )
+        }()
 
         return IslandPointerHit(
             interactive: interactiveFrame.contains(mouse),
@@ -2198,11 +2219,14 @@ final class IslandController: NSObject {
         )
         let offsetX = currentPanelHorizontalOffset(panel: panel)
         // 面板在窗内水平居中（圆岛再加右偏）、贴顶（AppKit 原点左下）。
+        // 收起态外扩：右计时翼 / 停止钮加大热区时仍落在 hitTest 内，禁止贴边穿透掐 hover。
+        let padX = isExpanded ? 0 : IslandExpandedPanelPolicy.collapsedInteractivePadX
+        let padY = isExpanded ? 0 : IslandExpandedPanelPolicy.collapsedInteractivePadY
         let interactive = CGRect(
-            x: (windowFrame.width - panel.width) / 2 + offsetX,
-            y: windowFrame.height - panel.height,
-            width: panel.width,
-            height: panel.height
+            x: (windowFrame.width - panel.width) / 2 + offsetX - padX,
+            y: windowFrame.height - panel.height - padY,
+            width: panel.width + padX * 2,
+            height: panel.height + padY * 2
         )
         hitTestView.interactiveFrame = interactive
         window.interactiveFrameInWindow = interactive
@@ -2222,6 +2246,58 @@ final class IslandController: NSObject {
         } else {
             AppLog.debug("Overlay", "可点区域已更新", fields)
         }
+    }
+
+    /// 收起态双翼 / 仅计时：可点区不得窄于可见待命，否则右翼 morph 贴边误收。
+    private func ensureCollapsedCompactPanelSizeIfNeeded(geometry: NotchGeometry) {
+        guard !viewModel.isExpanded else { return }
+        let slots = IslandNoticeCenter.shared.slots
+        let size: CGSize
+        let reason: String
+        if case .dual = slots.resolvedLayout {
+            size = IslandChrome.preparedDualFlushPanelSize(
+                notchWidth: geometry.notchWidth,
+                notchHeight: geometry.notchHeight,
+                rightIsOrb: slots.usesDualFlushWithRightOrb,
+                wingWidth: slots.dualFlushWingWidth
+            )
+            reason = "compactDualFlushFloor"
+        } else if FocusTimerSession.shared.showsCompactStandby,
+                  !MediaCompactPresence.isActive,
+                  !DownloadCompactPresence.isActive
+        {
+            let height = NotchGeometry.compactPanelHeight(notchHeight: geometry.notchHeight)
+            let width: CGFloat = {
+                if FocusTimerSession.shared.snapshot.isCountUp {
+                    return NotchGeometry.focusTimerCountUpStandbyWidth(
+                        elapsedSeconds: FocusTimerSession.shared.snapshot.elapsedSeconds
+                    )
+                }
+                return NotchGeometry.focusTimerStandbyWidth(
+                    extendStepMinutes: FocusTimerSettings.shared.extendStepMinutes
+                )
+            }()
+            size = CGSize(
+                width: NotchGeometry.pixelAlign(max(geometry.notchWidth * NotchGeometry.compactScale, width)),
+                height: height
+            )
+            reason = "focusStandbyFloor"
+        } else {
+            return
+        }
+        let needs =
+            size.width - viewModel.panelSize.width > 0.5
+            || size.height - viewModel.panelSize.height > 0.5
+        guard needs else { return }
+        AppLog.warn("Island", "收起待命可点区过窄，抬回可见宽", [
+            "reason": reason,
+            "fromW": Int(viewModel.panelSize.width),
+            "fromH": Int(viewModel.panelSize.height),
+            "toW": Int(size.width),
+            "toH": Int(size.height)
+        ])
+        viewModel.forcePanelSize(size, reason: reason)
+        updateInteractiveFrame(expanded: false)
     }
 
     /// 「已复制」圆岛相对刘海中心右偏；双槽非对称左移让左翼往左伸；其它为 0。
