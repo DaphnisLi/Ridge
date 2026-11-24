@@ -1704,14 +1704,20 @@ enum L10n {
         static var dropActiveDetail: String {
             tr("shelf.drop_active_detail", "已识别拖拽对象 · 准备自动就绪")
         }
-        /// 货架设置：磁吸暂存（拖文件接近区开/关相同）。
+        static var dropAirDropHint: String {
+            tr("shelf.drop_airdrop_hint", "隔空传送")
+        }
+        static var dropAirDropDetail: String {
+            tr("shelf.drop_airdrop_detail", "松手后选择附近设备")
+        }
+        /// 货架设置：双舱磁吸（拖文件接近区开/关相同）。
         static var magneticDropToggle: String {
             tr("shelf.magnetic_drop.toggle", "磁吸拖放")
         }
         static var magneticDropToggleSubtitle: String {
             tr(
                 "shelf.magnetic_drop.toggle_subtitle",
-                "开启后，将文件拖近灵动岛即可展开暂存入舱；关闭后仍用同一拖放感应区存入货架，但不弹出磁吸暂存面"
+                "开启后，将文件拖近灵动岛即可暂存入舱或隔空传送；关闭后仍用同一拖放感应区存入货架，但不提供双舱与隔空传送"
             )
         }
         static var dropMore: String { tr("shelf.drop_more", "继续拖入可追加") }
@@ -2587,6 +2593,35 @@ enum L10n {
         }
         static var diskAccessAllow: String {
             tr("system_focus.disk.allow", "打开完全磁盘访问")
+        }
+    }
+
+    // MARK: - AirDrop 接收 tip（文件完成；D 档瞬时）
+
+    enum AirDropReceive {
+        static var widgetName: String { tr("airdrop_receive.widget.name", "隔空投送") }
+        static var widgetSummary: String {
+            tr(
+                "airdrop_receive.widget.summary",
+                "文件接收完成后上岛提示，点按打开该文件"
+            )
+        }
+        static var tipTitle: String { tr("airdrop_receive.tip.title", "隔空投送") }
+        static var tapToOpen: String { tr("airdrop_receive.tip.tap_open", "点按打开文件") }
+        static var clickActionTitle: String {
+            tr("airdrop_receive.click.title", "点按动作")
+        }
+        static var clickActionSubtitle: String {
+            tr(
+                "airdrop_receive.click.subtitle",
+                "接收完成 tip 点按时打开文件或在访达中显示"
+            )
+        }
+        static var openWithDefaultApp: String {
+            tr("airdrop_receive.click.open_default", "打开")
+        }
+        static var revealInFinder: String {
+            tr("airdrop_receive.click.reveal_finder", "访达")
         }
     }
 

@@ -1515,7 +1515,7 @@ final class IslandController: NSObject {
         let wasPinned = isShelfFileDragPinned
         isShelfDropTargeted = false
         isShelfFileDragPinned = false
-        if reason == "dropComplete" {
+        if reason == "dropComplete" || reason == "airDropComplete" {
             islandExpandedForShelfFileDrag = false
         }
         setShelfDragWindowElevation(false)
@@ -1526,7 +1526,7 @@ final class IslandController: NSObject {
         ])
     }
 
-    /// 拖文件左键松开：清磁吸暂存钉住；仅当指针已离开展开大面板才强收（大岛内松手须留着）。
+    /// 拖文件左键松开：清双舱钉住；仅当指针已离开展开大面板才强收（大岛内松手须留着）。
     private func handleShelfFileDragMouseUp(mouse: NSPoint, geometry: NotchGeometry) {
         let hadExpand = islandExpandedForShelfFileDrag
             || isShelfFileDragPinned

@@ -74,6 +74,7 @@ final class WidgetRegistry {
         register(TypedWidgetModule<NetworkLinkTipWidget>())
         register(TypedWidgetModule<SystemFocusTipWidget>())
         register(TypedWidgetModule<DownloadCompleteTipWidget>())
+        register(TypedWidgetModule<AirDropReceiveTipWidget>())
         register(TypedWidgetModule<CopiedNoticeWidget>())
 
         // 用户 / AI 包：校验 manifest 后 register(manifest:factory:)，无需改 Runtime。

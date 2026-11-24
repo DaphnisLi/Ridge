@@ -31,6 +31,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
     )
     case moveReminder(MoveReminderSession.Notice)
     case meetingLead(meetingID: String)
+    case airDropReceived(AirDropReceiveNotice)
 
     static let colorPickTipID = "shelf.capture.colorPickTip"
     static let ocrSelectTipID = "shelf.capture.ocrSelectTip"
@@ -63,6 +64,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .aiUsageAlert(let id, _, _, _, _): return id
         case .moveReminder(let notice): return notice.id
         case .meetingLead(let meetingID): return "meeting.lead.\(meetingID)"
+        case .airDropReceived(let notice): return notice.id
         }
     }
 
@@ -88,6 +90,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
         case .aiUsageAlert: return "aiUsage"
         case .moveReminder: return "moveReminder"
         case .meetingLead: return "meeting"
+        case .airDropReceived: return "airDrop.receive"
         }
     }
 
@@ -114,7 +117,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
              .systemFocusOn, .systemFocusOff,
-             .aiUsageAlert:
+             .aiUsageAlert, .airDropReceived:
             #if DEBUG
             if let override = IslandTestLabSettings.resolvedTipDurationNanoseconds() {
                 return override
@@ -137,7 +140,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
              .systemFocusOn, .systemFocusOff,
-             .aiUsageAlert, .moveReminder, .meetingLead:
+             .aiUsageAlert, .moveReminder, .meetingLead, .airDropReceived:
             return true
         }
     }
@@ -149,7 +152,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
-             .systemFocusOn, .systemFocusOff:
+             .systemFocusOn, .systemFocusOff, .airDropReceived:
             return true
         default:
             return false
@@ -212,7 +215,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
              .systemFocusOn, .systemFocusOff,
-             .aiUsageAlert:
+             .aiUsageAlert, .airDropReceived:
             return true
         case .clipboardCaptureHint(let id, _, _):
             return id.hasPrefix("copy.")

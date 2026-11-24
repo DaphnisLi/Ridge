@@ -8180,7 +8180,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "开启后，将文件拖近灵动岛即可展开暂存入舱；关闭后仍用同一拖放感应区存入货架，但不弹出磁吸暂存面"
+            "value": "开启后，将文件拖近灵动岛即可暂存入舱或隔空传送；关闭后仍用同一拖放感应区存入货架，但不提供双舱与隔空传送"
           }
         }
       }
@@ -12636,6 +12636,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "点选时岛「正计时」起钟后在此归档"
+          }
+        }
+      }
+    },
+    "shelf.drop_airdrop_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔空传送"
+          }
+        }
+      }
+    },
+    "shelf.drop_airdrop_detail": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "松手后选择附近设备"
+          }
+        }
+      }
+    },
+    "airdrop_receive.widget.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔空投送"
+          }
+        }
+      }
+    },
+    "airdrop_receive.widget.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "文件接收完成后上岛提示，点按打开该文件"
+          }
+        }
+      }
+    },
+    "airdrop_receive.tip.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔空投送"
+          }
+        }
+      }
+    },
+    "airdrop_receive.tip.tap_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按打开文件"
+          }
+        }
+      }
+    },
+    "airdrop_receive.click.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按动作"
+          }
+        }
+      }
+    },
+    "airdrop_receive.click.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接收完成 tip 点按时打开文件或在访达中显示"
+          }
+        }
+      }
+    },
+    "airdrop_receive.click.open_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开"
+          }
+        }
+      }
+    },
+    "airdrop_receive.click.reveal_finder": {
+      "extractionState": "manual",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访达"
           }
         }
       }

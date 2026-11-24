@@ -380,7 +380,7 @@ extension IslandNoticePayload {
              .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
              .networkWifiDisconnected, .networkVPNDisconnected,
              .systemFocusOn, .systemFocusOff,
-             .aiUsageAlert, .ramPressure:
+             .aiUsageAlert, .ramPressure, .airDropReceived:
             // D（含系统专注 tip）：靠右半块 / 单独满岛；多条 FIFO。与 C 计时无关。
             return .secondary
         }

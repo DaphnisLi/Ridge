@@ -447,7 +447,8 @@ enum WidgetSamplePreview {
              "builtin.systemFocusTip.onOpened",
              "builtin.systemFocusTip.on",
              "builtin.systemFocusTip.off",
-             "builtin.downloadComplete":
+             "builtin.downloadComplete",
+             "builtin.airDropReceive":
             return true
         default:
             return false
@@ -508,6 +509,8 @@ enum WidgetSamplePreview {
             systemFocusTipSample(preview: .off, compact: compact)
         case "builtin.downloadComplete":
             downloadCompleteSample(compact: compact)
+        case "builtin.airDropReceive":
+            airDropReceiveSample(compact: compact)
         case "builtin.copiedNotice":
             copiedNoticeSample(compact: compact)
         case "system.controlDeck.battery":
@@ -708,6 +711,17 @@ enum WidgetSamplePreview {
                 speedBytesPerSecond: 41_000_000,
                 progressFraction: 0.82
             )
+        }
+    }
+
+    @ViewBuilder
+    private static func airDropReceiveSample(compact: Bool) -> some View {
+        if compact {
+            meetingMatchedCompactChrome {
+                AirDropReceiveNoticeCard.previewSample(compact: true, includeChrome: false)
+            }
+        } else {
+            AirDropReceiveNoticeCard.previewSample(compact: false)
         }
     }
 

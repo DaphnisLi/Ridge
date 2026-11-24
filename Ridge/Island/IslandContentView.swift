@@ -21,7 +21,7 @@ struct IslandContentView: View {
         controlDeck.isModuleEnabled("shelf")
     }
 
-    /// 整岛磁吸暂存面仅磁吸开时出现；拖文件接近区开/关相同，关磁吸仍可普通入舱。
+    /// 整岛双舱（暂存 / 隔空传送）仅磁吸开时出现；拖文件接近区开/关相同，关磁吸仍可普通入舱。
     private var shelfMagneticStagingActive: Bool {
         shelfDropEnabled
             && shelfSettings.magneticDropCaptureEnabled
@@ -265,7 +265,7 @@ struct IslandContentView: View {
                 }
 
                 if viewModel.isExpanded, shelfMagneticStagingActive {
-                    // 磁吸拖放：整岛暂存入舱；关闭磁吸后不进此态。
+                    // 磁吸拖放：整岛切成双舱（暂存 / 隔空传送）；关闭磁吸后不进此态。
                     // 必须自报控制台画布尺寸——切掉 IslandBody 后 Preference 会停在刘海，吸住又立刻收。
                     ShelfDropStagingView(highlighted: true, fillsIsland: true)
                         .padding(.horizontal, IslandChrome.contentHorizontal)
@@ -419,7 +419,7 @@ struct IslandContentView: View {
             IslandController.shared?.setShelfDropTargeted(active)
             if active {
                 ControlDeckSettings.shared.focusShelfForDrop()
-                // 进入磁吸暂存由 IslandController 轮询（须 fileDrag）；此处不再单独 setActive(true)，
+                // 进入双舱由 IslandController 轮询（须 fileDrag）；此处不再单独 setActive(true)，
                 // 避免松手后 isTargeted 残影绕过 fileDrag 检查再闪一次。
             } else if IslandController.shared?.isShelfDragSessionActive != true {
                 ShelfDropSession.shared.setActive(false, reason: "dropUntargeted")
@@ -435,7 +435,7 @@ struct IslandContentView: View {
         .onChange(of: shelfSettings.magneticDropCaptureEnabled) { _, enabled in
             if !enabled {
                 ShelfDropSession.shared.setActive(false, reason: "magneticDisabled")
-                AppLog.info("Shelf", "磁吸拖放已关闭，退出暂存面")
+                AppLog.info("Shelf", "磁吸拖放已关闭，退出双舱态")
             }
         }
         .onChange(of: bodySize) { _, size in

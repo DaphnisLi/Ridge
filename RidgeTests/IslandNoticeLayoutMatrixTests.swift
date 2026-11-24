@@ -365,7 +365,8 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                  .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
                  .networkWifiConnected, .networkWiredConnected, .networkVPNConnected,
                  .networkWifiDisconnected, .networkVPNDisconnected,
-                 .systemFocusOn, .systemFocusOff:
+                 .systemFocusOn, .systemFocusOff,
+                 .airDropReceived:
                 return Expect(
                     lane: .secondary,
                     autoDismiss: true,
@@ -426,6 +427,9 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                 detail: "已关闭"
             )
         )
+        let airDrop = IslandNoticePayload.airDropReceived(
+            .init(id: "air.1", path: "/tmp/Photo.jpg", fileName: "Photo.jpg")
+        )
 
         let samples: [IslandNoticePayload] = [
             exclusive,
@@ -450,11 +454,12 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
             netWifiOff,
             netVPNOff,
             focusOn,
-            focusOff
+            focusOff,
+            airDrop
         ]
 
-        // 23 个样本覆盖全部 case 族；clipboard 两种；本机电池四态；网络五态；系统 Focus 两态。
-        XCTAssertEqual(samples.count, 23)
+        // 24 个样本覆盖全部 case 族；clipboard 两种；本机电池四态；网络五态；系统 Focus 两态；AirDrop 一态。
+        XCTAssertEqual(samples.count, 24)
 
         for payload in samples {
             let e = expect(for: payload)

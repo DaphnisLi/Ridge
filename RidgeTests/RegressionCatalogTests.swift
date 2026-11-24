@@ -2318,6 +2318,7 @@ final class RegressionCatalogTests: XCTestCase {
             "builtin.systemFocusTip",
             "builtin.meeting",
             "builtin.downloadComplete",
+            "builtin.airDropReceive",
         ] as [WidgetID] {
             XCTAssertTrue(
                 WidgetSamplePreview.hugsIslandContent(for: id),
@@ -2451,6 +2452,7 @@ final class RegressionCatalogTests: XCTestCase {
             "builtin.systemFocusTip.onOpened",
             "builtin.systemFocusTip.off",
             "builtin.downloadComplete",
+            "builtin.airDropReceive",
         ]
         for id in tipIDs {
             XCTAssertTrue(
@@ -2609,12 +2611,14 @@ final class RegressionCatalogTests: XCTestCase {
         let network = order.firstIndex(of: "builtin.networkLinkTip")!
         let systemFocus = order.firstIndex(of: "builtin.systemFocusTip")!
         let download = order.firstIndex(of: "builtin.downloadComplete")!
+        let airDrop = order.firstIndex(of: "builtin.airDropReceive")!
         let media = order.firstIndex(of: "builtin.media")!
         XCTAssertEqual(peripheral + 1, macBattery)
         XCTAssertEqual(macBattery + 1, network)
         XCTAssertEqual(network + 1, systemFocus)
         XCTAssertEqual(systemFocus + 1, download)
-        XCTAssertEqual(download + 1, media)
+        XCTAssertEqual(download + 1, airDrop)
+        XCTAssertEqual(airDrop + 1, media)
         XCTAssertEqual(media + 1, focus)
         XCTAssertEqual(order[order.count - 2], "system.controlDeck.volume")
         XCTAssertEqual(order.last, "system.controlDeck.projects")
@@ -2636,6 +2640,7 @@ final class RegressionCatalogTests: XCTestCase {
                 "builtin.networkLinkTip",
                 "builtin.systemFocusTip",
                 "builtin.downloadComplete",
+                "builtin.airDropReceive",
                 "builtin.media",
                 "builtin.focusTimer",
                 "builtin.worldClock",
@@ -2651,6 +2656,7 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.networkLinkTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.systemFocusTip"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.downloadComplete"), .tip)
+        XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.airDropReceive"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.copiedNotice"), .tip)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "builtin.media"), .live)
         XCTAssertEqual(WidgetLibraryFamily.family(for: "system.controlDeck.battery"), .live)
@@ -2666,7 +2672,47 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.networkLinkTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.systemFocusTip"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.downloadComplete"))
+        XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.airDropReceive"))
         XCTAssertFalse(WidgetLibraryFamily.allowsIslandContentPage("builtin.copiedNotice"))
+    }
+
+    func test_airDropReceive_attributionRequiresPositiveSignal() {
+        XCTAssertTrue(
+            AirDropReceiveAttribution.isLikelyAirDropReceive(
+                fileName: "Photo.jpg",
+                quarantineAgentBundleID: "com.apple.sharingd",
+                whereFroms: []
+            )
+        )
+        XCTAssertTrue(
+            AirDropReceiveAttribution.isLikelyAirDropReceive(
+                fileName: "Doc.pdf",
+                quarantineAgentBundleID: nil,
+                whereFroms: ["AirDrop"]
+            )
+        )
+        XCTAssertFalse(
+            AirDropReceiveAttribution.isLikelyAirDropReceive(
+                fileName: "Report.pdf",
+                quarantineAgentBundleID: "com.google.Chrome",
+                whereFroms: []
+            )
+        )
+        XCTAssertFalse(
+            AirDropReceiveAttribution.isLikelyAirDropReceive(
+                fileName: "Report.pdf",
+                quarantineAgentBundleID: nil,
+                whereFroms: []
+            ),
+            "无正向信号不得当成隔空投送"
+        )
+        XCTAssertFalse(
+            AirDropReceiveAttribution.isLikelyAirDropReceive(
+                fileName: "Unconfirmed 12345.crdownload",
+                quarantineAgentBundleID: "com.apple.sharingd",
+                whereFroms: []
+            )
+        )
     }
 
     @MainActor

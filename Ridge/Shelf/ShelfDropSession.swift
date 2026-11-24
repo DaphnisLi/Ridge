@@ -7,7 +7,7 @@ final class ShelfDropSession: ObservableObject {
     static let shared = ShelfDropSession()
 
     /// 投放完成 / 未入舱松手后禁止再进入的冷却（秒）。
-    /// 挡住 isTargeted 滞后二次暂存面，以及拖完未投放却回头再开。
+    /// 挡住 isTargeted 滞后二次双舱，以及拖完未投放却回头再开。
     static let postDropSuppress: TimeInterval = 0.55
 
     @Published private(set) var isActive = false
@@ -22,14 +22,14 @@ final class ShelfDropSession: ObservableObject {
         Date() < suppressReactivateUntil
     }
 
-    /// 是否刚完成投放（成功入舱），松手路径勿当取消强收。
+    /// 是否刚完成投放（成功入舱 / 隔空），松手路径勿当取消强收。
     func dropCompletedRecently(within seconds: TimeInterval = 0.35, now: Date = Date()) -> Bool {
         now.timeIntervalSince(lastDropCompletedAt) < seconds
     }
 
     func setActive(_ active: Bool, reason: String) {
         if active, Date() < suppressReactivateUntil {
-            AppLog.warn("Shelf", "投放后冷却中，忽略再次进入暂存面", [
+            AppLog.warn("Shelf", "投放后冷却中，忽略再次进入双舱", [
                 "reason": reason,
                 "remainMs": Int(suppressReactivateUntil.timeIntervalSinceNow * 1000)
             ])
@@ -37,7 +37,7 @@ final class ShelfDropSession: ObservableObject {
         }
         guard isActive != active else { return }
         isActive = active
-        // 落盘用 warn：info 不进 app.log，暂存面闪第二次时否则无迹可查。
+        // 落盘用 warn：info 不进 app.log，双舱闪第二次时否则无迹可查。
         AppLog.warn("Shelf", active ? "进入整岛暂存拖入态" : "退出整岛暂存拖入态", [
             "reason": reason
         ])

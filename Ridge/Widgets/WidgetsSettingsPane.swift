@@ -592,6 +592,7 @@ private struct WidgetPreviewPane: View {
             || widgetID == "builtin.networkLinkTip"
             || widgetID == "builtin.systemFocusTip"
             || widgetID == "builtin.downloadComplete"
+            || widgetID == "builtin.airDropReceive"
             || widgetID == "builtin.copiedNotice"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".shelf"
             || widgetID == ControlDeckSettings.pageIDPrefix + ".volume"
@@ -647,6 +648,8 @@ private struct WidgetPreviewPane: View {
             SystemFocusTipWidgetConfigSection()
         } else if widgetID == "builtin.downloadComplete" {
             DownloadCompleteTipWidgetConfigSection()
+        } else if widgetID == "builtin.airDropReceive" {
+            AirDropReceiveTipWidgetConfigSection()
         } else if widgetID == "builtin.copiedNotice" {
             CopiedNoticeWidgetConfigSection()
         } else if widgetID == ControlDeckSettings.pageIDPrefix + ".shelf" {
