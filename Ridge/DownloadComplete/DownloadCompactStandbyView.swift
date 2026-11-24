@@ -1,10 +1,11 @@
 import AppKit
 import SwiftUI
 
-/// 下载常驻小岛（方案 04）：
-/// - 进行中：左下载图标+文件名；右 16px 微圆环 + **定宽**估速
-/// - 完成：左绿色勾+文件名；右 AppKit「打开」徽章（可点 / 设置快捷键）；约 3s 自动撤，悬停续命
-/// 根视图不加外圈 padding（壳层 `IslandChrome` 管边距）。
+/// 下载常驻（产品 **C**，同档内高于计时）：
+/// - **全岛**（单独）：方案 04 左右翼贴刘海——进行中图标+名 / 定宽估速+微圆环；完成勾+名 / AppKit「打开」
+/// - **半岛**（并排半翼）：左文件名 · 右薄荷绿估速；底边蓝→青绿渐变进度；悬停 morph「打开」
+///   · 与计时：左下载右计时；与音乐：左音乐右下载（下完再露计时）
+/// 根视图不加外圈 padding。
 struct DownloadCompactStandbyView: View {
     let fileName: String
     var phase: DownloadIslandPhase = .completed
@@ -17,12 +18,14 @@ struct DownloadCompactStandbyView: View {
 
     @ObservedObject private var downloadSettings = DownloadCompleteSettings.shared
     @Environment(\.islandNotchWidth) private var envNotchWidth
+    @State private var localHover = false
 
     private let downloadAccent = Color(red: 0.678, green: 0.776, blue: 1.0)
     private let checkGreen = Color(red: 0.325, green: 0.882, blue: 0.435)
+    private let speedGreen = IslandFlushWingStyle.accentSuccess
     private let iconSide: CGFloat = 14
     private let leftClusterSpacing: CGFloat = IslandFlushWingStyle.iconLabelSpacing
-    /// 右翼速度列定宽，避免 `12.3 MB/s` ↔ `128 KB/s` 拽动整岛/翼宽。
+    /// 全岛右翼速度列定宽，避免 `MB/s` 文案长短拽翼宽。
     private static let speedColumnWidth: CGFloat = 78
 
     private var notchWidth: CGFloat {
@@ -42,11 +45,24 @@ struct DownloadCompactStandbyView: View {
         downloadSettings.hotKey.displayString
     }
 
+    private var showsPeninsulaOpenMorph: Bool {
+        flushSide != nil && localHover
+    }
+
     var body: some View {
         Group {
             if flushSide != nil {
-                // 完成态右翼 AppKit「打开」：禁止整翼 onTap 盖住（空 guard 也会抢命中）。
                 peninsulaBody
+                    .onHover { hovering in
+                        if localHover != hovering {
+                            localHover = hovering
+                            AppLog.debug("Download", "下载半岛悬停", [
+                                "hover": hovering,
+                                "phase": phase.rawValue
+                            ])
+                        }
+                    }
+                    .animation(.easeOut(duration: 0.18), value: showsPeninsulaOpenMorph)
             } else {
                 fullStandbyBody
             }
@@ -78,39 +94,115 @@ struct DownloadCompactStandbyView: View {
         return "\(L10n.DownloadComplete.openBadge)，\(fileName)"
     }
 
+    // MARK: - 半岛（半翼）
+
     private var peninsulaBody: some View {
+        let side = flushSide ?? .trailing
+        let shape = IslandFlushWingStyle.capsuleShape(side: side)
+        let stack = ZStack {
+            peninsulaIdleLayer
+                .opacity(showsPeninsulaOpenMorph ? 0 : 1)
+                .scaleEffect(showsPeninsulaOpenMorph ? 0.95 : 1)
+                .allowsHitTesting(!showsPeninsulaOpenMorph)
+            peninsulaOpenMorphLayer
+                .opacity(showsPeninsulaOpenMorph ? 1 : 0)
+                .scaleEffect(showsPeninsulaOpenMorph ? 1 : 0.95)
+                .allowsHitTesting(showsPeninsulaOpenMorph)
+        }
+
+        if bareWingContent {
+            return AnyView(
+                stack
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background {
+                        if showsPeninsulaOpenMorph {
+                            speedGreen.opacity(0.22)
+                        }
+                    }
+                    .clipShape(shape)
+            )
+        }
+        return AnyView(
+            stack
+                .frame(width: IslandFlushWingStyle.width, height: IslandFlushWingStyle.height)
+                .background(
+                    shape.fill(showsPeninsulaOpenMorph ? speedGreen.opacity(0.22) : Color.black)
+                )
+                .clipShape(shape)
+        )
+    }
+
+    private var peninsulaIdleLayer: some View {
         let row = HStack(spacing: 0) {
-            HStack(spacing: leftClusterSpacing) {
-                leadIcon
-                Text(fileName)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.95))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+            Text(fileName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.95))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .layoutPriority(1)
+            Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
+            peninsulaIdleTrailing
+        }
+        return ZStack(alignment: .bottom) {
+            Group {
+                if bareWingContent {
+                    row.islandBareFlushWingContent()
+                } else {
+                    row.padding(.horizontal, IslandFlushWingStyle.horizontalPadding)
+                }
             }
-            .contentShape(Rectangle())
-            .onTapGesture(perform: performTap)
-            .accessibilityAddTraits(.isButton)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
 
             if phase == .downloading {
-                Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
-                    .contentShape(Rectangle())
-                    .onTapGesture(perform: performTap)
-                trailingStatus
-                    .contentShape(Rectangle())
-                    .onTapGesture(perform: performTap)
-            } else {
-                // 完成态：Spacer 不抢点；右翼仅 AppKit「打开」（对齐会议满岛入会钮）。
-                Spacer(minLength: IslandFlushWingStyle.bareContentSpacerMin)
+                DownloadPeninsulaProgressBar(fraction: progressFraction)
+                    .frame(height: 3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .allowsHitTesting(false)
-                trailingStatus
             }
         }
-        if bareWingContent {
-            return AnyView(row.islandBareFlushWingContent())
-        }
-        return AnyView(IslandFlushWingCapsule(side: flushSide ?? .leading) { row })
+        .contentShape(Rectangle())
+        .onTapGesture(perform: performTap)
+        .accessibilityAddTraits(.isButton)
     }
+
+    @ViewBuilder
+    private var peninsulaIdleTrailing: some View {
+        switch phase {
+        case .downloading:
+            Text(speedLabel ?? "0 KB/s")
+                .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                .foregroundStyle(speedGreen)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        case .completed:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(checkGreen)
+                .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private var peninsulaOpenMorphLayer: some View {
+        if onTap != nil {
+            openBadgeChrome(title: L10n.DownloadComplete.openBadge, showShortcut: false)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(false)
+        } else {
+            DownloadOpenAppKitButton(
+                title: L10n.DownloadComplete.openBadge,
+                shortcut: nil
+            ) {
+                AppLog.warn("Download", "AppKit 打开按钮已点击")
+                _ = DownloadCompleteSession.shared.handleClick()
+            }
+            .frame(height: DownloadOpenAppKitButton.fixedHeight)
+            .fixedSize(horizontal: true, vertical: true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - 全岛
 
     private var fullStandbyBody: some View {
         GeometryReader { geo in
@@ -144,40 +236,39 @@ struct DownloadCompactStandbyView: View {
                     .onTapGesture(perform: performTap)
                     .accessibilityHidden(true)
 
-                rightWing(width: wing)
+                fullIslandRightWing(width: wing)
             }
             .frame(width: total, height: geo.size.height)
         }
     }
 
     @ViewBuilder
-    private func rightWing(width: CGFloat) -> some View {
+    private func fullIslandRightWing(width: CGFloat) -> some View {
         if phase == .downloading {
             HStack(spacing: 0) {
                 Spacer(minLength: 0)
-                trailingStatus
+                fullIslandTrailingStatus
             }
             .frame(width: width, alignment: .trailing)
             .contentShape(Rectangle())
             .onTapGesture(perform: performTap)
         } else {
-            // 完成态禁止任何 SwiftUI tap / contentShape 盖住 AppKit「打开」。
+            // 完成态禁止 SwiftUI tap 盖住 AppKit「打开」。
             HStack(spacing: 0) {
                 Spacer(minLength: 0)
                     .allowsHitTesting(false)
-                trailingStatus
+                fullIslandTrailingStatus
             }
             .frame(width: width, alignment: .trailing)
         }
     }
 
     @ViewBuilder
-    private var trailingStatus: some View {
+    private var fullIslandTrailingStatus: some View {
         switch phase {
         case .completed:
             openBadge
         case .downloading:
-            // 靠右：速度（定宽）在左，进度环在右。
             HStack(spacing: 6) {
                 Text(speedLabel ?? "0 KB/s")
                     .font(.system(size: 12, weight: .semibold).monospacedDigit())
@@ -198,7 +289,6 @@ struct DownloadCompactStandbyView: View {
     @ViewBuilder
     private var openBadge: some View {
         if onTap != nil {
-            // 预览 / 图鉴：不接真 Session。
             openBadgeChrome(title: L10n.DownloadComplete.openBadge, showShortcut: showsOpenShortcutChip)
                 .allowsHitTesting(false)
         } else {
@@ -251,7 +341,7 @@ struct DownloadCompactStandbyView: View {
     }
 
     static func previewSample(
-        fileName: String = "Report.pdf",
+        fileName: String = "Docker.raw",
         phase: DownloadIslandPhase = .completed,
         speedBytesPerSecond: Double? = nil,
         progressFraction: Double? = nil,
@@ -261,7 +351,7 @@ struct DownloadCompactStandbyView: View {
             fileName: fileName,
             phase: phase,
             speedBytesPerSecond: speedBytesPerSecond,
-            progressFraction: progressFraction ?? (phase == .downloading ? 0.62 : nil),
+            progressFraction: progressFraction ?? (phase == .downloading ? 0.82 : nil),
             flushSide: flushSide,
             bareWingContent: false,
             onTap: {}
@@ -303,7 +393,63 @@ extension DownloadCompactStandbyView {
     }
 }
 
-/// 完成态「打开」：AppKit 钮，避开 nonactivatingPanel 上 SwiftUI 首击失灵。
+// MARK: - Peninsula progress
+
+private struct DownloadPeninsulaProgressBar: View {
+    var fraction: Double?
+
+    private let blue = Color(red: 0.15, green: 0.45, blue: 0.95)
+    private let cyan = Color(red: 0.25, green: 0.85, blue: 0.85)
+    private let green = IslandFlushWingStyle.accentSuccess
+
+    @State private var indeterminatePhase: CGFloat = 0
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = max(geo.size.width, 1)
+            let h = max(geo.size.height, 1)
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: w, height: h)
+                if let fraction, fraction >= 0 {
+                    let fill = min(1, max(0.04, fraction))
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [blue, cyan, green],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: w * fill, height: h)
+                } else {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [blue.opacity(0.2), cyan, green.opacity(0.2)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: w * 0.28, height: h)
+                        .offset(x: (w - w * 0.28) * indeterminatePhase)
+                }
+            }
+            .frame(width: w, height: h)
+            .clipShape(Capsule())
+        }
+        .onAppear {
+            guard fraction == nil else { return }
+            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: true)) {
+                indeterminatePhase = 1
+            }
+        }
+    }
+}
+
+// MARK: - AppKit Open
+
 private struct DownloadOpenAppKitButton: NSViewRepresentable {
     let title: String
     var shortcut: String?
@@ -397,7 +543,6 @@ private final class DownloadOpenNSButton: NSButton {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
-    /// 整颗胶囊 bounds 都可点，不限于文字字形（对齐会议入会钮）。
     override func hitTest(_ point: NSPoint) -> NSView? {
         bounds.contains(point) ? self : nil
     }
@@ -407,7 +552,6 @@ private final class DownloadOpenNSButton: NSButton {
             "w": Int(bounds.width),
             "h": Int(bounds.height)
         ])
-        // 不走 super：避免 cell 与 SwiftUI 宿主抢首击；mouseUp 再 performClick。
         highlight(true)
     }
 
@@ -426,7 +570,8 @@ private final class DownloadOpenNSButton: NSButton {
     }
 }
 
-/// 右翼微圆环：画布略大于描边，避免上下被裁。
+// MARK: - Full-island ring
+
 private struct DownloadMicroGaugeRing: View {
     var progress: Double?
     var tint: Color

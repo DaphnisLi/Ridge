@@ -28,46 +28,47 @@ struct IslandContentView: View {
             && shelfDropSession.isActive
     }
 
-    /// 播放中常驻小岛（可与专注并排：左音乐右专注；大面板仅点按/悬停后出现）。
+    /// 播放中常驻小岛（可与专注/下载并排；大面板仅点按/悬停后出现）。
     private var showsMediaCompactStandby: Bool {
         MediaCompactPresence.isActive
     }
 
-    /// 下载完成常驻（有播放时被盖，不在此画）。
+    /// 下载常驻（C 类；可与音乐/专注并排右翼，单独全岛）。
     private var showsDownloadCompactStandby: Bool {
-        DownloadCompactPresence.isActive && !showsMediaCompactStandby
+        DownloadCompactPresence.isActive
     }
 
-    /// 收起且无 tip：音乐+专注左右双翼。
+    /// 收起且无 tip：音乐+计时左右双翼（无下载时；有下载则右翼先给下载）。
     private var showsMediaFocusCompactDual: Bool {
         !viewModel.isExpanded
             && showsMediaCompactStandby
             && focusTimer.showsCompactStandby
+            && !showsDownloadCompactStandby
             && !noticeCenter.slots.hasNoticePayload
     }
 
-    /// 收起且无 tip：下载+专注左右双翼（无音乐时）。
+    /// 收起且无 tip：左音乐 · 右下载半岛（可同时有计时，下载结束后再露计时）。
+    private var showsMediaDownloadCompactDual: Bool {
+        !viewModel.isExpanded
+            && showsMediaCompactStandby
+            && showsDownloadCompactStandby
+            && !noticeCenter.slots.hasNoticePayload
+    }
+
+    /// 收起且无 tip：左下载 · 右计时（无音乐时）。
     private var showsDownloadFocusCompactDual: Bool {
         !viewModel.isExpanded
             && showsDownloadCompactStandby
             && focusTimer.showsCompactStandby
+            && !showsMediaCompactStandby
             && !noticeCenter.slots.hasNoticePayload
     }
 
     private var compactSize: CGSize {
         // 高度一律等于刘海：贴顶时底边齐平，禁止 max(…, 38) 再抬高掉出刘海。
         let height = NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
-        // 音乐 + 专注：贴刘海左右双翼（与 tip dualFlush 同宽）。
-        if showsMediaFocusCompactDual {
-            let dual = IslandChrome.preparedDualFlushPanelSize(
-                notchWidth: viewModel.notchWidth,
-                notchHeight: viewModel.notchHeight,
-                rightIsOrb: false
-            )
-            return CGSize(width: NotchGeometry.pixelAlign(dual.width), height: height)
-        }
-        // 下载 + 专注：同宽双翼。
-        if showsDownloadFocusCompactDual {
+        // 音乐 + 计时 / 音乐 + 下载 / 下载 + 计时：贴刘海左右双翼。
+        if showsMediaFocusCompactDual || showsMediaDownloadCompactDual || showsDownloadFocusCompactDual {
             let dual = IslandChrome.preparedDualFlushPanelSize(
                 notchWidth: viewModel.notchWidth,
                 notchHeight: viewModel.notchHeight,
@@ -94,6 +95,7 @@ struct IslandContentView: View {
                 height: height
             )
         }
+        // 仅音乐 / 仅下载：全岛待命宽。
         if showsMediaCompactStandby || showsDownloadCompactStandby {
             return CGSize(
                 width: NotchGeometry.pixelAlign(
@@ -151,8 +153,10 @@ struct IslandContentView: View {
         if runtime.isTransientNoticePage, noticeCenter.slots.usesDualFlushChrome {
             return true
         }
-        // 收起：音乐/下载左 + 专注右，与 tip 双槽同壳。
-        return showsMediaFocusCompactDual || showsDownloadFocusCompactDual
+        // 收起：左音乐/下载 + 右计时/下载，与 tip 双槽同壳。
+        return showsMediaFocusCompactDual
+            || showsMediaDownloadCompactDual
+            || showsDownloadFocusCompactDual
     }
 
     private var usesDualFlushWithRightOrb: Bool {
@@ -498,20 +502,29 @@ private struct IslandBody: View {
     }
 
     private var showsDownloadCompactStandby: Bool {
-        DownloadCompactPresence.isActive && !showsMediaCompactStandby
+        DownloadCompactPresence.isActive
     }
 
-    /// 收起且无 tip：左音乐右专注。
+    /// 收起且无 tip：左音乐右计时（无下载；有下载则右翼先给下载）。
     private var showsMediaFocusCompactDual: Bool {
         showsMediaCompactStandby
             && focusTimer.showsCompactStandby
+            && !showsDownloadCompactStandby
             && !noticeCenter.slots.hasNoticePayload
     }
 
-    /// 收起且无 tip：左下载右专注。
+    /// 收起且无 tip：左音乐 · 右下载半岛。
+    private var showsMediaDownloadCompactDual: Bool {
+        showsMediaCompactStandby
+            && showsDownloadCompactStandby
+            && !noticeCenter.slots.hasNoticePayload
+    }
+
+    /// 收起且无 tip：左下载 · 右计时。
     private var showsDownloadFocusCompactDual: Bool {
         showsDownloadCompactStandby
             && focusTimer.showsCompactStandby
+            && !showsMediaCompactStandby
             && !noticeCenter.slots.hasNoticePayload
     }
 
@@ -523,7 +536,7 @@ private struct IslandBody: View {
     /// 下载常驻必须画「打开」：即便 isExpanded 尚未收完，也优先于 WidgetHost（否则打开钮不在树上）。
     private var prefersDownloadCompactOverExpanded: Bool {
         guard showsDownloadCompactStandby, downloadSession.pending != nil else { return false }
-        // 独占 tip / 会议 sticky 仍走展开通知页。
+        // 独占 tip / 会议 sticky 仍走展开通知页（会议左 · 下载右由通知页 dual 画）。
         if noticeCenter.slots.primary?.displayLane == .exclusive { return false }
         if noticeCenter.slots.anyKeepsExpandedWithoutHover { return false }
         return true
@@ -558,8 +571,11 @@ private struct IslandBody: View {
                             .allowsHitTesting(false)
                     }
                 }
+            } else if showsMediaDownloadCompactDual, let item = downloadSession.pending,
+                      let snap = nowPlaying.snapshot {
+                mediaDownloadDualRow(snap: snap, item: item)
             } else if showsMediaFocusCompactDual, let snap = nowPlaying.snapshot {
-                // 左音乐 · 右专注；与 tip dualFlush 同壳。
+                // 左音乐 · 右计时；与 tip dualFlush 同壳。
                 IslandDualNotchWingRow {
                     MediaCompactStandbyView(
                         title: snap.title,
@@ -641,8 +657,40 @@ private struct IslandBody: View {
     }
 
     @ViewBuilder
+    private func mediaDownloadDualRow(
+        snap: NowPlayingSnapshot,
+        item: DownloadCompleteItem
+    ) -> some View {
+        IslandDualNotchWingRow {
+            MediaCompactStandbyView(
+                title: snap.title,
+                artwork: snap.artwork,
+                elapsedText: MediaCompactStandbyView.formatElapsed(snap.elapsed),
+                isPlaying: snap.isPlaying,
+                flushSide: .leading,
+                bareWingContent: true
+            )
+            .contentShape(Rectangle())
+            .onTapGesture {
+                MediaCompactPresence.openExpandedPanel(reason: "compactTap")
+            }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(L10n.Media.previewStageExpanded)
+        } right: {
+            DownloadCompactStandbyView(
+                item: item,
+                flushSide: .trailing,
+                bareWingContent: true
+            )
+        }
+    }
+
+    @ViewBuilder
     private func downloadCompactBody(item: DownloadCompleteItem) -> some View {
-        if showsDownloadFocusCompactDual {
+        if showsMediaDownloadCompactDual, let snap = nowPlaying.snapshot {
+            mediaDownloadDualRow(snap: snap, item: item)
+        } else if showsDownloadFocusCompactDual {
+            // 左下载 · 右计时。
             IslandDualNotchWingRow {
                 DownloadCompactStandbyView(
                     item: item,
@@ -661,6 +709,7 @@ private struct IslandBody: View {
                 )
             }
         } else {
+            // 仅下载：全岛方案 04。
             DownloadCompactStandbyView(item: item)
                 .padding(.horizontal, 10)
                 .frame(

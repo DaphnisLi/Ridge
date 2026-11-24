@@ -2488,6 +2488,10 @@ enum L10n {
         static var downloadingBadge: String {
             tr("download_complete.badge.downloading", "下载中")
         }
+        /// 设置预览 Tab：并排半翼半岛样张。
+        static var peninsulaPreviewStage: String {
+            tr("download_complete.preview.peninsula", "半岛")
+        }
         static var downloadingPlaceholderName: String {
             tr("download_complete.name.placeholder", "正在下载")
         }

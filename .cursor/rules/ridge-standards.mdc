@@ -15,6 +15,7 @@ alwaysApply: true
 | `product-spec.mdc` | **产品说明**：改用户可感行为须同步 `docs/PRODUCT.md` |
 | `regression-catalog.mdc` | 回归目录 + **改完必跑** `./scripts/test-recurring.sh`（仅 recurring；单次问题不强制） |
 | `widget-architecture.mdc` | 小组件扩展契约：如何实现 / 注册新 widget（含 AI 自定义） |
+| `island-priority-grades.mdc` | 岛展示四档 A/B/C/D；新能力必须先问档位 |
 | `widget-preview.mdc` | 设置预览：统一假数据组件 `WidgetSamplePreview`；上直角下圆角 |
 | `settings-ui.mdc` | 设置页通用 UI：`SettingsChrome` 色板/字号 + `SettingsUI` 卡片与表单 |
 | `island-notice.mdc` | 岛内通用瞬时通知：`IslandNoticeCenter` / 悬停保活 / 禁滑 |

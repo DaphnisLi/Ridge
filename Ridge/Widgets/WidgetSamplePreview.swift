@@ -690,23 +690,23 @@ enum WidgetSamplePreview {
 
     @ViewBuilder
     private static func downloadCompleteSample(compact: Bool) -> some View {
-        // 库卡：与会议 tip 同 290×30 chrome，避免 GeometryReader 无宽把预览撑坏。
+        // 库卡：全岛方案 04 样张（与会议 tip 同 chrome）；半岛半翼见配置页 / 图鉴。
         if compact {
             meetingMatchedCompactChrome {
                 DownloadCompactStandbyView(
-                    fileName: "Rust_Toolchain.tar.gz",
+                    fileName: "Docker.raw",
                     phase: .downloading,
-                    speedBytesPerSecond: 28_400_000,
-                    progressFraction: 0.62,
+                    speedBytesPerSecond: 41_000_000,
+                    progressFraction: 0.82,
                     onTap: {}
                 )
             }
         } else {
             DownloadCompactStandbyView.previewSample(
-                fileName: "Rust_Toolchain.tar.gz",
+                fileName: "Docker.raw",
                 phase: .downloading,
-                speedBytesPerSecond: 28_400_000,
-                progressFraction: 0.62
+                speedBytesPerSecond: 41_000_000,
+                progressFraction: 0.82
             )
         }
     }

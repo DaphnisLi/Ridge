@@ -12719,6 +12719,17 @@
       }
     }
   },
+  "download_complete.preview.peninsula": {
+    "extractionState": "manual",
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "半岛"
+        }
+      }
+    }
+  },
   "download_complete.name.placeholder": {
     "extractionState": "manual",
     "localizations": {

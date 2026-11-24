@@ -217,23 +217,42 @@ struct IslandStyleGallerySection: View {
                 onTap: { harness.presentDownloadDownloadingSample() }
             ) {
                 DownloadCompactStandbyView.previewSample(
-                    fileName: "Rust_Toolchain.tar.gz",
+                    fileName: "Docker.raw",
                     phase: .downloading,
-                    speedBytesPerSecond: 28_400_000,
-                    progressFraction: 0.62
+                    speedBytesPerSecond: 41_000_000,
+                    progressFraction: 0.82
                 )
             }
             tipCell(
                 label: pairedLabel(L10n.TestLab.galleryDownloadComplete, half: false),
                 onTap: { harness.presentDownloadCompleteSample() }
             ) {
-                DownloadCompactStandbyView.previewSample(fileName: "Report.pdf")
+                DownloadCompactStandbyView.previewSample(
+                    fileName: "Docker.raw",
+                    phase: .completed
+                )
+            }
+            flushCell(
+                label: pairedLabel(L10n.TestLab.galleryDownloadDownloading, half: true),
+                onTap: { harness.presentDownloadDownloadingSample() }
+            ) {
+                DownloadCompactStandbyView.previewSample(
+                    fileName: "Docker.raw",
+                    phase: .downloading,
+                    speedBytesPerSecond: 41_000_000,
+                    progressFraction: 0.82,
+                    flushSide: .trailing
+                )
             }
             flushCell(
                 label: pairedLabel(L10n.TestLab.galleryDownloadComplete, half: true),
                 onTap: { harness.presentDownloadCompleteSample() }
             ) {
-                DownloadCompactStandbyView.previewSample(fileName: "Report.pdf", flushSide: .trailing)
+                DownloadCompactStandbyView.previewSample(
+                    fileName: "Docker.raw",
+                    phase: .completed,
+                    flushSide: .trailing
+                )
             }
         }
     }

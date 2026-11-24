@@ -1020,7 +1020,7 @@ extension Notification.Name {
     static let downloadCompleteResidentsDidChange = Notification.Name("ridge.downloadComplete.residents")
 }
 
-/// 收起态是否应画下载待命小岛（被会议/音乐盖时仍可能 `showsCompactStandby`，但画面不露）。
+/// 收起态是否应画下载待命（单独全岛，或与音乐/会议/专注 dual 半翼）。
 enum DownloadCompactPresence {
     @MainActor
     static var isActive: Bool {
@@ -1031,12 +1031,12 @@ enum DownloadCompactPresence {
     static var isVisiblyShowingCompact: Bool {
         guard isActive else { return false }
         switch IslandNoticeCenter.shared.slots.resolvedLayout {
-        case .fullDownload, .dual(left: .download, _):
+        case .fullDownload:
+            return true
+        case .dual(let left, let right) where left == .download || right == .download:
             return true
         default:
-            if IslandNoticeCenter.shared.slots.hasNoticePayload { return false }
-            if MediaCompactPresence.isActive { return false }
-            return true
+            return false
         }
     }
 }

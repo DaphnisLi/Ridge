@@ -536,6 +536,10 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-24 | 四档定稿：A 取色框选；B 会议/播放；C 下载/计时；D tip（PRODUCT + island-priority-grades） |
+| 2026-11-24 | 下载：计时并排左下右计；音乐并排左音右下（下完再露计时）；布局矩阵同步 |
+| 2026-11-24 | 下载与音乐并排右翼（不再被盖）；布局矩阵/PRODUCT 同步 |
+| 2026-11-24 | 下载并排半翼改半岛（底边渐变+悬停打开）；单独仍全岛 |
 | 2026-11-24 | 下载打开：常驻抢占收起番茄展开页，打开钮进树可点；catalog `download-complete-open-wrong-file` +1 |
 | 2026-11-24 | 下载打开：完成态右翼/半岛去掉空 onTap（仍会抢 AppKit）；catalog `download-complete-open-wrong-file` +1 |
 | 2026-11-24 | 下载打开钮：去整卡 tap；完成态全局热键；catalog `download-complete-open-wrong-file` +1 |

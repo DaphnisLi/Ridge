@@ -2440,15 +2440,29 @@ final class RegressionCatalogTests: XCTestCase {
 
     @MainActor
     func test_downloadComplete_layoutBetweenMediaAndFocus() {
-        // 仅下载
+        // 仅下载 → 全岛
         var only = IslandNoticeSlots(downloadResident: true)
         XCTAssertEqual(only.resolvedLayout, .fullDownload)
-        // 播放盖下载
+        // 播放 + 下载 → 左音乐 · 右下载
         only.mediaResident = true
-        XCTAssertEqual(only.resolvedLayout, .fullMedia)
-        only.mediaResident = false
-        // 下载 + 专注
+        XCTAssertEqual(
+            only.resolvedLayout,
+            .dual(left: .media, right: .download)
+        )
+        // 播放 + 下载 + 计时 → 仍左音乐右下载；下载结束后才露计时
         only.focusResident = true
+        XCTAssertEqual(
+            only.resolvedLayout,
+            .dual(left: .media, right: .download)
+        )
+        only.downloadResident = false
+        XCTAssertEqual(
+            only.resolvedLayout,
+            .dual(left: .media, right: .focus)
+        )
+        only.mediaResident = false
+        only.downloadResident = true
+        // 下载 + 计时 → 左下载 · 右计时（系统专注 tip 仍是普通 C，不走 focusResident）
         XCTAssertEqual(
             only.resolvedLayout,
             .dual(left: .download, right: .focus)

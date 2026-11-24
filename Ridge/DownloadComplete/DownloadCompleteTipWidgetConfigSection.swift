@@ -134,19 +134,40 @@ struct DownloadCompleteTipWidgetConfigSection: View {
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
                 ),
+                SettingsIslandStageOption(
+                    id: "peninsula",
+                    title: L10n.DownloadComplete.peninsulaPreviewStage,
+                    badge: L10n.DownloadComplete.peninsulaPreviewStage,
+                    symbol: "rectangle.righthalf.inset.filled",
+                    tint: SettingsChrome.primary,
+                    maxIslandWidth: SettingsIslandPreviewWidth.tip,
+                    minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
+                    compactShell: true
+                ),
             ],
             selection: $previewID
         ) { option in
             Group {
                 if option.id == "downloading" {
                     DownloadCompactStandbyView.previewSample(
-                        fileName: "Rust_Toolchain.tar.gz",
+                        fileName: "Docker.raw",
                         phase: .downloading,
-                        speedBytesPerSecond: 28_400_000,
-                        progressFraction: 0.62
+                        speedBytesPerSecond: 41_000_000,
+                        progressFraction: 0.82
+                    )
+                } else if option.id == "peninsula" {
+                    DownloadCompactStandbyView.previewSample(
+                        fileName: "Docker.raw",
+                        phase: .downloading,
+                        speedBytesPerSecond: 41_000_000,
+                        progressFraction: 0.82,
+                        flushSide: .trailing
                     )
                 } else {
-                    DownloadCompactStandbyView.previewSample(fileName: "Report.pdf")
+                    DownloadCompactStandbyView.previewSample(
+                        fileName: "Docker.raw",
+                        phase: .completed
+                    )
                 }
             }
             .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)

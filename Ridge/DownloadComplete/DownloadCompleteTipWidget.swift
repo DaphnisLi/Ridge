@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-/// 浏览器下载完成：常驻待命小岛（权重低于音乐、高于专注）；不做进度条。
+/// 浏览器下载（产品 **C**）：单独全岛；与计时左下右计；与音乐左音右下；不做假进度条。
 @MainActor
 final class DownloadCompleteTipWidget: IslandWidget {
     static let manifest = WidgetManifest(

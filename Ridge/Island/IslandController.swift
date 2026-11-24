@@ -474,19 +474,39 @@ final class IslandController: NSObject {
     /// 下载常驻上岛：必须收起番茄/其它展开页，否则 IslandBody 只画 WidgetHost，绿色「打开」不在树上、整段点穿。
     func ensureDownloadCompactClickable(reason: String) {
         guard DownloadCompactPresence.isActive else { return }
-        // 会议 sticky / 取色·OCR 独占 tip 优先，不抢。
+        // 会议 sticky / 取色·OCR 独占 tip 优先，不抢（会议左·下载右由通知页 dual 画）。
         let slots = IslandNoticeCenter.shared.slots
         let exclusiveTip = slots.primary?.displayLane == .exclusive
         if slots.anyKeepsExpandedWithoutHover || exclusiveTip {
             return
         }
-        let size = CGSize(
-            width: NotchGeometry.pixelAlign(
-                max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.mediaCompactWidth)
-            ),
-            height: NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
-        )
         let needsCollapse = viewModel.isExpanded
+        // 并排半岛（左音乐右下载 / 左下载右计时）由 dualFlush / compactSize 对齐，勿压成全岛宽。
+        let pairedAsPeninsula: Bool = {
+            if case .dual(let left, let right) = slots.resolvedLayout {
+                return left == .download || right == .download
+            }
+            return false
+        }()
+        let size: CGSize = {
+            if pairedAsPeninsula {
+                let dual = IslandChrome.preparedDualFlushPanelSize(
+                    notchWidth: viewModel.notchWidth,
+                    notchHeight: viewModel.notchHeight,
+                    rightIsOrb: false
+                )
+                return CGSize(
+                    width: NotchGeometry.pixelAlign(dual.width),
+                    height: NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
+                )
+            }
+            return CGSize(
+                width: NotchGeometry.pixelAlign(
+                    max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.mediaCompactWidth)
+                ),
+                height: NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
+            )
+        }()
         let needsResize = abs(size.width - viewModel.panelSize.width) > 0.5
             || abs(size.height - viewModel.panelSize.height) > 0.5
         guard needsCollapse || needsResize else { return }
@@ -497,7 +517,8 @@ final class IslandController: NSObject {
             AppLog.warn("Island", "下载常驻抢占：收起展开页以露出打开钮", [
                 "reason": reason,
                 "page": WidgetRuntime.shared.activeID ?? "nil",
-                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? ""
+                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? "",
+                "peninsula": pairedAsPeninsula
             ])
             collapse(reason: "downloadCompact:\(reason)")
         }
@@ -507,7 +528,8 @@ final class IslandController: NSObject {
                 "reason": reason,
                 "panelW": Int(size.width),
                 "panelH": Int(size.height),
-                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? ""
+                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? "",
+                "peninsula": pairedAsPeninsula
             ])
         }
         updateInteractiveFrame(expanded: false)

@@ -1,0 +1,49 @@
+---
+description: 岛展示四档 A/B/C/D；新小组件必须先问清等级再实现
+alwaysApply: true
+---
+
+# 岛展示等级（A / B / C / D）
+
+权威产品表述见 `docs/PRODUCT.md` §3。岛上争夺只认这四档，**高盖低**（或并排时高占左、低占右，见 PRODUCT 形态表）。
+
+| 档 | 成员 | 代码锚点（现状） |
+|---|---|---|
+| **A** | 取色 / 框选 | `exclusive` |
+| **B** | 会议 / 正在播放 | 会议 `primary`；媒体 `mediaResident` |
+| **C** | 浏览器下载 / 专注计时 | `downloadResident`；`focusResident` |
+| **D** | 瞬时 tip（复制、外设、本机电池、网络、系统专注、AI 额度、RAM、进程结束、久坐…） | `secondary` + FIFO |
+
+同档内：
+
+- **B**：会议盖播放（满岛会议）
+- **C**：下载高于计时（下载+计时 → 左下载右计时；B+下载±计时 → 左音乐右下载，下完再露计时）
+
+用语：
+
+- **C** = 下载 + 计时，不是「系统专注」
+- **系统专注 tip** = **D**
+- 旧称「C 类短提示」一律改称 **D**
+
+## 新小组件 / 新 tip（强制）
+
+动手实现前**必须先问用户**：
+
+> 这个小组件（或 tip）属于 A / B / C / D 哪一档？
+
+未得到明确答复前：
+
+- 不要写布局矩阵、不要改 `IslandNoticeSlotPolicy` / resident 旗标
+- 不要默认塞进 D 或 `system.islandNotice`
+
+定档后再：
+
+1. 写入 `docs/PRODUCT.md` §3（及 §4 / §5 若需要）
+2. 按档接入（A 独占 / B·C 常驻或 tip / D → `IslandNoticePayload` + `IslandNoticeCenter`）
+3. 需要时补布局矩阵测试
+
+## 禁止
+
+- 用「C 类」指瞬时 tip（易与档位 C 混淆）
+- 未经询问给新能力自创第 5 档或塞进错误档
+- 只改代码不改 PRODUCT §3

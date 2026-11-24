@@ -323,7 +323,7 @@ final class IslandNoticeCenter: ObservableObject {
         let focus = FocusTimerSession.shared.showsCompactStandby
         // 音乐是 B；可与专注并排（左音乐右专注），mediaResident 跟播放态。
         let media = MediaCompactPresence.isActive
-        // 下载完成常驻：低于音乐、高于专注；有播放时被盖但旗标仍在。
+        // C 档下载：同档内高于计时；与计时并排占左、与 B 音乐并排占右；旗标跟会话。
         let download = DownloadCompactPresence.isActive
         guard slots.focusResident != focus
             || slots.mediaResident != media

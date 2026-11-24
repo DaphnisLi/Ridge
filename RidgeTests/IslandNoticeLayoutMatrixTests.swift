@@ -161,15 +161,19 @@ final class IslandNoticeLayoutMatrixTests: XCTestCase {
                                     } else if meetingOn {
                                         if hasC {
                                             expected = .dual(left: .notice(meeting), right: .notice(c))
+                                        } else if download {
+                                            expected = .dual(left: .notice(meeting), right: .download)
                                         } else if focus {
                                             expected = .dual(left: .notice(meeting), right: .focus)
                                         } else {
                                             expected = .fullNotice(meeting)
                                         }
                                     } else if media {
-                                        // 播放盖下载
                                         if hasC {
                                             expected = .dual(left: .media, right: .notice(c))
+                                        } else if download {
+                                            // 左音乐 · 右下载（含同时有专注：下载完再露专注）
+                                            expected = .dual(left: .media, right: .download)
                                         } else if focus {
                                             expected = .dual(left: .media, right: .focus)
                                         } else {

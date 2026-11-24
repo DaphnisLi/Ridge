@@ -5,7 +5,7 @@ alwaysApply: true
 
 # 岛内瞬时通知
 
-`system.islandNotice` 是**通用瞬时通知**通道，不只服务进程监视。新提示一律走此通道，禁止再造一套「临时上岛」widget。
+`system.islandNotice` 是**通用瞬时通知**通道（产品 **D** 档），不只服务进程监视。新提示一律走此通道，禁止再造一套「临时上岛」widget。新 tip 动手前须先确认档位为 D（见 `island-priority-grades.mdc`）。
 
 ## 契约
 
