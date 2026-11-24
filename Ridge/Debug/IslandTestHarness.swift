@@ -393,6 +393,11 @@ final class IslandTestHarness: ObservableObject {
         note(L10n.TestLab.statusDownloadDownloading)
     }
 
+    func presentDownloadForceCompleteSample() {
+        DownloadCompleteSession.shared.presentForceCompleteFromDownloading()
+        note(L10n.TestLab.statusDownloadComplete)
+    }
+
     func clearDownloadCompleteSample() {
         DownloadCompleteSession.shared.clearPending(reason: "testLabClear")
         note(L10n.TestLab.statusDownloadCleared)

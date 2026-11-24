@@ -47,7 +47,6 @@ struct PeripheralTipWidgetConfigSection: View {
                     tint: SettingsChrome.primary,
                     maxIslandWidth: SettingsIslandPreviewWidth.tip,
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
-                    bottomRadius: 18,
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
@@ -60,7 +59,6 @@ struct PeripheralTipWidgetConfigSection: View {
                     tint: SettingsChrome.secondary,
                     maxIslandWidth: SettingsIslandPreviewWidth.tip,
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
-                    bottomRadius: 18,
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
@@ -73,7 +71,6 @@ struct PeripheralTipWidgetConfigSection: View {
                     tint: SettingsChrome.error,
                     maxIslandWidth: SettingsIslandPreviewWidth.tip,
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
-                    bottomRadius: 18,
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true

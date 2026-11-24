@@ -20,8 +20,26 @@ struct HotKeyChord: Codable, Equatable, Hashable {
         carbonModifiers: UInt32(cmdKey | optionKey)
     )
 
+    /// 下载完成「打开」默认：⌘O。
+    static let downloadCompleteDefault = HotKeyChord(
+        keyCode: UInt32(kVK_ANSI_O),
+        carbonModifiers: UInt32(cmdKey)
+    )
+
     var hasModifiers: Bool {
         carbonModifiers & UInt32(cmdKey | optionKey | shiftKey | controlKey) != 0
+    }
+
+    /// 与本地 `NSEvent.keyDown` 比对（忽略 Caps Lock 等非设备独立位）。
+    func matches(_ event: NSEvent) -> Bool {
+        guard UInt32(event.keyCode) == keyCode else { return false }
+        var carbon: UInt32 = 0
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags.contains(.control) { carbon |= UInt32(controlKey) }
+        if flags.contains(.option) { carbon |= UInt32(optionKey) }
+        if flags.contains(.shift) { carbon |= UInt32(shiftKey) }
+        if flags.contains(.command) { carbon |= UInt32(cmdKey) }
+        return carbon == carbonModifiers
     }
 
     /// 展示串，如 `⌥⌘C`。

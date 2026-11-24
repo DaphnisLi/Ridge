@@ -64,6 +64,125 @@ struct DownloadCompleteItem: Equatable, Hashable, Identifiable {
     }
 }
 
+/// 下载临时后缀与成品路径解析（无隔离，供 Session / 单测共用）。
+enum DownloadPathLogic {
+    static let tempSuffixes = [
+        ".crdownload",
+        ".download",
+        ".part",
+        ".partial",
+        ".opdownload",
+        ".qqdownload",
+        ".qbd",
+        ".xltd",
+        ".baiduyun",
+        ".td",
+        ".downloading",
+    ]
+
+    static func matchedTempSuffix(_ name: String) -> String? {
+        let lower = name.lowercased()
+        for suffix in tempSuffixes where lower.hasSuffix(suffix) {
+            return String(name.suffix(suffix.count))
+        }
+        return nil
+    }
+
+    /// Chrome / Edge 等：英文 `Unconfirmed …` 与中文「未确认 …」均视为无名临时件。
+    static func isUnconfirmedTempBase(_ stripped: String) -> Bool {
+        let trimmed = stripped.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return true }
+        let lower = trimmed.lowercased()
+        if lower.hasPrefix("unconfirmed") { return true }
+        if trimmed.hasPrefix("未确认") { return true }
+        return false
+    }
+
+    /// 去掉 ` (N)` 序号后的基名，便于用上次同系列成品估总长。
+    static func canonicalBaseName(_ fileName: String) -> String {
+        let url = URL(fileURLWithPath: fileName)
+        let ext = url.pathExtension
+        var stem = url.deletingPathExtension().lastPathComponent
+        if let regex = try? NSRegularExpression(pattern: #" \(\d+\)$"#),
+           let match = regex.firstMatch(
+               in: stem,
+               range: NSRange(stem.startIndex..., in: stem)
+           ),
+           let range = Range(match.range, in: stem) {
+            stem.removeSubrange(range)
+        }
+        if ext.isEmpty { return stem }
+        return stem + "." + ext
+    }
+
+    /// 优先 preferred（须是「新写出」的成品）→ 同名 → 短窗内最新非临时文件。
+    /// `notBefore`：忽略早于该时刻的同名旧文件，避免 Chrome 下到 `foo (5).dmg` 却命中旧 `foo.dmg`。
+    static func resolveFinalURL(
+        preferredPath: String?,
+        displayName: String?,
+        placeholderName: String,
+        directory: URL,
+        entries: [URL],
+        recentWindow: TimeInterval,
+        now: Date = Date(),
+        notBefore: Date? = nil
+    ) -> URL? {
+        let floor = notBefore ?? now.addingTimeInterval(-recentWindow)
+
+        func isFreshFinished(_ url: URL) -> Bool {
+            guard matchedTempSuffix(url.lastPathComponent) == nil else { return false }
+            let vals = try? url.resourceValues(forKeys: [
+                .contentModificationDateKey,
+                .creationDateKey,
+            ])
+            let stamp = vals?.contentModificationDate
+                ?? vals?.creationDate
+                ?? .distantPast
+            return stamp >= floor
+        }
+
+        if let preferredPath,
+           preferredPath.isEmpty == false,
+           FileManager.default.fileExists(atPath: preferredPath) {
+            let url = URL(fileURLWithPath: preferredPath)
+            if isFreshFinished(url) {
+                return url
+            }
+        }
+
+        if let displayName,
+           !displayName.isEmpty,
+           displayName != placeholderName,
+           !isUnconfirmedTempBase(displayName) {
+            let candidate = directory.appendingPathComponent(displayName)
+            if FileManager.default.fileExists(atPath: candidate.path),
+               isFreshFinished(candidate) {
+                return candidate
+            }
+        }
+
+        var best: (url: URL, date: Date)?
+        for url in entries {
+            let name = url.lastPathComponent
+            if matchedTempSuffix(name) != nil { continue }
+            if name == ".DS_Store" || name == ".localized" { continue }
+            let vals = try? url.resourceValues(forKeys: [
+                .contentModificationDateKey,
+                .creationDateKey,
+            ])
+            let stamp = vals?.contentModificationDate
+                ?? vals?.creationDate
+                ?? .distantPast
+            guard stamp >= floor else { continue }
+            guard now.timeIntervalSince(stamp) <= recentWindow else { continue }
+            if best == nil || stamp > best!.date {
+                best = (url, stamp)
+            }
+        }
+        return best?.url
+    }
+}
+
 /// 下载字节 / 速度文案（文件风格，便于岛面短展示）。
 enum DownloadTransferFormatting {
     /// 低于此瞬时速度不展示，避免抖动成「0 KB/s」。

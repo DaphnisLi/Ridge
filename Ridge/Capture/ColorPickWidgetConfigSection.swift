@@ -45,7 +45,6 @@ struct ColorPickWidgetConfigSection: View {
                     tint: SettingsChrome.primary,
                     maxIslandWidth: SettingsIslandPreviewWidth.tip,
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
-                    bottomRadius: 18,
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
@@ -66,6 +65,7 @@ struct ColorPickWidgetConfigSection: View {
             SettingsFormRows {
                 SettingsHotKeyRecorder(
                     chord: $settings.hotKey,
+                    owner: .colorPick,
                     title: L10n.ColorPick.hotKeyTitle,
                     subtitle: L10n.ColorPick.hotKeySubtitle
                 )

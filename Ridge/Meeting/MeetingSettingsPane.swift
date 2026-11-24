@@ -99,7 +99,6 @@ struct MeetingWidgetConfigSection: View {
                     tint: urgency.settingsTint,
                     maxIslandWidth: SettingsIslandPreviewWidth.tip,
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
-                    bottomRadius: 18,
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true

@@ -26,7 +26,8 @@ struct MacBatteryNoticeCard: View {
         return max(envNotchHeight, 32)
     }
 
-    private var wingWidth: CGFloat { compact ? 70 : Self.liveWingWidth }
+    /// 库卡 compact 翼宽：与 `SettingsIslandPreviewWidth.library`（290）对齐（90×2+110）。
+    private var wingWidth: CGFloat { compact ? 90 : Self.liveWingWidth }
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
 
     private var title: String {
@@ -43,7 +44,8 @@ struct MacBatteryNoticeCard: View {
     static func previewSample(
         kind: MacBatteryNotice.Kind,
         compact: Bool = true,
-        flushSide: IslandFlushWingStyle.Side? = nil
+        flushSide: IslandFlushWingStyle.Side? = nil,
+        includeChrome: Bool = true
     ) -> some View {
         let percent: Int
         let threshold: Int
@@ -85,11 +87,12 @@ struct MacBatteryNoticeCard: View {
                 }
             )
         }
+        guard includeChrome else { return AnyView(card) }
         return AnyView(
             card
                 .padding(.horizontal, IslandChrome.contentHorizontal)
                 .padding(.bottom, IslandChrome.compactTipBottom)
-                .frame(minHeight: compact ? 34 : 40)
+                .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)
         )
     }
 

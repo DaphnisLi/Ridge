@@ -196,12 +196,14 @@ struct SettingsSliderRow: View {
 
 /// 浅底分段选择条（几何预设 / 速度 / 震感等）。页内禁止再抄一套 pill 分段。
 struct SettingsSegmentedControl: View {
-    struct Item: Identifiable {
+        struct Item: Identifiable {
         let id: String
         let title: String
         let selected: Bool
         /// 标题前色点（如涨跌惯例绿/红）。
         var leadingDot: Color? = nil
+        /// 标题前 SF Symbol（如下载「打开 / Finder」分段）。
+        var leadingSymbol: String? = nil
         /// `false` 时仅作状态展示（如「自定义」指示），不可点。
         var isInteractive: Bool = true
         let action: () -> Void
@@ -211,6 +213,7 @@ struct SettingsSegmentedControl: View {
             title: String,
             selected: Bool,
             leadingDot: Color? = nil,
+            leadingSymbol: String? = nil,
             isInteractive: Bool = true,
             action: @escaping () -> Void
         ) {
@@ -218,6 +221,7 @@ struct SettingsSegmentedControl: View {
             self.title = title
             self.selected = selected
             self.leadingDot = leadingDot
+            self.leadingSymbol = leadingSymbol
             self.isInteractive = isInteractive
             self.action = action
         }
@@ -247,6 +251,11 @@ struct SettingsSegmentedControl: View {
                 Circle()
                     .fill(leadingDot)
                     .frame(width: 7, height: 7)
+            }
+            if let leadingSymbol = item.leadingSymbol {
+                Image(systemName: leadingSymbol)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(item.selected ? SettingsChrome.primary : SettingsChrome.onSurfaceVariant)
             }
             Text(item.title)
                 .font(item.selected ? SettingsChrome.Font.chipSelected : SettingsChrome.Font.chip)

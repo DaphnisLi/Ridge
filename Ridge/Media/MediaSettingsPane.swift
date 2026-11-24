@@ -57,7 +57,6 @@ struct MediaWidgetConfigSection: View {
                 ? SettingsIslandPreviewWidth.standby
                 : SettingsIslandPreviewWidth.expanded,
             hugsContent: false,
-            bottomRadius: tab.isCompact ? 20 : 24,
             outlineStyle: .panel,
             minStageHeight: tab.isCompact ? 100 : 168,
             compactShell: tab.isCompact

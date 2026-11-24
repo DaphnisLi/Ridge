@@ -25,7 +25,8 @@
 | `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥6 | 粘键盘；SwiftUI 首击无响应（会议入会 / 媒体暂停切歌 / 混音台滑条静音 / **久坐 +10m 点穿**） | 普通点击只 makeKey；穿透 resignKey；岛内操作钮用 AppKit；常驻翼 tip 可点区抬双翼宽；`test_islandFocusPolicy_*` / `test_islandFocusSteal_*` |
-| `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 4 | 黑岛过高；电量空黑；番茄 minStageHeight / 环 24+预览垫高 | 环=媒体封面 22；预览上下 6；`test_compactIsland_*` |
+| `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 5 | 黑岛过高；电量空黑；番茄垫高；**四 tip 库卡高低不齐** | 环 22；`meetingMatchedCompactChrome`；`test_libraryIslandStageStretch_*` |
+| `island-bottom-corner-preview-dead` | 下圆角曲率调了没反应 | 2 | 迷你预览钳死；**库卡/详情写死半径不跟设置** | 壳 `nil`→设置；`test_islandBottomCornerPreviewDead_*` |
 | `settings-preview-island-appearance` | 设置预览比真岛暗淡 | 2 | 文字/外设卡发闷；曾误画分页角点 | 禁预览 `.disabled`；深色+sRGB；`test_settingsPreviewIslandAppearance_*` |
 | `shelf-magnetic-staging-double` | 磁吸双舱用完又冒一次 | ≥2 | 投放后双舱再闪；**未入舱松手后岛回头再开** | `fileDragCanceled` 强收 + 悬停冷却；双舱须 `fileDrag`；`test_shelfFileDragCancel_*` |
 | `meeting-tip-stays-after-join` | 点入会后 tip 仍不消失 | ≥3 | 已入会仍贴着会前提示；tick/改选把同一场贴回 | 会话级 `dismissedAfterJoinID` + publish 拒投；`test_meetingTipAfterJoin_*` |
@@ -70,11 +71,11 @@
 ### library-island-stage-stretch — 库卡/详情预览黑岛被拉高留空
 
 - **recurring:** true  
-- **occurrences:** 4（2026-11-09 股票；2026-11-11 电量；2026-11-12 minStageHeight；**同日专注左环 24 + 库卡 vertical 8/minHeight 44，仍比媒体小岛高**）  
-- **症状:** 库卡/详情预览黑岛呈过高矩形；股票卡被撑高；电量样张卡片贴顶、下半截空黑；番茄待命黑岛比内容高一截  
-- **根因倾向:** 对岛施 `maxHeight: .infinity` / 写死双行高；样张行数与占位高度不一致；**`hugsContent: false` 时把 `minStageHeight` 写在岛 frame 上**；进度环大于媒体封面、预览垫高不一致  
-- **防护:** 库卡岛 `.fixedSize(vertical: true)`；窄 widget `hugsContent`；`batterySample` 按单行样张高度；固定预览宽时高度仍 hugs；**`FocusTimerCompactMetrics` 环 22、预览上下 6 / minHeight 36 对齐媒体**  
-- **相关代码:** `FocusTimerCompactMetrics`、`WidgetSamplePreview.focusTimerSample`、`SettingsIslandStage.stageCanvas`  
+- **occurrences:** 5（2026-11-09 股票；2026-11-11 电量；2026-11-12 minStageHeight；同日专注环垫高；**2026-11-24 外设/本机电池/网络/专注 tip 库卡窄内容同比放大后黑岛虚高不一致**）  
+- **症状:** 库卡/详情预览黑岛呈过高矩形；股票卡被撑高；电量样张卡片贴顶、下半截空黑；番茄待命黑岛比内容高一截；四 tip 库卡灰舞台内黑岛高低不齐  
+- **根因倾向:** 对岛施 `maxHeight: .infinity` / 写死双行高；样张行数与占位高度不一致；**`hugsContent: false` 时把 `minStageHeight` 写在岛 frame 上**；进度环大于媒体封面、预览垫高不一致；**tip 未走 `meetingMatchedCompactChrome`，固有宽 <290 时库卡 scale>1 把高度放大**  
+- **防护:** 库卡岛 `.fixedSize(vertical: true)`；窄 widget `hugsContent`；`batterySample` 按单行样张高度；固定预览宽时高度仍 hugs；**`FocusTimerCompactMetrics` 环 22、预览上下 6 / minHeight 36 对齐媒体**；**外设/本机电池/网络/专注库卡与会议同款 `meetingMatchedCompactChrome`（290×30），compact 翼宽 90×2+110**  
+- **相关代码:** `FocusTimerCompactMetrics`、`WidgetSamplePreview.*TipSample`、`SettingsIslandStage.stageCanvas`、`meetingMatchedCompactChrome`  
 - **自动化:** `RegressionCatalogTests.test_libraryIslandStageStretch_*`、`test_settingsPreviewTipForcedStretch_*`、`test_compactIsland_sharedHeightAndMediaWidth`
 
 ### settings-preview-tip-forced-stretch — tip 预览被强制拉宽撑开左右间距
@@ -262,13 +263,13 @@
 
 ### island-bottom-corner-preview-dead — 下圆角曲率调了没反应
 
-- **recurring:** false  
-- **occurrences:** 1（2026-11-23：设置「平角/经典/默认/圆润」与滑条改了，迷你预览几乎不变）  
-- **症状:** 调下圆角曲率像没生效  
-- **根因倾向:** 迷你预览高仅 24pt，半高钳制把 ≥12 的半径压成同形；开设置时真岛收起，收起态半高亦钳大半径  
-- **防护:** `IslandBottomRadiusPolicy.settingsGeometryPreviewHeight ≥ 2×32`；预览用 `clamped`；真岛走 `applied`；预设档 8/18/24（默认 18），滑条仍到 32  
-- **相关代码:** `IslandBottomRadiusPolicy`、`IslandSettingsPane.geometryMiniPreview`、`IslandContentView.appliedBottomRadius`  
-- **自动化:** `RegressionCatalogTests.test_islandBottomCornerPreviewDead_settingsPreviewDistinguishesPresets`
+- **recurring:** true  
+- **occurrences:** 2（2026-11-23：几何迷你预览矮条钳死；**2026-11-24：库卡/详情 tip 预览写死 16/18/26，不跟设置左下/右下**）  
+- **症状:** 调下圆角曲率像没生效；库卡/小组件详情预览下圆角与「灵动岛」设置不一致  
+- **根因倾向:** 迷你预览高仅 24pt，半高钳制把 ≥12 的半径压成同形；开设置时真岛收起，收起态半高亦钳大半径；**`WidgetIslandPreviewShell` compact 写死 16、各 tip `bottomRadius: 18`**  
+- **防护:** `IslandBottomRadiusPolicy.settingsGeometryPreviewHeight ≥ 2×32`；预览用 `clamped`；真岛走 `applied`；预设档 8/18/24（默认 18），滑条仍到 32；**库卡/详情壳 `bottomRadius == nil` → `IslandSettings.bottomCornerRadius`**  
+- **相关代码:** `IslandBottomRadiusPolicy`、`IslandSettingsPane.geometryMiniPreview`、`IslandContentView.appliedBottomRadius`、`WidgetIslandPreviewShell`、`SettingsIslandStageOption`  
+- **自动化:** `RegressionCatalogTests.test_islandBottomCornerPreviewDead_*`
 
 ### meeting-tip-advance-next — 第一场关掉后不提示第二场
 
@@ -489,12 +490,67 @@
 - **相关代码:** `SystemFocusSession` / `SystemFocusStoreReader` / `SystemFocusSymbol` / `WidgetPermissionGate.fullDiskAccess`  
 - **自动化:** `test_systemFocusTip_detailAndOffSymbol`（含私有符号解析；occurrences=2 但未标 recurring——私有 API 依赖系统 glyph 包）
 
+### dock-apps-launcher-blocked — Dock「App」启动台点不开
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-24）  
+- **症状:** Dock 上 tooltip「App」的启动台（`Apps.app` / 旧 Launchpad）点击无反应或闪一下被盖住  
+- **根因倾向:** Ridge 岛窗 level 高于系统启动台遮罩；`FullscreenMonitor` 虽能侦到 `systemOverlay`，但 `applyFullscreen` 误用 `hideInFullscreen` 开关（默认关）→ 岛不让路  
+- **防护:** `IslandFullscreenHidePolicy`：`systemOverlay` **一律**隐藏并 `orderOut`；普通绿钮全屏仍跟设置；启动台 activate 立即重算；窗主 PID 须落在 Apps/Siri/Launchpad bundle  
+- **相关代码:** `FullscreenMonitor` / `IslandFullscreenHidePolicy` / `IslandController.applyFullscreen`  
+- **自动化:** 不强制（occurrences=1）；`test_islandFullscreenHide_systemOverlayAlwaysHides`
+
+### download-complete-phase-stuck — 下载完成后仍停在「下载中」
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-24）  
+- **症状:** 浏览器文件已落盘，岛面仍显示进行中（估速/下载图标），不切「下载完成」  
+- **根因倾向:** 临时件 rename 瞬间成品尚未可见就放弃；Chrome `Unconfirmed *.crdownload` 无成品路径提示；失败后 `pending` 仍为 `.downloading`  
+- **防护:** 成品解析重试；Unconfirmed/无名靠短窗最新非临时文件；孤儿进行中约 1.2s 兜底切完成或撤；完成路径 warn 落盘  
+- **相关代码:** `DownloadCompleteSession.resolveFinalURL` / `scheduleStabilityCheck` / `reconcileOrphanDownloading`  
+- **自动化:** 不强制（occurrences=1）；`test_downloadComplete_resolveFinalAfterTempRename`
+
+### widget-library-card-hit-area — 库卡只有内容可点、留白点不中
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-24）  
+- **症状:** 小组件库卡片灰舞台外留白 / 卡边点按无反应，须点到预览或标题才进配置  
+- **根因倾向:** 舞台、标题、箭头拆成多个小 `Button`，卡根无整卡 `contentShape`  
+- **防护:** 整卡一个 `Button` + 圆角 `contentShape`；开关叠在 Button 外，避免连带进详情  
+- **相关代码:** `WidgetLibraryCard`（`WidgetsSettingsPane`）  
+- **自动化:** 不强制（occurrences=1）
+
+### download-complete-open-wrong-file — 完成后「打开」不是刚下的文件
+
+- **recurring:** false
+- **occurrences:** 7（2026-11-24：错文件；进度环；打开失灵；dmg+悬停；整卡 onTap+本地 ⌘O；右翼空 onTap；**同日番茄终局/展开页盖住下载常驻 →「打开」不在树上、整段 `hoverPaused=false` 点穿**）
+- **症状:** 点完成岛打开旧同名；SwiftUI 点「打开」无响应；完成态秒收点不到；进度环上下被裁；速度文案变长短导致翼宽抖；点打开出怪异带「取消/打开」的窗；伸手点外部钮岛自己展开；**「打开」钮点不中；焦点在他 App 时快捷键打开系统「打开」面板**
+- **根因倾向:** preferred 旧同名；中文未确认；nonactivatingPanel 上 SwiftUI 首击失灵；右翼 `.clipped` 吃描边；速度列 hug 内容；`selectFile` 对 dmg 易误开镜像面板；下载待命未禁悬停展开；整卡/右翼/半岛 `onTapGesture` 盖住 AppKit；本地 ⌘O；**`isExpanded` 时 IslandBody 只画 WidgetHost，下载「打开」未进树；番茄终局 sticky 反复抢展开；点击全程穿透（无 mouseDown）**
+- **防护:** 访达 `activateFileViewerSelecting`；完成态右翼禁 SwiftUI tap；全局瞬态热键；**下载常驻抢占：`ensureDownloadCompactClickable` 收起展开页 + 对齐 380 可点区；禁番茄终局 sticky / 悬停展开盖住下载；IslandBody 优先画下载常驻**
+- **相关代码:** `DownloadCompactStandbyView` / `DownloadCompleteSession` / `IslandController.ensureDownloadCompactClickable` / `IslandExpandedPanelPolicy.shouldBlockFocusCompletedSticky`
+- **自动化:** 不强制；`test_downloadComplete_resolveFinalAfterTempRename` / `test_downloadComplete_openSuppressesHoverExpand`
+
 ---
 
 ## 变更日志
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-24 | 下载打开：常驻抢占收起番茄展开页，打开钮进树可点；catalog `download-complete-open-wrong-file` +1 |
+| 2026-11-24 | 下载打开：完成态右翼/半岛去掉空 onTap（仍会抢 AppKit）；catalog `download-complete-open-wrong-file` +1 |
+| 2026-11-24 | 下载打开钮：去整卡 tap；完成态全局热键；catalog `download-complete-open-wrong-file` +1 |
+| 2026-11-24 | 下载打开：dmg→访达、禁待命悬停掀面板、打开后冷却；catalog `download-complete-open-wrong-file` +1 |
+| 2026-11-24 | 库卡/详情预览下圆角跟 `IslandSettings`；catalog `island-bottom-corner-preview-dead` recurring |
+| 2026-11-24 | 外设/本机电池/网络/专注库卡 tip 统一 meetingMatchedCompactChrome；catalog `library-island-stage-stretch` +1 |
+| 2026-11-24 | 下载快捷键可录制（HotKeyChord + SettingsHotKeyRecorder） |
+| 2026-11-24 | 下载设置：点按动作 + 快捷键直达；库卡预览 meetingMatchedCompactChrome |
+| 2026-11-24 | 下载完成：AppKit 打开/⌘O、3s 悬停、速度定宽、环不裁；catalog `download-complete-open-wrong-file` +1 |
+| 2026-11-24 | 下载：中文未确认 + 拒旧同名 + 访达选中 + 估长进度环；catalog `download-complete-open-wrong-file` +1 |
+| 2026-11-24 | 下载完成默认访达选中 + 进度环读浏览器总长；catalog `download-complete-open-wrong-file` |
+| 2026-11-24 | 小组件库卡整卡可点进配置（开关除外）；catalog `widget-library-card-hit-area` |
+| 2026-11-24 | 浏览器下载岛面方案 04（微圆环+打开徽章） |
+| 2026-11-24 | Dock「App」启动台被岛窗盖住：systemOverlay 一律让路，不再绑「全屏时禁用」 |
+| 2026-11-24 | 浏览器下载：完成后未切「下载完成」态（rename 竞态/Unconfirmed）；重试解析成品 + 孤儿兜底 |
 | 2026-11-23 | 浏览器下载：进行中估速 / 无进度退化图标；`downloadResident` 仍夹在音乐与专注之间 |
 | 2026-11-23 | 下载完成常驻：`downloadResident` 权重夹在音乐与专注之间；布局矩阵 64 格 |
 | 2026-11-23 | Focus tip 半岛方案 03（模式色光点 / 关态空心环）；C 类 secondary |

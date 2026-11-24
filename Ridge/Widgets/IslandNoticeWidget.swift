@@ -544,9 +544,9 @@ struct PeripheralBatteryNoticeCard: View {
     /// 真岛满岛翼宽；须与 `IslandChrome.preparedPeripheralWingWidth` 同值（自动化锁）。
     static let liveWingWidth: CGFloat = IslandChrome.preparedPeripheralWingWidth
 
-    /// 与 `IslandChrome.preparedPeripheralWingWidth` 对齐；设置样张略收。
+    /// 库卡 compact 翼宽：与 `SettingsIslandPreviewWidth.library`（290）对齐（90×2+110）。
     private var wingWidth: CGFloat {
-        compact ? 70 : Self.liveWingWidth
+        compact ? 90 : Self.liveWingWidth
     }
 
     private var totalWidth: CGFloat { wingWidth * 2 + notchWidth }
@@ -588,7 +588,8 @@ struct PeripheralBatteryNoticeCard: View {
         style: Style,
         threshold: Int = 15,
         compact: Bool = true,
-        flushSide: IslandFlushWingStyle.Side? = nil
+        flushSide: IslandFlushWingStyle.Side? = nil,
+        includeChrome: Bool = true
     ) -> some View {
         let notice: BatteryPeripheralNotice
         switch style {
@@ -632,11 +633,12 @@ struct PeripheralBatteryNoticeCard: View {
         if flushSide != nil {
             return AnyView(card)
         }
+        guard includeChrome else { return AnyView(card) }
         return AnyView(
             card
                 .padding(.horizontal, IslandChrome.contentHorizontal)
                 .padding(.bottom, IslandChrome.compactTipBottom)
-                .frame(minHeight: compact ? 34 : 40)
+                .frame(minHeight: SettingsIslandPreviewWidth.tipDetailMinHeight)
         )
     }
 

@@ -102,7 +102,7 @@ final class IslandController: NSObject {
         displayMonitor.start()
 
         fullscreenMonitor.onChange = { [weak self] fullscreen, systemOverlay in
-            self?.applyFullscreen(fullscreen || systemOverlay)
+            self?.applyFullscreen(appFullscreen: fullscreen, systemOverlay: systemOverlay)
         }
         fullscreenMonitor.start()
 
@@ -130,7 +130,11 @@ final class IslandController: NSObject {
             .sink { [weak self] enabled in
                 AppLog.info("Settings", "全屏禁用岛设置变更，立即重算", ["enabled": enabled])
                 self?.fullscreenMonitor.refresh(reason: "setting")
-                self?.applyFullscreen(self?.fullscreenMonitor.isFullscreenActive ?? false)
+                guard let self else { return }
+                self.applyFullscreen(
+                    appFullscreen: self.fullscreenMonitor.isFullscreenActive,
+                    systemOverlay: self.fullscreenMonitor.isSystemOverlayActive
+                )
             }
             .store(in: &settingsObservers)
 
@@ -436,6 +440,11 @@ final class IslandController: NSObject {
             AppLog.debug("Island", "番茄待命禁止指针展开", ["reason": reason])
             return false
         }
+        // 下载待命小岛自带「打开」：悬停不得掀开底层面板（否则伸手点打开会先展开番茄/控制台）。
+        if DownloadCompactPresence.isActive {
+            AppLog.debug("Island", "下载待命禁止指针展开", ["reason": reason])
+            return false
+        }
         if WidgetRuntime.shared.allowsHoverExpand {
             return true
         }
@@ -446,9 +455,81 @@ final class IslandController: NSObject {
         return false
     }
 
+    /// 下载打开/访达选中后：短冷却禁止悬停再展开，避免伸手点外部窗时掀开底层面板。
+    func suppressHoverExpandAfterExternalOpen(reason: String) {
+        let seconds = IslandExpandedPanelPolicy.postDownloadOpenHoverSuppress
+        suppressHoverExpandUntil = Date().addingTimeInterval(seconds)
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        isPointerOverIsland = false
+        if viewModel.isExpanded {
+            collapse(reason: reason)
+        }
+        AppLog.warn("Island", "外部打开后抑制悬停展开", [
+            "reason": reason,
+            "suppressMs": Int(seconds * 1000)
+        ])
+    }
+
+    /// 下载常驻上岛：必须收起番茄/其它展开页，否则 IslandBody 只画 WidgetHost，绿色「打开」不在树上、整段点穿。
+    func ensureDownloadCompactClickable(reason: String) {
+        guard DownloadCompactPresence.isActive else { return }
+        // 会议 sticky / 取色·OCR 独占 tip 优先，不抢。
+        let slots = IslandNoticeCenter.shared.slots
+        let exclusiveTip = slots.primary?.displayLane == .exclusive
+        if slots.anyKeepsExpandedWithoutHover || exclusiveTip {
+            return
+        }
+        let size = CGSize(
+            width: NotchGeometry.pixelAlign(
+                max(viewModel.notchWidth * NotchGeometry.compactScale, NotchGeometry.mediaCompactWidth)
+            ),
+            height: NotchGeometry.compactPanelHeight(notchHeight: viewModel.notchHeight)
+        )
+        let needsCollapse = viewModel.isExpanded
+        let needsResize = abs(size.width - viewModel.panelSize.width) > 0.5
+            || abs(size.height - viewModel.panelSize.height) > 0.5
+        guard needsCollapse || needsResize else { return }
+
+        collapseWorkItem?.cancel()
+        collapseWorkItem = nil
+        if needsCollapse {
+            AppLog.warn("Island", "下载常驻抢占：收起展开页以露出打开钮", [
+                "reason": reason,
+                "page": WidgetRuntime.shared.activeID ?? "nil",
+                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? ""
+            ])
+            collapse(reason: "downloadCompact:\(reason)")
+        }
+        if needsResize {
+            viewModel.forcePanelSize(size, reason: "downloadCompact:\(reason)")
+            AppLog.warn("Island", "下载常驻可点区已对齐", [
+                "reason": reason,
+                "panelW": Int(size.width),
+                "panelH": Int(size.height),
+                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? ""
+            ])
+        }
+        updateInteractiveFrame(expanded: false)
+    }
+
     func expand(reason: String) {
         let shelfDropExpand = Self.isShelfDropExpandReason(reason)
         let noticeExpand = Self.isNoticeExpandReason(reason)
+        let settingsExpand = reason.hasPrefix("settings")
+        // 下载常驻（打开钮）期间禁止番茄/悬停等把岛展开盖住；会议/通知 tip / 货架 / 设置预览除外。
+        if DownloadCompactPresence.isActive,
+           !noticeExpand,
+           !shelfDropExpand,
+           !settingsExpand
+        {
+            AppLog.warn("Island", "下载常驻中跳过展开", [
+                "reason": reason,
+                "phase": DownloadCompleteSession.shared.pending?.phase.rawValue ?? ""
+            ])
+            ensureDownloadCompactClickable(reason: "blockExpand:\(reason)")
+            return
+        }
         // 设计页：会议等无自动收的 tip 不得抢展开（与 pointerOverSettings 互殴连震）。
         // 约 3s 瞬时 tip（RAM / 进程结束 / 已复制等）仍程序展开，不依赖悬停。
         if noticeExpand, blocksProgrammaticNoticeExpand,
@@ -972,8 +1053,18 @@ final class IslandController: NSObject {
             ])
             expand(reason: "noticeSticky:\(notice?.sourceTag ?? "dual")")
         }
+        // 下载常驻（含完成「打开」）优先于番茄终局：否则展开页盖住打开钮且整段点穿。
+        if DownloadCompactPresence.isActive {
+            ensureDownloadCompactClickable(reason: "pointerPoll")
+        }
         // 专注终局：半岛待命结束后须保持全岛完成态；若被误收再强制展开。
-        if FocusTimerSession.shared.keepsIslandExpandedWithoutHover, !viewModel.isExpanded {
+        // 下载常驻期间禁止抢回展开（权重：下载 > 专注）。
+        if FocusTimerSession.shared.keepsIslandExpandedWithoutHover,
+           !viewModel.isExpanded,
+           !IslandExpandedPanelPolicy.shouldBlockFocusCompletedSticky(
+               downloadCompactActive: DownloadCompactPresence.isActive
+           )
+        {
             AppLog.warn("Island", "专注终局未展开，强制全岛完成态", [
                 "phase": FocusTimerSession.shared.phase.rawValue,
                 "page": WidgetRuntime.shared.activeID ?? "nil"
@@ -1416,13 +1507,21 @@ final class IslandController: NSObject {
         }
     }
 
-    /// 正在拖文件：须同时满足左键按下 + 拖放剪贴板带 fileURL。
-    /// 仅查 pasteboard 不够——松手后类型常残留，会把货架钉住展开卡死。
+    /// 拖放剪贴板 changeCount 基线：松手后类型常残留，不能只靠 `types.contains(.fileURL)`。
+    private static var dragPasteboardBaselineChangeCount = NSPasteboard(name: .drag).changeCount
+
+    /// 正在拖文件：左键按下，且拖放剪贴板相对基线有变更，并带 fileURL。
     private static func isFileDragInProgress() -> Bool {
-        guard NSEvent.pressedMouseButtons & (1 << 0) != 0 else { return false }
         let drag = NSPasteboard(name: .drag)
+        let leftDown = NSEvent.pressedMouseButtons & (1 << 0) != 0
+        if !leftDown {
+            dragPasteboardBaselineChangeCount = drag.changeCount
+            return false
+        }
+        guard drag.changeCount != dragPasteboardBaselineChangeCount else { return false }
         guard let types = drag.types, !types.isEmpty else { return false }
-        return types.contains(.fileURL) || types.contains(NSPasteboard.PasteboardType("public.file-url"))
+        return types.contains(.fileURL)
+            || types.contains(NSPasteboard.PasteboardType("public.file-url"))
     }
 
     /// 拖文件磁吸区：刘海外扩一圈（仅 fileDrag 路径调用）。
@@ -2120,20 +2219,27 @@ final class IslandController: NSObject {
         return 0
     }
 
-    private func applyFullscreen(_ fullscreen: Bool) {
-        let shouldHide = fullscreen && settings.hideInFullscreen
+    private func applyFullscreen(appFullscreen: Bool, systemOverlay: Bool) {
+        // Dock「App」/ Siri 启动台层级低于岛窗，必须让路；不受「全屏时禁用」开关影响。
+        let shouldHide = IslandFullscreenHidePolicy.shouldHideIsland(
+            appFullscreen: appFullscreen,
+            systemOverlay: systemOverlay,
+            hideInFullscreenSetting: settings.hideInFullscreen
+        )
         viewModel.isHiddenForFullscreen = shouldHide
         if shouldHide {
             collapseWorkItem?.cancel()
             isPointerOverIsland = false
-            setClickThrough(true, reason: "fullscreenHide")
+            setClickThrough(true, reason: systemOverlay ? "systemOverlayHide" : "fullscreenHide")
             if viewModel.isExpanded {
                 viewModel.collapse()
             }
         }
-        AppLog.info("Overlay", shouldHide ? "全屏隐藏岛" : "全屏恢复岛", [
-            "fullscreen": fullscreen,
-            "setting": settings.hideInFullscreen
+        AppLog.warn("Overlay", shouldHide ? "遮罩隐藏岛" : "遮罩恢复岛", [
+            "appFullscreen": appFullscreen,
+            "systemOverlay": systemOverlay,
+            "setting": settings.hideInFullscreen,
+            "shouldHide": shouldHide
         ])
         updateVisibility()
     }

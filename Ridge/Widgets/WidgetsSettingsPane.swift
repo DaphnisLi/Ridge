@@ -448,16 +448,15 @@ private struct WidgetLibraryCard: View {
     @ObservedObject private var colorPickSettings = ColorPickSettings.shared
     @ObservedObject private var ocrSelectSettings = OCRSelectSettings.shared
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Button(action: onOpen) {
-                libraryIslandStage
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+    /// 底栏右：开关 + 间距 + 箭头占位，保证标题不与叠层开关抢位。
+    private static let trailingControlsWidth: CGFloat = 70
 
-            HStack(alignment: .center, spacing: 8) {
-                Button(action: onOpen) {
+    var body: some View {
+        Button(action: openConfiguration) {
+            VStack(alignment: .leading, spacing: 10) {
+                libraryIslandStage
+
+                HStack(alignment: .center, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title)
                             .font(SettingsChrome.Font.sectionTitle)
@@ -467,29 +466,22 @@ private struct WidgetLibraryCard: View {
                             .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
 
-                Toggle("", isOn: $isEnabled)
-                    .labelsHidden()
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-
-                Button(action: onOpen) {
-                    Image(systemName: "arrow.up.right")
-                        .font(SettingsChrome.Font.iconInline)
-                        .foregroundStyle(SettingsChrome.onSurfaceVariant.opacity(0.7))
-                        .padding(4)
-                        .contentShape(Rectangle())
+                    Color.clear
+                        .frame(width: Self.trailingControlsWidth, height: 22)
+                        .accessibilityHidden(true)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(L10n.Widgets.configureLink)
             }
+            .padding(SettingsChrome.Spacing.cardInner)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(height: WidgetLibraryCardLayout.cardHeight(for: family), alignment: .top)
+            .contentShape(
+                RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous)
+            )
         }
-        .padding(SettingsChrome.Spacing.cardInner)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: WidgetLibraryCardLayout.cardHeight(for: family), alignment: .top)
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(L10n.Widgets.configureLink)
         .background(SettingsChrome.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: SettingsChrome.Radius.bento, style: .continuous))
         .overlay(
@@ -497,7 +489,30 @@ private struct WidgetLibraryCard: View {
                 .strokeBorder(SettingsChrome.cardStroke, lineWidth: SettingsChrome.cardStrokeWidth)
         )
         .shadow(color: Color.black.opacity(0.04), radius: 8, y: 2)
+        .overlay(alignment: .bottomTrailing) {
+            // 开关在 Button 外，避免点开关同时进配置页。
+            HStack(spacing: 8) {
+                Toggle("", isOn: $isEnabled)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.small)
+                    .accessibilityLabel(title)
+
+                Image(systemName: "arrow.up.right")
+                    .font(SettingsChrome.Font.iconInline)
+                    .foregroundStyle(SettingsChrome.onSurfaceVariant.opacity(0.7))
+                    .padding(4)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+            .padding(SettingsChrome.Spacing.cardInner)
+        }
         .opacity(isEnabled ? 1 : 0.72)
+    }
+
+    private func openConfiguration() {
+        AppLog.debug("Settings", "点击库卡打开配置", ["id": widgetID])
+        onOpen()
     }
 
     @ViewBuilder

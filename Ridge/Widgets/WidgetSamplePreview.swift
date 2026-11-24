@@ -86,7 +86,8 @@ struct SettingsIslandStageOption: Identifiable, Hashable {
     var maxIslandWidth: CGFloat? = nil
     /// `true`：黑岛贴合内容宽（展开态）；`false`：拉到 `maxIslandWidth` / 舞台宽（待命等）。
     var hugsContent: Bool = false
-    var bottomRadius: CGFloat = 26
+    /// `nil`：跟 `IslandSettings.bottomCornerRadius`（与真岛左下/右下一致）；圆岛等再显式传入。
+    var bottomRadius: CGFloat? = nil
     /// 岛预览外形：上直角下圆角（与真岛一致）。
     var outlineStyle: IslandOutlineStyle = .panel
     var minStageHeight: CGFloat = 148
@@ -243,7 +244,8 @@ extension SettingsIslandStage {
             tint: .clear,
             maxIslandWidth: maxIslandWidth,
             hugsContent: hugsContent,
-            bottomRadius: compact ? 16 : 26,
+            // 下圆角跟设置，勿写死 16/26。
+            bottomRadius: nil,
             minStageHeight: minStageHeight
                 ?? (compact ? SettingsIslandPreviewWidth.tipStageMinHeight : 168),
             compactShell: compact,
@@ -297,7 +299,8 @@ struct WidgetIslandPreviewShell<Content: View>: View {
         if outlineStyle == .circle {
             return bottomRadius ?? (IslandChrome.notchRightOrbDiameter / 2)
         }
-        return bottomRadius ?? (compact ? 16 : CGFloat(settings.bottomCornerRadius))
+        // 库卡 / 详情预览与真岛同一设置值（左下、右下）；半高钳制由路径尺寸自然完成。
+        return bottomRadius ?? CGFloat(settings.bottomCornerRadius)
     }
 
     var body: some View {
@@ -334,6 +337,7 @@ struct WidgetIslandPreviewShell<Content: View>: View {
         )
         // 真岛 window/hosting 强制 darkAqua；设置窗浅色下锁深色，白字与卡片灰底才与真岛一致。
         .preferredColorScheme(.dark)
+        .animation(.easeOut(duration: 0.15), value: settings.bottomCornerRadius)
     }
 }
 
@@ -606,46 +610,105 @@ enum WidgetSamplePreview {
             .frame(minHeight: compact ? 30 : 34)
     }
 
+    @ViewBuilder
     private static func peripheralTipSample(
         style: PeripheralBatteryNoticeCard.Style,
         compact: Bool
     ) -> some View {
-        PeripheralBatteryNoticeCard.previewSample(
-            style: style,
-            threshold: BatterySettings.shared.lowThresholdPercent,
-            compact: compact
-        )
+        // 库卡：与会议 tip 同 290×30 chrome，避免窄内容同比放大后黑岛虚高。
+        if compact {
+            meetingMatchedCompactChrome {
+                PeripheralBatteryNoticeCard.previewSample(
+                    style: style,
+                    threshold: BatterySettings.shared.lowThresholdPercent,
+                    compact: true,
+                    includeChrome: false
+                )
+            }
+        } else {
+            PeripheralBatteryNoticeCard.previewSample(
+                style: style,
+                threshold: BatterySettings.shared.lowThresholdPercent,
+                compact: false
+            )
+        }
     }
 
+    @ViewBuilder
     private static func macBatteryTipSample(
         kind: MacBatteryNotice.Kind,
         compact: Bool
     ) -> some View {
-        MacBatteryNoticeCard.previewSample(kind: kind, compact: compact)
+        if compact {
+            meetingMatchedCompactChrome {
+                MacBatteryNoticeCard.previewSample(
+                    kind: kind,
+                    compact: true,
+                    includeChrome: false
+                )
+            }
+        } else {
+            MacBatteryNoticeCard.previewSample(kind: kind, compact: false)
+        }
     }
 
+    @ViewBuilder
     private static func networkLinkTipSample(
         kind: NetworkLinkTipKind,
         compact: Bool
     ) -> some View {
-        NetworkLinkNoticeCard.previewSample(kind: kind, compact: compact)
+        if compact {
+            meetingMatchedCompactChrome {
+                NetworkLinkNoticeCard.previewSample(
+                    kind: kind,
+                    compact: true,
+                    includeChrome: false
+                )
+            }
+        } else {
+            NetworkLinkNoticeCard.previewSample(kind: kind, compact: false)
+        }
     }
 
+    @ViewBuilder
     private static func systemFocusTipSample(
         preview: SystemFocusNoticeCard.PreviewVariant,
         compact: Bool
     ) -> some View {
-        SystemFocusNoticeCard.previewSample(preview: preview, compact: compact)
+        if compact {
+            meetingMatchedCompactChrome {
+                SystemFocusNoticeCard.previewSample(
+                    preview: preview,
+                    compact: true,
+                    includeChrome: false
+                )
+            }
+        } else {
+            SystemFocusNoticeCard.previewSample(preview: preview, compact: false)
+        }
     }
 
+    @ViewBuilder
     private static func downloadCompleteSample(compact: Bool) -> some View {
-        _ = compact
-        // 库卡默认展「进行中 + 估速」；无进度条（退化口径）。
-        return DownloadCompactStandbyView.previewSample(
-            fileName: "Archive.zip",
-            phase: .downloading,
-            speedBytesPerSecond: 2_400_000
-        )
+        // 库卡：与会议 tip 同 290×30 chrome，避免 GeometryReader 无宽把预览撑坏。
+        if compact {
+            meetingMatchedCompactChrome {
+                DownloadCompactStandbyView(
+                    fileName: "Rust_Toolchain.tar.gz",
+                    phase: .downloading,
+                    speedBytesPerSecond: 28_400_000,
+                    progressFraction: 0.62,
+                    onTap: {}
+                )
+            }
+        } else {
+            DownloadCompactStandbyView.previewSample(
+                fileName: "Rust_Toolchain.tar.gz",
+                phase: .downloading,
+                speedBytesPerSecond: 28_400_000,
+                progressFraction: 0.62
+            )
+        }
     }
 
     private static func copiedNoticeSample(compact: Bool) -> some View {

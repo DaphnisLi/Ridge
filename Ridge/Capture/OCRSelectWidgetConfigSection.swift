@@ -45,7 +45,6 @@ struct OCRSelectWidgetConfigSection: View {
                     tint: SettingsChrome.primary,
                     maxIslandWidth: SettingsIslandPreviewWidth.tip,
                     hugsContent: WidgetSamplePreview.tipPreviewHugsContent,
-                    bottomRadius: 18,
                     outlineStyle: .panel,
                     minStageHeight: SettingsIslandPreviewWidth.tipStageMinHeight,
                     compactShell: true
@@ -66,6 +65,7 @@ struct OCRSelectWidgetConfigSection: View {
             SettingsFormRows {
                 SettingsHotKeyRecorder(
                     chord: $settings.hotKey,
+                    owner: .ocrSelect,
                     title: L10n.OCRSelect.hotKeyTitle,
                     subtitle: L10n.OCRSelect.hotKeySubtitle
                 )

@@ -1697,6 +1697,29 @@ final class RegressionCatalogTests: XCTestCase {
         XCTAssertTrue(panel.contains(CGPoint(x: 100, y: 20)))
     }
 
+    /// island-bottom-corner-preview-dead：库卡/详情壳不得写死下圆角，须跟设置（与真岛左下/右下一致）。
+    @MainActor
+    func test_islandBottomCornerPreviewDead_libraryAndDetailFollowSettings() {
+        let option = SettingsIslandStageOption(
+            id: "probe",
+            title: "",
+            badge: "",
+            symbol: "",
+            tint: .clear
+        )
+        XCTAssertNil(
+            option.bottomRadius,
+            "SettingsIslandStageOption 默认 bottomRadius 须为 nil，由 WidgetIslandPreviewShell 读 IslandSettings"
+        )
+        XCTAssertEqual(IslandSettings.Defaults.bottomCornerRadius, 18.0, accuracy: 0.5)
+        // 圆岛仍固定半直径，不跟面板下圆角。
+        XCTAssertEqual(
+            IslandChrome.notchRightOrbDiameter / 2,
+            16,
+            accuracy: 0.5
+        )
+    }
+
     /// island-bottom-corner-preview-dead：设置迷你预览须够高以区分 8/18/24（及滑条 32）；矮条会把大半径钳成同形。
     func test_islandBottomCornerPreviewDead_settingsPreviewDistinguishesPresets() {
         let previewH = IslandBottomRadiusPolicy.settingsGeometryPreviewHeight
@@ -2031,6 +2054,47 @@ final class RegressionCatalogTests: XCTestCase {
     }
 
     // MARK: - library-island-stage-stretch（电量预览勿按双行留黑空）
+
+    @MainActor
+    func test_libraryIslandStageStretch_tipLibraryChromeMatchesMeeting() {
+        // 外设/本机电池/网络/专注库卡须与会议同款 290×30，避免窄内容 scale>1 虚高。
+        XCTAssertEqual(SettingsIslandPreviewWidth.library, 290)
+        XCTAssertEqual(SettingsIslandPreviewWidth.tipBarHeight, 30)
+        XCTAssertEqual(SettingsIslandPreviewWidth.tipPreviewMinHeight, 30)
+        let compactWing: CGFloat = 90
+        let previewNotch: CGFloat = 110
+        XCTAssertEqual(
+            compactWing * 2 + previewNotch,
+            SettingsIslandPreviewWidth.library,
+            accuracy: 0.5,
+            "tip compact 翼宽须铺满 library，再套 meetingMatchedCompactChrome"
+        )
+        let chromeNativeWidth =
+            SettingsIslandPreviewWidth.library + IslandChrome.contentHorizontal * 2
+        let scale = SettingsIslandPreviewWidth.libraryScale(nativeWidth: chromeNativeWidth)
+        XCTAssertLessThan(
+            scale,
+            1,
+            "meetingMatchedCompactChrome 外框宽含左右 inset，库卡缩放须 ≤1，禁止再放大高度"
+        )
+        let chromeNativeHeight =
+            SettingsIslandPreviewWidth.tipBarHeight + IslandChrome.compactTipBottom
+        XCTAssertEqual(chromeNativeHeight, 34, accuracy: 0.5)
+        for id in [
+            "builtin.peripheralTip",
+            "builtin.macBatteryTip",
+            "builtin.networkLinkTip",
+            "builtin.systemFocusTip",
+            "builtin.meeting",
+            "builtin.downloadComplete",
+        ] as [WidgetID] {
+            XCTAssertTrue(
+                WidgetSamplePreview.hugsIslandContent(for: id),
+                "\(id) 库卡须 hugs + meetingMatchedCompactChrome"
+            )
+            XCTAssertNil(WidgetSamplePreview.libraryIslandWidth(for: id))
+        }
+    }
 
     @MainActor
     func test_libraryIslandStageStretch_batteryPreviewSingleRowHeight() {
@@ -2389,11 +2453,18 @@ final class RegressionCatalogTests: XCTestCase {
             only.resolvedLayout,
             .dual(left: .download, right: .focus)
         )
-        // 点击动作默认打开
-        XCTAssertEqual(
-            DownloadCompleteSettings.shared.clickAction,
-            .openWithDefaultApp
-        )
+        // 点击动作 / 快捷键默认值（先恢复，避免本机 UserDefaults 污染）
+        let settings = DownloadCompleteSettings.shared
+        let savedAction = settings.clickAction
+        let savedShortcut = settings.keyboardShortcutEnabled
+        let savedChord = settings.hotKey
+        settings.restoreDefaults()
+        XCTAssertEqual(settings.clickAction, .openWithDefaultApp)
+        XCTAssertTrue(settings.keyboardShortcutEnabled)
+        XCTAssertEqual(settings.hotKey, .downloadCompleteDefault)
+        settings.clickAction = savedAction
+        settings.keyboardShortcutEnabled = savedShortcut
+        settings.hotKey = savedChord
     }
 
     func test_downloadTransferFormatting_speedAndProgressDegrade() {
@@ -2420,6 +2491,162 @@ final class RegressionCatalogTests: XCTestCase {
             totalBytes: 100
         )
         XCTAssertEqual(withTotal.progressFraction, 0.5)
+    }
+
+    func test_islandFullscreenHide_systemOverlayAlwaysHides() {
+        // Dock「App」启动台不受「全屏时禁用」开关影响，必须让路。
+        XCTAssertTrue(
+            IslandFullscreenHidePolicy.shouldHideIsland(
+                appFullscreen: false,
+                systemOverlay: true,
+                hideInFullscreenSetting: false
+            )
+        )
+        XCTAssertTrue(
+            IslandFullscreenHidePolicy.shouldHideIsland(
+                appFullscreen: false,
+                systemOverlay: true,
+                hideInFullscreenSetting: true
+            )
+        )
+        // 普通全屏仍跟设置走。
+        XCTAssertFalse(
+            IslandFullscreenHidePolicy.shouldHideIsland(
+                appFullscreen: true,
+                systemOverlay: false,
+                hideInFullscreenSetting: false
+            )
+        )
+        XCTAssertTrue(
+            IslandFullscreenHidePolicy.shouldHideIsland(
+                appFullscreen: true,
+                systemOverlay: false,
+                hideInFullscreenSetting: true
+            )
+        )
+        XCTAssertFalse(
+            IslandFullscreenHidePolicy.shouldHideIsland(
+                appFullscreen: false,
+                systemOverlay: false,
+                hideInFullscreenSetting: true
+            )
+        )
+    }
+
+    func test_downloadComplete_openSuppressesHoverExpand() {
+        XCTAssertEqual(
+            IslandExpandedPanelPolicy.postDownloadOpenHoverSuppress,
+            1.6,
+            accuracy: 0.05,
+            "下载打开后须短冷却，避免伸手点访达时掀开底层面板"
+        )
+        XCTAssertGreaterThan(
+            IslandExpandedPanelPolicy.postDownloadOpenHoverSuppress,
+            IslandExpandedPanelPolicy.postFileDragHoverSuppress
+        )
+        // 完成态瞬态全局热键 id 须稳定，便于与取色/OCR 冲突检查并存、撤 tip 可注销。
+        XCTAssertEqual(
+            HotKeyOwnerID.downloadComplete.rawValue,
+            "builtin.downloadComplete"
+        )
+        XCTAssertNotEqual(
+            HotKeyOwnerID.downloadComplete.rawValue,
+            CaptureHotKeyCoordinator.colorPickHotKeyID
+        )
+        // 下载常驻须挡住番茄终局 sticky，否则「打开」不在树上、整段点穿。
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.shouldBlockFocusCompletedSticky(downloadCompactActive: true)
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.shouldBlockFocusCompletedSticky(downloadCompactActive: false)
+        )
+    }
+
+    func test_downloadComplete_resolveFinalAfterTempRename() {
+        XCTAssertEqual(DownloadPathLogic.matchedTempSuffix("a.dmg.crdownload"), ".crdownload")
+        XCTAssertEqual(DownloadPathLogic.matchedTempSuffix("Unconfirmed 123.crdownload"), ".crdownload")
+        XCTAssertEqual(DownloadPathLogic.matchedTempSuffix("未确认 121328.crdownload"), ".crdownload")
+        XCTAssertNil(DownloadPathLogic.matchedTempSuffix("a.dmg"))
+        XCTAssertTrue(DownloadPathLogic.isUnconfirmedTempBase("Unconfirmed 123"))
+        XCTAssertTrue(DownloadPathLogic.isUnconfirmedTempBase("未确认 121328"))
+        XCTAssertFalse(DownloadPathLogic.isUnconfirmedTempBase("googlechrome (5).dmg"))
+        XCTAssertEqual(
+            DownloadPathLogic.canonicalBaseName("googlechrome (5).dmg"),
+            "googlechrome.dmg"
+        )
+
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ridge-download-resolve-\(UUID().uuidString)", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let old = dir.appendingPathComponent("googlechrome.dmg")
+        FileManager.default.createFile(atPath: old.path, contents: Data("old".utf8))
+        // 把旧文件 mtime 拨到过去，模拟「早已存在的同名」。
+        try? FileManager.default.setAttributes(
+            [.modificationDate: Date(timeIntervalSinceNow: -3600)],
+            ofItemAtPath: old.path
+        )
+
+        let fresh = dir.appendingPathComponent("googlechrome (5).dmg")
+        FileManager.default.createFile(atPath: fresh.path, contents: Data("new".utf8))
+
+        // 旧同名不能当 preferred；短窗应落到刚下的 (5)。
+        let resolved = DownloadPathLogic.resolveFinalURL(
+            preferredPath: old.path,
+            displayName: "googlechrome.dmg",
+            placeholderName: "正在下载",
+            directory: dir,
+            entries: [old, fresh],
+            recentWindow: 60,
+            notBefore: Date(timeIntervalSinceNow: -30)
+        )
+        XCTAssertEqual(resolved?.lastPathComponent, "googlechrome (5).dmg")
+
+        // 中文未确认：无 displayName，靠短窗最新成品。
+        let resolvedRecent = DownloadPathLogic.resolveFinalURL(
+            preferredPath: nil,
+            displayName: nil,
+            placeholderName: "正在下载",
+            directory: dir,
+            entries: [old, fresh],
+            recentWindow: 60,
+            notBefore: Date(timeIntervalSinceNow: -30)
+        )
+        XCTAssertEqual(resolvedRecent?.lastPathComponent, "googlechrome (5).dmg")
+    }
+
+    func test_downloadProgressLookup_safariPackageTotal() {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ridge-dl-safari-\(UUID().uuidString)", isDirectory: true)
+        let pkg = dir.appendingPathComponent("Sample.dmg.download", isDirectory: true)
+        try? FileManager.default.createDirectory(at: pkg, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+
+        let info: [String: Any] = [
+            "DownloadEntryProgressBytesSoFar": 40,
+            "DownloadEntryProgressTotalToLoad": 160,
+        ]
+        let infoURL = pkg.appendingPathComponent("Info.plist")
+        let data = try? PropertyListSerialization.data(
+            fromPropertyList: info,
+            format: .xml,
+            options: 0
+        )
+        try? data?.write(to: infoURL)
+
+        let snap = DownloadProgressLookup.snapshot(tempURL: pkg, displayName: "Sample.dmg")
+        XCTAssertEqual(snap.receivedBytes, 40)
+        XCTAssertEqual(snap.totalBytes, 160)
+
+        let item = DownloadCompleteItem(
+            path: pkg.path,
+            fileName: "Sample.dmg",
+            phase: .downloading,
+            bytesReceived: snap.receivedBytes,
+            totalBytes: snap.totalBytes
+        )
+        XCTAssertEqual(item.progressFraction, 0.25)
     }
 
     func test_systemFocusTip_detailAndOffSymbol() {

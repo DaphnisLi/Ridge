@@ -139,6 +139,13 @@ enum IslandExpandedPanelPolicy {
 
     /// 拖文件会话结束后短暂禁止「普通悬停再展开」，避免未入舱松手后岛立刻又弹开。
     static let postFileDragHoverSuppress: TimeInterval = 0.55
+    /// 下载完成点「打开」/ 访达选中后：禁止悬停立刻掀开底层面板，便于伸手点外部窗。
+    static let postDownloadOpenHoverSuppress: TimeInterval = 1.6
+
+    /// 下载常驻（含完成「打开」）优先于番茄终局 sticky：否则展开页盖住打开钮且整段点穿。
+    static func shouldBlockFocusCompletedSticky(downloadCompactActive: Bool) -> Bool {
+        downloadCompactActive
+    }
 
     /// 收起态是否应因指针位置展开。
     /// - 拖文件：接近区或刘海均可。

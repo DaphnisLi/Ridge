@@ -64,6 +64,10 @@ enum RecurringRegressionManifest {
             ]
         ),
         Entry(
+            id: "island-bottom-corner-preview-dead",
+            testNamePrefixes: ["test_islandBottomCornerPreviewDead_"]
+        ),
+        Entry(
             id: "settings-preview-island-appearance",
             testNamePrefixes: ["test_settingsPreviewIslandAppearance_"]
         ),

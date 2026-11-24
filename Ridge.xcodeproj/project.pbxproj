@@ -214,6 +214,7 @@
 		D0FFA7F559C32DCD0A6EC7C6 /* IslandSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54CBA736194D9B2DDBA65133 /* IslandSettingsPane.swift */; };
 		D206341C8F877895151A8C55 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5E5749E20E05BB84808D3ED8 /* CoreBluetooth.framework */; };
 		D3131253CE98D17A73798553 /* SoundDeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BFECE714321CB884F2A555 /* SoundDeviceService.swift */; };
+		D563D2FFC57D226D6206CC82 /* HotKeyConflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD3B8FFAAB032AC98A4B6B28 /* HotKeyConflict.swift */; };
 		D83C0E7A4A203CD44A9F6052 /* NetworkLinkTipPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD01905B9970891134F871A /* NetworkLinkTipPolicy.swift */; };
 		D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */; };
 		D977A2C2EEF06F3B273EDD72 /* NetworkLinkTipWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39D419102205FD56979E8D5 /* NetworkLinkTipWidget.swift */; };
@@ -237,6 +238,7 @@
 		E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 888652166B6E000A14995BED /* IslandNoticeCenter.swift */; };
 		E8169D4F5591ECA57D3E0638 /* OCRSelectSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2ED8E8814C24BCB80AA5347 /* OCRSelectSettings.swift */; };
 		E86CFE0FA7133009ACF2445E /* IslandOpaqueFillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */; };
+		E88E90B16C5B12FFEAA211D7 /* IslandFullscreenHidePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EB74980E216CC89C8434E2 /* IslandFullscreenHidePolicy.swift */; };
 		E8C82B760CE95166C809ED13 /* NetworkLinkNoticeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EAD5D5EDD9A1AE5C7F18707 /* NetworkLinkNoticeCard.swift */; };
 		EB81F75E843FCBC6CA5BB137 /* MoveReminderSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435BC94936C01BFE6DAB7E63 /* MoveReminderSettings.swift */; };
 		EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCC7FCDF5B20E51770B768F /* LegalDocumentOpener.swift */; };
@@ -248,6 +250,7 @@
 		F28939871C5E2E9CB1970826 /* SettingsRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7B868652010E80E7A1FACC /* SettingsRootView.swift */; };
 		F3E23D1B6E35D63833D77EC0 /* WidgetRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11948404DA855E5880642096 /* WidgetRuntime.swift */; };
 		F57A8E3B6E53EEEF4BE83B6E /* IslandNoticeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60B42ED40E0C22D308ED7D51 /* IslandNoticeWidget.swift */; };
+		F6536B7FED625B54AFDE9898 /* DownloadProgressLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D1E5A0F673222276E9E5ED /* DownloadProgressLookup.swift */; };
 		F7A4C7E129D0EC902A82B93E /* WidgetGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46C8B0291D49B709283472D /* WidgetGrid.swift */; };
 		F826FAAB19DA3A5042681D75 /* AboutSettingsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882A1231A7741992CA7A5361 /* AboutSettingsPane.swift */; };
 		F87094ED9F9196E986A6EC2B /* MacBatteryTipWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9C3D58E55A2392BC7D4860A /* MacBatteryTipWidget.swift */; };
@@ -382,6 +385,7 @@
 		60B5E4196EB011FA7492603E /* NetworkLinkTipPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLinkTipPolicyTests.swift; sourceTree = "<group>"; };
 		60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicyTests.swift; sourceTree = "<group>"; };
 		6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSession.swift; sourceTree = "<group>"; };
+		63EB74980E216CC89C8434E2 /* IslandFullscreenHidePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFullscreenHidePolicy.swift; sourceTree = "<group>"; };
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		68FC47787BB776C0D2730ACB /* NetworkLinkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLinkModels.swift; sourceTree = "<group>"; };
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
@@ -419,6 +423,7 @@
 		85DB713B5E38759909A00339 /* IslandTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandTheme.swift; sourceTree = "<group>"; };
 		864E2F6942A036A432A26F3D /* MediaIslandCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaIslandCardView.swift; sourceTree = "<group>"; };
 		87802C0729680940D587DA92 /* DiagnosticsExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsExporter.swift; sourceTree = "<group>"; };
+		87D1E5A0F673222276E9E5ED /* DownloadProgressLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgressLookup.swift; sourceTree = "<group>"; };
 		880C963E64D0E720AFA4F20F /* BatterySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatterySettings.swift; sourceTree = "<group>"; };
 		882A1231A7741992CA7A5361 /* AboutSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsPane.swift; sourceTree = "<group>"; };
 		888652166B6E000A14995BED /* IslandNoticeCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandNoticeCenter.swift; sourceTree = "<group>"; };
@@ -477,6 +482,7 @@
 		B9D5DB26A5CC7BE0E4BCD2BF /* FocusTimerTitleBackfillCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerTitleBackfillCard.swift; sourceTree = "<group>"; };
 		B9E71E8C9C4E7B9E09E7C5D8 /* Legal */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Legal; path = Ridge/Resources/Legal; sourceTree = SOURCE_ROOT; };
 		BCAD560F7358D04D95CCCE24 /* ResourceMonitorSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMonitorSession.swift; sourceTree = "<group>"; };
+		BD3B8FFAAB032AC98A4B6B28 /* HotKeyConflict.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeyConflict.swift; sourceTree = "<group>"; };
 		BDCF350EB78BD3D9510A3BD7 /* CoreAudioProperty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreAudioProperty.swift; sourceTree = "<group>"; };
 		BE22E9C8BAD05F8F70BC6B9E /* MediaSettingsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSettingsPane.swift; sourceTree = "<group>"; };
 		BE748766A3251995BFE03CB9 /* MeetingLinkDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingLinkDetector.swift; sourceTree = "<group>"; };
@@ -675,6 +681,7 @@
 				585D5C13D23B9EA0715BCF9F /* IslandExpandedPanelPolicy.swift */,
 				6D3812EB79B21806D4A37916 /* IslandFlushWingStyle.swift */,
 				0DED1FE914E22C6B0AE949B4 /* IslandFocusPolicy.swift */,
+				63EB74980E216CC89C8434E2 /* IslandFullscreenHidePolicy.swift */,
 				41BD6C83C37407C7AF9F9F64 /* IslandHaptics.swift */,
 				D8FD82C0FC96B0AF7A5E10DC /* IslandOpaqueFillView.swift */,
 				3674425432CF0FC40B1093A4 /* IslandPanelShape.swift */,
@@ -733,6 +740,7 @@
 				950406D41F5DF51309C3C939 /* ColorPickWidgetConfigSection.swift */,
 				98015AF857E81F37003D7B64 /* GlobalHotKeyCenter.swift */,
 				45BDD3FD3EEAF28093A962D7 /* HotKeyChord.swift */,
+				BD3B8FFAAB032AC98A4B6B28 /* HotKeyConflict.swift */,
 				A2ED8E8814C24BCB80AA5347 /* OCRSelectSettings.swift */,
 				6AC46FD42F8A011930661306 /* OCRSelectWidget.swift */,
 				5AD1CC844DF9536D4305FE23 /* OCRSelectWidgetConfigSection.swift */,
@@ -974,6 +982,7 @@
 				1D56FB4F19610DC867EEC63E /* DownloadCompleteSettings.swift */,
 				0AE1AEBC5354BEA9F3B3CFE1 /* DownloadCompleteTipWidget.swift */,
 				3582AD1F6FFF39BB260BBD0D /* DownloadCompleteTipWidgetConfigSection.swift */,
+				87D1E5A0F673222276E9E5ED /* DownloadProgressLookup.swift */,
 			);
 			path = DownloadComplete;
 			sourceTree = "<group>";
@@ -1211,6 +1220,7 @@
 				973FAE45B37DAA10386F9646 /* DownloadCompleteSettings.swift in Sources */,
 				A8199FA16D32511B7DF99521 /* DownloadCompleteTipWidget.swift in Sources */,
 				67182BDAA03F9FA7EE25B249 /* DownloadCompleteTipWidgetConfigSection.swift in Sources */,
+				F6536B7FED625B54AFDE9898 /* DownloadProgressLookup.swift in Sources */,
 				AABD7D952685E5B46CC0669A /* EmptyIslandWidget.swift in Sources */,
 				0D9AC236173DA2FCF6173725 /* FeedbackService.swift in Sources */,
 				D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */,
@@ -1224,6 +1234,7 @@
 				BB0A9DF8C27CC8790787FF25 /* GeneralSettingsPane.swift in Sources */,
 				46543EB57A64C3055AEE5217 /* GlobalHotKeyCenter.swift in Sources */,
 				27B8EED1C6766CB59C6FEE5E /* HotKeyChord.swift in Sources */,
+				D563D2FFC57D226D6206CC82 /* HotKeyConflict.swift in Sources */,
 				3015458F02E4F9FB0DA5E2A3 /* IslandChrome.swift in Sources */,
 				7A3EF794A668B5A64BB078D1 /* IslandCompactTitleMarquee.swift in Sources */,
 				A57AF40294CCAA73C6282E89 /* IslandContentView.swift in Sources */,
@@ -1231,6 +1242,7 @@
 				089B80CDF812C21F5E851F43 /* IslandExpandedPanelPolicy.swift in Sources */,
 				2704CB14D70C0E89FC7A838A /* IslandFlushWingStyle.swift in Sources */,
 				38E07147B859BA2648E95197 /* IslandFocusPolicy.swift in Sources */,
+				E88E90B16C5B12FFEAA211D7 /* IslandFullscreenHidePolicy.swift in Sources */,
 				7270DDA4E7CC5E6C3BDFA6D5 /* IslandHaptics.swift in Sources */,
 				E7A6831D193A0EDECB31799E /* IslandNoticeCenter.swift in Sources */,
 				54C390432E7ED1FBF327739E /* IslandNoticeDismissPolicy.swift in Sources */,

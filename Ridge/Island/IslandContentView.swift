@@ -520,9 +520,20 @@ private struct IslandBody: View {
         max(0, NotchGeometry.compactPanelHeight(notchHeight: notchHeight) - 4)
     }
 
+    /// 下载常驻必须画「打开」：即便 isExpanded 尚未收完，也优先于 WidgetHost（否则打开钮不在树上）。
+    private var prefersDownloadCompactOverExpanded: Bool {
+        guard showsDownloadCompactStandby, downloadSession.pending != nil else { return false }
+        // 独占 tip / 会议 sticky 仍走展开通知页。
+        if noticeCenter.slots.primary?.displayLane == .exclusive { return false }
+        if noticeCenter.slots.anyKeepsExpandedWithoutHover { return false }
+        return true
+    }
+
     var body: some View {
         Group {
-            if isExpanded {
+            if prefersDownloadCompactOverExpanded, let item = downloadSession.pending {
+                downloadCompactBody(item: item)
+            } else if isExpanded {
                 VStack(spacing: 0) {
                     // 可选顶栏标题（在统一顶距之下）；会议 / 媒体 / 番茄 title 为空，不占行。
                     if showsShellTitle {
@@ -577,24 +588,7 @@ private struct IslandBody: View {
                     )
                 }
             } else if showsDownloadFocusCompactDual, let item = downloadSession.pending {
-                // 左下载 · 右专注。
-                IslandDualNotchWingRow {
-                    DownloadCompactStandbyView(
-                        item: item,
-                        flushSide: .leading,
-                        bareWingContent: true
-                    )
-                } right: {
-                    FocusTimerStandbyView(
-                        snapshot: focusTimer.snapshot,
-                        flushSide: .trailing,
-                        bareWingContent: true,
-                        extendStepMinutes: focusTimerSettings.extendStepMinutes,
-                        onExtend: { FocusTimerSession.shared.extend() },
-                        onFinishEarly: { FocusTimerSession.shared.finishEarly() },
-                        onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
-                    )
-                }
+                downloadCompactBody(item: item)
             } else if focusTimer.showsCompactStandby {
                 // 倒计时随 +Nm；正计时按分秒占位、出小时加宽；内边距在 StandbyView 内。
                 let standbyW: CGFloat = {
@@ -638,16 +632,41 @@ private struct IslandBody: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityHint(L10n.Media.previewStageExpanded)
             } else if showsDownloadCompactStandby, let item = downloadSession.pending {
-                DownloadCompactStandbyView(item: item)
-                    .padding(.horizontal, 10)
-                    .frame(
-                        width: NotchGeometry.mediaCompactWidth,
-                        height: compactContentHeight
-                    )
+                downloadCompactBody(item: item)
             } else {
                 Color.clear
                     .frame(width: 1, height: 1)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func downloadCompactBody(item: DownloadCompleteItem) -> some View {
+        if showsDownloadFocusCompactDual {
+            IslandDualNotchWingRow {
+                DownloadCompactStandbyView(
+                    item: item,
+                    flushSide: .leading,
+                    bareWingContent: true
+                )
+            } right: {
+                FocusTimerStandbyView(
+                    snapshot: focusTimer.snapshot,
+                    flushSide: .trailing,
+                    bareWingContent: true,
+                    extendStepMinutes: focusTimerSettings.extendStepMinutes,
+                    onExtend: { FocusTimerSession.shared.extend() },
+                    onFinishEarly: { FocusTimerSession.shared.finishEarly() },
+                    onTogglePause: { FocusTimerSession.shared.toggleCountUpPause() }
+                )
+            }
+        } else {
+            DownloadCompactStandbyView(item: item)
+                .padding(.horizontal, 10)
+                .frame(
+                    width: NotchGeometry.mediaCompactWidth,
+                    height: compactContentHeight
+                )
         }
     }
 

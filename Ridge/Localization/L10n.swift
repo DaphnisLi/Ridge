@@ -1611,6 +1611,14 @@ enum L10n {
         static var recording: String { tr("hotkey.recording", "按下快捷键…") }
         static var recordingHelp: String { tr("hotkey.recording_help", "再点取消，或按 Esc") }
         static var recordHelp: String { tr("hotkey.record_help", "点击后按下新的快捷键组合") }
+        /// 当前已存组合与其它功能冲突（持久提示）。
+        static func conflictWith(_ feature: String) -> String {
+            String(format: tr("hotkey.conflict_with", "与「%@」快捷键冲突，请更换"), feature)
+        }
+        /// 刚录到的组合已被占用（拒绝落盘）。
+        static func conflictRejected(_ feature: String) -> String {
+            String(format: tr("hotkey.conflict_rejected", "与「%@」冲突，未保存，请换一组"), feature)
+        }
     }
 
     enum ColorPick {
@@ -2476,6 +2484,7 @@ enum L10n {
             )
         }
         static var doneBadge: String { tr("download_complete.badge.done", "下载完成") }
+        static var openBadge: String { tr("download_complete.badge.open", "打开") }
         static var downloadingBadge: String {
             tr("download_complete.badge.downloading", "下载中")
         }
@@ -2488,13 +2497,16 @@ enum L10n {
         static var tapHintDownloading: String {
             tr("download_complete.a11y.tap_hint_downloading", "在 Finder 中显示下载中的文件")
         }
+        static var quickActionsTitle: String {
+            tr("download_complete.settings.quick_actions_title", "完成后的快速动作")
+        }
         static var clickActionTitle: String {
             tr("download_complete.settings.click_title", "完成后的点按操作")
         }
         static var clickActionSubtitle: String {
             tr(
                 "download_complete.settings.click_subtitle",
-                "仅对已完成项生效；进行中点按一律在 Finder 中显示。打开失败时回退到 Reveal"
+                "点击灵动岛通知胶囊主体时立即执行的默认指令"
             )
         }
         static var openDefaultApp: String {
@@ -2502,6 +2514,24 @@ enum L10n {
         }
         static var revealInFinder: String {
             tr("download_complete.settings.reveal_finder", "在 Finder 中显示")
+        }
+        static var shortcutTitle: String {
+            tr("download_complete.settings.shortcut_title", "快捷键直达")
+        }
+        static var shortcutSubtitle: String {
+            tr(
+                "download_complete.settings.shortcut_subtitle",
+                "下载就绪驻留期间全局生效（其它 App 前台也可）；无需移光标即可执行点按动作"
+            )
+        }
+        static var shortcutChordTitle: String {
+            tr("download_complete.settings.shortcut_chord_title", "按键组合")
+        }
+        static var shortcutChordSubtitle: String {
+            tr(
+                "download_complete.settings.shortcut_chord_subtitle",
+                "点按后按下新的快捷键；需含 ⌘ / ⌥ / ⌃ / ⇧；驻留期间占用该组合"
+            )
         }
     }
 
@@ -3741,6 +3771,9 @@ enum L10n {
         }
         static var downloadCompletePresentDownloading: String {
             tr("test_lab.download_complete.present_downloading", "挂下载中")
+        }
+        static var downloadCompleteForceComplete: String {
+            tr("test_lab.download_complete.force_complete", "切完成态")
         }
         static var downloadCompleteClear: String {
             tr("test_lab.download_complete.clear", "撤常驻")

@@ -217,9 +217,10 @@ struct IslandStyleGallerySection: View {
                 onTap: { harness.presentDownloadDownloadingSample() }
             ) {
                 DownloadCompactStandbyView.previewSample(
-                    fileName: "Archive.zip",
+                    fileName: "Rust_Toolchain.tar.gz",
                     phase: .downloading,
-                    speedBytesPerSecond: 2_400_000
+                    speedBytesPerSecond: 28_400_000,
+                    progressFraction: 0.62
                 )
             }
             tipCell(

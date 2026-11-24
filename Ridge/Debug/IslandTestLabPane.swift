@@ -356,6 +356,9 @@ struct IslandTestLabPane: View {
                 (L10n.TestLab.downloadCompletePresentDownloading, {
                     harness.presentDownloadDownloadingSample()
                 }),
+                (L10n.TestLab.downloadCompleteForceComplete, {
+                    harness.presentDownloadForceCompleteSample()
+                }),
                 (L10n.TestLab.downloadCompletePresent, {
                     harness.presentDownloadCompleteSample()
                 }),

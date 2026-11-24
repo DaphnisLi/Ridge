@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 浏览器下载设置：完成后点击动作 + 进行中/完成样张。
+/// 浏览器下载设置：完成后快速动作 + 进行中/完成样张。
 struct DownloadCompleteTipWidgetConfigSection: View {
     @ObservedObject private var settings = DownloadCompleteSettings.shared
     @ObservedObject private var session = DownloadCompleteSession.shared
@@ -10,8 +10,8 @@ struct DownloadCompleteTipWidgetConfigSection: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: SettingsChrome.Spacing.stack) {
-                    clickActionCard
                     previewCard
+                    quickActionsCard
                 }
                 .padding(.horizontal, SettingsChrome.Spacing.pageHorizontal)
                 .padding(.top, 16)
@@ -30,36 +30,84 @@ struct DownloadCompleteTipWidgetConfigSection: View {
             DownloadCompleteSession.shared.start()
             AppLog.info("Download", "配置页已显示", [
                 "action": settings.clickAction.rawValue,
+                "shortcut": settings.keyboardShortcutEnabled,
+                "chord": settings.hotKey.displayString,
                 "pending": session.pending?.fileName ?? ""
             ])
         }
     }
 
-    private var clickActionCard: some View {
-        SettingsCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(L10n.DownloadComplete.clickActionTitle)
-                    .font(SettingsChrome.Font.cardTitle)
-                    .foregroundStyle(SettingsChrome.onSurface)
-                Text(L10n.DownloadComplete.clickActionSubtitle)
-                    .font(SettingsChrome.Font.caption)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .fixedSize(horizontal: false, vertical: true)
+    private var quickActionsCard: some View {
+        SettingsBentoCard {
+            SettingsBentoCardTitle(
+                symbol: "bolt.fill",
+                tint: SettingsChrome.primary,
+                title: L10n.DownloadComplete.quickActionsTitle
+            )
+
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.DownloadComplete.clickActionTitle)
+                        .font(SettingsChrome.Font.rowTitle)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Text(L10n.DownloadComplete.clickActionSubtitle)
+                        .font(SettingsChrome.Font.caption)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
                 SettingsSegmentedControl(
-                    items: DownloadCompleteClickAction.allCases.map { action in
+                    items: [
                         SettingsSegmentedControl.Item(
-                            id: action.rawValue,
-                            title: action == .openWithDefaultApp
-                                ? L10n.DownloadComplete.openDefaultApp
-                                : L10n.DownloadComplete.revealInFinder,
-                            selected: settings.clickAction == action
+                            id: DownloadCompleteClickAction.openWithDefaultApp.rawValue,
+                            title: L10n.DownloadComplete.openDefaultApp,
+                            selected: settings.clickAction == .openWithDefaultApp,
+                            leadingSymbol: "arrow.up.right.square"
                         ) {
-                            settings.clickAction = action
-                        }
-                    }
+                            settings.clickAction = .openWithDefaultApp
+                        },
+                        SettingsSegmentedControl.Item(
+                            id: DownloadCompleteClickAction.revealInFinder.rawValue,
+                            title: L10n.DownloadComplete.revealInFinder,
+                            selected: settings.clickAction == .revealInFinder,
+                            leadingSymbol: "folder"
+                        ) {
+                            settings.clickAction = .revealInFinder
+                        },
+                    ]
                 )
+                .frame(maxWidth: 320)
             }
-            .padding(SettingsChrome.Spacing.cardPadding)
+
+            SettingsHairline.flush
+
+            HStack(alignment: .center, spacing: 16) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.DownloadComplete.shortcutTitle)
+                        .font(SettingsChrome.Font.rowTitle)
+                        .foregroundStyle(SettingsChrome.onSurface)
+                    Text(L10n.DownloadComplete.shortcutSubtitle)
+                        .font(SettingsChrome.Font.caption)
+                        .foregroundStyle(SettingsChrome.onSurfaceVariant)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Toggle("", isOn: $settings.keyboardShortcutEnabled)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .accessibilityLabel(L10n.DownloadComplete.shortcutTitle)
+            }
+
+            SettingsHotKeyRecorder(
+                chord: $settings.hotKey,
+                owner: .downloadComplete,
+                title: L10n.DownloadComplete.shortcutChordTitle,
+                subtitle: L10n.DownloadComplete.shortcutChordSubtitle
+            )
+            .disabled(!settings.keyboardShortcutEnabled)
+            .opacity(settings.keyboardShortcutEnabled ? 1 : 0.45)
         }
     }
 
@@ -92,9 +140,10 @@ struct DownloadCompleteTipWidgetConfigSection: View {
             Group {
                 if option.id == "downloading" {
                     DownloadCompactStandbyView.previewSample(
-                        fileName: "Archive.zip",
+                        fileName: "Rust_Toolchain.tar.gz",
                         phase: .downloading,
-                        speedBytesPerSecond: 2_400_000
+                        speedBytesPerSecond: 28_400_000,
+                        progressFraction: 0.62
                     )
                 } else {
                     DownloadCompactStandbyView.previewSample(fileName: "Report.pdf")

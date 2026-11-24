@@ -108,7 +108,6 @@ struct FocusTimerWidgetConfigSection: View {
                 ? SettingsIslandPreviewWidth.standby
                 : SettingsIslandPreviewWidth.expanded,
             hugsContent: tab == .completed,
-            bottomRadius: tab.isCompact || tab == .completed ? 20 : 24,
             minStageHeight: tab.isCompact ? 120 : (tab == .completed ? 100 : 148),
             compactShell: tab.isCompact
         )

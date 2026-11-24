@@ -14,10 +14,10 @@ final class FullscreenMonitor {
     private var timer: Timer?
     private var debounceWork: DispatchWorkItem?
 
-    private static let systemOverlayBundleIDs: Set<String> = [
+    static let systemOverlayBundleIDs: Set<String> = [
         "com.apple.apps.launcher",
         "com.apple.Siri",
-        "com.apple.launchpad.launcher"
+        "com.apple.launchpad.launcher",
     ]
 
     func start() {
@@ -28,19 +28,27 @@ final class FullscreenMonitor {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.scheduleEvaluate(reason: "space", delay: 0.25) }
+            Task { @MainActor in self?.scheduleEvaluate(reason: "space", delay: 0.12) }
         }
         let activate = nc.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification,
             object: nil,
             queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in self?.scheduleEvaluate(reason: "activate", delay: 0.15) }
+        ) { [weak self] note in
+            Task { @MainActor in
+                // Dock「App」一点就激活：立刻重算，避免岛窗再挡一帧。
+                let id = (note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?
+                    .bundleIdentifier
+                let delay: TimeInterval = (id.map { Self.systemOverlayBundleIDs.contains($0) } ?? false)
+                    ? 0
+                    : 0.08
+                self?.scheduleEvaluate(reason: "activate", delay: delay)
+            }
         }
         observers = [space, activate]
 
         // 全屏 / Apps 进出有时不发 Space 通知，轮询兜底。
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.evaluate(reason: "poll") }
         }
         if let timer {
@@ -67,6 +75,10 @@ final class FullscreenMonitor {
 
     private func scheduleEvaluate(reason: String, delay: TimeInterval) {
         debounceWork?.cancel()
+        if delay <= 0 {
+            evaluate(reason: reason)
+            return
+        }
         let work = DispatchWorkItem { [weak self] in
             Task { @MainActor in self?.evaluate(reason: reason) }
         }
@@ -155,6 +167,18 @@ final class FullscreenMonitor {
             return true
         }
 
+        // 启动台进程在跑且仍有可见大窗（前台有时仍报上一个 App）。
+        let overlayPIDs = Set(
+            NSWorkspace.shared.runningApplications
+                .compactMap { app -> pid_t? in
+                    guard let id = app.bundleIdentifier,
+                          systemOverlayBundleIDs.contains(id)
+                    else { return nil }
+                    return app.processIdentifier
+                }
+        )
+        guard !overlayPIDs.isEmpty else { return false }
+
         guard let infoList = CGWindowListCopyWindowInfo(
             [.optionOnScreenOnly, .excludeDesktopElements],
             kCGNullWindowID
@@ -168,13 +192,9 @@ final class FullscreenMonitor {
             guard screenW > 0, screenH > 0 else { continue }
 
             for info in infoList {
-                let owner = info[kCGWindowOwnerName as String] as? String ?? ""
-                let bundleHint = info["kCGWindowOwnerPID"] // only name is reliable here
-                _ = bundleHint
-                let isSystemChrome = owner == "Siri"
-                    || owner == "Apps"
-                    || owner == "Launchpad"
-                guard isSystemChrome else { continue }
+                guard let ownerPID = info[kCGWindowOwnerPID as String] as? pid_t,
+                      overlayPIDs.contains(ownerPID)
+                else { continue }
 
                 let layer = info[kCGWindowLayer as String] as? Int ?? 0
                 // Apps 走 Siri 时 layer≈23；须高于普通窗。
