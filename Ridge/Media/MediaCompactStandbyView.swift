@@ -21,10 +21,10 @@ struct MediaCompactStandbyView: View {
     /// 满岛待命原色 #32D74B；半块 flush 另用 `flushEqGreen`。
     private let eqGreen = Color(red: 0.196, green: 0.843, blue: 0.294)
     private let flushEqGreen = IslandFlushWingStyle.accentSuccess
-    private let artworkSide: CGFloat = 22
-    private let leftClusterSpacing: CGFloat = 8
-    /// 满岛右翼：律动条与时长数字间距（原 6 过挤）。
-    private let equalizerElapsedSpacing: CGFloat = 12
+
+    private var artworkSide: CGFloat { MediaCompactStandbyMetrics.artworkSide }
+    private var leftClusterSpacing: CGFloat { MediaCompactStandbyMetrics.leftClusterSpacing }
+    private var equalizerElapsedSpacing: CGFloat { MediaCompactStandbyMetrics.equalizerElapsedSpacing }
 
     private var notchWidth: CGFloat {
         envNotchWidth > 40 ? envNotchWidth : previewNotchWidth
@@ -46,10 +46,10 @@ struct MediaCompactStandbyView: View {
         let row = HStack(spacing: 0) {
             HStack(spacing: IslandFlushWingStyle.iconLabelSpacing) {
                 Image(systemName: "music.note")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: MediaCompactStandbyMetrics.wingNoteFontSize, weight: .semibold))
                     .foregroundStyle(flushEqGreen)
                 Text(elapsedText)
-                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .font(.system(size: MediaCompactStandbyMetrics.elapsedFontSize, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color.white.opacity(0.92))
                     .monospacedDigit()
                     .lineLimit(1)
@@ -87,7 +87,7 @@ struct MediaCompactStandbyView: View {
                         text: title.isEmpty ? L10n.Media.widgetName : title,
                         animated: animatedEqualizer,
                         visibleWidth: titleBudget,
-                        fontSize: 12,
+                        fontSize: MediaCompactStandbyMetrics.titleFontSize,
                         fontWeight: .semibold,
                         logTag: "Media"
                     )
@@ -106,7 +106,7 @@ struct MediaCompactStandbyView: View {
                         animated: animatedEqualizer
                     )
                     Text(elapsedText)
-                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .font(.system(size: MediaCompactStandbyMetrics.elapsedFontSize, weight: .semibold, design: .monospaced))
                         .monospacedDigit()
                         .foregroundStyle(.white)
                         .lineLimit(1)

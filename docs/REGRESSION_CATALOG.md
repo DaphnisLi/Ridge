@@ -35,6 +35,7 @@
 | `settings-session-swallows-transient-notice` | 设置开着 / 不悬停就看不见 tip | 3 | 改 RAM 阈值仅入槽；测试台创建会议悬停才见 | 仅设计 sticky 挡；`settingsBlocksProgrammaticNoticeExpand`；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
 | `island-notice-layout-matrix` | 岛展示权重 / 左右组合漏测 | 2 | 音乐×专注、C 盖右翼专注、会议盖播放等组合易漏改 | 真值表 32 格 + 全 C 盖专注 + 翼宽 + 权重阶梯；`test_islandNoticeLayoutMatrix_*` |
 | `island-notice-behavior` | 免打扰 / 自动收 / 收岛策略漏测 | 2 | 点免打扰 tip 仍挂；改阈值 mute 不失效；悬停空岛 | `shouldDismissNow` 时钟注入 + Center FIFO + 专注待命；`test_islandNoticeBehavior_*` |
+| `ui-style-drift` | 修行为时顺手改样式 | ≥3 | 间距/字号/圆角/写死宽被「微调」；律动-时长距、胶囊宽、圆钮视觉径反复漂 | 令牌进 `*Metrics`/`UIStyleLock`；`test_uiStyleLock_*` 钉死数值 |
 
 ---
 
@@ -166,6 +167,16 @@
 - **防护:** `IslandNoticeAutoDismissPolicy` / `IslandNoticeEndCollapsePolicy`；`muteAlerts30m` 撤 RAM；`rearm` 清 mute；**`shouldDismissNow` 可注入时钟**（不必真 sleep 3s）；Center FIFO + 独占清队；专注待命仅计时/加时  
 - **相关代码:** `IslandNoticeDismissPolicy`、`ResourceMonitorSession.muteAlerts30m` / `rearmAlertAndEvaluate`  
 - **自动化:** `test_islandNoticeBehavior_*`  
+
+### ui-style-drift — 修行为时顺手改样式
+
+- **recurring:** true  
+- **occurrences:** 3+（2026-11-24：律动↔时长间距反复拧；选时绿胶囊写死宽留白；待命圆钮/字号在修命中时被顺手改）  
+- **症状:** 用户确认过的岛上长相被 Agent「修点不了 / 悬停」时一起改掉；间距、字号、圆角、固定宽高漂移  
+- **根因倾向:** 行为修复与可见样式未分离；魔法数散落 View 内，无单测钉死  
+- **防护:** 易漂令牌进 `MediaCompactStandbyMetrics` / `IslandFlushWingStyle` / `FocusTimerCountUpButtonLayout` / `IslandStandbyControlChrome` / `IslandChrome`；登记 `UIStyleLock.pinnedModuleIDs`；规则 `ui-style-lock.mdc`  
+- **相关代码:** `UIStyleLock.swift`、各 `*Metrics` / 翼样式枚举  
+- **自动化:** `test_uiStyleLock_*`（含 `everyPinnedModuleHasAnchoredTest`）；改数值必须同步期望值，否则 recurring 套件红  
 
 ### stocks-refresh-stuck-querying — 行情失败仍显示「正在查询」
 
@@ -557,6 +568,7 @@
 
 | 日期 | 变更 |
 |---|---|
+| 2026-11-24 | 录入 `ui-style-drift` recurring：视觉令牌 + `test_uiStyleLock_*` 钉死，防修行为顺手改样 |
 | 2026-11-24 | 选时「正计时」补单测：自适应宽/文案热区/挡媒体/Hosting 优先级；catalog focus-steal +1 |
 | 2026-11-24 | 选时「正计时」：HitView+DirectHit；hosting 按钮优先于可编辑外溢；选时中禁媒体抢页；focus-steal |
 | 2026-11-24 | 选时「正计时」改 AppKit 整 bounds 可点（SwiftUI 只吃图标）；catalog focus-steal +1 |

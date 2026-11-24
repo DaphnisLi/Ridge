@@ -1331,14 +1331,13 @@ private struct FocusTimerStandbyExtendButton: View {
 private struct FocusTimerStandbyStopButton: View {
     let action: () -> Void
     var onPressingChanged: ((Bool) -> Void)? = nil
-    private let visualSize: CGFloat = 26
-    /// 可点外扩；负 padding 收回布局宽，避免过大占位把右圆裁出岛外。
-    private let hitPad: CGFloat = 10
+    private var visualSize: CGFloat { IslandStandbyControlChrome.visualDiameter }
+    private var hitPad: CGFloat { IslandStandbyControlChrome.hitPad }
 
     var body: some View {
         Button(action: action) {
             Image(systemName: "stop.fill")
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: IslandStandbyControlChrome.symbolPointSize, weight: .bold))
                 .foregroundStyle(Color.white.opacity(0.90))
                 .frame(width: visualSize, height: visualSize)
                 .background(
@@ -1400,14 +1399,13 @@ private struct FocusTimerStandbyPauseButton: View {
     let isPaused: Bool
     let action: () -> Void
     var onPressingChanged: ((Bool) -> Void)? = nil
-    private let visualSize: CGFloat = 26
-    /// 与结束钮同档外扩；禁止只点到 26pt 圆心才算。
-    private let hitPad: CGFloat = 10
+    private var visualSize: CGFloat { IslandStandbyControlChrome.visualDiameter }
+    private var hitPad: CGFloat { IslandStandbyControlChrome.hitPad }
 
     var body: some View {
         Button(action: action) {
             Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: IslandStandbyControlChrome.symbolPointSize, weight: .bold))
                 .foregroundStyle(Color.white.opacity(0.90))
                 .frame(width: visualSize, height: visualSize)
                 .background(

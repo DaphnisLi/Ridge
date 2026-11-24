@@ -1,0 +1,53 @@
+---
+description: 修行为时禁止顺手改样式；视觉令牌须单测锁定
+alwaysApply: true
+---
+
+# UI 样式锁（禁止顺手改样）
+
+用户反复踩坑：**修点击 / 悬停 / 逻辑时，Agent 顺手改间距、字号、圆角、写死宽度、颜色**，导致样式被「优化」乱掉。
+
+规则 alone 不够 → **易漂令牌必须进可测枚举 + `test_uiStyleLock_*`**（catalog `ui-style-drift`）。
+
+## 默认
+
+- **行为 / 命中 / 悬停 / 调度 / 权限 bug**：只改逻辑与不可见命中层；**视觉样式零改动**。
+- **视觉改动**（字号、字重、颜色、圆角、可见 padding、间距、固定宽高、对齐、阴影、透明度）须用户**明确说要改长相**，或 PRODUCT / 设计稿已写明。未说清 → **不要改**。
+- 用户只说「点不了 / 收不回去 / 空白太多」时：优先 `contentShape`、命中外扩（pad + 负 padding 收回布局）、HitView / AppKit 优先级、自适应 `fittingWidth`；**不要**借机重排整块 UI 或「顺便好看一点」。
+
+## 自动化（强制）
+
+| 步骤 | 要求 |
+|---|---|
+| 抽令牌 | 易漂 magics 进命名枚举（如 `MediaCompactStandbyMetrics`、`IslandStandbyControlChrome`），View 禁止再写裸 `CGFloat = 12` 当样式 |
+| 登记 | 新模块 id 写入 `UIStyleLock.pinnedModuleIDs` |
+| 单测 | 增加 `test_uiStyleLock_<id>`，**钉死具体数值**（不是「>0」这种松断言） |
+| 改长相 | 用户确认后：改令牌 + **同步改单测期望**；回复里列出改了哪些视觉项 |
+| 跑测 | 改完跑 `./scripts/test-recurring.sh`（`ui-style-drift` 在 Manifest 内） |
+
+覆盖闸门：`test_uiStyleLock_everyPinnedModuleHasAnchoredTest` —— 登记了却没测会红。
+
+## 命中修复与样式分离
+
+| 要做 | 不要做 |
+|---|---|
+| `IslandStandbyControlChrome.hitPad` + 负 padding，视觉直径不变 | 把 `visualDiameter` 26→32「好点」 |
+| `contentShape(Rectangle())` / `frame(maxWidth: .infinity)` | 给根视图再叠一层可见 `.padding` |
+| 文案宽度用内容测量 | 随意换 `fixedWidth` / 魔法数字「留白好看」 |
+| 对齐用既有 token / `*Metrics` | 把已锁定的 `12` 改成 `8`/`16` 当「微调」 |
+
+岛壳边距仍只认 `IslandChrome`；设置页仍只认 `SettingsChrome`（见 `island-notice` / `settings-ui` / `widget-architecture`）。
+
+## 自检（有 UI 文件的 diff 时）
+
+提交或收工前扫一眼：是否动了 `.font` / `.foreground` / `.padding`（可见）/ `cornerRadius` / `spacing` / 写死 `width`/`height` / 颜色常量 / `*Metrics`？
+
+- 用户没要改长相 → **撤回这些行**，只留行为/命中。
+- 用户要改长相 → 令牌 + `test_uiStyleLock_*` 一起改；说明「改了哪些视觉项」。
+
+## 禁止
+
+- 「修着修着」重写 View 布局或换一套间距
+- 把命中不足当成「把控件做大 / 加 padding」的借口（除非用户明确要求变大）
+- 用「对齐稿面 / 更精致」未经确认就改现网样式
+- 只改规则 / 口头保证、不写 `test_uiStyleLock_*`

@@ -26,11 +26,24 @@ final class RecurringRegressionCoverageTests: XCTestCase {
     func test_recurringManifest_matchesDocumentedTableCount() {
         XCTAssertEqual(
             RecurringRegressionManifest.all.count,
-            16,
+            17,
             "增减 recurring 项时同步改 Manifest、REGRESSION_CATALOG 顶部表与本断言"
         )
         let unique = Set(RecurringRegressionManifest.ids)
         XCTAssertEqual(unique.count, RecurringRegressionManifest.all.count, "recurring id 不得重复")
+    }
+
+    /// ui-style-drift：登记表每个模块必须有同名锚定用例，禁止只加令牌不写测。
+    func test_uiStyleLock_everyPinnedModuleHasAnchoredTest() {
+        let methods = Set(RecurringRegressionManifest.testMethodNames(in: RegressionCatalogTests.self))
+        XCTAssertFalse(UIStyleLock.pinnedModuleIDs.isEmpty)
+        for id in UIStyleLock.pinnedModuleIDs {
+            let name = UIStyleLock.expectedTestMethodName(for: id)
+            XCTAssertTrue(
+                methods.contains(name),
+                "UIStyleLock 模块 \(id) 缺少 \(name)；改长相须同步单测"
+            )
+        }
     }
 
     // MARK: - tip-outline-panel 补强

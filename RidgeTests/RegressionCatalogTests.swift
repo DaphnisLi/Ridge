@@ -782,6 +782,71 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
+    // MARK: - ui-style-drift（修行为时禁止顺手改视觉令牌）
+
+    func test_uiStyleLock_mediaCompactStandby() {
+        XCTAssertEqual(MediaCompactStandbyMetrics.artworkSide, 22)
+        XCTAssertEqual(MediaCompactStandbyMetrics.leftClusterSpacing, 8)
+        XCTAssertEqual(MediaCompactStandbyMetrics.equalizerElapsedSpacing, 12)
+        XCTAssertEqual(MediaCompactStandbyMetrics.titleFontSize, 12)
+        XCTAssertEqual(MediaCompactStandbyMetrics.elapsedFontSize, 13)
+        XCTAssertEqual(MediaCompactStandbyMetrics.wingNoteFontSize, 15)
+        XCTAssertEqual(
+            MediaCompactStandbyMetrics.artworkSide,
+            FocusTimerCompactMetrics.progressRingDiameter,
+            "封面与专注环须同档，禁只改一边"
+        )
+    }
+
+    func test_uiStyleLock_flushWingGeometry() {
+        XCTAssertEqual(IslandFlushWingStyle.width, 112)
+        XCTAssertEqual(IslandFlushWingStyle.height, 34)
+        XCTAssertEqual(IslandFlushWingStyle.horizontalPadding, 10)
+        XCTAssertEqual(IslandFlushWingStyle.bareContentLeading, 10)
+        XCTAssertEqual(IslandFlushWingStyle.bareContentTrailing, 8)
+        XCTAssertEqual(IslandFlushWingStyle.iconLabelSpacing, 8)
+        XCTAssertEqual(IslandFlushWingStyle.bareContentSpacerMin, 6)
+        XCTAssertEqual(IslandFlushWingStyle.outerBottomRadius, 14)
+    }
+
+    func test_uiStyleLock_focusCountUpButton() {
+        XCTAssertEqual(FocusTimerCountUpButtonLayout.height, 26)
+        XCTAssertEqual(FocusTimerCountUpButtonLayout.horizontalPadding, 10)
+        XCTAssertEqual(FocusTimerCountUpButtonLayout.iconSide, 14)
+        XCTAssertEqual(FocusTimerCountUpButtonLayout.iconTitleGap, 5)
+        XCTAssertEqual(FocusTimerCountUpButtonLayout.forbiddenFixedWidth, 88)
+        XCTAssertEqual(FocusTimerCountUpButtonLayout.titleFont.pointSize, 12, accuracy: 0.01)
+    }
+
+    func test_uiStyleLock_focusCompactMetrics() {
+        XCTAssertEqual(FocusTimerCompactMetrics.progressRingDiameter, 22)
+        XCTAssertEqual(FocusTimerCompactMetrics.progressRingLineWidth, 2.5, accuracy: 0.01)
+        XCTAssertEqual(FocusTimerCompactMetrics.progressRingIconPointSize, 9)
+        XCTAssertEqual(FocusTimerCompactMetrics.standbyTopNudge, 2)
+    }
+
+    func test_uiStyleLock_islandChromeContent() {
+        XCTAssertEqual(IslandChrome.contentHorizontal, 7)
+        XCTAssertEqual(IslandChrome.contentBottom, 7)
+        XCTAssertEqual(IslandChrome.compactTipTopInset, 0)
+        XCTAssertEqual(IslandChrome.compactTipBottom, 4)
+        XCTAssertEqual(IslandChrome.shortTipBottom, 6)
+        XCTAssertEqual(IslandChrome.preparedWingWidth, 98)
+        XCTAssertEqual(IslandChrome.dualFlushLeftWingWidth, 120)
+        XCTAssertEqual(IslandChrome.dualFlushCompactWingWidth, 96)
+    }
+
+    func test_uiStyleLock_standbyControlChrome() {
+        XCTAssertEqual(IslandStandbyControlChrome.visualDiameter, 26)
+        XCTAssertEqual(IslandStandbyControlChrome.hitPad, 10)
+        XCTAssertEqual(IslandStandbyControlChrome.symbolPointSize, 9)
+        XCTAssertGreaterThan(
+            IslandStandbyControlChrome.hitPad,
+            0,
+            "命中外扩须存在；视觉直径改动与 hitPad 须分开审"
+        )
+    }
+
     // MARK: - island-chrome-double-padding
 
     func test_islandChromeDoublePadding_contentBottomMatchesHorizontal() {

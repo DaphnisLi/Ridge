@@ -114,6 +114,12 @@ enum RecurringRegressionManifest {
             testNamePrefixes: [
                 "test_islandNoticeBehavior_"
             ]
+        ),
+        Entry(
+            id: "ui-style-drift",
+            testNamePrefixes: [
+                "test_uiStyleLock_"
+            ]
         )
     ]
 
