@@ -45,6 +45,24 @@ enum WidgetPermissionGate {
         }
     }
 
+    /// 授权后重开瞬间 TCC 探针可能滞后；同步刷一遍再读 isSatisfied。
+    @MainActor
+    static func refreshSatisfactionProbes(reason: String) {
+        MeetingCalendarService.shared.refreshAuthStatus()
+        NetworkLinkLocationAccess.shared.reloadStatusFromSystem(reason: reason)
+        ResourceMonitorSession.shared.refreshInputMonitoringStatus()
+        SystemFocusSession.shared.recheckAccess(reason: "probe:\(reason)")
+        AppLog.info("PrivacyHub", "已刷新权限探针", [
+            "reason": reason,
+            "calendar": MeetingCalendarService.shared.authStatus == .authorized,
+            "screen": CGPreflightScreenCaptureAccess(),
+            "bluetooth": CBManager.authorization == .allowedAlways,
+            "input": ResourceKeystrokeMonitor.shared.hasInputMonitoringAccess,
+            "location": NetworkLinkLocationAccess.shared.isAuthorized,
+            "fullDisk": SystemFocusStoreReader.canReadStore()
+        ])
+    }
+
     @MainActor
     static func title(for need: Need) -> String {
         switch need {

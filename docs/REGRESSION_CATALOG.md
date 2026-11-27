@@ -356,11 +356,21 @@
 ### onboarding-perms-skip-ahead — 引导权限未齐就进自启页
 
 - **recurring:** false  
-- **occurrences:** 1（2026-11-16：第三项未同意已到开机自启）  
-- **症状:** 权限步在队列空 / 蓝牙异步未决时跳到下一步  
-- **根因倾向:** 以 `permissionQueue.isEmpty` 为跳步条件；蓝牙 `start()` 后立即 `stillNeeded` 未等用户点系统框；队列与真实缺口可能短暂不一致  
-- **防护:** `allSelectedPermissionsSatisfied()` 才进自启；`ensurePermissionQueueReflectsGaps`；蓝牙轮询等待授权结果；跳步/停留均 warn  
-- **相关代码:** `OnboardingProgress`、`OnboardingController.requestNextPermission`、`WidgetPermissionGate.ensureBluetooth`  
+- **occurrences:** 2（2026-11-16：第三项未同意已到开机自启；**2026-11-27：全部授权后仍显示「授权」、未进自启**）  
+- **症状:** 权限步在队列空 / 蓝牙异步未决时跳到下一步；**或**用户已全部授权、重开后主按钮仍是「授权」不进下一步  
+- **根因倾向:** 以 `permissionQueue.isEmpty` 为跳步条件；蓝牙 `start()` 后立即 `stillNeeded`；**重开瞬间 TCC 探针滞后 → `allSelectedPermissionsSatisfied` 假阴性又 rebuild 队列**  
+- **防护:** 以 `allSelectedPermissionsSatisfied()` 为准；齐了主按钮改「继续」并自动进自启；`refreshSatisfactionProbes` + 短延迟重试；未齐才留页  
+- **相关代码:** `OnboardingProgress`、`OnboardingController.syncPermissionsStep`、`WidgetPermissionGate.refreshSatisfactionProbes`  
+- **自动化:** 不强制（occurrences=2，尚未 recurring 闸）
+
+### onboarding-window-buried — 引导窗被其它 App 盖住
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-27：授权后重开 / 出窗后不在最前；同日修浮动层时 `canJoinAllSpaces`+`moveToActiveSpace` 断言崩；浮动层又盖住系统权限窗）  
+- **症状:** 欢迎引导不在屏幕最前，被 Cursor / 系统设置等盖住，要找才看得到；或一出引导即 SIGABRT；或引导压住系统授权框  
+- **根因倾向:** LSUIElement accessory 冷启动 activate 不稳；岛收起/穿透后 `demoteIslandInteractionIfNeeded` 降回 accessory；**`collectionBehavior` 不可同时含 `canJoinAllSpaces` 与 `moveToActiveSpace`**；**.floating 会盖住系统设置/TCC 框**  
+- **防护:** 普通窗层级；授权前 / `willResignActive` `yieldFrontForSystemUI`；仅 `moveToActiveSpace`+`fullScreenAuxiliary`；`isPresenting` 时禁降 accessory；`didBecomeActive` 再前置  
+- **相关代码:** `OnboardingController`、`IslandController.demoteIslandInteractionIfNeeded`、`AppDelegate`  
 - **自动化:** 不强制（occurrences=1）
 
 ### focus-timer-standby-side-margins — 计时待命左右边距不对称

@@ -1723,10 +1723,12 @@ final class IslandController: NSObject {
         demoteIslandInteractionIfNeeded(reason: reason)
     }
 
-    /// 收起后若设置窗未开，降回 accessory，避免常驻 Dock。
+    /// 收起后若设置窗 / 引导窗未开，降回 accessory，避免常驻 Dock。
     private func demoteIslandInteractionIfNeeded(reason: String) {
         if isSettingsSessionActive { return }
         if MenuBarController.shared?.settingsWindow != nil { return }
+        // 引导进行中保持 regular：否则一降 accessory，引导窗立刻被其它 App 盖住。
+        if OnboardingController.shared.isPresenting { return }
         guard NSApp.activationPolicy() == .regular else { return }
         NSApp.setActivationPolicy(.accessory)
         AppLog.info("Overlay", "降回 accessory", [

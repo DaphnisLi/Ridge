@@ -278,6 +278,12 @@ final class MenuBarController: NSObject, NSWindowDelegate {
         DispatchQueue.main.async {
             guard !self.isSettingsPresented else { return }
             IslandController.shared?.setSettingsLivePreview(false, forceCollapseOnEnd: true)
+            // 引导还在时勿降 accessory，否则引导窗被盖住。
+            if OnboardingController.shared.isPresenting {
+                AppLog.warn("Settings", "设置窗已关，引导仍在，保持 regular")
+                OnboardingController.shared.reassertFrontIfNeeded(reason: "settingsClosed")
+                return
+            }
             NSApp.setActivationPolicy(.accessory)
             AppLog.warn("Settings", "设置窗已关，activationPolicy → accessory")
         }

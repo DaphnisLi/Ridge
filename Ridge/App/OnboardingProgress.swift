@@ -120,10 +120,13 @@ struct OnboardingProgress: Codable, Equatable {
     /// 所选推荐小组件 + 基线权限是否全部已满足（进自启页的唯一门槛）。
     @MainActor
     func allSelectedPermissionsSatisfied() -> Bool {
-        for need in allPermissionNeeds() where !WidgetPermissionGate.isSatisfied(need) {
-            return false
-        }
-        return true
+        unsatisfiedPermissionNeeds().isEmpty
+    }
+
+    /// 当前仍未满足的权限（日志 / 续跑诊断）。
+    @MainActor
+    func unsatisfiedPermissionNeeds() -> [WidgetPermissionGate.Need] {
+        allPermissionNeeds().filter { !WidgetPermissionGate.isSatisfied($0) }
     }
 
     /// 队列空了但权限未齐时，按所选小组件重建剩余项，避免误跳步。

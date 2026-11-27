@@ -54,10 +54,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         LoginItemService.shared.refresh()
         UpdateService.shared.start()
+        // 待引导时尽早提成 regular，否则延迟出窗时仍是 accessory，易被其它 App 盖住。
+        OnboardingController.shared.prepareActivationPolicyIfNeeded()
         // 首次启动引导：下一拍再出，避免与岛初始化抢主线程。
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             OnboardingController.shared.presentIfNeeded()
         }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        // 从系统设置授权返回 / Dock 点回时再钉引导窗，避免仍被设置或其它 App 盖住。
+        OnboardingController.shared.reassertFrontIfNeeded(reason: "appDidBecomeActive")
+    }
+
+    func applicationWillResignActive(_ notification: Notification) {
+        // 系统设置 / 授权框抢前台时，引导窗主动让路，勿用浮动层压住它们。
+        OnboardingController.shared.yieldFrontForSystemUI(reason: "appWillResignActive")
     }
 
     func applicationWillTerminate(_ notification: Notification) {

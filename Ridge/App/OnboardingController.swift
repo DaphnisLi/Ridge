@@ -8,16 +8,29 @@ final class OnboardingController: NSObject, NSWindowDelegate {
 
     private var windowController: NSWindowController?
 
+    /// 引导窗是否正显示（岛交互降 accessory / 关设置时勿把引导压到后面）。
+    var isPresenting: Bool {
+        windowController?.window?.isVisible == true
+    }
+
     func presentIfNeeded() {
         guard !UserDefaults.standard.bool(forKey: AppIdentity.onboardingCompletedKey) else { return }
         present()
     }
 
+    /// 启动早期把 App 提成 regular，避免仍以 accessory 出窗时被其它 App 盖住。
+    func prepareActivationPolicyIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: AppIdentity.onboardingCompletedKey) else { return }
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+            AppLog.warn("Onboarding", "引导待展示：activationPolicy → regular")
+        }
+    }
+
     func present() {
         if let existing = windowController?.window, existing.isVisible {
             applySizeAndCenter(existing)
-            existing.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
+            bringToFront(existing, reason: "reuse")
             return
         }
         // 引导进行中库内必须全关；推荐勾选只在「开始使用」时写入。
@@ -60,16 +73,26 @@ final class OnboardingController: NSObject, NSWindowDelegate {
         // 禁止系统记住上次窗位，保证每次默认开在屏幕正中。
         window.isRestorable = false
         window.setFrameAutosaveName("")
+        // 普通层级：勿用 .floating，否则会盖住系统权限框 / 系统设置。
+        // 前置靠保持 regular + activate；授权时 yieldFrontForSystemUI 让路。
+        window.level = .normal
+        window.hidesOnDeactivate = false
+        // 勿与 canJoinAllSpaces 同用（AppKit 会 assert）；跟到当前 Space 即可。
+        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
         applySizeAndCenter(window)
 
         let wc = NSWindowController(window: window)
         windowController = wc
-        NSApp.setActivationPolicy(.regular)
+        // 对齐设置窗：先 regular，再 makeKeyAndOrderFront + 抢前台（accessory 冷启动只 showWindow 易被盖住）。
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
         wc.showWindow(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        // SwiftUI 首帧后再钉一次，避免布局撑开后偏出屏幕中心。
+        bringToFront(window, reason: "present")
+        // SwiftUI 首帧后再钉居中与前台：policy 切换后首帧激活常不稳。
         DispatchQueue.main.async { [weak self] in
             self?.applySizeAndCenter(window)
+            self?.bringToFront(window, reason: "presentDeferred")
             AppLog.warn("Onboarding", "引导窗已居中", [
                 "midX": Int(window.frame.midX),
                 "midY": Int(window.frame.midY),
@@ -77,7 +100,59 @@ final class OnboardingController: NSObject, NSWindowDelegate {
                 "screenMidY": Int(Self.targetScreen()?.visibleFrame.midY ?? 0)
             ])
         }
+        // 再晚一拍：从其它前台 App 冷启动时，首两次 activate 常被系统吞掉。
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            guard let self,
+                  let window = self.windowController?.window,
+                  window.isVisible
+            else { return }
+            if NSApp.keyWindow === window, NSApp.isActive { return }
+            self.bringToFront(window, reason: "presentRetry")
+        }
         AppLog.warn("Onboarding", "引导窗已显示")
+    }
+
+    /// App 重新激活时（从系统设置返回等）再钉一次前台。
+    func reassertFrontIfNeeded(reason: String) {
+        guard let window = windowController?.window, window.isVisible else { return }
+        bringToFront(window, reason: reason)
+    }
+
+    /// 打开系统权限 UI 前让路：降回 normal、resignKey、orderBack，避免盖住系统设置/授权框。
+    func yieldFrontForSystemUI(reason: String) {
+        guard let window = windowController?.window, window.isVisible else { return }
+        window.level = .normal
+        if window.isKeyWindow {
+            window.resignKey()
+        }
+        window.orderBack(nil)
+        AppLog.warn("Onboarding", "引导窗已让路给系统权限 UI", [
+            "reason": reason,
+            "appActive": NSApp.isActive
+        ])
+    }
+
+    /// 把引导窗提到前台并激活 Ridge（普通窗层级，不压系统权限框）。
+    private func bringToFront(_ window: NSWindow, reason: String) {
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
+        window.level = .normal
+        window.hidesOnDeactivate = false
+        NSApp.unhide(nil)
+        window.makeKeyAndOrderFront(nil)
+        // accessory→regular 后，仅 activate 有时仍留在其它 App 后面；再 orderFrontRegardless 钉可见性。
+        window.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+        // 双通道：部分系统版本对 NSApp.activate 限制更严。
+        NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+        AppLog.warn("Onboarding", "引导窗已前置", [
+            "reason": reason,
+            "appActive": NSApp.isActive,
+            "key": NSApp.keyWindow === window,
+            "main": NSApp.mainWindow === window,
+            "level": window.level.rawValue
+        ])
     }
 
     /// 与 SwiftUI 根 `.frame` 一致：推荐双列卡需更宽，避免会议 tip 样张挤扁。
@@ -176,20 +251,51 @@ private struct OnboardingFlowView: View {
         .background(SettingsChrome.pageBackground)
         .preferredColorScheme(.light)
         .onAppear {
-            progress.ensurePermissionQueueReflectsGaps()
-            // 重开后仅当所选能力权限全部满足才进自启页；队列空但未齐会重建，禁止误跳。
-            if progress.step == .permissions, progress.allSelectedPermissionsSatisfied() {
-                // 开关只在引导真正完成时写入；此处仅续跑到自启页。
-                progress.step = .loginItem
-                AppLog.warn("Onboarding", "重开后续跑：权限已齐，进入自启页")
-            } else if progress.step == .permissions {
-                AppLog.warn("Onboarding", "重开后续跑：权限未齐，留在权限页", [
-                    "left": progress.permissionQueue.count,
-                    "awaiting": progress.awaitingRelaunchFor ?? ""
-                ])
-            }
-            persist()
+            syncPermissionsStep(reason: "flowAppear")
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            syncPermissionsStep(reason: "flowDidBecomeActive")
+        }
+        .task(id: progress.step) {
+            guard progress.step == .permissions else { return }
+            // 授权后重开瞬间 TCC 探针常滞后；短延迟再刷，齐了就进自启，勿卡在「授权」。
+            for delayMs in [0, 400, 1_200, 2_500] as [UInt64] {
+                if delayMs > 0 {
+                    try? await Task.sleep(nanoseconds: delayMs * 1_000_000)
+                }
+                if syncPermissionsStep(reason: "flowRetry:\(delayMs)ms") {
+                    break
+                }
+            }
+        }
+    }
+
+    /// - Returns: 是否已离开权限页（全部满足并进入自启）。
+    @discardableResult
+    private func syncPermissionsStep(reason: String) -> Bool {
+        guard progress.step == .permissions else { return false }
+        WidgetPermissionGate.refreshSatisfactionProbes(reason: reason)
+        progress.ensurePermissionQueueReflectsGaps()
+        let left = progress.unsatisfiedPermissionNeeds()
+        if left.isEmpty {
+            progress.permissionQueue = []
+            progress.awaitingRelaunchFor = nil
+            progress.step = .loginItem
+            persist()
+            AppLog.warn("Onboarding", "权限已齐，进入自启页", [
+                "reason": reason
+            ])
+            return true
+        }
+        AppLog.warn("Onboarding", "权限未齐，留在权限页", [
+            "reason": reason,
+            "left": left.count,
+            "needs": left.map(\.rawValue).joined(separator: ","),
+            "awaiting": progress.awaitingRelaunchFor ?? "",
+            "queue": progress.permissionQueue.count
+        ])
+        persist()
+        return false
     }
 
     private var stepIndex: Int {
@@ -282,10 +388,13 @@ private struct OnboardingFlowView: View {
     private var primaryTitle: String {
         switch progress.step {
         case .loginItem: return L10n.Onboarding.done
-        case .permissions where !progress.permissionQueue.isEmpty:
-            return L10n.Onboarding.grantNextPermission
+        case .permissions where progress.allSelectedPermissionsSatisfied():
+            // 全部已授权：显示「继续」进入自启，勿再显示「授权」。
+            return L10n.Onboarding.next
         case .permissions where progress.awaitingRelaunchFor != nil:
             return L10n.Onboarding.openSystemSettingsAgain
+        case .permissions where !progress.permissionQueue.isEmpty:
+            return L10n.Onboarding.grantNextPermission
         default:
             return L10n.Onboarding.next
         }
@@ -376,18 +485,23 @@ private struct OnboardingFlowView: View {
         }
         isRequestingPermission = true
         defer { isRequestingPermission = false }
+        // 申请前先让路，避免引导窗盖住系统授权框 / 即将打开的系统设置。
+        OnboardingController.shared.yieldFrontForSystemUI(reason: "beforeEnsure:\(raw)")
         let outcome = await WidgetPermissionGate.ensureOne(need, reason: "onboarding")
         switch outcome {
         case .satisfied:
             progress.permissionQueue.removeAll { $0 == raw }
             progress.awaitingRelaunchFor = nil
             AppLog.warn("Onboarding", "权限已满足", ["need": raw, "left": progress.permissionQueue.count])
+            OnboardingController.shared.reassertFrontIfNeeded(reason: "permissionSatisfied:\(raw)")
         case .stillNeeded:
             progress.awaitingRelaunchFor = nil
             AppLog.warn("Onboarding", "权限仍缺，可重试", ["need": raw])
+            OnboardingController.shared.yieldFrontForSystemUI(reason: "stillNeeded:\(raw)")
         case .awaitingSystemSettingsRelaunch:
             progress.awaitingRelaunchFor = raw
             AppLog.warn("Onboarding", "权限需系统设置，等待重开后续跑", ["need": raw])
+            OnboardingController.shared.yieldFrontForSystemUI(reason: "awaitingSettings:\(raw)")
         }
         progress.ensurePermissionQueueReflectsGaps()
         persist()
@@ -717,12 +831,13 @@ private struct OnboardingPermissionsStep: View {
             Spacer(minLength: 0)
         }
         .onAppear {
-            progress.ensurePermissionQueueReflectsGaps()
-            progress.reconcilePermissionsWithSystem()
-            progress.save()
-            AppLog.info("Onboarding", "进入权限页", [
+            // 父级 syncPermissionsStep 会负责齐权后跳自启；此处只打快照，避免与续跑抢状态。
+            let left = progress.unsatisfiedPermissionNeeds()
+            AppLog.warn("Onboarding", "进入权限页", [
                 "needs": displayNeeds.map(\.rawValue).joined(separator: ","),
-                "left": progress.permissionQueue.count,
+                "left": left.count,
+                "unsatisfied": left.map(\.rawValue).joined(separator: ","),
+                "queue": progress.permissionQueue.count,
                 "awaiting": progress.awaitingRelaunchFor ?? ""
             ])
         }

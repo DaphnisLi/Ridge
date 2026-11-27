@@ -104,6 +104,15 @@ final class NetworkLinkLocationAccess: NSObject, ObservableObject, CLLocationMan
         SystemPrivacyOpener.open(anchor: "Privacy_LocationServices")
     }
 
+    /// 从系统重读授权状态（引导重开后续跑用，不弹窗）。
+    func reloadStatusFromSystem(reason: String) {
+        status = manager.authorizationStatus
+        AppLog.debug("NetworkLink", "已重读定位授权", [
+            "reason": reason,
+            "status": Self.describe(status)
+        ])
+    }
+
     // MARK: - Prompt
 
     private func promptForAuthorization(reason: String, openSettingsIfNoPrompt: Bool) {
