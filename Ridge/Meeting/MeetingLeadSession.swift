@@ -108,7 +108,13 @@ final class MeetingLeadSession: ObservableObject {
     func publish(_ next: Snapshot?, reason: String) {
         let previous = snapshot
         // 已入会场次禁止再 present（防 widget tick / 改选竞态把 tip 贴回来）。
-        if let next, next.meetingID == dismissedAfterJoinID {
+        // 契约：`LockedInvariants.Meeting.shouldRejectRepublish`。
+        if let next,
+           LockedInvariants.Meeting.shouldRejectRepublish(
+               meetingID: next.meetingID,
+               dismissedAfterJoinID: dismissedAfterJoinID
+           )
+        {
             AppLog.warn("Meeting", "拒绝再次投递已入会场次", [
                 "reason": reason,
                 "meeting": String(next.meetingID.prefix(8))

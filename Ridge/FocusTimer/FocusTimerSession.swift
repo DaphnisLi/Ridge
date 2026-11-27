@@ -23,7 +23,7 @@ final class FocusTimerSession: ObservableObject {
 
     /// 终局全岛展示：不因指针离开收掉（含从音乐+专注半岛结束），直到保存或主动离开。
     var keepsIslandExpandedWithoutHover: Bool {
-        phase == .completed
+        LockedInvariants.FocusTimer.keepsExpandedWithoutHover(phaseIsCompleted: phase == .completed)
     }
 
     /// 需要争夺岛展示。

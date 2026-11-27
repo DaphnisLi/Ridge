@@ -8,7 +8,8 @@ import SwiftUI
 /// 左右 / 底边是**固定令牌**；改数值须同步 `RidgeTests`（`island-chrome-double-padding`）。
 enum IslandChrome {
     /// 内容区相对面板左右边（展开页 / tip / 短提示统一；原 14，收为半档）。
-    static let contentHorizontal: CGFloat = 7
+    /// 令牌来自 `LockedInvariants.Chrome`（未授权禁止改锁定文件）。
+    static let contentHorizontal: CGFloat = LockedInvariants.Chrome.contentHorizontal
     /// 内容区相对面板底边；与左右边距一致。
     static let contentBottom: CGFloat = contentHorizontal
 
@@ -33,7 +34,7 @@ enum IslandChrome {
 
     /// 遗留左右翼 tip 令牌（已无业务使用；测试仍锁定数值防回退）。
     static let compactTipTopInset: CGFloat = 0
-    static let compactTipBottom: CGFloat = 4
+    static let compactTipBottom: CGFloat = LockedInvariants.Chrome.compactTipBottom
 
     /// 矮胶囊短提示（「已复制」等）：躲开刘海后落在正下方。取色 / 框选 / 会议 / 久坐走翼 tip。
     static func shortTipTopInset(notchHeight: CGFloat) -> CGFloat {
@@ -47,26 +48,26 @@ enum IslandChrome {
     static let shortTipContentHeight: CGFloat = 30
 
     /// 「已复制」圆形微岛直径（刘海右侧 Ø32）。
-    static let notchRightOrbDiameter: CGFloat = 32
+    static let notchRightOrbDiameter: CGFloat = LockedInvariants.Chrome.notchRightOrbDiameter
     /// 微岛相对刘海右缘的空隙（略贴刘海，比稿面 8px 更靠左）。
-    static let notchRightOrbGap: CGFloat = 2
+    static let notchRightOrbGap: CGFloat = LockedInvariants.Chrome.notchRightOrbGap
     /// 方案 02 入场时长（流光→坍缩→板夹→绿勾），约 0.9s。
-    static let notchRightOrbEntranceNanoseconds: UInt64 = 900_000_000
+    static let notchRightOrbEntranceNanoseconds: UInt64 = LockedInvariants.Chrome.notchRightOrbEntranceNanoseconds
     /// 入场结束后定格再消失的时长。
-    static let notchRightOrbLingerNanoseconds: UInt64 = 500_000_000
+    static let notchRightOrbLingerNanoseconds: UInt64 = LockedInvariants.Chrome.notchRightOrbLingerNanoseconds
     /// 「已复制」圆岛自动收起总时长 = 入场 + 定格。
     static var notchRightOrbAutoDismissNanoseconds: UInt64 {
-        notchRightOrbEntranceNanoseconds + notchRightOrbLingerNanoseconds
+        LockedInvariants.Chrome.notchRightOrbAutoDismissNanoseconds
     }
 
     /// 翼 tip 单侧翼宽（会议等与 `prepareMeetingWingNoticeLayout` 一致）。
-    static let preparedWingWidth: CGFloat = 98
+    static let preparedWingWidth: CGFloat = LockedInvariants.Chrome.preparedWingWidth
     /// 外设满岛 tip 单侧翼宽：比会议收一档；长设备名在左翼内滚动。
-    static let preparedPeripheralWingWidth: CGFloat = 78
+    static let preparedPeripheralWingWidth: CGFloat = LockedInvariants.Chrome.preparedPeripheralWingWidth
     /// 网络 tip 单侧翼宽：比会议略收；SSID / VPN 名放不下则左翼滚动。
-    static let preparedNetworkLinkWingWidth: CGFloat = 84
+    static let preparedNetworkLinkWingWidth: CGFloat = LockedInvariants.Chrome.preparedNetworkLinkWingWidth
     /// 专注终局翼 tip：右翼要装备注+回车，比会议略宽。
-    static let preparedFocusCompletedWingWidth: CGFloat = 120
+    static let preparedFocusCompletedWingWidth: CGFloat = LockedInvariants.Chrome.preparedFocusCompletedWingWidth
 
     /// 短 tip 上岛前强制面板尺寸（遗留；「已复制」已改圆岛）。
     static func preparedShortTipPanelSize(notchWidth: CGFloat, notchHeight: CGFloat) -> CGSize {
@@ -118,12 +119,12 @@ enum IslandChrome {
     }
 
     /// 双槽左翼**内容**宽（音乐/专注）；过宽会让音符与时长之间空洞过大。
-    static let dualFlushLeftWingWidth: CGFloat = 120
+    static let dualFlushLeftWingWidth: CGFloat = LockedInvariants.Chrome.dualFlushLeftWingWidth
     /// 进程结束 tip 单独上岛：内容更短，翼宽收一档（稿 ~86–104）。
-    static let dualFlushCompactWingWidth: CGFloat = 96
+    static let dualFlushCompactWingWidth: CGFloat = LockedInvariants.Chrome.dualFlushCompactWingWidth
 
     /// 左右翼黑底伸进刘海弧度的空宽（只铺黑、禁止放图标/文案）；过小会在刘海圆角处露缺口。
-    static let dualFlushNotchUnderlap: CGFloat = 12
+    static let dualFlushNotchUnderlap: CGFloat = LockedInvariants.Chrome.dualFlushNotchUnderlap
 
     /// 兼容旧名：同 `dualFlushNotchUnderlap`。
     static var dualFlushLeftNotchBleed: CGFloat { dualFlushNotchUnderlap }
@@ -201,7 +202,11 @@ enum IslandChrome {
             )
         case .dualFlush:
             // 与刘海同高；左右翼贴边，禁止再叠 tip/notice 边距把内容挤没。
-            return Insets(top: 0, bottom: 0, horizontal: 0)
+            return Insets(
+                top: LockedInvariants.Chrome.dualFlushInsetTop,
+                bottom: LockedInvariants.Chrome.dualFlushInsetBottom,
+                horizontal: LockedInvariants.Chrome.dualFlushInsetHorizontal
+            )
         case .shortBelowNotchTip:
             return Insets(
                 top: shortTipTopInset(notchHeight: notchHeight),
@@ -209,7 +214,11 @@ enum IslandChrome {
                 horizontal: contentHorizontal
             )
         case .notchRightOrb:
-            return Insets(top: 0, bottom: 0, horizontal: 0)
+            return Insets(
+                top: LockedInvariants.Chrome.dualFlushInsetTop,
+                bottom: LockedInvariants.Chrome.dualFlushInsetBottom,
+                horizontal: LockedInvariants.Chrome.dualFlushInsetHorizontal
+            )
         case .notice:
             return Insets(
                 top: noticeTopInset(notchHeight: notchHeight),

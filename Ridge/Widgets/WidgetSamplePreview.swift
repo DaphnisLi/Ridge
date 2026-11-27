@@ -8,11 +8,11 @@ enum SettingsIslandPreviewWidth {
     /// 详情 tip 舞台目标宽（配置页里边；勿与库卡混用）。
     static let tip: CGFloat = 360
     /// **仅库卡**黑岛同比目标宽；详情页不套此缩放。
-    static let library: CGFloat = 290
+    static let library: CGFloat = LockedInvariants.Preview.libraryWidth
     /// 库卡 tip / 待命样张内容高（会议 tip compact `barHeight`）。
-    static let tipBarHeight: CGFloat = 30
+    static let tipBarHeight: CGFloat = LockedInvariants.Preview.tipBarHeight
     /// 库卡 tip / 待命样张 minHeight。
-    static let tipPreviewMinHeight: CGFloat = 30
+    static let tipPreviewMinHeight: CGFloat = LockedInvariants.Preview.tipPreviewMinHeight
     /// 详情 tip 样张 minHeight。
     static let tipDetailMinHeight: CGFloat = 34
     /// 详情 tip 灰舞台 minHeight。
@@ -364,7 +364,7 @@ enum WidgetSamplePreview {
 
     /// 库卡才缩到 290；「已复制」圆岛除外。详情页勿用此开关。
     static func scalesBlackIslandToLibraryWidth(for id: WidgetID) -> Bool {
-        id != "builtin.copiedNotice"
+        id != LockedInvariants.CopiedNotice.widgetID
     }
 
     /// 库卡排版宽：控制台满宽后再缩到 290；tip/媒体/番茄待命 hugs。
@@ -401,7 +401,7 @@ enum WidgetSamplePreview {
     }
 
     /// tip 详情 / 库卡必须 hugs：翼宽与 `IslandChrome` 边距是定值，拉满会左右空一大截。
-    static var tipPreviewHugsContent: Bool { true }
+    static var tipPreviewHugsContent: Bool { LockedInvariants.Preview.tipPreviewHugsContent }
 
     /// 电量等预览自带不透明岛底，避免壳层再叠一层发暗。
     static func contentProvidesOpaqueShell(for id: WidgetID) -> Bool {
@@ -410,7 +410,7 @@ enum WidgetSamplePreview {
 
     /// 库卡 / 详情预览：默认上直角下圆角；「已复制」为刘海右侧正圆微岛。
     private static func outlineStyle(for id: WidgetID) -> IslandOutlineStyle {
-        id == "builtin.copiedNotice" ? .circle : .panel
+        LockedInvariants.Preview.outlineIsCircle(widgetID: id) ? .circle : .panel
     }
 
     /// 窄内容贴合固有宽；媒体/番茄待命与 tip 同 hugs（会议同款 chrome）。

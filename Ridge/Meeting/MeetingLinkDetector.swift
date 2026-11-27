@@ -149,22 +149,13 @@ enum MeetingLinkDetector {
     }
 
     /// 日历「事件详情页」——点开会进日程，不是会议室。
+    /// 契约在 `LockedInvariants.Meeting`（未授权禁改）。
     static func isLikelyCalendarEventPage(_ url: URL) -> Bool {
-        let host = (url.host ?? "").lowercased()
-        let path = url.path.lowercased()
-        let absolute = url.absoluteString.lowercased()
-        if host.contains("calendar.google.com") { return true }
-        if host.contains("google.com"), path.contains("/calendar") || absolute.contains("eid=") {
-            return true
-        }
-        if host.contains("outlook.office.com")
-            || host.contains("outlook.office365.com")
-            || host.contains("outlook.live.com") {
-            return true
-        }
-        if host.contains("icloud.com"), path.contains("calendar") { return true }
-        if host == "aka.ms", path.contains("meettimes") { return false }
-        return false
+        LockedInvariants.Meeting.isLikelyCalendarEventPage(
+            host: url.host ?? "",
+            path: url.path,
+            absolute: url.absoluteString
+        )
     }
 
     static func extractURLs(from text: String?) -> [URL] {

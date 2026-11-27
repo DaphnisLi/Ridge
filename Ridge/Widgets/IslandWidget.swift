@@ -140,7 +140,7 @@ typealias WidgetFactory = @MainActor (WidgetContext) -> any IslandWidget
 
 enum SystemWidgetID {
     /// 系统空态岛：无用户小组件争夺时展示，不进设置排序列表。
-    static let empty = "system.empty"
-    /// 瞬时通知（监视结束等）：隐性小组件，不进库。
-    static let islandNotice = "system.islandNotice"
+    static let empty = LockedInvariants.Notice.emptyWidgetID
+    /// 瞬时通知（监视结束等）：隐性小组件，不进库。唯一 D 档通道（见 LockedInvariants）。
+    static let islandNotice = LockedInvariants.Notice.widgetID
 }

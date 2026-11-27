@@ -56,12 +56,16 @@ enum FocusTimerCountUpButtonLayout {
 }
 
 /// 播放媒体 vs 专注选时：纯函数闸门，供 `MediaCompactPresence` 与单测共用。
+/// 契约在 `LockedInvariants.Media`（未授权禁改）。
 enum MediaFocusPickingGate {
     /// 专注选时页打开时，禁止播放悬停/按住抢成媒体大面板。
     static func shouldBlockMediaExpand(
         focusPhase: FocusTimerPhase,
         activePageID: String?
     ) -> Bool {
-        focusPhase == .picking && activePageID == FocusTimerWidget.manifest.id
+        LockedInvariants.Media.shouldBlockMediaExpand(
+            focusIsPicking: focusPhase == .picking,
+            activePageIsFocusTimer: activePageID == LockedInvariants.Media.focusTimerWidgetID
+        )
     }
 }

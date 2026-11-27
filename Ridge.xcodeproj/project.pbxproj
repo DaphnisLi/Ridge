@@ -23,6 +23,7 @@
 		0D4E28E69B82709D46D5CAB6 /* CursorSafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE07D38BD81E9B818E5ADA17 /* CursorSafeStorage.swift */; };
 		0D9AC236173DA2FCF6173725 /* FeedbackService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E70E6D43E5E4875FB4FBBE0 /* FeedbackService.swift */; };
 		0EA143E3BD6F7004173F1A93 /* SystemFocusModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 605B95BC2937B374FAD86F20 /* SystemFocusModels.swift */; };
+		0F712D4690CDEF01DAA07F86 /* LockedInvariantsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F248E747691698D8B551D3 /* LockedInvariantsTests.swift */; };
 		0FBB3671C2041665989E9FD0 /* ProjectReleaseDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A624C237E5FF8583A8E64A8F /* ProjectReleaseDeckView.swift */; };
 		0FE86EFE95B06DA31554FAD6 /* Onboarding in Resources */ = {isa = PBXBuildFile; fileRef = 210A737567D7541750F62787 /* Onboarding */; };
 		116B41390F574AB23AF93FAF /* BatterySession.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2DAC872E498304E243C7C7 /* BatterySession.swift */; };
@@ -223,6 +224,7 @@
 		D8C8960AA34DD8FC30696AED /* FocusTimerIslandViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220E996D902FB3662CB9524B /* FocusTimerIslandViews.swift */; };
 		D977A2C2EEF06F3B273EDD72 /* NetworkLinkTipWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C39D419102205FD56979E8D5 /* NetworkLinkTipWidget.swift */; };
 		DAC712683CEC87ED9E2577F6 /* IslandWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D378811091ADDC4CE4CE6F00 /* IslandWindow.swift */; };
+		DC37E69E598BBC7B3CA1D43C /* LockedInvariants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63052F884A08C05026B49EE9 /* LockedInvariants.swift */; };
 		DCAC91E2C5FC798857A641BA /* MediaCompactStandbyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E20F1209152BF9843DC44EF /* MediaCompactStandbyView.swift */; };
 		DD63777274D1A37B6A707A60 /* AppShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2893E8199FB7A4116AF2E288 /* AppShellTests.swift */; };
 		DD6695D1F13C59D1AB459E39 /* DownloadCompleteSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAE8396EEDC4243C0217DC94 /* DownloadCompleteSession.swift */; };
@@ -394,7 +396,9 @@
 		60B5E4196EB011FA7492603E /* NetworkLinkTipPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLinkTipPolicyTests.swift; sourceTree = "<group>"; };
 		60E540F7D3B6D2336930AF18 /* IslandExpandedPanelPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandExpandedPanelPolicyTests.swift; sourceTree = "<group>"; };
 		6229430D6DAC1B76C9F1E4B0 /* FocusTimerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimerSession.swift; sourceTree = "<group>"; };
+		63052F884A08C05026B49EE9 /* LockedInvariants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedInvariants.swift; sourceTree = "<group>"; };
 		63EB74980E216CC89C8434E2 /* IslandFullscreenHidePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IslandFullscreenHidePolicy.swift; sourceTree = "<group>"; };
+		63F248E747691698D8B551D3 /* LockedInvariantsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedInvariantsTests.swift; sourceTree = "<group>"; };
 		6887EE1DEDE357B154C52B12 /* SettingsUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsUI.swift; sourceTree = "<group>"; };
 		68FC47787BB776C0D2730ACB /* NetworkLinkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkLinkModels.swift; sourceTree = "<group>"; };
 		696174AF0446BACA3704883A /* AIUsageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageModels.swift; sourceTree = "<group>"; };
@@ -724,6 +728,7 @@
 				005BF7749C43BE20B2F94FBE /* Debug */,
 				D8EB6F14C4AE78CF85A81B4D /* DownloadComplete */,
 				0308FADC0BC583E5A2A4B5A1 /* FocusTimer */,
+				61898BEC1F16E58CEE3AC8FE /* Invariants */,
 				2A565B209C491CD8B02FF35B /* Island */,
 				AC72FD61D32CE3BA33F2B556 /* Localization */,
 				61864BFFC78D89E10A875476 /* Logging */,
@@ -782,6 +787,14 @@
 			path = Logging;
 			sourceTree = "<group>";
 		};
+		61898BEC1F16E58CEE3AC8FE /* Invariants */ = {
+			isa = PBXGroup;
+			children = (
+				63052F884A08C05026B49EE9 /* LockedInvariants.swift */,
+			);
+			path = Invariants;
+			sourceTree = "<group>";
+		};
 		6475114B0F370C8ABCCC842F /* Sound */ = {
 			isa = PBXGroup;
 			children = (
@@ -809,6 +822,7 @@
 				9C17AEA38ECF7C50319EA4E4 /* IslandNoticeLayoutMatrixTests.swift */,
 				0B0B371F5248ECFDAEDF6F42 /* IslandTestLabTests.swift */,
 				56E612CBA14254D2023C2AFF /* KeystrokePeakHourTests.swift */,
+				63F248E747691698D8B551D3 /* LockedInvariantsTests.swift */,
 				60B5E4196EB011FA7492603E /* NetworkLinkTipPolicyTests.swift */,
 				2C3A7D77738F10EB67B95471 /* ProjectScanRootTests.swift */,
 				50AC9BD3364E36C78B8C3B19 /* RecurringRegressionCoverageTests.swift */,
@@ -1286,6 +1300,7 @@
 				6776195AF3B9EC7EA6F9429B /* L10n.swift in Sources */,
 				EBA104A073B769E1A3693EC5 /* LegalDocumentOpener.swift in Sources */,
 				7D3C88381DB300E392C22A60 /* LiveIslandGate.swift in Sources */,
+				DC37E69E598BBC7B3CA1D43C /* LockedInvariants.swift in Sources */,
 				36AB046618885204AD5B5B6B /* LoginItemService.swift in Sources */,
 				9E0DBB4C1215656FBCE8D9EB /* MacBatteryModels.swift in Sources */,
 				482EB214063E886A663EA5EF /* MacBatteryNoticeCard.swift in Sources */,
@@ -1432,6 +1447,7 @@
 				47A26013C43CDC614CDC613D /* IslandNoticeLayoutMatrixTests.swift in Sources */,
 				7DA42C24437D2B2B5FD2F358 /* IslandTestLabTests.swift in Sources */,
 				A460C629F56E217E5B978DA1 /* KeystrokePeakHourTests.swift in Sources */,
+				0F712D4690CDEF01DAA07F86 /* LockedInvariantsTests.swift in Sources */,
 				5241F20FE003BD897FB62B8E /* NetworkLinkTipPolicyTests.swift in Sources */,
 				27BFC264B4A738F590680B85 /* ProjectScanRootTests.swift in Sources */,
 				E122543EE250BA129D7DF32C /* RecurringRegressionCoverageTests.swift in Sources */,

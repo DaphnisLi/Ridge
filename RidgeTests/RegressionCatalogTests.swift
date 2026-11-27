@@ -75,6 +75,64 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
+    /// 选时宽矮 + lastStable=0：保展开高必须抬到 floor（日志 panelH=73 立刻「离开保展开区」）。
+    func test_islandHoverRetention_shortWidePickingFloorsWhenStableZero() {
+        let notchSize = CGSize(width: 179, height: 32)
+        let notchFrame = CGRect(x: 400, y: 968, width: notchSize.width, height: notchSize.height)
+        let picking = CGSize(width: 447, height: 73)
+
+        XCTAssertTrue(
+            IslandExpandedPanelPolicy.isTransientShortPanel(picking, notch: notchSize),
+            "选时高度落在短条阈值内，不得写入 lastStable"
+        )
+        XCTAssertFalse(
+            IslandExpandedPanelPolicy.isCollapsedSizedWhileExpanded(
+                panel: picking,
+                notch: notchSize,
+                isExpanded: true
+            ),
+            "宽选时不是「双轴接近刘海」；旧逻辑因此跳过 floor"
+        )
+
+        let resolved = IslandExpandedPanelPolicy.resolvedRetentionPanelSize(
+            panel: picking,
+            stable: .zero,
+            notch: notchSize,
+            isExpanded: true
+        )
+        let floor = IslandExpandedPanelPolicy.expandedRetentionFloor(notch: notchSize)
+        XCTAssertGreaterThanOrEqual(resolved.width, picking.width - 0.5)
+        XCTAssertGreaterThanOrEqual(
+            resolved.height,
+            floor.height - 0.5,
+            "stable=0 时选时保展开高必须 ≥ floor，否则下移一半必收"
+        )
+
+        let screenMaxY: CGFloat = 1000
+        let retentionPanel = CGRect(
+            x: notchFrame.midX - resolved.width / 2,
+            y: screenMaxY - resolved.height,
+            width: resolved.width,
+            height: resolved.height
+        )
+        let visiblePicking = CGRect(
+            x: notchFrame.midX - picking.width / 2,
+            y: screenMaxY - picking.height,
+            width: picking.width,
+            height: picking.height
+        )
+        let midLowerVisible = CGPoint(
+            x: visiblePicking.midX,
+            y: visiblePicking.minY + visiblePicking.height * 0.25
+        )
+        let frame = IslandExpandedPanelPolicy.retentionFrame(
+            notchFrame: notchFrame,
+            panelFrame: retentionPanel,
+            expanded: true
+        )
+        XCTAssertTrue(frame.contains(midLowerVisible), "选时可见区中下点须在抬高后的保展开内")
+    }
+
     /// 已有稳定大面板后 Preference 误报矮框：保展开仍用大面板，中下点命中。
     func test_islandHoverRetention_stablePanelWinsOverShortPreferenceReport() {
         let notchSize = CGSize(width: 179, height: 32)

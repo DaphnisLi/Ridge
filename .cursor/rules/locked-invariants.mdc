@@ -1,0 +1,52 @@
+---
+description: LockedInvariants.swift 未经用户明确授权禁止修改；经常出问题的通用与组件契约都须锁
+alwaysApply: true
+---
+
+# 锁定契约（LockedInvariants）
+
+权威代码：`Ridge/Invariants/LockedInvariants.swift`。
+
+## 什么必须锁（收录标准）
+
+**不是**只锁「理论上永不改的通识」。以下两类都要进锁定文件（或以其为唯一真相源并转发）：
+
+1. **产品已拍板、不该漂**的判定 / 令牌 / 档位  
+2. **经常出问题的**逻辑——以 `docs/REGRESSION_CATALOG.md` 为准：  
+   - `recurring: true` 或 `occurrences ≥ 2` → **必须**有对应锁定契约（通用 **或** 按组件分区）  
+   - 同组件反复翻车（媒体右翼、专注正计时、会议入会、已复制、外设翼宽、预览 hugs 等）→ 锁进 `LockedInvariants.<组件>`，禁止只散落在业务 View/Session  
+
+锁的是**判定、门闩、令牌、状态机必须/禁止**；不锁整份 Controller / 整份 View 排版。
+
+分区示例（随 catalog 扩充）：`HoverRetention` · `Notice` · `Focus` · `Chrome` · `LayoutMatrix` · `Media` · `FocusTimer` · `Meeting` · `CopiedNotice` · `Download` · `Battery` · `Preview` · …
+
+## 绝对禁止（默认）
+
+- **禁止**修改 `Ridge/Invariants/LockedInvariants.swift` 的任何内容（含数值、分支、注释里的契约表述、`lockID`、组件分区）
+- **禁止**在 `IslandController` / 各 widget / 设置页再抄一套同义逻辑绕过本文件
+- **禁止**把锁定逻辑「为修 bug 方便」内联回调用方后改数值
+- **禁止**修某组件时只改业务文件、却不把「已反复翻车的判决」收进锁定分区（须先获授权再写入 Locked）
+
+调用方只允许**转发**到 `LockedInvariants`。
+
+## 若必须改锁定文件
+
+1. **先停手**，向用户说明：要改的符号 / 要新增的组件分区、原因、用户可感影响  
+2. 明确问句，例如：  
+   「需要改 / 扩写 `LockedInvariants.Media`（右翼禁开媒体），原因是…，是否授权修改锁定文件？」  
+3. **仅当本对话用户明确回复授权**（如「授权」「可以改 LockedInvariants」）后，才可编辑该文件  
+4. 改完：同步钉死 `test_lockedInvariants_*`（按分区）→ 跑 `./scripts/test-recurring.sh` → `dev-relaunch`  
+5. 更新 `docs/REGRESSION_CATALOG.md` / `docs/PRODUCT.md` 若行为对用户可感  
+
+用户只说「修 hover / 修媒体 / 修 tip」**不等于**授权改锁定文件；未点名 `LockedInvariants` 或「锁定文件」则视为未授权。
+
+## 未授权时可以做什么
+
+- 修调用方接线、日志、UI 命中（不改锁定数值）  
+- 补 / 加强 `test_lockedInvariants_*` 与各 recurring 锚点测试  
+- 更新本规则或 PRODUCT / catalog 文字（不改锁定代码）  
+- 列出「按 catalog 还应迁入的组件分区」供用户授权  
+
+## 自检
+
+改岛悬停 / tip / chrome / 焦点 / 档位 / **任一曾进 catalog 的组件行为**前：先搜 `LockedInvariants` 与 catalog id，确认不是在改锁定实现或绕过锁定。

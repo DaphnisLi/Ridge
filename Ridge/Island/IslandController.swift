@@ -741,6 +741,44 @@ final class IslandController: NSObject {
         ])
     }
 
+    /// tip 撤完仍悬停：把被短条压矮的可见面板抬回当前页下限 / 稳定大尺寸。
+    /// 选时等本就矮的内容页只走 phase 画布，禁止用上一页 media stable 把选时视觉抬高。
+    func restoreExpandedContentAfterNoticeEnd(reason: String) {
+        guard viewModel.isExpanded else { return }
+        applyFocusTimerPanelSizeIfNeeded(reason: "noticeEnd:\(reason)")
+        applyControlDeckExpandedPanelSizeIfNeeded(reason: "noticeEnd:\(reason)")
+        applyMediaExpandedPanelSizeIfNeeded(reason: "noticeEnd:\(reason)")
+
+        let notch = CGSize(width: viewModel.notchWidth, height: viewModel.notchHeight)
+        let stable = viewModel.lastStableExpandedPanelSize
+        let page = WidgetRuntime.shared.activeID
+        let restoreStableVisual =
+            page == MediaNowPlayingWidget.manifest.id
+            || WidgetRuntime.shared.isControlDeckPage
+        if restoreStableVisual,
+           stable.width > notch.width + 8,
+           stable.height > notch.height + 8,
+           viewModel.panelSize.height + 40 < stable.height
+            || IslandExpandedPanelPolicy.isTransientShortPanel(viewModel.panelSize, notch: notch)
+        {
+            let next = CGSize(
+                width: max(viewModel.panelSize.width, stable.width),
+                height: max(viewModel.panelSize.height, stable.height)
+            )
+            viewModel.forcePanelSize(next, reason: "noticeEndRestore:\(reason)")
+        }
+        updateInteractiveFrame(expanded: true)
+        AppLog.warn("Island", "通知结束已恢复展开内容尺寸", [
+            "reason": reason,
+            "panelW": Int(viewModel.panelSize.width),
+            "panelH": Int(viewModel.panelSize.height),
+            "stableW": Int(stable.width),
+            "stableH": Int(stable.height),
+            "page": page ?? "nil",
+            "restoreStable": restoreStableVisual
+        ])
+    }
+
     /// 当前是番茄页时按 phase 写入内容画布尺寸。
     /// 终局必须抬高可点框：停在进行中 ~80pt 时备注落在 interactiveFrame 外，表现为「点不了输入」。
     /// 进行中 / 加时 / 正计时**禁止**写入展开画布（大顶距），只保留贴刘海待命。
@@ -1447,10 +1485,18 @@ final class IslandController: NSObject {
             collapseWorkItem?.cancel()
             collapseWorkItem = nil
         } else {
+            let retentionSize = viewModel.retentionPanelSize(
+                notchWidth: geometry.notchWidth,
+                notchHeight: geometry.notchHeight
+            )
             AppLog.warn("Island", "指针离开保展开区，安排收起", [
                 "interactive": overInteractive,
                 "panelW": Int(viewModel.panelSize.width),
                 "panelH": Int(viewModel.panelSize.height),
+                "retentionW": Int(retentionSize.width),
+                "retentionH": Int(retentionSize.height),
+                "stableW": Int(viewModel.lastStableExpandedPanelSize.width),
+                "stableH": Int(viewModel.lastStableExpandedPanelSize.height),
                 "notchW": Int(geometry.notchWidth),
                 "notchH": Int(geometry.notchHeight),
                 "page": WidgetRuntime.shared.activeID ?? "nil",

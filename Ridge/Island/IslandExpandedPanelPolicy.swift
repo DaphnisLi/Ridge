@@ -1,26 +1,22 @@
 import CoreGraphics
 import Foundation
 
-/// 展开态面板尺寸与悬停保展开的**唯一策略入口**。
+/// 展开态面板尺寸与悬停保展开的**调用入口**。
 ///
-/// # 不变量（违反即回归「大岛拖一下就收」/「移入刘海外就展开」）
-/// 1. 展开态保展开热区必须跟**当前可见大面板**走，禁止退回刘海小框。
-/// 2. 收起态悬停展开仅刘海；控制台外扩接近区只在拖文件时用。
-/// 3. 展开态内容 Preference 可以变大，但**禁止**在非翻页窗口内大幅缩小（拖动/滚动会误报矮框）。
-/// 4. 左键在岛上按下后的拖动，松开前不得因热区抖动收岛。
-/// 5. 控制台列表纵滑（无左键按下）后短时内不得 `collapse(hoverEnd)`——滚到一半指针微移会误判离开。
+/// 固定契约实现在 `LockedInvariants`（未经用户授权禁止改）。本类型只转发 + 保留仍依赖壳层几何的辅助（翼 tip 等）。
 ///
 /// 改 `IslandController` 悬停 / `IslandViewModel.panelSize` / Preference 上报前必读
-/// `.cursor/rules/island-hover-retention.mdc`，并跑 `RidgeTests`。
+/// `.cursor/rules/island-hover-retention.mdc` 与 `.cursor/rules/locked-invariants.mdc`，并跑 `RidgeTests`。
 enum IslandExpandedPanelPolicy {
-    /// 相对当前尺寸，单边缩小超过此值视为「误缩」（常见是缩回刘海）。
-    static let accidentalShrinkThreshold: CGFloat = 28
-    /// 内容区纵滑结束后仍保展开的宽限（秒）。
-    static let contentScrollHoldGrace: TimeInterval = 0.55
+    static let accidentalShrinkThreshold = LockedInvariants.HoverRetention.accidentalShrinkThreshold
+    static let contentScrollHoldGrace = LockedInvariants.HoverRetention.contentScrollHoldGrace
+    static let fileDragApproachHorizontalOutset = LockedInvariants.HoverRetention.fileDragApproachHorizontalOutset
+    static let fileDragApproachMinHeightInNotches = LockedInvariants.HoverRetention.fileDragApproachMinHeightInNotches
+    static let postFileDragHoverSuppress = LockedInvariants.HoverRetention.postFileDragHoverSuppress
+    static let postDownloadOpenHoverSuppress = LockedInvariants.Download.postOpenHoverSuppress
+    static let collapsedInteractivePadX = LockedInvariants.HoverRetention.collapsedInteractivePadX
+    static let collapsedInteractivePadY = LockedInvariants.HoverRetention.collapsedInteractivePadY
 
-    /// 展开态是否应采纳本次内容测量。
-    /// - Parameters:
-    ///   - allowShrink: 翻页 / 刚展开 / 番茄态切换等布局重置窗口内为 true。
     static func shouldApplyMeasuredSize(
         current: CGSize,
         measured: CGSize,
@@ -28,130 +24,94 @@ enum IslandExpandedPanelPolicy {
         allowShrink: Bool,
         shrinkThreshold: CGFloat = accidentalShrinkThreshold
     ) -> Bool {
-        guard abs(measured.width - current.width) > 0.5
-            || abs(measured.height - current.height) > 0.5
-        else {
-            return false
-        }
-        guard isExpanded, !allowShrink else { return true }
-        let shrinkW = current.width - measured.width
-        let shrinkH = current.height - measured.height
-        if shrinkW > shrinkThreshold || shrinkH > shrinkThreshold {
-            // shelf-copied-notice-miss：宽翼引导→「已复制」圆岛/短条必缩宽。
-            // 若因缩宽整单拒绝，面板卡在翼尺寸，提示看不见。
-            if isWingToShortTipResize(current: current, measured: measured, shrinkH: shrinkH, shrinkThreshold: shrinkThreshold) {
-                return true
-            }
-            return false
-        }
-        return true
+        LockedInvariants.HoverRetention.shouldApplyMeasuredSize(
+            current: current,
+            measured: measured,
+            isExpanded: isExpanded,
+            allowShrink: allowShrink,
+            shrinkThreshold: shrinkThreshold
+        )
     }
 
-    /// 宽翼 tip → 瞬时 tip（圆岛 Ø32 / 遗留短条）：允许明显缩宽。
     static func isWingToShortTipResize(
         current: CGSize,
         measured: CGSize,
         shrinkH: CGFloat,
         shrinkThreshold: CGFloat = accidentalShrinkThreshold
     ) -> Bool {
-        // 高度仍在大幅变矮（缩回异常框）→ 不走此放行。
-        guard shrinkH <= shrinkThreshold else { return false }
-        // 「已复制」圆岛固定 Ø32，相对翼 tip 可略矮。
-        if IslandChrome.isNotchRightOrbPanelSize(measured) { return true }
-        // 新尺寸不比当前更矮（允许略浮点误差）→ 视为 tip 替换而非误缩。
-        return measured.height + 1 >= current.height
+        LockedInvariants.HoverRetention.isWingToShortTipResize(
+            current: current,
+            measured: measured,
+            shrinkH: shrinkH,
+            shrinkThreshold: shrinkThreshold
+        )
     }
 
-    /// 展开态保展开矩形：面板框外扩 ∪ 刘海（下边多留，纵滑不易误收）。
-    /// 收起态悬停「识别 / 展开」：仅刘海。大接近区只给拖文件（见 `fileDragApproachFrame`），
-    /// 禁止把控制台外扩热区或宽于刘海的播放/番茄翼当成普通移入展开区。
     static func retentionFrame(
         notchFrame: CGRect,
         panelFrame: CGRect,
         expanded: Bool,
-        notchPad: CGFloat = 4,
-        panelPad: CGFloat = 16,
-        panelBottomExtra: CGFloat = 20
+        notchPad: CGFloat = LockedInvariants.HoverRetention.hoverExpandNotchPad,
+        panelPad: CGFloat = LockedInvariants.HoverRetention.retentionPanelPad,
+        panelBottomExtra: CGFloat = LockedInvariants.HoverRetention.retentionPanelBottomExtra
     ) -> CGRect {
-        let notchHit = hoverExpandFrame(notchFrame: notchFrame, notchPad: notchPad)
-        if !expanded {
-            _ = panelFrame // 收起态悬停展开不跟可见小岛走；可点区仍由 interactive 含翼。
-            return notchHit
-        }
-        let padded = panelFrame.insetBy(dx: -panelPad, dy: -panelPad)
-        let withBottom = CGRect(
-            x: padded.origin.x,
-            y: padded.origin.y - panelBottomExtra,
-            width: padded.width,
-            height: padded.height + panelBottomExtra
+        LockedInvariants.HoverRetention.retentionFrame(
+            notchFrame: notchFrame,
+            panelFrame: panelFrame,
+            expanded: expanded,
+            notchPad: notchPad,
+            panelPad: panelPad,
+            panelBottomExtra: panelBottomExtra
         )
-        return withBottom.union(notchHit)
     }
 
-    /// 非拖文件时收起态悬停展开 / 识别热区：刘海（略外扩防贴边抖）。
     static func hoverExpandFrame(
         notchFrame: CGRect,
-        notchPad: CGFloat = 4
+        notchPad: CGFloat = LockedInvariants.HoverRetention.hoverExpandNotchPad
     ) -> CGRect {
-        notchFrame.insetBy(dx: -notchPad, dy: -2)
+        LockedInvariants.HoverRetention.hoverExpandFrame(notchFrame: notchFrame, notchPad: notchPad)
     }
 
-    /// 拖文件接近区相对刘海左右外扩（pt）。宽度跟刘海，默认 0。
-    static let fileDragApproachHorizontalOutset: CGFloat = 0
-    /// 接近区总高度至少为刘海高的倍数（含刘海本身）。
-    static let fileDragApproachMinHeightInNotches: CGFloat = 3
-
-    /// 拖文件接近区是否启用：只看货架开 + 正在拖文件，**与磁吸开关无关**。
     static func isFileDragApproachEnabled(shelfEnabled: Bool, isFileDrag: Bool) -> Bool {
-        shelfEnabled && isFileDrag
+        LockedInvariants.HoverRetention.isFileDragApproachEnabled(
+            shelfEnabled: shelfEnabled,
+            isFileDrag: isFileDrag
+        )
     }
 
-    /// 磁吸暂存面：须磁吸开 + 货架开 + 拖文件。
     static func isMagneticStagingEnabled(
         shelfEnabled: Bool,
         magneticEnabled: Bool,
         isFileDrag: Bool
     ) -> Bool {
-        shelfEnabled && magneticEnabled && isFileDrag
+        LockedInvariants.HoverRetention.isMagneticStagingEnabled(
+            shelfEnabled: shelfEnabled,
+            magneticEnabled: magneticEnabled,
+            isFileDrag: isFileDrag
+        )
     }
 
-    /// 拖文件接近区（仅 `fileDrag`）：宽≈刘海，高≥3 倍刘海（向下延伸，躲开调度中心）。
-    /// 几何与磁吸开关无关；禁止用控制台 660×300 当地基。
     static func fileDragApproachFrame(
         notchFrame: CGRect,
         horizontalOutset: CGFloat = fileDragApproachHorizontalOutset,
         minHeightInNotches: CGFloat = fileDragApproachMinHeightInNotches
     ) -> CGRect {
-        let notchH = max(notchFrame.height, 1)
-        let targetH = max(notchH * minHeightInNotches, notchH)
-        let bottomOutset = max(0, targetH - notchH)
-        var zone = notchFrame.insetBy(dx: -horizontalOutset, dy: 0)
-        zone.origin.y -= bottomOutset
-        zone.size.height += bottomOutset
-        return zone
+        LockedInvariants.HoverRetention.fileDragApproachFrame(
+            notchFrame: notchFrame,
+            horizontalOutset: horizontalOutset,
+            minHeightInNotches: minHeightInNotches
+        )
     }
 
-    /// 接近区相对刘海底边向下的外扩量（便于测试 / 日志）。
     static func fileDragApproachBottomOutset(notchHeight: CGFloat) -> CGFloat {
         let h = max(notchHeight, 1)
         return max(0, h * fileDragApproachMinHeightInNotches - h)
     }
 
-    /// 拖文件会话结束后短暂禁止「普通悬停再展开」，避免未入舱松手后岛立刻又弹开。
-    static let postFileDragHoverSuppress: TimeInterval = 0.55
-    /// 下载完成点「打开」/ 访达选中后：禁止悬停立刻掀开底层面板，便于伸手点外部窗。
-    static let postDownloadOpenHoverSuppress: TimeInterval = 1.6
-
-    /// 下载常驻（含完成「打开」）优先于番茄终局 sticky：否则展开页盖住打开钮且整段点穿。
     static func shouldBlockFocusCompletedSticky(downloadCompactActive: Bool) -> Bool {
         downloadCompactActive
     }
 
-    /// 收起态是否应因指针位置展开。
-    /// - 拖文件：接近区或刘海均可。
-    /// - 普通移入：仅刘海；接近区 / 番茄翼外侧不算。
-    /// - 播放小岛（含左音乐右专注）另见 `shouldExpandCollapsedForMediaCompact`：可见小岛翼也算。
-    /// - `hoverExpandSuppressed`：未入舱松手后的冷却，挡住回头再开。
     static func shouldExpandCollapsedForPointer(
         mouse: CGPoint,
         notchFrame: CGRect,
@@ -159,33 +119,25 @@ enum IslandExpandedPanelPolicy {
         fileDragApproachContainsMouse: Bool,
         hoverExpandSuppressed: Bool = false
     ) -> Bool {
-        if isFileDrag {
-            if fileDragApproachContainsMouse { return true }
-            return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
-        }
-        if hoverExpandSuppressed { return false }
-        return hoverExpandFrame(notchFrame: notchFrame).contains(mouse)
+        LockedInvariants.HoverRetention.shouldExpandCollapsedForPointer(
+            mouse: mouse,
+            notchFrame: notchFrame,
+            isFileDrag: isFileDrag,
+            fileDragApproachContainsMouse: fileDragApproachContainsMouse,
+            hoverExpandSuppressed: hoverExpandSuppressed
+        )
     }
 
-    /// 收起态可点 / 悬停保活水平外扩（pt）。过紧时右翼 morph 会因 click-through 误收。
-    /// 音乐+计时右翼贴边：22 仍会未出岛就收，提到 32。
-    static let collapsedInteractivePadX: CGFloat = 32
-    /// 收起态可点 / 悬停保活竖直外扩（pt）。
-    static let collapsedInteractivePadY: CGFloat = 10
-
-    /// 收起态可点框：可见面板外扩 ∪ 刘海（展开态仍用大面板 retention，勿走此）。
     static func collapsedInteractiveFrame(
         panelFrame: CGRect,
         notchFrame: CGRect
     ) -> CGRect {
-        panelFrame
-            .insetBy(dx: -collapsedInteractivePadX, dy: -collapsedInteractivePadY)
-            .union(hoverExpandFrame(notchFrame: notchFrame))
+        LockedInvariants.HoverRetention.collapsedInteractiveFrame(
+            panelFrame: panelFrame,
+            notchFrame: notchFrame
+        )
     }
 
-    /// 收起态正显示播放小岛时：悬停刘海或**左音乐翼**开媒体大面板。
-    /// 左音乐·右计时双翼时，右翼留给计时操作钮（`+Nm`/结束 或 暂停/结束），**不得**开媒体。
-    /// 仅计时待命不适用（`mediaCompactVisible == false`）。
     static func shouldExpandCollapsedForMediaCompact(
         notchHover: Bool,
         pointerOverCompactPanel: Bool,
@@ -193,14 +145,21 @@ enum IslandExpandedPanelPolicy {
         hoverExpandSuppressed: Bool,
         pointerOverFocusTrailingWing: Bool = false
     ) -> Bool {
-        if hoverExpandSuppressed { return false }
-        // 右计时翼：悬停 morph 操作钮，禁止 compactHover 抢成媒体大面板。
-        if pointerOverFocusTrailingWing { return false }
-        if notchHover { return true }
-        return mediaCompactVisible && pointerOverCompactPanel
+        // 右翼禁开媒体：`LockedInvariants.Media.shouldOpenMediaOnTrailingFocusWing` == false
+        if pointerOverFocusTrailingWing,
+           !LockedInvariants.Media.shouldOpenMediaOnTrailingFocusWing()
+        {
+            return false
+        }
+        return LockedInvariants.HoverRetention.shouldExpandCollapsedForMediaCompact(
+            notchHover: notchHover,
+            pointerOverCompactPanel: pointerOverCompactPanel,
+            mediaCompactVisible: mediaCompactVisible,
+            hoverExpandSuppressed: hoverExpandSuppressed,
+            pointerOverFocusTrailingWing: pointerOverFocusTrailingWing
+        )
     }
 
-    /// 右翼是否为计时待命：左音乐·右计时，或左下载·右计时（有下载盖右翼时不算）。
     static func isFocusTrailingDualStandby(
         mediaVisible: Bool,
         downloadActive: Bool,
@@ -209,15 +168,11 @@ enum IslandExpandedPanelPolicy {
     ) -> Bool {
         guard focusStandby, !hasNoticePayload else { return false }
         if mediaVisible {
-            // 音乐+下载时右翼是下载，不是计时。
             return !downloadActive
         }
         return downloadActive
     }
 
-    /// 双槽右计时翼：须在收起可点框内且在刘海右半（开操作钮、不开媒体）。
-    /// 分界用刘海中线偏右一点：右翼 underlap 伸进刘海弧，纯 `maxX` 会把贴刘海的暂停/结束误判成左翼而去开媒体。
-    /// 右缘用 `hit.maxX`（含 pad），禁止只认 `panel.maxX`——往右滑未出黑岛就丢命中。
     static func isPointerOverFocusTrailingWing(
         mouse: CGPoint,
         notchFrame: CGRect,
@@ -227,12 +182,10 @@ enum IslandExpandedPanelPolicy {
         guard focusTrailingDualVisible else { return false }
         let hit = collapsedInteractiveFrame(panelFrame: panelFrame, notchFrame: notchFrame)
         guard hit.contains(mouse) else { return false }
-        // 刘海右缘再往左收 underlap，避免点右翼内侧仍 >maxX 失败。
         let trailingStart = notchFrame.maxX - IslandChrome.dualFlushNotchUnderlap
         return mouse.x >= trailingStart
     }
 
-    /// 兼容旧名：无面板框时仅按「刘海右缘以右」粗判（测试 / 旧调用）。
     static func isPointerOverMediaFocusTrailingWing(
         mouse: CGPoint,
         notchFrame: CGRect,
@@ -242,104 +195,78 @@ enum IslandExpandedPanelPolicy {
         return mouse.x > notchFrame.maxX
     }
 
-    /// 因货架拖文件而展开后，鼠标松开且未刚完成投放 → 是否强收。
-    /// 仅当指针已离开**展开态大面板保展开区**才强收；仍在大岛下半截松手不得收（否则「移到一半就收」）。
     static func shouldForceCollapseAfterShelfFileDragMouseUp(
         hadShelfFileDragExpand: Bool,
         dropCompletedRecently: Bool,
         isExpanded: Bool,
         pointerInExpandedRetention: Bool
     ) -> Bool {
-        hadShelfFileDragExpand
-            && !dropCompletedRecently
-            && isExpanded
-            && !pointerInExpandedRetention
+        LockedInvariants.HoverRetention.shouldForceCollapseAfterShelfFileDragMouseUp(
+            hadShelfFileDragExpand: hadShelfFileDragExpand,
+            dropCompletedRecently: dropCompletedRecently,
+            isExpanded: isExpanded,
+            pointerInExpandedRetention: pointerInExpandedRetention
+        )
     }
 
-    /// 展开且面板已接近刘海尺寸时视为异常（热区会退化成「小岛」）。
-    /// 「已复制」Ø32 圆岛故意小于刘海宽，不算异常。
     static func isCollapsedSizedWhileExpanded(
         panel: CGSize,
         notch: CGSize,
         isExpanded: Bool,
         slop: CGFloat = 8
     ) -> Bool {
-        guard isExpanded else { return false }
-        if IslandChrome.isNotchRightOrbPanelSize(panel) { return false }
-        return panel.width <= notch.width + slop && panel.height <= notch.height + slop
-    }
-
-    /// Preference 未到 / 误报矮框时，展开态保展开不得矮于此下限（否则下半截一移就收）。
-    /// 宽约媒体/番茄下限，高须明显超过刘海，覆盖「移动一半」的指针位置。
-    static func expandedRetentionFloor(notch: CGSize) -> CGSize {
-        CGSize(
-            width: max(notch.width + 120, 320),
-            height: max(notch.height + 120, 160)
+        LockedInvariants.HoverRetention.isCollapsedSizedWhileExpanded(
+            panel: panel,
+            notch: notch,
+            isExpanded: isExpanded,
+            slop: slop
         )
     }
 
-    /// 解析展开态保展开用的面板尺寸（稳定大面板优先，其次当前面板，矮框则抬到下限）。
-    /// 最终宽高取 `max(首选, 当前可见面板)`：选时岛可比上一页更宽更矮，若只认「更高但更窄」的
-    /// lastStable，右侧「正计时」会落在保展开外 → 往右移未点就收岛。
+    static func expandedRetentionFloor(notch: CGSize) -> CGSize {
+        LockedInvariants.HoverRetention.expandedRetentionFloor(notch: notch)
+    }
+
     static func resolvedRetentionPanelSize(
         panel: CGSize,
         stable: CGSize,
         notch: CGSize,
         isExpanded: Bool
     ) -> CGSize {
-        let preferred: CGSize = {
-            if shouldPreferStableRetention(
-                panel: panel,
-                stable: stable,
-                notch: notch,
-                isExpanded: isExpanded
-            ) {
-                return stable
-            }
-            guard isExpanded else { return panel }
-            if isCollapsedSizedWhileExpanded(panel: panel, notch: notch, isExpanded: true) {
-                let floor = expandedRetentionFloor(notch: notch)
-                return CGSize(
-                    width: max(panel.width, floor.width),
-                    height: max(panel.height, floor.height)
-                )
-            }
-            return panel
-        }()
-        guard isExpanded else { return preferred }
-        return CGSize(
-            width: max(preferred.width, panel.width),
-            height: max(preferred.height, panel.height)
+        LockedInvariants.HoverRetention.resolvedRetentionPanelSize(
+            panel: panel,
+            stable: stable,
+            notch: notch,
+            isExpanded: isExpanded
         )
     }
 
-    /// 大面板竖直中下点是否仍在保展开区内（「移动一半就收」回归锚点）。
     static func retentionContainsMidLowerPoint(
         notchFrame: CGRect,
         panelFrame: CGRect,
         expanded: Bool
     ) -> Bool {
-        let frame = retentionFrame(
+        LockedInvariants.HoverRetention.retentionContainsMidLowerPoint(
             notchFrame: notchFrame,
             panelFrame: panelFrame,
             expanded: expanded
         )
-        let midLower = CGPoint(x: panelFrame.midX, y: panelFrame.minY + panelFrame.height * 0.25)
-        return frame.contains(midLower)
     }
 
-    /// 「已复制」/ AI 额度等瞬时短条：可见面板可以变矮，但绝不能当成稳定大面板写入 `lastStable`。
     static func isTransientShortPanel(
         _ panel: CGSize,
         notch: CGSize,
         maxHeightAboveNotch: CGFloat = 48,
         maxWidthAboveNotch: CGFloat = 140
     ) -> Bool {
-        panel.height <= notch.height + maxHeightAboveNotch
-            || panel.width <= notch.width + maxWidthAboveNotch
+        LockedInvariants.HoverRetention.isTransientShortPanel(
+            panel,
+            notch: notch,
+            maxHeightAboveNotch: maxHeightAboveNotch,
+            maxWidthAboveNotch: maxWidthAboveNotch
+        )
     }
 
-    /// 当前面板相对已记录大面板明显缩水时，保展开仍用大面板（短通知盖住大岛）。
     static func shouldPreferStableRetention(
         panel: CGSize,
         stable: CGSize,
@@ -348,33 +275,28 @@ enum IslandExpandedPanelPolicy {
         heightSlop: CGFloat = 40,
         widthSlop: CGFloat = 80
     ) -> Bool {
-        guard isExpanded else { return false }
-        guard stable.width > notch.width + 8, stable.height > notch.height + 8 else {
-            return false
-        }
-        if isCollapsedSizedWhileExpanded(panel: panel, notch: notch, isExpanded: true) {
-            return true
-        }
-        if isTransientShortPanel(panel, notch: notch) {
-            return true
-        }
-        return panel.height + heightSlop < stable.height
-            || panel.width + widthSlop < stable.width
+        LockedInvariants.HoverRetention.shouldPreferStableRetention(
+            panel: panel,
+            stable: stable,
+            notch: notch,
+            isExpanded: isExpanded,
+            heightSlop: heightSlop,
+            widthSlop: widthSlop
+        )
     }
 
-    /// 列表纵滑后宽限内应钉住展开（触控板/鼠标滚轮无左键，不能靠 dragHold）。
     static func shouldHoldExpandForRecentScroll(
         lastScrollAt: Date?,
         now: Date = Date(),
         grace: TimeInterval = contentScrollHoldGrace
     ) -> Bool {
-        guard let lastScrollAt else { return false }
-        return now.timeIntervalSince(lastScrollAt) < grace
+        LockedInvariants.HoverRetention.shouldHoldExpandForRecentScroll(
+            lastScrollAt: lastScrollAt,
+            now: now,
+            grace: grace
+        )
     }
 
-    /// 翼 tip（会议 / 久坐 / 外设等）可点区：不得窄于该 tip 的预备双翼宽，否则右翼控件落在 interactive 外点穿。
-    /// - Parameter wingWidth: 会议等用 `preparedWingWidth`；外设满岛用 `preparedPeripheralWingWidth`（勿混抬）。
-    /// - Parameter focusCompletedFlush: 专注终局用刘海同高预备尺寸（含 centerExtra），禁止抬成会议 tip 的 +bottom。
     static func wingTipInteractivePanelSize(
         current: CGSize,
         notchWidth: CGFloat,
@@ -403,9 +325,6 @@ enum IslandExpandedPanelPolicy {
         )
     }
 
-    /// 常驻 tip（`keepsExpandedWithoutHover`）未展开时是否强制 expand。
-    /// 会议等无自动收的 tip：仅「小组件设计 sticky」或指针在设置窗上时禁止（避免 sticky↔收起互殴）。
-    /// 约 3s 瞬时 tip（`expandsDuringSettingsSession`）：设置开着也要补展开，与悬停无关。
     static func shouldForceStickyNoticeExpand(
         isExpanded: Bool,
         keepsExpandedWithoutHover: Bool,
@@ -413,20 +332,24 @@ enum IslandExpandedPanelPolicy {
         pointerOverSettings: Bool,
         expandsDuringSettingsSession: Bool = false
     ) -> Bool {
-        guard keepsExpandedWithoutHover, !isExpanded else { return false }
-        if expandsDuringSettingsSession { return true }
-        if settingsSessionBlocksIslandTips { return false }
-        if pointerOverSettings { return false }
-        return true
+        LockedInvariants.Notice.shouldForceStickyNoticeExpand(
+            isExpanded: isExpanded,
+            keepsExpandedWithoutHover: keepsExpandedWithoutHover,
+            settingsSessionBlocksIslandTips: settingsSessionBlocksIslandTips,
+            pointerOverSettings: pointerOverSettings,
+            expandsDuringSettingsSession: expandsDuringSettingsSession
+        )
     }
 
-    /// 设置会话是否挡程序 tip 展开：须同时「收起会话 + 设计 sticky」。
-    /// 非设计 sticky 的设置页（含测试台）与正式路径一致，不挡程序 expand。
     static func settingsBlocksProgrammaticNoticeExpand(
         sessionActive: Bool,
         livePreview: Bool,
         designSticky: Bool
     ) -> Bool {
-        sessionActive && !livePreview && designSticky
+        LockedInvariants.Notice.settingsBlocksProgrammaticNoticeExpand(
+            sessionActive: sessionActive,
+            livePreview: livePreview,
+            designSticky: designSticky
+        )
     }
 }

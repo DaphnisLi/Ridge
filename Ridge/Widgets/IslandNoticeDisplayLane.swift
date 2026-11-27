@@ -305,65 +305,9 @@ enum IslandNoticeSlotPolicy {
     }
 
     /// 布局解析（产品 A > B > C > D；C 内下载 > 计时）。
-    /// 播放+下载(+计时)→左音乐右下载；下载+计时→左下载右计时；单独下载=全岛。
+    /// 契约在 `LockedInvariants.LayoutMatrix`（未授权禁改）。
     static func resolvedLayout(_ slots: IslandNoticeSlots) -> IslandNoticeLayout {
-        if let primary = slots.primary, primary.displayLane == .exclusive {
-            return .fullNotice(primary)
-        }
-
-        // B：会议 tip（同档盖播放；可与 C/D 并排）
-        if let primary = slots.primary {
-            if let secondary = slots.secondary {
-                return .dual(left: .notice(primary), right: .notice(secondary))
-            }
-            // 会议左 · 下载右（C 内下载优先于计时）。
-            if slots.downloadResident {
-                return .dual(left: .notice(primary), right: .download)
-            }
-            if slots.focusResident {
-                return .dual(left: .notice(primary), right: .focus)
-            }
-            return .fullNotice(primary)
-        }
-
-        // B：音乐（无会议时）
-        if slots.mediaResident {
-            if let secondary = slots.secondary {
-                return .dual(left: .media, right: .notice(secondary))
-            }
-            // 左音乐 · 右下载；下载结束后右翼才回计时。
-            if slots.downloadResident {
-                return .dual(left: .media, right: .download)
-            }
-            if slots.focusResident {
-                return .dual(left: .media, right: .focus)
-            }
-            return .fullMedia
-        }
-
-        // C：下载（同档内高于计时；无 B 时与计时并排占左；D 暂盖右翼）。
-        if slots.downloadResident {
-            if let secondary = slots.secondary {
-                return .dual(left: .download, right: .notice(secondary))
-            }
-            if slots.focusResident {
-                return .dual(left: .download, right: .focus)
-            }
-            return .fullDownload
-        }
-
-        // 无下载：C 计时左 + D 右；或单独 D / 仅计时
-        if let secondary = slots.secondary {
-            if slots.focusResident {
-                return .dual(left: .focus, right: .notice(secondary))
-            }
-            return .fullNotice(secondary)
-        }
-
-        if slots.focusResident {
-            return .fullFocus
-        }
-        return .empty
+        LockedInvariants.LayoutMatrix.resolvedLayout(slots)
     }
 }
 

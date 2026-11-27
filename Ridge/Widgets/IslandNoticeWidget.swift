@@ -300,7 +300,12 @@ final class IslandNoticeWidget: IslandWidget {
                 "transientPage": WidgetRuntime.shared.isTransientNoticePage
             ])
         } else {
-            AppLog.debug("IslandNotice", "通知结束但面板仍在且悬停，保持展开")
+            // tip 曾 force 成刘海高；悬停保展开时立刻抬回媒体/控制台等大面板，避免「移一半像收成小岛」。
+            IslandController.shared?.restoreExpandedContentAfterNoticeEnd(reason: "islandNoticeEnd")
+            AppLog.warn("IslandNotice", "通知结束但面板仍在且悬停，保持展开并恢复尺寸", [
+                "allowHover": WidgetRuntime.shared.allowsHoverExpand,
+                "page": WidgetRuntime.shared.activeID ?? "nil"
+            ])
         }
     }
 }
@@ -433,7 +438,7 @@ private struct IslandNoticeCardView: View {
                 bareWingContent: bareWingContent
             )
         case .clipboardCaptureHint(let id, let text, let symbol):
-            if id.hasPrefix("copy.") {
+            if LockedInvariants.CopiedNotice.isCopiedTipID(id) {
                 // 单独 / 双槽右侧一律现有 Ø32 圆岛；双槽时不要外包 Spacer 黑翼。
                 ClipboardCopiedIslandView(detail: text, animationToken: id)
             } else {

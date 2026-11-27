@@ -30,7 +30,7 @@ final class ClipboardHistoryStore: ObservableObject {
     /// 同一指纹短时内不重复上岛/触感（系统剪贴板 changeCount 抖动会连投）。
     private var lastCopiedNoticeFingerprint: String?
     private var lastCopiedNoticeAt: Date = .distantPast
-    private static let copiedNoticeDedupInterval: TimeInterval = 2.0
+    private static let copiedNoticeDedupInterval = LockedInvariants.CopiedNotice.dedupInterval
 
     private init() {
         previewImageCache.countLimit = Self.maxItems
@@ -262,8 +262,8 @@ final class ClipboardHistoryStore: ObservableObject {
         lastCopiedNoticeFingerprint = item.fingerprint
         lastCopiedNoticeAt = now
         let text = L10n.Shelf.copiedNotice(for: item)
-        // id 带唯一后缀：每次复制都能触发上岛；`copy.` 前缀走刘海右侧圆岛，并保持展开至自动收起。
-        let tipID = "copy.\(item.category.rawValue).\(UUID().uuidString)"
+        // id 带唯一后缀：每次复制都能触发上岛；锁定前缀走刘海右侧圆岛，并保持展开至自动收起。
+        let tipID = "\(LockedInvariants.CopiedNotice.tipIDPrefix)\(item.category.rawValue).\(UUID().uuidString)"
         IslandNoticeCenter.shared.present(
             .clipboardCaptureHint(
                 id: tipID,

@@ -19,7 +19,7 @@
 
 | id | 标题 | 次数 | 症状 | 防护 / 测试锚点 |
 |---|---|---|---|---|
-| `island-hover-retention` | 岛悬停热区退化 | ≥10 | 展开后热区缩成刘海/短 tip；下移/拖一半就收；**选时更宽时 lastStable 更窄 → 右侧「正计时」出热区**；收起右翼贴边 morph 误收 | 保展开 `max(stable,panel)`；收起可点外扩；双翼地板；中下点/选时宽用例 |
+| `island-hover-retention` | 岛悬停热区退化 | ≥11 | 展开后热区缩成刘海/短 tip；下移/拖一半就收；**选时 447×73+stable0 不抬 floor**；**tip 压矮后悬停不恢复**；选时更宽右侧出热区 | `LockedInvariants` v2（Hover+组件分区；未授权禁改）；`test_lockedInvariants_*` |
 | `media-compact-not-resident` | 播放大面板不得常驻 / 右计时翼 morph 误收 | ≥9 | 有曲目即大面板；双翼右翼误开媒体；**未出岛 morph 已收**；**点时长无效**；**离岛 morph 不恢复数字** | 右翼禁开媒体；Controller 钉 morph；离岛清 hover；整翼热区；`test_mediaCompactNotResident_*` |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥6 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bare / 右翼欠宽居中**；**新 tip 翼宽 ≠ preparedWingWidth** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 wingTipCardsMatchPrepared） |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
@@ -44,13 +44,13 @@
 ### island-hover-retention — 岛悬停热区退化
 
 - **recurring:** true  
-- **occurrences:** 10+（历史反复；2026-11-09 tip 污染 lastStable；2026-11-10 纵滑误收；2026-11-11 收起播放小岛两翼；2026-11-13 展开后下移一半仍收；**2026-11-13 非拖文件也认过大接近区**；**2026-11-24 计时右翼未出岛 morph/待命就收**；**同日选时岛 447 宽但 lastStable 334 → 右侧「正计时」出保展开、点字无效**）  
-- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**；**收起双翼/计时待命往右移未出岛，操作钮已收**；**选时右侧「正计时」只能点图标、往右移岛就收**  
-- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；收起 interactive 过紧；**`resolvedRetentionPanelSize` 只返回更高更窄的 stable，未并入当前更宽面板**  
-- **防护:** 收起悬停展开 **仅刘海**；`fileDragApproachFrame` **仅**拖文件；展开态 `max(stable, panel)` 保展开 + `expandedRetentionFloor`；`scrollHold`；收起 interactive 外扩 + dualFlush/待命地板；选时「正计时」整颗胶囊 `contentShape`  
-- **自动化:** `test_islandHoverRetention_*`（含 `pickingWiderThanStableUnionsWidth`）+ `test_islandHoverExpand_*`  
-- **曾缺口（已补 2026-11-13 / 2026-11-24）:** Preference 未到 / 误报矮框；非拖文件误用大接近区；收起右翼贴边穿透；**选时宽于 lastStable**。  
-- **日志锚点:** `指针离开保展开区，安排收起`；`收起待命可点区过窄，抬回可见宽`；`货架拖入：钉住展开`（须 `fileDrag=true`）；`保展开改用稳定面板尺寸`；`选时：点正计时起钟`
+- **occurrences:** 11+（历史反复；…；**2026-11-24 选时 447 宽但 lastStable 334**；**2026-11-27 选时 447×73 + stable=0 只认 73 高、1s 内离开保展开；tip dualFlush 压成 32 高后悬停不抬回媒体**）
+- **症状:** 大岛仍在，保展开/可点区退成刘海或 tip 小框；下移一半就收岛；短通知像「小岛盖住大岛」；控制台列表滚一半误收；**普通移入在刘海外很远就被「识别」展开**；**收起双翼/计时待命往右移未出岛，操作钮已收**；**选时右侧「正计时」只能点图标、往右移岛就收**
+- **根因倾向:** Preference 误报矮框；热区只用 `notchFrame`；瞬时短条写入 `lastStable`；纵滑无左键；收起 interactive 过紧；**`resolvedRetentionPanelSize` 只返回更高更窄的 stable，未并入当前更宽面板**；**宽矮选时不是 `isCollapsedSizedWhileExpanded` 故跳过 floor**；**tip 结束 keepExpanded 未恢复可见大面板**
+- **防护:** 契约收拢 `LockedInvariants.HoverRetention`（未授权禁改）；收起悬停展开 **仅刘海**；展开态 `max(stable, panel, floor)`；`scrollHold`；tip 结束 `restoreExpandedContentAfterNoticeEnd`
+- **自动化:** `test_lockedInvariants_*` + `test_islandHoverRetention_*`（含 `shortWidePickingFloorsWhenStableZero`）+ `test_islandHoverExpand_*`
+- **曾缺口（已补 2026-11-13 / 2026-11-24 / 2026-11-27）:** Preference 未到 / 误报矮框；非拖文件误用大接近区；收起右翼贴边穿透；**选时宽于 lastStable**；**宽矮选时 stable=0 不抬 floor**；**tip 压矮后悬停不恢复**
+- **日志锚点:** `指针离开保展开区，安排收起`（含 retentionW/H）；`通知结束已恢复展开内容尺寸`；`保展开改用稳定面板尺寸`；`选时：点正计时起钟`
 
 ### island-chrome-double-padding — 岛边距叠两层
 

@@ -99,7 +99,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return nil
         case .clipboardCaptureHint(let id, _, _):
             // 「已复制」固定跟圆岛入场+定格，不受测试台 tip 时长覆盖（否则会闪没或拖太久）。
-            if id.hasPrefix("copy.") {
+            if LockedInvariants.CopiedNotice.isCopiedTipID(id) {
                 return IslandNoticeAutoDismissPolicy.copiedNoticeNanoseconds
             }
             #if DEBUG
@@ -130,7 +130,9 @@ enum IslandNoticePayload: Identifiable, Hashable {
             return false
         case .clipboardCaptureHint(let id, _, _):
             // 「已复制」动效走完即收，悬停不续命。
-            return !id.hasPrefix("copy.")
+            return LockedInvariants.CopiedNotice.isCopiedTipID(id)
+                ? LockedInvariants.CopiedNotice.holdsWhileHovering
+                : true
         case .ramPressure, .processEnded, .peripheralLowBattery,
              .peripheralFullCharge, .peripheralConnected,
              .macBatteryCharging, .macBatteryLow, .macBatteryFull, .macBatteryUnplugged,
@@ -197,7 +199,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
     var usesNotchRightOrbChrome: Bool {
         switch self {
         case .clipboardCaptureHint(let id, _, _):
-            return id.hasPrefix("copy.")
+            return LockedInvariants.CopiedNotice.isCopiedTipID(id)
         default:
             return false
         }
@@ -215,7 +217,7 @@ enum IslandNoticePayload: Identifiable, Hashable {
              .aiUsageAlert:
             return true
         case .clipboardCaptureHint(let id, _, _):
-            return id.hasPrefix("copy.")
+            return LockedInvariants.CopiedNotice.isCopiedTipID(id)
         }
     }
 

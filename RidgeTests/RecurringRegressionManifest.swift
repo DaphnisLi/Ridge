@@ -21,7 +21,8 @@ enum RecurringRegressionManifest {
                 "test_islandHoverRetention_",
                 "test_islandHoverExpand_",
                 "testExpandedRetentionFloor",
-                "testRejectsAccidentalShrink"
+                "testRejectsAccidentalShrink",
+                "test_lockedInvariants_"
             ]
         ),
         Entry(
