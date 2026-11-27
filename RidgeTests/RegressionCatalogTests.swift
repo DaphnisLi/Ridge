@@ -668,6 +668,19 @@ final class RegressionCatalogTests: XCTestCase {
         )
     }
 
+    /// 「已复制」有自动收起 → 设置 sticky 时仍应程序上岛（勿在剪贴板层提前 return）。
+    func test_shelfCopiedNoticeMiss_copyTipExpandsDuringSettingsSession() {
+        let payload = IslandNoticePayload.clipboardCaptureHint(
+            id: "copy.text.test",
+            text: "已复制",
+            symbol: "doc.on.doc"
+        )
+        XCTAssertTrue(payload.expandsDuringSettingsSession)
+        XCTAssertTrue(payload.keepsExpandedWithoutHover)
+        XCTAssertTrue(payload.usesNotchRightOrbChrome)
+        XCTAssertNotNil(payload.autoDismissNanoseconds)
+    }
+
     /// 会议等无自动收的 sticky：设置设计页 / 指针在设置窗禁止强制展开（防连震）。
     /// 约 3s 瞬时 tip：设置开着也要强制展开，与悬停无关。
     func test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand() {

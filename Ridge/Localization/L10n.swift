@@ -287,14 +287,8 @@ enum L10n {
         static var stepIslandBody: String {
             tr(
                 "onboarding.island_body",
-                "刘海处已出现正在播放的小岛。把指针移上去，即可展开媒体控制面板。"
+                "刘海处已出现正在播放的小岛。也可把指针移上去，展开媒体控制面板试试。"
             )
-        }
-        static var stepIslandTryHint: String {
-            tr("onboarding.island_try_hint", "请把指针移到刘海区域试一下，展开后即可继续")
-        }
-        static var stepIslandTriedHint: String {
-            tr("onboarding.island_tried_hint", "已检测到展开，可以继续")
         }
         static var videoPlaceholder: String {
             tr("onboarding.video_placeholder", "演示视频稍后加入")
@@ -306,7 +300,7 @@ enum L10n {
         static var stepPickBody: String {
             tr(
                 "onboarding.pick_body",
-                "这些是常用能力，默认已勾选。可按需调整，下一步仅为勾选项申请权限。"
+                "安装后全部关闭。以下为推荐开启项（已预勾选），可按需调整；完成引导后才会打开勾选项，并仅为其申请权限。"
             )
         }
         static var stepPermissionsEyebrow: String {

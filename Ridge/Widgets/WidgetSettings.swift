@@ -262,6 +262,18 @@ final class WidgetSettings: ObservableObject {
             ])
         }
 
+        // 首次引导完成前：每次启动都压回出厂全关，避免旧会话/演示残留「半开」。
+        // 真正开启仅发生在引导点「开始使用」写入勾选项之后。
+        if !defaults.bool(forKey: AppIdentity.onboardingCompletedKey) {
+            disabledIDs = Set(Defaults.disabled)
+            pinnedIDs = []
+            defaults.set(Array(disabledIDs), forKey: Key.disabled)
+            defaults.set(Array(pinnedIDs), forKey: Key.pinned)
+            AppLog.warn("Widget", "引导未完成：已强制内容型小组件全关", [
+                "disabled": disabledIDs.count
+            ])
+        }
+
         // 确保 ControlDeck 迁移先跑（清掉旧 combo 键）。
         _ = ControlDeckSettings.shared
         defaults.removeObject(forKey: Key.comboPagesLegacy)

@@ -7,7 +7,7 @@ final class OnboardingIslandMediaDemo {
     static let shared = OnboardingIslandMediaDemo()
 
     private(set) var isActive = false
-    /// 用户悬停展开后回调（用于标记 `islandTried`）。
+    /// 用户悬停展开后的可选回调（仅日志 / 演示，不挡「继续」）。
     var onUserExpanded: (() -> Void)?
 
     private var previousMediaEnabled: Bool?

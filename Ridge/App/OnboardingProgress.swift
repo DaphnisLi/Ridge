@@ -12,7 +12,7 @@ struct OnboardingProgress: Codable, Equatable {
     var step: Step
     /// 推荐页勾选的小组件。
     var selectedWidgetIDs: [WidgetID]
-    /// 是否已在第 1 步成功悬停展开过岛。
+    /// 历史字段：曾用于强制悬停展开；现不挡继续，保留以兼容旧进度 JSON。
     var islandTried: Bool
     /// 待申请权限队列（`WidgetPermissionGate.Need.rawValue`）。
     var permissionQueue: [String]

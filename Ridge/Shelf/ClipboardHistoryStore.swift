@@ -240,13 +240,9 @@ final class ClipboardHistoryStore: ObservableObject {
             AppLog.debug("Clipboard", "采集成功提示刚投递，跳过轮询重复提示")
             return
         }
-        // 仅小组件库「设计页 sticky」挡上岛（连震防护）。普通设置 / 岛测试台开着仍应提示。
-        if IslandController.shared?.blocksProgrammaticNoticeExpand == true {
-            AppLog.info("Clipboard", "设置设计页中，跳过复制上岛提示", [
-                "category": item.category.rawValue
-            ])
-            return
-        }
+        // 「已复制」有自动收起（≈1.4s），与 RAM/外设等同属 expandsDuringSettingsSession：
+        // 设置库 / 设计 sticky 开着也要上岛。勿在此处用 blocksProgrammaticNoticeExpand 提前 return
+        //（否则引导结束后打开小组件库再 Cmd+C 会静默无提示）。
         let guidingID = IslandNoticeCenter.shared.current?.id
         if guidingID == IslandNoticePayload.colorPickTipID
             || guidingID == IslandNoticePayload.ocrSelectTipID {

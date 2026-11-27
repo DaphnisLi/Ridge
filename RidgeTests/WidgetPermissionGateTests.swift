@@ -43,7 +43,13 @@ final class WidgetPermissionGateTests: XCTestCase {
         XCTAssertTrue(disabled.contains("builtin.colorPick"))
         XCTAssertTrue(disabled.contains("builtin.networkLinkTip"))
         XCTAssertTrue(disabled.contains("builtin.systemFocusTip"))
+        XCTAssertTrue(disabled.contains("builtin.media"))
+        XCTAssertTrue(disabled.contains("builtin.copiedNotice"))
         XCTAssertEqual(disabled.count, WidgetLibraryLayout.defaultContentOrder.count)
+        // 推荐清单 ⊆ 库序，且不等于「出厂已开」：Defaults 仍含全部推荐 id。
+        let recommended = Set(OnboardingProgress.recommendedWidgetIDs)
+        XCTAssertTrue(recommended.isSubset(of: Set(WidgetLibraryLayout.defaultContentOrder)))
+        XCTAssertTrue(recommended.isSubset(of: disabled))
     }
 
     func test_onboardingRecommended_includesRecentTips() {

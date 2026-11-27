@@ -20,6 +20,13 @@ final class OnboardingController: NSObject, NSWindowDelegate {
             NSApp.activate(ignoringOtherApps: true)
             return
         }
+        // 引导进行中库内必须全关；推荐勾选只在「开始使用」时写入。
+        WidgetSettings.shared.restoreDefaults()
+        for id in ControlDeckSettings.liveModuleIDs {
+            ControlDeckSettings.shared.setModuleEnabled(id, false)
+        }
+        AppLog.warn("Onboarding", "展示引导前已恢复小组件/控制台全关")
+
         var progress = OnboardingProgress.load() ?? .fresh()
         progress.reconcilePermissionsWithSystem()
         progress.save()
@@ -172,7 +179,7 @@ private struct OnboardingFlowView: View {
             progress.ensurePermissionQueueReflectsGaps()
             // 重开后仅当所选能力权限全部满足才进自启页；队列空但未齐会重建，禁止误跳。
             if progress.step == .permissions, progress.allSelectedPermissionsSatisfied() {
-                applySelectedWidgets()
+                // 开关只在引导真正完成时写入；此处仅续跑到自启页。
                 progress.step = .loginItem
                 AppLog.warn("Onboarding", "重开后续跑：权限已齐，进入自启页")
             } else if progress.step == .permissions {
@@ -269,9 +276,7 @@ private struct OnboardingFlowView: View {
     }
 
     private var canPrimary: Bool {
-        // 第 1 步须先悬停展开假媒体岛，再允许继续。
-        if progress.step == .island { return progress.islandTried }
-        return true
+        true
     }
 
     private var primaryTitle: String {
@@ -292,9 +297,11 @@ private struct OnboardingFlowView: View {
 
     private func skip() {
         OnboardingIslandMediaDemo.shared.stop()
+        // 跳过 = 不采纳推荐：库内保持出厂全关。
+        WidgetSettings.shared.restoreDefaults()
         OnboardingProgress.clear()
         UserDefaults.standard.set(true, forKey: AppIdentity.onboardingCompletedKey)
-        AppLog.warn("Onboarding", "引导已跳过")
+        AppLog.warn("Onboarding", "引导已跳过，小组件保持默认全关")
         onFinished()
     }
 
@@ -324,7 +331,6 @@ private struct OnboardingFlowView: View {
             progress.rebuildPermissionQueue()
             progress.reconcilePermissionsWithSystem()
             if progress.permissionQueue.isEmpty {
-                applySelectedWidgets()
                 progress.step = .loginItem
             } else {
                 progress.step = .permissions
@@ -345,7 +351,6 @@ private struct OnboardingFlowView: View {
     private func advanceFromPermissionsToLogin(reason: String) {
         progress.permissionQueue = []
         progress.awaitingRelaunchFor = nil
-        applySelectedWidgets()
         progress.step = .loginItem
         persist()
         AppLog.warn("Onboarding", "全部权限已满足，进入自启页", ["reason": reason])
@@ -398,12 +403,16 @@ private struct OnboardingFlowView: View {
         }
     }
 
+    /// 出厂全关；仅把引导里勾选的推荐项打开，其余内容型一律关。
     private func applySelectedWidgets() {
         let selected = Set(progress.selectedWidgetIDs)
-        for id in OnboardingProgress.recommendedWidgetIDs {
+        for id in WidgetLibraryLayout.defaultContentOrder {
             WidgetSettings.shared.setEnabled(id, enabled: selected.contains(id))
         }
-        AppLog.info("Onboarding", "已应用推荐小组件开关", ["on": selected.count])
+        AppLog.info("Onboarding", "已按引导勾选写入小组件开关", [
+            "on": selected.count,
+            "library": WidgetLibraryLayout.defaultContentOrder.count
+        ])
     }
 
     private func finish() {
@@ -448,31 +457,12 @@ private struct OnboardingIslandStep: View {
 
             OnboardingDemoVideoView()
 
-            HStack(spacing: 8) {
-                Image(systemName: progress.islandTried ? "checkmark.circle.fill" : "hand.point.up.left.fill")
-                    .font(SettingsChrome.Font.iconTile)
-                    .foregroundStyle(progress.islandTried ? SettingsChrome.secondary : SettingsChrome.primary)
-                Text(progress.islandTried ? L10n.Onboarding.stepIslandTriedHint : L10n.Onboarding.stepIslandTryHint)
-                    .font(SettingsChrome.Font.caption)
-                    .foregroundStyle(SettingsChrome.onSurfaceVariant)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-            }
-            .padding(12)
-            .background(
-                SettingsChrome.surfaceContainerLow,
-                in: RoundedRectangle(cornerRadius: SettingsChrome.Radius.card, style: .continuous)
-            )
-            .padding(.top, 14)
-
             Spacer(minLength: 0)
         }
         .onAppear {
+            // 假媒体上岛仅演示；不强制悬停展开后再继续。
             OnboardingIslandMediaDemo.shared.onUserExpanded = {
-                guard !progress.islandTried else { return }
-                progress.islandTried = true
-                progress.save()
-                AppLog.info("Onboarding", "已记录刘海悬停展开", ["islandTried": true])
+                AppLog.info("Onboarding", "用户已悬停展开媒体岛（可选）")
             }
             OnboardingIslandMediaDemo.shared.start()
         }

@@ -168,6 +168,15 @@ final class ControlDeckSettings: ObservableObject {
                 "version": Key.modulesDefaultOffMigrated
             ])
         }
+
+        // 首次引导完成前：控制台磁贴也压回全关（推荐清单不含磁贴）。
+        if !defaults.bool(forKey: AppIdentity.onboardingCompletedKey) {
+            for id in Self.liveModuleIDs {
+                modules[id] = false
+            }
+            defaults.set(modules, forKey: Key.modules)
+            AppLog.warn("ControlDeck", "引导未完成：已强制控制台磁贴全关")
+        }
         moduleEnabled = modules
 
         if let raw = defaults.string(forKey: Key.activePane),

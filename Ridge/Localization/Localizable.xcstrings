@@ -5002,7 +5002,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "刘海处已出现正在播放的小岛。把指针移上去，即可展开媒体控制面板。"
+            "value": "刘海处已出现正在播放的小岛。也可把指针移上去，展开媒体控制面板试试。"
           }
         }
       }
@@ -5025,28 +5025,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "认识灵动岛"
-          }
-        }
-      }
-    },
-    "onboarding.island_tried_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已检测到展开，可以继续"
-          }
-        }
-      }
-    },
-    "onboarding.island_try_hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "请把指针移到刘海区域试一下，展开后即可继续"
           }
         }
       }
@@ -5178,7 +5156,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "这些是常用能力，默认已勾选。可按需调整，下一步仅为勾选项申请权限。"
+            "value": "安装后全部关闭。以下为推荐开启项（已预勾选），可按需调整；完成引导后才会打开勾选项，并仅为其申请权限。"
           }
         }
       }

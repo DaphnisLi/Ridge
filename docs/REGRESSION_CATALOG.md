@@ -23,7 +23,7 @@
 | `media-compact-not-resident` | 播放大面板不得常驻 / 右计时翼 morph 误收 | ≥9 | 有曲目即大面板；双翼右翼误开媒体；**未出岛 morph 已收**；**点时长无效**；**离岛 morph 不恢复数字** | 右翼禁开媒体；Controller 钉 morph；离岛清 hover；整翼热区；`test_mediaCompactNotResident_*` |
 | `island-chrome-double-padding` | 岛边距叠两层 | ≥6 | 内容根再加 padding / tip 误用大底距；**外设翼 tip 叠 bare / 右翼欠宽居中**；**新 tip 翼宽 ≠ preparedWingWidth** | `IslandChrome.insets`；`test_islandChromeDoublePadding_*`（含 wingTipCardsMatchPrepared） |
 | `settings-preview-live-data` | 设置预览用真数据 | ≥2 | 库卡/详情拉实时源；空数据/网络抖时预览难看 | `test_settingsPreviewLiveData_*`：媒体/会议/电量假样张非空 + 股票固定两卡 |
-| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥9 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑** | 显式双翼宽高；`Surface.dualFlush` 零 inset；`usesDualFlushChrome`；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
+| `shelf-copied-notice-miss` | 复制成功提示看不见 / 闪一下就没 / 触控板连震 / 音乐时整岛黑 | ≥10 | 取色/框选后看不见；关货架不上岛；hoverEnd 秒收；设置页连震；**播放中复制 DualNotchWingRow+GeoReader 空黑**；**库 sticky 误跳过投递** | 显式双翼宽高；`Surface.dualFlush` 零 inset；sticky 仍投递 copy；同指纹去抖；`test_shelfCopiedNoticeMiss_*` / dualSlots |
 | `tip-outline-panel` | tip 上角圆/直角反复改 | ≥2 | 会议等 tip 上角与贴顶直角期望不一致 | 真岛/预览一律 `.panel`；`test_islandOutline_panelKeepsSquareTopCorners` |
 | `island-focus-steal` | 岛抢焦点 / 矫枉按钮失灵 | ≥9 | 粘键盘；SwiftUI 首击无响应；**选时「正计时」只图标可点 / 写死宽右侧空白 / 播放抢页** | 自适应布局单测 + DirectHit + 挡媒体；`test_islandFocusSteal_picking*` |
 | `library-island-stage-stretch` | 库卡/详情预览黑岛被拉高留空 | 5 | 黑岛过高；电量空黑；番茄垫高；**四 tip 库卡高低不齐** | 环 22；`meetingMatchedCompactChrome`；`test_libraryIslandStageStretch_*` |
@@ -112,10 +112,10 @@
 ### shelf-copied-notice-miss — 复制成功有时不上岛提示
 
 - **recurring:** true  
-- **occurrences:** 9（…；设置页连震；dual 会议翼宽黑条；**2026-11-16 DualNotchWingRow+GeometryReader 在 fixedSize 下理想宽≈0 → 只剩黑底**）  
-- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**；**或一点复制触控板一直震**；**或正在播放时复制灵动岛全黑**  
-- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**；⑥ **设置设计页 sticky↔pointerOverSettings 互殴连震**；⑦ **同指纹短时内 changeCount 抖动反复 present + haptic**；⑧ **expand(notice) 误走控制台画布盖掉 Ø32**；⑨ **media+copy dual 误用会议双翼宽**；⑩ **`IslandDualNotchWingRow` 用 GeometryReader + IslandBody `.fixedSize` → 内容塌宽，OpaqueFill 仍铺满 → 全黑**  
-- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至入场+定格（`notchRightOrbAutoDismissNanoseconds` ≈1.4s）再收，不悬停续命**；clamp 不得把 Ø32 抬到刘海宽；**`shouldForceStickyNoticeExpand` 在设置设计页/指针在设置窗时禁止**；**仅 `blocksProgrammaticNoticeExpand`（设计 sticky）跳过复制上岛，普通设置/测试台仍提示**；**同指纹 2s 去抖**；**notice expand 套 `applyNoticeTipPanelSizeIfNeeded`**；展开触感 0.4s 节流；**`usesDualFlushChrome`：左右各自 flush OpaqueFill + underlap；右圆岛时仅左填、Ø32 自绘**；**双槽 tip 一律 `bareWingContent`（对齐音乐三区，禁再套黑胶囊）**；**双槽禁 GeometryReader**；**`Surface.dualFlush` 零 inset**  
+- **occurrences:** 10（…；设置页连震；dual 会议翼宽黑条；**2026-11-16 DualNotchWingRow+GeometryReader 在 fixedSize 下理想宽≈0 → 只剩黑底**；**2026-11-27：引导结束打开小组件库 sticky 时剪贴板层误 `blocksProgrammaticNoticeExpand` 直接跳过投递**）  
+- **症状:** 复制文字/链接/颜色/截图后不出现「已复制」；取色/框选后尤甚；tip 开着但货架关时 Cmd+C 也不上岛；**或刚展开就收起、几乎看不清**；**或一点复制触控板一直震**；**或正在播放时复制灵动岛全黑**；**或设置小组件库开着复制无圆岛**  
+- **根因倾向:** ① dismiss 后再 present 会先收岛；② 翼→短/圆岛 Preference 缩宽被误缩守卫拒绝；③ `showCopiedNotice` 关；④ 剪贴板轮询只跟货架模块走；⑤ **`copy.*` 未 `keepsExpandedWithoutHover`，指针不在岛上时 0.1s 后 hoverEnd 收岛**；⑥ **设置设计页 sticky↔pointerOverSettings 互殴连震**；⑦ **同指纹短时内 changeCount 抖动反复 present + haptic**；⑧ **expand(notice) 误走控制台画布盖掉 Ø32**；⑨ **media+copy dual 误用会议双翼宽**；⑩ **`IslandDualNotchWingRow` 用 GeometryReader + IslandBody `.fixedSize` → 内容塌宽，OpaqueFill 仍铺满 → 全黑**；⑪ **剪贴板层用设计 sticky 提前 return，与 `expandsDuringSettingsSession` 矛盾**  
+- **防护:** `ClipboardCopiedNoticeGate.syncClipboardMonitoring`；**`prepareNotchRightOrbLayout`（Ø32 圆岛）**；翼→圆岛放行；**`copy.*` 保持展开至入场+定格（`notchRightOrbAutoDismissNanoseconds` ≈1.4s）再收，不悬停续命**；clamp 不得把 Ø32 抬到刘海宽；**`copy.*` 有自动收起 → 设置 sticky 也投递并程序展开（勿在 `ClipboardHistoryStore` 用 `blocksProgrammaticNoticeExpand` 跳过）**；**同指纹 2s 去抖**；**notice expand 套 `applyNoticeTipPanelSizeIfNeeded`**；展开触感 0.4s 节流；**`usesDualFlushChrome`：左右各自 flush OpaqueFill + underlap；右圆岛时仅左填、Ø32 自绘**；**双槽 tip 一律 `bareWingContent`（对齐音乐三区，禁再套黑胶囊）**；**双槽禁 GeometryReader**；**`Surface.dualFlush` 零 inset**  
 
 - **相关代码:** `ClipboardCopiedNoticeGate`、`IslandNoticePayload.usesNotchRightOrbChrome`、`IslandExpandedPanelPolicy`、`ClipboardCopiedIslandView`、`IslandDualNotchWingRow`、`IslandController.blocksProgrammaticNoticeExpand`、`IslandNoticeSlots.usesDualFlushChrome`、`IslandChrome.Surface.dualFlush`  
 - **自动化:** `RegressionCatalogTests.test_shelfCopiedNoticeMiss_*`、`test_islandNoticeDualSlots_*`（含 media+copy dualFlush 零 inset）、`IslandExpandedPanelPolicyTests`
@@ -671,6 +671,7 @@
 | 2026-11-16 | island-focus-steal +1：久坐 +10m 点穿；翼 tip 可点区抬双翼 + 强制保展开；久坐 preemption=50 |
 | 2026-11-16 | 提示双槽：A 满岛；B+C 左右；专注待命 C 常驻；短 C 暂占后归还；`test_islandNoticeDualSlots_*` |
 | 2026-11-17 | 非专注 C 改 FIFO 队列 + 统一 3s；专注左/短 C 右；`test_islandNoticeDualSlots_secondaryTipsQueueFIFO` |
+| 2026-11-27 | shelf-copied-notice-miss +1：去掉剪贴板层 sticky 跳过投递；`copy.*` 与其它瞬时 tip 一样设置库开着仍上岛 |
 | 2026-11-16 | shelf-copied-notice-miss +1：设置设计页 sticky↔收起互殴连震；同指纹去抖；notice expand 套圆岛；`test_shelfCopiedNoticeMiss_settingsBlocksStickyForceExpand` |
 | 2026-11-16 | shelf-copied-notice-miss +1：播放中复制 dual 误抬会议翼宽整岛黑；`usesDualFlushChrome` + flush 已复制 |
 | 2026-11-16 | shelf-copied-notice-miss +1：DualNotchWingRow 禁 GeometryReader（fixedSize 塌宽）；`Surface.dualFlush` 零 inset；右翼仍 Ø32 |
