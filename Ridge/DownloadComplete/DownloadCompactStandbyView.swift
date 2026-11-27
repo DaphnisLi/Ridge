@@ -2,9 +2,8 @@ import AppKit
 import SwiftUI
 
 /// 下载常驻（产品 **C**，同档内高于计时）：
-/// - **全岛**（单独）：方案 04 左右翼贴刘海——进行中图标+名 / 定宽估速+微圆环；完成勾+名 / AppKit「打开」
-/// - **半岛**（并排半翼）：左文件名 · 右薄荷绿估速；底边蓝→青绿渐变进度；悬停 morph「打开」
-///   · 与计时：左下载右计时；与音乐：左音乐右下载（下完再露计时）
+/// - **全岛**（单独）：方案 04——进行中图标+名 / 定宽估速+微圆环；完成勾+名 / AppKit「打开」
+/// - **半岛**（并排半翼）：左文件名 · 右薄荷绿估速；底边进度；悬停 morph「打开」
 /// 根视图不加外圈 padding。
 struct DownloadCompactStandbyView: View {
     let fileName: String
@@ -194,7 +193,7 @@ struct DownloadCompactStandbyView: View {
                 shortcut: nil
             ) {
                 AppLog.warn("Download", "AppKit 打开按钮已点击")
-                _ = DownloadCompleteSession.shared.handleClick()
+                performTap()
             }
             .frame(height: DownloadOpenAppKitButton.fixedHeight)
             .fixedSize(horizontal: true, vertical: true)
@@ -297,7 +296,7 @@ struct DownloadCompactStandbyView: View {
                 shortcut: showsOpenShortcutChip ? openShortcutLabel : nil
             ) {
                 AppLog.warn("Download", "AppKit 打开按钮已点击")
-                _ = DownloadCompleteSession.shared.handleClick()
+                performTap()
             }
             .frame(height: DownloadOpenAppKitButton.fixedHeight)
             .fixedSize(horizontal: true, vertical: true)

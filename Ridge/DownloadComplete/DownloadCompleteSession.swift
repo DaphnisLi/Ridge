@@ -25,9 +25,6 @@ final class DownloadCompleteSession: ObservableObject {
     private var lastCompletedBytesAny: Int64?
     /// 完成态约 3s 自动撤；悬停时不计时。
     private var completedDismissTask: Task<Void, Never>?
-    /// 完成态驻留期间注册的全局快捷键（其它 App 前台也能命中，避免落到对方 ⌘O）。
-    private var registeredOpenChord: HotKeyChord?
-    private static let openHotKeyID = "builtin.downloadComplete.openTransient"
     private let completedAutoDismissNanoseconds =
         IslandNoticeAutoDismissPolicy.standardNanoseconds
     private let stabilityNanoseconds: UInt64 = 500_000_000
@@ -246,14 +243,9 @@ final class DownloadCompleteSession: ObservableObject {
         return ok
     }
 
-    /// 设置改快捷开关时同步监听。
+    /// 设置改快捷开关时同步监听（与隔空投送共用同一快捷键）。
     func refreshOpenShortcutMonitor() {
-        if pending?.phase == .completed,
-           DownloadCompleteSettings.shared.keyboardShortcutEnabled {
-            installOpenShortcutMonitorIfNeeded()
-        } else {
-            uninstallOpenShortcutMonitor()
-        }
+        TransferCompleteOpenHotKey.refresh()
     }
 
     /// 优先 `Downloads/<fileName>`，避免 path 指到旧同名或失效路径。
@@ -384,37 +376,8 @@ final class DownloadCompleteSession: ObservableObject {
         completedDismissTask = nil
     }
 
-    private func installOpenShortcutMonitorIfNeeded() {
-        guard DownloadCompleteSettings.shared.keyboardShortcutEnabled,
-              pending?.phase == .completed
-        else {
-            uninstallOpenShortcutMonitor()
-            return
-        }
-        let chord = DownloadCompleteSettings.shared.hotKey
-        if registeredOpenChord == chord { return }
-        uninstallOpenShortcutMonitor()
-        GlobalHotKeyCenter.shared.register(id: Self.openHotKeyID, chord: chord) { [weak self] in
-            Task { @MainActor in
-                guard let self else { return }
-                guard self.pending?.phase == .completed else { return }
-                AppLog.warn("Download", "全局快捷键打开下载完成项", [
-                    "chord": DownloadCompleteSettings.shared.hotKey.displayString
-                ])
-                _ = self.handleClick()
-            }
-        }
-        registeredOpenChord = chord
-        AppLog.warn("Download", "已注册完成态全局快捷键", [
-            "chord": chord.displayString
-        ])
-    }
-
     private func uninstallOpenShortcutMonitor() {
-        guard registeredOpenChord != nil else { return }
-        GlobalHotKeyCenter.shared.unregister(id: Self.openHotKeyID)
-        registeredOpenChord = nil
-        AppLog.debug("Download", "已注销完成态全局快捷键")
+        TransferCompleteOpenHotKey.refresh()
     }
 
     // MARK: - Watch

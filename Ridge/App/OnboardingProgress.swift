@@ -22,16 +22,26 @@ struct OnboardingProgress: Codable, Equatable {
 
     static let storageKey = "onboarding.progress.v2"
 
+    /// 首次引导推荐勾选：库内常用 tip + 会议/媒体；新 tip 默认一并推荐。
     static var recommendedWidgetIDs: [WidgetID] {
         [
             "builtin.copiedNotice",
             "builtin.meeting",
-            "builtin.media",
             "builtin.moveReminder",
             "builtin.colorPick",
             "builtin.ocrSelect",
-            "builtin.peripheralTip"
+            "builtin.peripheralTip",
+            "builtin.macBatteryTip",
+            "builtin.networkLinkTip",
+            "builtin.systemFocusTip",
+            "builtin.downloadComplete",
+            "builtin.media",
         ]
+    }
+
+    /// 无对应库小组件、但引导仍要申请的权限（击键洞察 → 输入监控）。
+    static var baselinePermissionNeeds: [WidgetPermissionGate.Need] {
+        [.inputMonitoring]
     }
 
     static func fresh() -> OnboardingProgress {
@@ -67,8 +77,26 @@ struct OnboardingProgress: Codable, Equatable {
                 ordered.append(need.rawValue)
             }
         }
+        for need in Self.baselinePermissionNeeds where seen.insert(need.rawValue).inserted {
+            ordered.append(need.rawValue)
+        }
         permissionQueue = ordered
         awaitingRelaunchFor = nil
+    }
+
+    /// 勾选能力 + 固定基线权限，去重后的完整清单（权限页展示用）。
+    func allPermissionNeeds() -> [WidgetPermissionGate.Need] {
+        var seen = Set<String>()
+        var ordered: [WidgetPermissionGate.Need] = []
+        for id in selectedWidgetIDs {
+            for need in WidgetPermissionGate.needs(forWidgetID: id) where seen.insert(need.rawValue).inserted {
+                ordered.append(need)
+            }
+        }
+        for need in Self.baselinePermissionNeeds where seen.insert(need.rawValue).inserted {
+            ordered.append(need)
+        }
+        return ordered
     }
 
     /// 对照当前 TCC，去掉已满足项；若仍在等重开的项已满足则清除 awaiting。
@@ -89,13 +117,11 @@ struct OnboardingProgress: Codable, Equatable {
         }
     }
 
-    /// 所选推荐小组件涉及的权限是否全部已满足（进自启页的唯一门槛）。
+    /// 所选推荐小组件 + 基线权限是否全部已满足（进自启页的唯一门槛）。
     @MainActor
     func allSelectedPermissionsSatisfied() -> Bool {
-        for id in selectedWidgetIDs {
-            for need in WidgetPermissionGate.needs(forWidgetID: id) where !WidgetPermissionGate.isSatisfied(need) {
-                return false
-            }
+        for need in allPermissionNeeds() where !WidgetPermissionGate.isSatisfied(need) {
+            return false
         }
         return true
     }

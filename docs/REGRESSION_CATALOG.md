@@ -492,6 +492,15 @@
 - **防护:** 以 AC 接电边沿触发充电 tip；`IOPSNotification` + AppDelegate 启用时启动会话；设置页可试投样张  
 - **自动化:** 不强制（occurrences=1）
 
+### airdrop-receive-miss — 隔空收视频/文件岛上无提示
+
+- **recurring:** false  
+- **occurrences:** 1（2026-11-27）  
+- **症状:** 手机隔空投送后岛上无进行中/完成常驻  
+- **根因倾向:** 落点由系统决定（常进「照片」）；与系统 tip 重复；监视 Downloads 覆盖不全  
+- **处置:** **已撤回接收上岛**（2026-11-27）；仅保留货架隔空发送；见 PRODUCT §5.17 / §5.18  
+- **自动化:** 不强制
+
 ### network-link-tip-miss — 切 Wi‑Fi / VPN 无 tip
 
 - **recurring:** false  

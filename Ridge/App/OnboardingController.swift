@@ -635,16 +635,9 @@ private struct OnboardingPermissionsStep: View {
     @Binding var progress: OnboardingProgress
     @Binding var isRequesting: Bool
 
-    /// 按勾选能力展开的完整权限清单（含已满足项，便于右侧显示「已授权」）。
+    /// 按勾选能力 + 基线权限展开的完整清单（含已满足项，便于右侧显示「已授权」）。
     private var displayNeeds: [WidgetPermissionGate.Need] {
-        var seen = Set<String>()
-        var ordered: [WidgetPermissionGate.Need] = []
-        for id in progress.selectedWidgetIDs {
-            for need in WidgetPermissionGate.needs(forWidgetID: id) where seen.insert(need.rawValue).inserted {
-                ordered.append(need)
-            }
-        }
-        return ordered
+        progress.allPermissionNeeds()
     }
 
     var body: some View {

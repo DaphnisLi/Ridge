@@ -388,11 +388,6 @@ final class IslandTestHarness: ObservableObject {
         note(L10n.TestLab.statusDownloadComplete)
     }
 
-    func presentAirDropReceiveSample() {
-        AirDropReceiveSession.shared.presentSample()
-        note(L10n.AirDropReceive.tipTitle)
-    }
-
     func presentDownloadDownloadingSample() {
         DownloadCompleteSession.shared.presentDownloadingSample()
         note(L10n.TestLab.statusDownloadDownloading)

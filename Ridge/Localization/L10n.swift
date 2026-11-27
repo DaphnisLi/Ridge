@@ -2598,33 +2598,6 @@ enum L10n {
 
     // MARK: - AirDrop 接收 tip（文件完成；D 档瞬时）
 
-    enum AirDropReceive {
-        static var widgetName: String { tr("airdrop_receive.widget.name", "隔空投送") }
-        static var widgetSummary: String {
-            tr(
-                "airdrop_receive.widget.summary",
-                "文件接收完成后上岛提示，点按打开该文件"
-            )
-        }
-        static var tipTitle: String { tr("airdrop_receive.tip.title", "隔空投送") }
-        static var tapToOpen: String { tr("airdrop_receive.tip.tap_open", "点按打开文件") }
-        static var clickActionTitle: String {
-            tr("airdrop_receive.click.title", "点按动作")
-        }
-        static var clickActionSubtitle: String {
-            tr(
-                "airdrop_receive.click.subtitle",
-                "接收完成 tip 点按时打开文件或在访达中显示"
-            )
-        }
-        static var openWithDefaultApp: String {
-            tr("airdrop_receive.click.open_default", "打开")
-        }
-        static var revealInFinder: String {
-            tr("airdrop_receive.click.reveal_finder", "访达")
-        }
-    }
-
     // MARK: - Network / VPN tip（主路径与 VPN；非常驻网速页）
 
     enum NetworkLink {

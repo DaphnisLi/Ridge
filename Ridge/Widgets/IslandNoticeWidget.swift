@@ -463,13 +463,6 @@ private struct IslandNoticeCardView: View {
             )
         case .meetingLead:
             MeetingLeadNoticeCard(flushSide: flushSide, bareWingContent: bareWingContent)
-        case .airDropReceived(let notice):
-            AirDropReceiveNoticeCard(
-                notice: notice,
-                compact: compact,
-                flushSide: flushSide,
-                bareWingContent: bareWingContent
-            )
         }
     }
 }

@@ -31,6 +31,8 @@ final class WidgetPermissionGateTests: XCTestCase {
         XCTAssertTrue(WidgetPermissionGate.needs(forWidgetID: "builtin.media").isEmpty)
         XCTAssertTrue(WidgetPermissionGate.needs(forWidgetID: "builtin.focusTimer").isEmpty)
         XCTAssertTrue(WidgetPermissionGate.needs(forWidgetID: "builtin.copiedNotice").isEmpty)
+        XCTAssertTrue(WidgetPermissionGate.needs(forWidgetID: "builtin.macBatteryTip").isEmpty)
+        XCTAssertTrue(WidgetPermissionGate.needs(forWidgetID: "builtin.downloadComplete").isEmpty)
         XCTAssertTrue(WidgetPermissionGate.needs(forDeckModule: "shelf").isEmpty)
         XCTAssertTrue(WidgetPermissionGate.needs(forDeckModule: "projects").isEmpty)
     }
@@ -42,6 +44,23 @@ final class WidgetPermissionGateTests: XCTestCase {
         XCTAssertTrue(disabled.contains("builtin.networkLinkTip"))
         XCTAssertTrue(disabled.contains("builtin.systemFocusTip"))
         XCTAssertEqual(disabled.count, WidgetLibraryLayout.defaultContentOrder.count)
+    }
+
+    func test_onboardingRecommended_includesRecentTips() {
+        let ids = Set(OnboardingProgress.recommendedWidgetIDs)
+        for tip in [
+            "builtin.macBatteryTip",
+            "builtin.networkLinkTip",
+            "builtin.systemFocusTip",
+            "builtin.downloadComplete",
+        ] {
+            XCTAssertTrue(ids.contains(tip), tip)
+        }
+        XCTAssertFalse(ids.contains("builtin.airDropReceive"))
+        XCTAssertEqual(
+            OnboardingProgress.baselinePermissionNeeds,
+            [.inputMonitoring]
+        )
     }
 
     func test_onboardingPermissionQueue_dedupesNeedsFromSelectedWidgets() {
@@ -62,8 +81,30 @@ final class WidgetPermissionGateTests: XCTestCase {
                 WidgetPermissionGate.Need.screenCapture.rawValue,
                 WidgetPermissionGate.Need.bluetooth.rawValue,
                 WidgetPermissionGate.Need.location.rawValue,
-                WidgetPermissionGate.Need.fullDiskAccess.rawValue
+                WidgetPermissionGate.Need.fullDiskAccess.rawValue,
+                WidgetPermissionGate.Need.inputMonitoring.rawValue,
             ]
+        )
+    }
+
+    func test_onboardingFresh_defaultQueueCoversAllGateNeeds() {
+        var progress = OnboardingProgress.fresh()
+        XCTAssertEqual(progress.selectedWidgetIDs, OnboardingProgress.recommendedWidgetIDs)
+        progress.rebuildPermissionQueue()
+        let needs = Set(progress.permissionQueue)
+        for raw in [
+            WidgetPermissionGate.Need.calendar.rawValue,
+            WidgetPermissionGate.Need.screenCapture.rawValue,
+            WidgetPermissionGate.Need.bluetooth.rawValue,
+            WidgetPermissionGate.Need.location.rawValue,
+            WidgetPermissionGate.Need.fullDiskAccess.rawValue,
+            WidgetPermissionGate.Need.inputMonitoring.rawValue,
+        ] {
+            XCTAssertTrue(needs.contains(raw), raw)
+        }
+        XCTAssertEqual(
+            progress.allPermissionNeeds().map(\.rawValue),
+            progress.permissionQueue
         )
     }
 }

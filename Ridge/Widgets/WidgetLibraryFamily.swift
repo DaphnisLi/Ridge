@@ -27,7 +27,6 @@ enum WidgetLibraryLayout {
         "builtin.networkLinkTip",
         "builtin.systemFocusTip",
         "builtin.downloadComplete",
-        "builtin.airDropReceive",
         "builtin.media",
         "builtin.focusTimer",
         "system.controlDeck.shelf",
@@ -74,7 +73,6 @@ enum WidgetLibraryFamily: String, CaseIterable, Identifiable, Hashable {
              "builtin.networkLinkTip",
              "builtin.systemFocusTip",
              "builtin.downloadComplete",
-             "builtin.airDropReceive",
              "builtin.copiedNotice":
             return .tip
         case "system.controlDeck.battery",
